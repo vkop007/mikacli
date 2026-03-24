@@ -18,6 +18,10 @@ Reference points:
 
 ## Current platform coverage
 
+- Facebook
+  - `login`
+  - `status`
+  - `post`, `like`, and `comment` commands return explicit Facebook-specific errors until the write layer is implemented
 - Instagram
   - `login`
   - `post` with media + caption
@@ -42,7 +46,7 @@ Reference points:
 
 ## Important note
 
-Instagram, TikTok, and X private web endpoints change over time. This project isolates each platform into its own adapter, uses fallback endpoint chains where practical, and returns structured errors when a session or endpoint drifts. For a long-lived production rollout, the best next step is a dual-mode auth strategy:
+Facebook, Instagram, TikTok, and X private web endpoints change over time. This project isolates each platform into its own adapter, uses fallback endpoint chains where practical, and returns structured errors when a session or endpoint drifts. For a long-lived production rollout, the best next step is a dual-mode auth strategy:
 
 - Use official APIs wherever the platform makes them viable.
 - Keep cookie-backed web-session adapters for actions the official APIs do not expose.
@@ -61,15 +65,19 @@ That gives you a much more durable production system than relying on private web
     │   └── cookie-manager.test.ts
     ├── adapters
     │   ├── base.ts
+    │   ├── facebook.ts
     │   ├── index.ts
     │   ├── instagram.ts
     │   ├── linkedin.ts
+    │   ├── youtube.ts
     │   ├── tiktok.ts
     │   └── x.ts
     ├── commands
+    │   ├── facebook.ts
     │   ├── instagram.ts
     │   ├── linkedin.ts
     │   ├── status.ts
+    │   ├── youtube.ts
     │   ├── tiktok.ts
     │   └── x.ts
     ├── utils
@@ -163,6 +171,26 @@ Like or comment on Instagram:
 ```bash
 autocli instagram like https://www.instagram.com/p/SHORTCODE/
 autocli instagram comment https://www.instagram.com/p/SHORTCODE/ "Looks great"
+```
+
+Import Facebook cookies:
+
+```bash
+autocli facebook login --cookies ./facebook.cookies.json
+```
+
+Check the saved Facebook session:
+
+```bash
+autocli status
+```
+
+Facebook write commands are present, but this adapter currently returns structured Facebook-specific errors for write actions:
+
+```bash
+autocli facebook post "Posting from AutoCLI"
+autocli facebook like "https://www.facebook.com/permalink.php?story_fbid=456&id=123"
+autocli facebook comment "123_456" "Nice post"
 ```
 
 Import X cookies:

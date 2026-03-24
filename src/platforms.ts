@@ -1,4 +1,4 @@
-export const PLATFORM_NAMES = ["instagram", "linkedin", "tiktok", "x", "youtube"] as const;
+export const PLATFORM_NAMES = ["facebook", "instagram", "linkedin", "tiktok", "x", "youtube"] as const;
 
 export type PlatformName = (typeof PLATFORM_NAMES)[number];
 
@@ -11,6 +11,13 @@ export interface PlatformConfig {
 }
 
 export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
+  facebook: {
+    displayName: "Facebook",
+    origin: "https://www.facebook.com",
+    homeUrl: "https://www.facebook.com/",
+    cookieDomain: "facebook.com",
+    authCookieNames: ["c_user", "xs"],
+  },
   instagram: {
     displayName: "Instagram",
     origin: "https://www.instagram.com",

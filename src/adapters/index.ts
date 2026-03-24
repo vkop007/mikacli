@@ -1,3 +1,4 @@
+import { FacebookAdapter } from "./facebook.js";
 import { InstagramAdapter } from "./instagram.js";
 import { LinkedInAdapter } from "./linkedin.js";
 import { TikTokAdapter } from "./tiktok.js";
@@ -7,6 +8,7 @@ import { YouTubeAdapter } from "./youtube.js";
 import type { Platform, PlatformAdapter } from "../types.js";
 
 const registry: Record<Platform, PlatformAdapter> = {
+  facebook: new FacebookAdapter(),
   instagram: new InstagramAdapter(),
   linkedin: new LinkedInAdapter(),
   tiktok: new TikTokAdapter(),
