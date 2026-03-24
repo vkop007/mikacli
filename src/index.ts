@@ -29,23 +29,6 @@ async function main(): Promise<void> {
     .option("--verbose", "Enable verbose logging")
     .showHelpAfterError()
     .addHelpText("beforeAll", `${HELP_FRAME}\n`)
-    .addHelpText(
-      "afterAll",
-      `
-Examples:
-  autocli status
-  autocli facebook login --cookies ./facebook.cookies.json
-  autocli x login --cookies ./x.cookies.json
-  autocli x post "Launching AutoCLI"
-  autocli instagram login --cookies ./instagram.cookies.txt
-  autocli instagram post ./photo.jpg --caption "Ship it"
-  autocli linkedin login --cookies ./linkedin.cookies.json
-  autocli linkedin post "Posting from AutoCLI"
-  autocli tiktok login --cookies ./tiktok.cookies.json
-  autocli youtube login --cookies ./youtube.cookies.json
-  autocli youtube like https://www.youtube.com/watch?v=dQw4w9WgXcQ
-`,
-    )
     .addCommand(createStatusCommand())
     .addCommand(createFacebookCommand())
     .addCommand(createInstagramCommand())

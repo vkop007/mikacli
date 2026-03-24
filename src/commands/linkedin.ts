@@ -9,7 +9,16 @@ const adapter = new LinkedInAdapter();
 export function createLinkedInCommand(): Command {
   const command = new Command("linkedin")
     .alias("li")
-    .description("Interact with LinkedIn using an imported browser session");
+    .description("Interact with LinkedIn using an imported browser session")
+    .addHelpText(
+      "afterAll",
+      `
+Examples:
+  autocli linkedin login --cookies ./linkedin.cookies.json
+  autocli linkedin post "Posting from AutoCLI"
+  autocli linkedin like https://www.linkedin.com/feed/update/urn:li:activity:1234567890123456789/
+`,
+    );
 
   command
     .command("login")

@@ -9,7 +9,16 @@ const adapter = new XAdapter();
 export function createXCommand(): Command {
   const command = new Command("x")
     .alias("twitter")
-    .description("Interact with X/Twitter using an imported browser session");
+    .description("Interact with X/Twitter using an imported browser session")
+    .addHelpText(
+      "afterAll",
+      `
+Examples:
+  autocli x login --cookies ./x.cookies.json
+  autocli x post "Launching AutoCLI"
+  autocli x like https://x.com/user/status/1234567890
+`,
+    );
 
   command
     .command("login")

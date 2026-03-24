@@ -9,7 +9,16 @@ const adapter = new FacebookAdapter();
 export function createFacebookCommand(): Command {
   const command = new Command("facebook")
     .alias("fb")
-    .description("Interact with Facebook using an imported browser session");
+    .description("Interact with Facebook using an imported browser session")
+    .addHelpText(
+      "afterAll",
+      `
+Examples:
+  autocli facebook login --cookies ./facebook.cookies.json
+  autocli facebook post "Launching from AutoCLI"
+  autocli facebook like https://www.facebook.com/permalink.php?story_fbid=456&id=123
+`,
+    );
 
   command
     .command("login")

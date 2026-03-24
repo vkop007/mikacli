@@ -1,6 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseFacebookTarget, parseTikTokTarget, parseYouTubeTarget } from "../utils/targets.js";
+import {
+  parseFacebookTarget,
+  parseTikTokTarget,
+  parseYouTubeChannelTarget,
+  parseYouTubePlaylistTarget,
+  parseYouTubeTarget,
+} from "../utils/targets.js";
 
 describe("parseFacebookTarget", () => {
   test("accepts a raw numeric object id", () => {
@@ -50,6 +56,42 @@ describe("parseYouTubeTarget", () => {
     expect(parseYouTubeTarget("https://youtu.be/dQw4w9WgXcQ")).toEqual({
       videoId: "dQw4w9WgXcQ",
       url: "https://youtu.be/dQw4w9WgXcQ",
+    });
+  });
+});
+
+describe("parseYouTubeChannelTarget", () => {
+  test("accepts a raw channel id", () => {
+    expect(parseYouTubeChannelTarget("UCuAXFkgsw1L7xaCfnd5JJOw")).toEqual({
+      channelId: "UCuAXFkgsw1L7xaCfnd5JJOw",
+    });
+  });
+
+  test("parses a /channel URL", () => {
+    expect(parseYouTubeChannelTarget("https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw")).toEqual({
+      channelId: "UCuAXFkgsw1L7xaCfnd5JJOw",
+      url: "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw",
+    });
+  });
+
+  test("parses a handle target", () => {
+    expect(parseYouTubeChannelTarget("@RickAstleyYT")).toEqual({
+      handle: "@RickAstleyYT",
+    });
+  });
+});
+
+describe("parseYouTubePlaylistTarget", () => {
+  test("accepts a raw playlist id", () => {
+    expect(parseYouTubePlaylistTarget("PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI")).toEqual({
+      playlistId: "PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI",
+    });
+  });
+
+  test("parses a playlist url", () => {
+    expect(parseYouTubePlaylistTarget("https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI")).toEqual({
+      playlistId: "PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI",
+      url: "https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI",
     });
   });
 });

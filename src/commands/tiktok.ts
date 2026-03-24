@@ -9,7 +9,16 @@ const adapter = new TikTokAdapter();
 export function createTikTokCommand(): Command {
   const command = new Command("tiktok")
     .alias("tt")
-    .description("Interact with TikTok using an imported browser session");
+    .description("Interact with TikTok using an imported browser session")
+    .addHelpText(
+      "afterAll",
+      `
+Examples:
+  autocli tiktok login --cookies ./tiktok.cookies.json
+  autocli tiktok post ./clip.mp4 --caption "Posting from AutoCLI"
+  autocli tiktok like https://www.tiktok.com/@user/video/7486727777941556488
+`,
+    );
 
   command
     .command("login")

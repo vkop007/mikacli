@@ -9,7 +9,16 @@ const adapter = new InstagramAdapter();
 export function createInstagramCommand(): Command {
   const command = new Command("instagram")
     .alias("ig")
-    .description("Interact with Instagram using an imported browser session");
+    .description("Interact with Instagram using an imported browser session")
+    .addHelpText(
+      "afterAll",
+      `
+Examples:
+  autocli instagram login --cookies ./instagram.cookies.txt
+  autocli instagram post ./photo.jpg --caption "Ship it"
+  autocli instagram like https://www.instagram.com/p/SHORTCODE/
+`,
+    );
 
   command
     .command("login")
