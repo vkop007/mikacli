@@ -106,6 +106,16 @@ export class XAdapter extends BasePlatformAdapter {
       jar: imported.jar,
     });
 
+    if (probe.status.state === "expired") {
+      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "X session has expired.", {
+        details: {
+          platform: this.platform,
+          account,
+          sessionPath,
+        },
+      });
+    }
+
     return {
       ok: true,
       platform: this.platform,

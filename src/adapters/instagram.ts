@@ -22,6 +22,8 @@ import type {
 const INSTAGRAM_ORIGIN = "https://www.instagram.com";
 const INSTAGRAM_HOME = `${INSTAGRAM_ORIGIN}/`;
 const INSTAGRAM_APP_ID = "936619743392459";
+const INSTAGRAM_USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";
 
 interface InstagramProbe {
   status: SessionStatus;
@@ -78,6 +80,16 @@ export class InstagramAdapter extends BasePlatformAdapter {
       metadata: probe.metadata,
       jar: imported.jar,
     });
+
+    if (probe.status.state === "expired") {
+      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Instagram session has expired.", {
+        details: {
+          platform: this.platform,
+          account,
+          sessionPath,
+        },
+      });
+    }
 
     return {
       ok: true,
@@ -322,27 +334,13 @@ export class InstagramAdapter extends BasePlatformAdapter {
       responseType: "text",
       expectedStatus: 200,
       headers: {
-        "user-agent": "AutoCLI/0.1 (+https://github.com/)",
+        "user-agent": INSTAGRAM_USER_AGENT,
       },
     });
 
     const inlineUser = this.extractUserFromHtml(homeHtml, dsUserId);
     const appId = this.extractFirst(homeHtml, /"app_id":"([^"]+)"/u) ?? INSTAGRAM_APP_ID;
     const deviceId = this.extractFirst(homeHtml, /"device_id":"([^"]+)"/u);
-    const looksLoggedOut = homeHtml.includes("CAAIGLoginHomepage") || homeHtml.includes("\"page_id\":\"CAAIGLoginHomepage\"");
-
-    if (looksLoggedOut) {
-      return {
-        status: {
-          state: "expired",
-          message: "Instagram returned a logged-out homepage. Re-import cookies.txt.",
-          lastValidatedAt: new Date().toISOString(),
-          lastErrorCode: "LOGGED_OUT",
-        },
-        user: inlineUser,
-        metadata: { appId, deviceId },
-      };
-    }
 
     const apiUser = await this.tryRequestChain<InstagramCurrentUserResponse | null>(
       [
@@ -381,10 +379,28 @@ export class InstagramAdapter extends BasePlatformAdapter {
             }
           : undefined;
 
+    if (!apiUser && !user) {
+      return {
+        status: {
+          state: "expired",
+          message: "Instagram did not expose a logged-in user for these cookies. Re-import cookies.txt.",
+          lastValidatedAt: new Date().toISOString(),
+          lastErrorCode: "LOGGED_OUT",
+        },
+        metadata: {
+          appId,
+          deviceId,
+        },
+      };
+    }
+
     return {
       status: {
         state: apiUser ? "active" : "unknown",
-        message: apiUser ? "Session validated." : "Cookies look valid but the validation endpoint was unavailable.",
+        message:
+          apiUser
+            ? "Session validated."
+            : "Homepage includes logged-in user data, but the validation endpoint was unavailable.",
         lastValidatedAt: new Date().toISOString(),
       },
       user,
@@ -399,7 +415,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     return this.createClient(session, {
       accept: "*/*",
       origin: INSTAGRAM_ORIGIN,
-      "user-agent": "Mozilla/5.0 AutoCLI/0.1",
+      "user-agent": INSTAGRAM_USER_AGENT,
     });
   }
 

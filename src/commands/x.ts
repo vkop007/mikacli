@@ -2,7 +2,7 @@ import { Command } from "commander";
 
 import { XAdapter } from "../adapters/x.js";
 import { Logger } from "../logger.js";
-import { printActionResult, resolveCommandContext } from "../utils/cli.js";
+import { printActionResult, resolveCommandContext, runCommandAction } from "../utils/cli.js";
 
 const adapter = new XAdapter();
 
@@ -22,14 +22,20 @@ export function createXCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Importing X session...");
-      const result = await adapter.login({
-        account: options.account,
-        cookieFile: options.cookies,
-        cookieString: options.cookieString,
-        cookieJson: options.cookieJson,
+      await runCommandAction({
+        spinner,
+        successMessage: "X session imported.",
+        action: () =>
+          adapter.login({
+            account: options.account,
+            cookieFile: options.cookies,
+            cookieString: options.cookieString,
+            cookieJson: options.cookieJson,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("X session imported.");
-      printActionResult(result, ctx.json);
     });
 
   const postCommand = command
@@ -42,13 +48,19 @@ export function createXCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Creating X post...");
-      const result = await adapter.postText({
-        account: options.account,
-        text,
-        imagePath: options.image,
+      await runCommandAction({
+        spinner,
+        successMessage: "X post created.",
+        action: () =>
+          adapter.postText({
+            account: options.account,
+            text,
+            imagePath: options.image,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("X post created.");
-      printActionResult(result, ctx.json);
     });
 
   postCommand.alias("publish");
@@ -61,12 +73,18 @@ export function createXCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Liking X post...");
-      const result = await adapter.like({
-        account: options.account,
-        target,
+      await runCommandAction({
+        spinner,
+        successMessage: "X post liked.",
+        action: () =>
+          adapter.like({
+            account: options.account,
+            target,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("X post liked.");
-      printActionResult(result, ctx.json);
     });
 
   command
@@ -77,13 +95,19 @@ export function createXCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Sending X reply...");
-      const result = await adapter.comment({
-        account: options.account,
-        target,
-        text,
+      await runCommandAction({
+        spinner,
+        successMessage: "X reply sent.",
+        action: () =>
+          adapter.comment({
+            account: options.account,
+            target,
+            text,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("X reply sent.");
-      printActionResult(result, ctx.json);
     });
 
   return command;

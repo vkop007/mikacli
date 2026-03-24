@@ -1,4 +1,5 @@
 import type { Command } from "commander";
+import type { Ora } from "ora";
 
 import type { AdapterActionResult, CommandContext } from "../types.js";
 import { printJson } from "./output.js";
@@ -33,5 +34,21 @@ export function printActionResult(result: AdapterActionResult, json: boolean): v
 
   if (result.sessionPath) {
     console.log(`session: ${result.sessionPath}`);
+  }
+}
+
+export async function runCommandAction<T>(input: {
+  spinner: Ora | null;
+  successMessage: string;
+  action: () => Promise<T>;
+  onSuccess: (result: T) => void;
+}): Promise<void> {
+  try {
+    const result = await input.action();
+    input.spinner?.succeed(input.successMessage);
+    input.onSuccess(result);
+  } catch (error) {
+    input.spinner?.stop();
+    throw error;
   }
 }

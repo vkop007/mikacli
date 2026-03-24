@@ -17,7 +17,10 @@ export class SessionHttpClient {
     private readonly defaultHeaders: Record<string, string> = {},
   ) {
     this.jar = jar ?? new CookieJar();
-    this.cookieFetch = makeFetchCookie(fetch, this.jar, false);
+    // Social platforms sometimes return cross-host Set-Cookie headers during
+    // otherwise successful requests. We keep the request and ignore the bad
+    // cookie instead of failing the whole command.
+    this.cookieFetch = makeFetchCookie(fetch, this.jar, true);
   }
 
   async request<T = unknown>(url: string, options: RequestOptions = {}): Promise<T> {

@@ -2,7 +2,7 @@ import { Command } from "commander";
 
 import { InstagramAdapter } from "../adapters/instagram.js";
 import { Logger } from "../logger.js";
-import { printActionResult, resolveCommandContext } from "../utils/cli.js";
+import { printActionResult, resolveCommandContext, runCommandAction } from "../utils/cli.js";
 
 const adapter = new InstagramAdapter();
 
@@ -22,14 +22,20 @@ export function createInstagramCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Importing Instagram session...");
-      const result = await adapter.login({
-        account: options.account,
-        cookieFile: options.cookies,
-        cookieString: options.cookieString,
-        cookieJson: options.cookieJson,
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram session imported.",
+        action: () =>
+          adapter.login({
+            account: options.account,
+            cookieFile: options.cookies,
+            cookieString: options.cookieString,
+            cookieJson: options.cookieJson,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("Instagram session imported.");
-      printActionResult(result, ctx.json);
     });
 
   command
@@ -41,13 +47,19 @@ export function createInstagramCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Creating Instagram post...");
-      const result = await adapter.postMedia({
-        account: options.account,
-        mediaPath,
-        caption: options.caption,
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram post created.",
+        action: () =>
+          adapter.postMedia({
+            account: options.account,
+            mediaPath,
+            caption: options.caption,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("Instagram post created.");
-      printActionResult(result, ctx.json);
     });
 
   command
@@ -58,12 +70,18 @@ export function createInstagramCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Liking Instagram post...");
-      const result = await adapter.like({
-        account: options.account,
-        target,
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram post liked.",
+        action: () =>
+          adapter.like({
+            account: options.account,
+            target,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("Instagram post liked.");
-      printActionResult(result, ctx.json);
     });
 
   command
@@ -74,13 +92,19 @@ export function createInstagramCommand(): Command {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Sending Instagram comment...");
-      const result = await adapter.comment({
-        account: options.account,
-        target,
-        text,
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram comment sent.",
+        action: () =>
+          adapter.comment({
+            account: options.account,
+            target,
+            text,
+          }),
+        onSuccess: (result) => {
+          printActionResult(result, ctx.json);
+        },
       });
-      spinner?.succeed("Instagram comment sent.");
-      printActionResult(result, ctx.json);
     });
 
   return command;
