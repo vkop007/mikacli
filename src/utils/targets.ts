@@ -95,6 +95,33 @@ export function parseLinkedInTarget(target: string): {
   });
 }
 
+export function parseTikTokTarget(target: string): {
+  itemId: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+
+  if (/^\d+$/.test(trimmed)) {
+    return { itemId: trimmed };
+  }
+
+  const videoMatch = trimmed.match(/tiktok\.com\/@[^/]+\/(?:video|photo)\/(\d+)/i);
+  if (videoMatch?.[1]) {
+    return {
+      itemId: videoMatch[1],
+      url: trimmed,
+    };
+  }
+
+  throw new AutoCliError(
+    "INVALID_TARGET",
+    "Expected a TikTok URL in /@user/video/<id> form or a numeric item ID.",
+    {
+      details: { target },
+    },
+  );
+}
+
 export function parseYouTubeTarget(target: string): {
   videoId: string;
   url?: string;

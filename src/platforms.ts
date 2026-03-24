@@ -1,4 +1,4 @@
-export const PLATFORM_NAMES = ["instagram", "linkedin", "x", "youtube"] as const;
+export const PLATFORM_NAMES = ["instagram", "linkedin", "tiktok", "x", "youtube"] as const;
 
 export type PlatformName = (typeof PLATFORM_NAMES)[number];
 
@@ -24,6 +24,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://www.linkedin.com/",
     cookieDomain: "linkedin.com",
     authCookieNames: ["li_at", "JSESSIONID"],
+  },
+  tiktok: {
+    displayName: "TikTok",
+    origin: "https://www.tiktok.com",
+    homeUrl: "https://www.tiktok.com/",
+    cookieDomain: "tiktok.com",
+    authCookieNames: ["sid_tt"],
   },
   x: {
     displayName: "X",

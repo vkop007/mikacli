@@ -1,6 +1,21 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseYouTubeTarget } from "../utils/targets.js";
+import { parseTikTokTarget, parseYouTubeTarget } from "../utils/targets.js";
+
+describe("parseTikTokTarget", () => {
+  test("accepts a raw numeric item id", () => {
+    expect(parseTikTokTarget("7486727777941556488")).toEqual({
+      itemId: "7486727777941556488",
+    });
+  });
+
+  test("parses a canonical video URL", () => {
+    expect(parseTikTokTarget("https://www.tiktok.com/@scout2015/video/6718335390845095173")).toEqual({
+      itemId: "6718335390845095173",
+      url: "https://www.tiktok.com/@scout2015/video/6718335390845095173",
+    });
+  });
+});
 
 describe("parseYouTubeTarget", () => {
   test("accepts a raw video id", () => {

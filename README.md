@@ -28,6 +28,10 @@ Reference points:
   - `post` / `share` with text
   - `like`
   - `comment`
+- TikTok
+  - `login`
+  - `status`
+  - `post`, `like`, and `comment` commands are wired, but TikTok web write signing is not implemented yet
 - X
   - `login`
   - `post` / `tweet` with optional image
@@ -38,7 +42,7 @@ Reference points:
 
 ## Important note
 
-Instagram and X private web endpoints change over time. This project isolates each platform into its own adapter, uses fallback endpoint chains where practical, and returns structured errors when a session or endpoint drifts. For a long-lived production rollout, the best next step is a dual-mode auth strategy:
+Instagram, TikTok, and X private web endpoints change over time. This project isolates each platform into its own adapter, uses fallback endpoint chains where practical, and returns structured errors when a session or endpoint drifts. For a long-lived production rollout, the best next step is a dual-mode auth strategy:
 
 - Use official APIs wherever the platform makes them viable.
 - Keep cookie-backed web-session adapters for actions the official APIs do not expose.
@@ -60,11 +64,13 @@ That gives you a much more durable production system than relying on private web
     │   ├── index.ts
     │   ├── instagram.ts
     │   ├── linkedin.ts
+    │   ├── tiktok.ts
     │   └── x.ts
     ├── commands
     │   ├── instagram.ts
     │   ├── linkedin.ts
     │   ├── status.ts
+    │   ├── tiktok.ts
     │   └── x.ts
     ├── utils
     │   ├── cli.ts
@@ -191,6 +197,26 @@ Post, like, or comment on LinkedIn:
 autocli linkedin post "Shipping browserless automation from the terminal"
 autocli linkedin like "https://www.linkedin.com/feed/update/urn:li:activity:1234567890123456789/"
 autocli linkedin comment "urn:li:activity:1234567890123456789" "Nice launch"
+```
+
+Import TikTok cookies:
+
+```bash
+autocli tiktok login --cookies ./tiktok.cookies.json
+```
+
+Check the saved TikTok session:
+
+```bash
+autocli status
+```
+
+TikTok write commands are present, but the adapter currently returns a structured `TIKTOK_SIGNING_REQUIRED` error until the TikTok web request-signing layer is added:
+
+```bash
+autocli tiktok post ./clip.mp4 --caption "Posting from AutoCLI"
+autocli tiktok like "https://www.tiktok.com/@user/video/7486727777941556488"
+autocli tiktok comment "7486727777941556488" "Nice clip"
 ```
 
 Import YouTube cookies:

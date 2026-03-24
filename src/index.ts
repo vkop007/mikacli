@@ -7,6 +7,7 @@ import packageJson from "../package.json" with { type: "json" };
 import { createInstagramCommand } from "./commands/instagram.js";
 import { createLinkedInCommand } from "./commands/linkedin.js";
 import { createStatusCommand } from "./commands/status.js";
+import { createTikTokCommand } from "./commands/tiktok.js";
 import { createXCommand } from "./commands/x.js";
 import { createYouTubeCommand } from "./commands/youtube.js";
 import { errorToJson } from "./errors.js";
@@ -38,6 +39,7 @@ Examples:
   autocli instagram post ./photo.jpg --caption "Ship it"
   autocli linkedin login --cookies ./linkedin.cookies.json
   autocli linkedin post "Posting from AutoCLI"
+  autocli tiktok login --cookies ./tiktok.cookies.json
   autocli youtube login --cookies ./youtube.cookies.json
   autocli youtube like https://www.youtube.com/watch?v=dQw4w9WgXcQ
 `,
@@ -45,6 +47,7 @@ Examples:
     .addCommand(createStatusCommand())
     .addCommand(createInstagramCommand())
     .addCommand(createLinkedInCommand())
+    .addCommand(createTikTokCommand())
     .addCommand(createYouTubeCommand())
     .addCommand(createXCommand());
 
