@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 
 import { AutoCliError, isAutoCliError } from "../errors.js";
+import { getPlatformOrigin } from "../platforms.js";
 import { parseLinkedInTarget } from "../utils/targets.js";
 import { BasePlatformAdapter } from "./base.js";
 import { CookieJar, Cookie } from "tough-cookie";
@@ -18,7 +19,7 @@ import type {
   TextPostInput,
 } from "../types.js";
 
-const LINKEDIN_ORIGIN = "https://www.linkedin.com";
+const LINKEDIN_ORIGIN = getPlatformOrigin("linkedin");
 const LINKEDIN_FEED = `${LINKEDIN_ORIGIN}/feed/`;
 const LINKEDIN_ME_ENDPOINT = `${LINKEDIN_ORIGIN}/voyager/api/me`;
 const LINKEDIN_GRAPHQL_ENDPOINT = `${LINKEDIN_ORIGIN}/voyager/api/graphql`;
@@ -101,7 +102,6 @@ interface LinkedInEntityResponse {
 
 export class LinkedInAdapter extends BasePlatformAdapter {
   readonly platform = "linkedin" as const;
-  readonly displayName = "LinkedIn";
 
   async login(input: LoginInput): Promise<AdapterActionResult> {
     const imported = await this.cookieManager.importCookies(this.platform, input);

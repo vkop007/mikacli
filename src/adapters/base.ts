@@ -1,12 +1,16 @@
 import { CookieManager, createSessionFile, serializeCookieJar } from "../utils/cookie-manager.js";
 import { SessionHttpClient } from "../utils/http-client.js";
+import { getPlatformDisplayName } from "../platforms.js";
 import type { AdapterStatusResult, Platform, PlatformAdapter, PlatformSession, SessionStatus, SessionUser } from "../types.js";
 
 export abstract class BasePlatformAdapter implements PlatformAdapter {
   readonly cookieManager = new CookieManager();
 
   abstract readonly platform: Platform;
-  abstract readonly displayName: string;
+
+  get displayName(): string {
+    return getPlatformDisplayName(this.platform);
+  }
 
   abstract login(input: Parameters<PlatformAdapter["login"]>[0]): ReturnType<PlatformAdapter["login"]>;
   abstract getStatus(account?: string): ReturnType<PlatformAdapter["getStatus"]>;
@@ -46,6 +50,31 @@ export abstract class BasePlatformAdapter implements PlatformAdapter {
     });
 
     return this.cookieManager.saveSession(session);
+  }
+
+  protected async persistExistingSession(
+    session: PlatformSession,
+    input: {
+      jar?: Awaited<ReturnType<CookieManager["createJar"]>>;
+      user?: SessionUser;
+      status?: SessionStatus;
+      metadata?: Record<string, unknown>;
+    },
+  ): Promise<PlatformSession> {
+    const jar = input.jar ?? (await this.cookieManager.createJar(session));
+    const nextSession = createSessionFile({
+      platform: this.platform,
+      account: session.account,
+      source: session.source,
+      user: input.user ?? session.user,
+      status: input.status ?? session.status,
+      metadata: input.metadata ?? session.metadata,
+      cookieJar: serializeCookieJar(jar),
+      existingSession: session,
+    });
+
+    await this.cookieManager.saveSession(nextSession);
+    return nextSession;
   }
 
   protected buildStatusResult(input: {

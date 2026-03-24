@@ -16,6 +16,7 @@ import {
   sanitizeAccountName,
 } from "../config.js";
 import { AutoCliError } from "../errors.js";
+import { getPlatformCookieDomain, getPlatformHomeUrl, isPlatform, PLATFORM_NAMES } from "../platforms.js";
 import type { Platform, PlatformSession, SessionSource } from "../types.js";
 
 const BrowserCookieSchema = z.object({
@@ -33,7 +34,7 @@ const BrowserCookieSchema = z.object({
 
 const SessionFileSchema = z.object({
   version: z.literal(1),
-  platform: z.enum(["instagram", "linkedin", "x", "youtube"]),
+  platform: z.enum(PLATFORM_NAMES),
   account: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -165,8 +166,8 @@ export class CookieManager {
         continue;
       }
 
-      const platform = entry.name as Platform;
-      if (platform !== "instagram" && platform !== "linkedin" && platform !== "x" && platform !== "youtube") {
+      const platform = entry.name;
+      if (!isPlatform(platform)) {
         continue;
       }
 
@@ -399,23 +400,11 @@ export function serializeCookieJar(jar: CookieJar): SerializedCookieJar {
 }
 
 function platformOrigin(platform: Platform): string {
-  return `https://${defaultCookieDomain(platform).replace(/^\./u, "")}/`;
+  return getPlatformHomeUrl(platform);
 }
 
 function defaultCookieDomain(platform: Platform): string {
-  if (platform === "instagram") {
-    return "instagram.com";
-  }
-
-  if (platform === "linkedin") {
-    return "linkedin.com";
-  }
-
-  if (platform === "youtube") {
-    return "youtube.com";
-  }
-
-  return "x.com";
+  return getPlatformCookieDomain(platform);
 }
 
 function looksLikeNetscapeCookies(content: string): boolean {

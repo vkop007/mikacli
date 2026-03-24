@@ -1,6 +1,7 @@
 import type { SerializedCookieJar } from "tough-cookie";
+import type { PlatformName } from "./platforms.js";
 
-export type Platform = "instagram" | "linkedin" | "x" | "youtube";
+export type Platform = PlatformName;
 
 export type SessionState = "active" | "expired" | "unknown";
 

@@ -210,6 +210,16 @@ YouTube video uploads and community posting are not implemented yet. The current
 
 If you connect multiple accounts for the same platform, AutoCLI keeps them all as named session files and uses the most recently logged-in one by default.
 
+## Session auto-refresh
+
+AutoCLI now includes a dedicated refresh layer in [autorefresh.ts](/Users/vk/dev/autocli/src/utils/autorefresh.ts).
+
+- Instagram, X, and YouTube use a lightweight authenticated keepalive flow before normal actions when the saved auth cookies are getting old or near expiry.
+- Any rotated cookies returned by the platform are persisted back into the saved session file.
+- LinkedIn is intentionally manual-only. Its copied browser sessions are not safely refreshable with a generic keepalive flow, and aggressive probing can revoke the session.
+
+This is the professional cookie-session approach, but it is not a universal guarantee. Some websites do not offer a safe or durable cookie-only refresh path once they decide to invalidate a copied session.
+
 ## Agent-friendly output
 
 Every command accepts `--json` and returns structured payloads shaped like:
