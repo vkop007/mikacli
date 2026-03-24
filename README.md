@@ -256,6 +256,8 @@ autocli youtube login --cookies ./youtube.cookies.txt
 Use YouTube engagement actions:
 
 ```bash
+autocli youtube download "dQw4w9WgXcQ"
+autocli youtube download "dQw4w9WgXcQ" --audio-only
 autocli youtube search "rick astley"
 autocli youtube videoid "dQw4w9WgXcQ"
 autocli youtube channelid "@RickAstleyYT"
@@ -269,6 +271,8 @@ autocli youtube comment "dQw4w9WgXcQ" "Nice video"
 autocli youtube subscribe "@RickAstleyYT"
 autocli youtube unsubscribe "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
 ```
+
+YouTube downloads use `yt-dlp` plus `ffmpeg`. That is the correct implementation path; raw `ffmpeg` alone is not enough to resolve YouTube formats and signatures reliably.
 
 YouTube video uploads and community posting are not implemented yet. `autocli youtube upload ...` exists as the eventual entrypoint, but it currently returns a structured unsupported-action error because the Studio upload flow is separate from the watch-page action flow.
 

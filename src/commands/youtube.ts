@@ -18,6 +18,8 @@ export function createYouTubeCommand(): Command {
       `
 Examples:
   autocli youtube login --cookies ./youtube.cookies.json
+  autocli youtube download dQw4w9WgXcQ
+  autocli youtube download dQw4w9WgXcQ --audio-only
   autocli youtube search "rick astley"
   autocli youtube videoid dQw4w9WgXcQ
   autocli youtube channelid @RickAstleyYT
@@ -52,6 +54,38 @@ Examples:
           }),
         onSuccess: (result) => {
           printActionResult(result, ctx.json);
+        },
+      });
+    });
+
+  command
+    .command("download <target>")
+    .description("Download a YouTube video or audio track using yt-dlp and ffmpeg")
+    .option("--output-dir <path>", "Directory to write downloaded files into")
+    .option("--filename <template>", "yt-dlp output template, for example '%(title)s [%(id)s].%(ext)s'")
+    .option("--audio-only", "Extract audio only instead of video + audio")
+    .option("--audio-format <format>", "Audio format when using --audio-only (default: mp3)")
+    .option("--format <selector>", "Custom yt-dlp format selector")
+    .option("--account <name>", "Optional override for a specific saved YouTube session")
+    .action(async (target, options, cmd) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Downloading YouTube media...");
+      await runCommandAction({
+        spinner,
+        successMessage: "YouTube download completed.",
+        action: () =>
+          adapter.download({
+            account: options.account,
+            target,
+            outputDir: options.outputDir,
+            filenameTemplate: options.filename,
+            audioOnly: options.audioOnly,
+            audioFormat: options.audioFormat,
+            format: options.format,
+          }),
+        onSuccess: (result) => {
+          printYouTubeDownloadResult(result, ctx.json);
         },
       });
     });
@@ -426,6 +460,34 @@ function printYouTubeSearchResult(result: AdapterActionResult, json: boolean): v
     if (item.url) {
       console.log(`   ${item.url}`);
     }
+  }
+}
+
+function printYouTubeDownloadResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+
+  const data = result.data;
+  if (!data || typeof data !== "object") {
+    return;
+  }
+
+  if (typeof data.outputPath === "string" && data.outputPath.length > 0) {
+    console.log(`file: ${data.outputPath}`);
+  }
+
+  const meta = [
+    typeof data.audioOnly === "boolean" ? (data.audioOnly ? "audio-only" : "video+audio") : undefined,
+    typeof data.audioFormat === "string" ? data.audioFormat : undefined,
+    typeof data.format === "string" ? data.format : undefined,
+  ].filter((value): value is string => typeof value === "string" && value.length > 0);
+
+  if (meta.length > 0) {
+    console.log(meta.join(" • "));
   }
 }
 
