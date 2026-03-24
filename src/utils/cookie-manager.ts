@@ -33,7 +33,7 @@ const BrowserCookieSchema = z.object({
 
 const SessionFileSchema = z.object({
   version: z.literal(1),
-  platform: z.enum(["instagram", "linkedin", "x"]),
+  platform: z.enum(["instagram", "linkedin", "x", "youtube"]),
   account: z.string(),
   createdAt: z.string(),
   updatedAt: z.string(),
@@ -166,7 +166,7 @@ export class CookieManager {
       }
 
       const platform = entry.name as Platform;
-      if (platform !== "instagram" && platform !== "linkedin" && platform !== "x") {
+      if (platform !== "instagram" && platform !== "linkedin" && platform !== "x" && platform !== "youtube") {
         continue;
       }
 
@@ -409,6 +409,10 @@ function defaultCookieDomain(platform: Platform): string {
 
   if (platform === "linkedin") {
     return "linkedin.com";
+  }
+
+  if (platform === "youtube") {
+    return "youtube.com";
   }
 
   return "x.com";

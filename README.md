@@ -193,6 +193,21 @@ autocli linkedin like "https://www.linkedin.com/feed/update/urn:li:activity:1234
 autocli linkedin comment "urn:li:activity:1234567890123456789" "Nice launch"
 ```
 
+Import YouTube cookies:
+
+```bash
+autocli youtube login --cookies ./youtube.cookies.txt
+```
+
+Like or comment on YouTube:
+
+```bash
+autocli youtube like "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+autocli youtube comment "dQw4w9WgXcQ" "Nice video"
+```
+
+YouTube video uploads and community posting are not implemented yet. The current YouTube adapter is focused on session-based engagement actions.
+
 If you connect multiple accounts for the same platform, AutoCLI keeps them all as named session files and uses the most recently logged-in one by default.
 
 ## Agent-friendly output

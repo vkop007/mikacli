@@ -95,6 +95,36 @@ export function parseLinkedInTarget(target: string): {
   });
 }
 
+export function parseYouTubeTarget(target: string): {
+  videoId: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+
+  if (/^[A-Za-z0-9_-]{11}$/.test(trimmed)) {
+    return { videoId: trimmed };
+  }
+
+  const watchMatch = trimmed.match(/[?&]v=([A-Za-z0-9_-]{11})/);
+  if (watchMatch?.[1]) {
+    return { videoId: watchMatch[1], url: trimmed };
+  }
+
+  const shortMatch = trimmed.match(/youtu\.be\/([A-Za-z0-9_-]{11})/i);
+  if (shortMatch?.[1]) {
+    return { videoId: shortMatch[1], url: trimmed };
+  }
+
+  const shortsMatch = trimmed.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/i);
+  if (shortsMatch?.[1]) {
+    return { videoId: shortsMatch[1], url: trimmed };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", "Expected a YouTube URL or 11-character video ID.", {
+    details: { target },
+  });
+}
+
 export function instagramShortcodeToMediaId(shortcode: string): string {
   let value = 0n;
 
