@@ -2,6 +2,54 @@ import { AutoCliError } from "../errors.js";
 
 const INSTAGRAM_SHORTCODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
+export function parseFacebookTarget(target: string): {
+  objectId: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+
+  if (/^\d+(?:_\d+)?$/.test(trimmed)) {
+    return { objectId: trimmed };
+  }
+
+  const permalinkMatch = trimmed.match(/[?&]story_fbid=(\d+)/i);
+  const profileMatch = trimmed.match(/[?&]id=(\d+)/i);
+  if (permalinkMatch?.[1]) {
+    return {
+      objectId: profileMatch?.[1] ? `${profileMatch[1]}_${permalinkMatch[1]}` : permalinkMatch[1],
+      url: trimmed,
+    };
+  }
+
+  const postMatch = trimmed.match(/facebook\.com\/[^/?#]+\/posts\/(\d+)/i);
+  if (postMatch?.[1]) {
+    return {
+      objectId: postMatch[1],
+      url: trimmed,
+    };
+  }
+
+  const videoMatch = trimmed.match(/facebook\.com\/[^/?#]+\/videos\/(\d+)/i);
+  if (videoMatch?.[1]) {
+    return {
+      objectId: videoMatch[1],
+      url: trimmed,
+    };
+  }
+
+  const reelMatch = trimmed.match(/facebook\.com\/reel\/(\d+)/i);
+  if (reelMatch?.[1]) {
+    return {
+      objectId: reelMatch[1],
+      url: trimmed,
+    };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", "Expected a Facebook post URL or numeric object ID.", {
+    details: { target },
+  });
+}
+
 export function parseInstagramTarget(target: string): {
   mediaId: string;
   shortcode?: string;

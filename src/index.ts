@@ -4,6 +4,7 @@ import { Command } from "commander";
 import pc from "picocolors";
 
 import packageJson from "../package.json" with { type: "json" };
+import { createFacebookCommand } from "./commands/facebook.js";
 import { createInstagramCommand } from "./commands/instagram.js";
 import { createLinkedInCommand } from "./commands/linkedin.js";
 import { createStatusCommand } from "./commands/status.js";
@@ -33,6 +34,7 @@ async function main(): Promise<void> {
       `
 Examples:
   autocli status
+  autocli facebook login --cookies ./facebook.cookies.json
   autocli x login --cookies ./x.cookies.json
   autocli x post "Launching AutoCLI"
   autocli instagram login --cookies ./instagram.cookies.txt
@@ -45,6 +47,7 @@ Examples:
 `,
     )
     .addCommand(createStatusCommand())
+    .addCommand(createFacebookCommand())
     .addCommand(createInstagramCommand())
     .addCommand(createLinkedInCommand())
     .addCommand(createTikTokCommand())

@@ -1,6 +1,21 @@
 import { describe, expect, test } from "bun:test";
 
-import { parseTikTokTarget, parseYouTubeTarget } from "../utils/targets.js";
+import { parseFacebookTarget, parseTikTokTarget, parseYouTubeTarget } from "../utils/targets.js";
+
+describe("parseFacebookTarget", () => {
+  test("accepts a raw numeric object id", () => {
+    expect(parseFacebookTarget("123456789012345")).toEqual({
+      objectId: "123456789012345",
+    });
+  });
+
+  test("parses a permalink URL", () => {
+    expect(parseFacebookTarget("https://www.facebook.com/permalink.php?story_fbid=456&id=123")).toEqual({
+      objectId: "123_456",
+      url: "https://www.facebook.com/permalink.php?story_fbid=456&id=123",
+    });
+  });
+});
 
 describe("parseTikTokTarget", () => {
   test("accepts a raw numeric item id", () => {
