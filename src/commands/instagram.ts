@@ -23,6 +23,7 @@ Examples:
   autocli instagram profileid @username
   autocli instagram posts @username
   autocli instagram stories @username
+  autocli instagram storydownload @username
   autocli instagram followers @username --limit 5
   autocli instagram following @username --limit 5
   autocli instagram download https://www.instagram.com/p/SHORTCODE/
@@ -178,6 +179,32 @@ Examples:
           }),
         onSuccess: (result) => {
           printInstagramStoriesResult(result, ctx.json);
+        },
+      });
+    });
+
+  command
+    .command("storydownload <target>")
+    .description("Download active Instagram stories for a profile URL, @username, username, or numeric user ID")
+    .option("--limit <number>", "Maximum number of story items to download (1-25, default: 5)", parseLimitOption)
+    .option("--output-dir <path>", "Directory to write downloaded story files into")
+    .option("--account <name>", "Optional override for a specific saved Instagram session")
+    .action(async (target, options, cmd) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Downloading Instagram stories...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram story download completed.",
+        action: () =>
+          adapter.storyDownload({
+            account: options.account,
+            target,
+            limit: options.limit,
+            outputDir: options.outputDir,
+          }),
+        onSuccess: (result) => {
+          printInstagramDownloadResult(result, ctx.json);
         },
       });
     });

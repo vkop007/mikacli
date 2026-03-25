@@ -586,16 +586,8 @@ export class InstagramAdapter extends BasePlatformAdapter {
     const client = await this.createInstagramClient(session);
     const profile = await this.resolveInstagramProfileInfo(client, probe.metadata, input.target);
     const limit = this.normalizeSearchLimit(input.limit);
-
-    const response = await client.request<InstagramStoryResponse>(
-      `${INSTAGRAM_ORIGIN}/api/v1/feed/user/${encodeURIComponent(profile.id)}/story/`,
-      {
-        expectedStatus: 200,
-        headers: await this.buildInstagramHeaders(client, probe.metadata),
-      },
-    );
-
-    const items = (response.reel?.items ?? []).slice(0, limit).map((item) => this.toInstagramStoryItem(item));
+    const storyItems = await this.fetchInstagramStoryItems(client, probe.metadata, profile.id);
+    const items = storyItems.slice(0, limit).map((item) => this.toInstagramStoryItem(item));
 
     return {
       ok: true,
@@ -613,6 +605,95 @@ export class InstagramAdapter extends BasePlatformAdapter {
         profile: { ...profile },
         limit,
         stories: items.map((item) => ({ ...item })),
+      },
+    };
+  }
+
+  async storyDownload(input: {
+    account?: string;
+    target: string;
+    limit?: number;
+    outputDir?: string;
+  }): Promise<AdapterActionResult> {
+    const { session } = await this.prepareSession(input.account);
+    const probe = await this.ensureActiveSession(session);
+    const client = await this.createInstagramClient(session);
+    const profile = await this.resolveInstagramProfileInfo(client, probe.metadata, input.target);
+    const limit = this.normalizeSearchLimit(input.limit);
+    const storyItems = await this.fetchInstagramStoryItems(client, probe.metadata, profile.id);
+    const selectedItems = storyItems.slice(0, limit);
+
+    if (selectedItems.length === 0) {
+      throw new AutoCliError("INSTAGRAM_STORIES_UNAVAILABLE", `No active Instagram stories found for ${profile.username ?? profile.id}.`, {
+        details: {
+          target: input.target,
+          profileId: profile.id,
+        },
+      });
+    }
+
+    const outputDir = resolve(
+      input.outputDir ?? join(process.cwd(), "downloads", "instagram", "stories", this.sanitizeFilename(profile.username ?? profile.id)),
+    );
+    await mkdir(outputDir, { recursive: true });
+
+    const savedFiles: string[] = [];
+    for (const [index, item] of selectedItems.entries()) {
+      const assetUrl = item.video_versions?.[0]?.url ?? item.image_versions2?.candidates?.[0]?.url;
+      if (!assetUrl) {
+        continue;
+      }
+
+      const story = this.toInstagramStoryItem(item);
+      const response = await client.requestWithResponse<ArrayBuffer>(assetUrl, {
+        responseType: "arrayBuffer",
+        expectedStatus: 200,
+        headers: {
+          referer: story.url ?? profile.url ?? INSTAGRAM_HOME,
+        },
+      });
+
+      const extension = this.normalizeInstagramDownloadExtension(
+        this.extensionFromUrl(assetUrl),
+        response.response.headers.get("content-type") ?? undefined,
+      );
+      const filename = this.buildInstagramStoryDownloadFilename({
+        profile,
+        storyId: story.id,
+        mediaType: story.mediaType ?? (item.video_versions?.[0]?.url ? "video" : "image"),
+        index,
+        extension,
+        includeIndex: selectedItems.length > 1,
+      });
+      const outputPath = join(outputDir, filename);
+      await writeFile(outputPath, Buffer.from(response.data));
+      savedFiles.push(outputPath);
+    }
+
+    if (savedFiles.length === 0) {
+      throw new AutoCliError("INSTAGRAM_STORY_DOWNLOAD_UNAVAILABLE", "Instagram did not expose any downloadable story assets for that profile.", {
+        details: {
+          target: input.target,
+          profileId: profile.id,
+        },
+      });
+    }
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "storydownload",
+      message: `Instagram story download completed for ${profile.username ?? profile.id}.`,
+      id: profile.id,
+      url: profile.url,
+      user: probe.user,
+      data: {
+        profile: { ...profile },
+        outputPath: savedFiles[0],
+        files: savedFiles,
+        outputDir,
+        limit,
       },
     };
   }
@@ -1233,6 +1314,20 @@ export class InstagramAdapter extends BasePlatformAdapter {
     return `${owner}-${identity}-${input.mediaType}${suffix}.${input.extension}`;
   }
 
+  private buildInstagramStoryDownloadFilename(input: {
+    profile: InstagramProfileInfo;
+    storyId: string;
+    mediaType: string;
+    index: number;
+    extension: string;
+    includeIndex: boolean;
+  }): string {
+    const owner = this.sanitizeFilename(input.profile.username ?? input.profile.id);
+    const identity = this.sanitizeFilename(input.storyId);
+    const suffix = input.includeIndex ? `-${input.index + 1}` : "";
+    return `${owner}-story-${identity}-${input.mediaType}${suffix}.${input.extension}`;
+  }
+
   private sanitizeFilename(value: string): string {
     return value.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "media";
   }
@@ -1289,6 +1384,22 @@ export class InstagramAdapter extends BasePlatformAdapter {
         results: users.map((item) => ({ ...item })),
       },
     };
+  }
+
+  private async fetchInstagramStoryItems(
+    client: Awaited<ReturnType<InstagramAdapter["createInstagramClient"]>>,
+    metadata: Record<string, unknown> | undefined,
+    profileId: string,
+  ): Promise<InstagramMediaPayload[]> {
+    const response = await client.request<InstagramStoryResponse>(
+      `${INSTAGRAM_ORIGIN}/api/v1/feed/user/${encodeURIComponent(profileId)}/story/`,
+      {
+        expectedStatus: 200,
+        headers: await this.buildInstagramHeaders(client, metadata),
+      },
+    );
+
+    return response.reel?.items ?? [];
   }
 
   private async resolveInstagramProfileInfo(

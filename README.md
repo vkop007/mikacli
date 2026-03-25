@@ -172,6 +172,7 @@ Like or comment on Instagram:
 autocli instagram search "blackpink"
 autocli instagram posts @username --limit 5
 autocli instagram stories @username
+autocli instagram storydownload @username
 autocli instagram followers @username --limit 5
 autocli instagram following @username --limit 5
 autocli instagram mediaid https://www.instagram.com/p/SHORTCODE/
