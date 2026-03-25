@@ -107,16 +107,11 @@ That gives you a much more durable production system than relying on private web
     │   ├── status.ts
     │   └── ...
     ├── platforms
+    │   ├── bots
+    │   ├── shared
+    │   ├── social
     │   ├── config.ts
-    │   ├── discordbot
-    │   ├── facebook
-    │   ├── instagram
-    │   ├── linkedin
-    │   ├── slackbot
-    │   ├── telegrambot
-    │   ├── tiktok
-    │   ├── x
-    │   └── youtube
+    │   └── index.ts
     ├── utils
     │   ├── cli.ts
     │   ├── cookie-manager.ts

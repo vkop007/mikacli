@@ -1,6 +1,6 @@
 # Platform Structure
 
-Each platform lives under `src/platforms/<name>/`.
+Providers are grouped by category under `src/platforms/`.
 
 There are two supported patterns:
 
@@ -21,15 +21,20 @@ There are two supported patterns:
 Recommended layout:
 
 ```text
-src/platforms/<name>/
-  adapter.ts
-  command.ts
-  manifest.ts
-  capabilities/
-    login.ts
-    post.ts
-    like.ts
-    comment.ts
+src/platforms/
+  bots/
+    <name>/
+      adapter.ts
+      command.ts
+      manifest.ts
+      capabilities/
+  social/
+    <name>/
+      adapter.ts
+      command.ts
+      manifest.ts
+      capabilities/
+  shared/
 ```
 
 Rules:
@@ -38,6 +43,7 @@ Rules:
 - Put shared platform metadata in `src/platforms/config.ts`.
 - Keep root CLI wiring out of `src/index.ts`; the root only loads platform definitions.
 - Use `manifest.ts` as the single entrypoint for a platform.
+- Set `category` in every `PlatformDefinition`.
 - Prefer `capabilities` for new work.
 - Keep `src/commands/*` as compatibility wrappers only.
 - Use the shared connection layer in `src/core/auth/connection-store.ts`.
@@ -49,5 +55,5 @@ Rules:
 Current examples:
 
 - All current platforms are capability-based.
-- Bot-token platforms: `src/platforms/discordbot/`, `src/platforms/slackbot/`, `src/platforms/telegrambot/`
-- Cookie-backed platforms: `src/platforms/facebook/`, `src/platforms/instagram/`, `src/platforms/linkedin/`, `src/platforms/tiktok/`, `src/platforms/x/`, `src/platforms/youtube/`
+- Bot-token platforms: `src/platforms/bots/discordbot/`, `src/platforms/bots/slackbot/`, `src/platforms/bots/telegrambot/`
+- Cookie-backed platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`

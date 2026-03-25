@@ -3,8 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import { TelegramBotApi } from "../platforms/telegrambot/api.js";
-import { TelegramBotAdapter } from "../platforms/telegrambot/adapter.js";
+import { TelegramBotApi } from "../platforms/bots/telegrambot/api.js";
+import { TelegramBotAdapter } from "../platforms/bots/telegrambot/adapter.js";
 
 const TEST_BOT = {
   id: 42,
@@ -135,4 +135,3 @@ describe("TelegramBotAdapter", () => {
     expect(saved[0]?.status && typeof saved[0].status === "object" ? (saved[0].status as { state?: string }).state : undefined).toBe("active");
   });
 });
-

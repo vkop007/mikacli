@@ -2,14 +2,14 @@ import { describe, expect, test } from "bun:test";
 import { Command } from "commander";
 
 import { buildPlatformCommand } from "../core/runtime/build-platform-command.js";
-import { discordBotPlatformDefinition } from "../platforms/discordbot/manifest.js";
+import { discordBotPlatformDefinition } from "../platforms/bots/discordbot/manifest.js";
 import {
   buildDiscordAccountName,
   buildDiscordMessageUrl,
   formatDiscordChannelType,
   normalizeDiscordBotToken,
   summarizeDiscordChannel,
-} from "../platforms/discordbot/helpers.js";
+} from "../platforms/bots/discordbot/helpers.js";
 
 describe("discordbot helpers", () => {
   test("normalizes bot token input", () => {

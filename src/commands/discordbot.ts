@@ -1,7 +1,6 @@
 import { buildPlatformCommand } from "../core/runtime/build-platform-command.js";
-import { discordBotPlatformDefinition } from "../platforms/discordbot/manifest.js";
+import { discordBotPlatformDefinition } from "../platforms/bots/discordbot/manifest.js";
 
 export function createDiscordBotCommand() {
   return buildPlatformCommand(discordBotPlatformDefinition);
 }
-
