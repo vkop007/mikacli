@@ -7,7 +7,7 @@ import { maybeAutoRefreshSession } from "../utils/autorefresh.js";
 import { serializeCookieJar } from "../utils/cookie-manager.js";
 import { readMediaFile } from "../utils/media.js";
 import { parseInstagramProfileTarget, parseInstagramTarget } from "../utils/targets.js";
-import { getPlatformHomeUrl, getPlatformOrigin } from "../platforms.js";
+import { getPlatformHomeUrl, getPlatformOrigin } from "../platforms/config.js";
 import { BasePlatformAdapter } from "./base.js";
 
 import type {

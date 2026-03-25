@@ -3,7 +3,7 @@ import { parseXProfileTarget, parseXTarget } from "../utils/targets.js";
 import { AutoCliError } from "../errors.js";
 import { maybeAutoRefreshSession } from "../utils/autorefresh.js";
 import { serializeCookieJar } from "../utils/cookie-manager.js";
-import { getPlatformOrigin } from "../platforms.js";
+import { getPlatformOrigin } from "../platforms/config.js";
 import { BasePlatformAdapter } from "./base.js";
 
 import type {

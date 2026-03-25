@@ -6,6 +6,7 @@ import type { Platform } from "./types.js";
 
 export const AUTOCLI_DIR = join(homedir(), ".autocli");
 export const SESSIONS_DIR = join(AUTOCLI_DIR, "sessions");
+export const CONNECTIONS_DIR = join(AUTOCLI_DIR, "connections");
 export const SESSION_FILE_VERSION = 1 as const;
 export const DEFAULT_ACCOUNT_NAME = "default";
 
@@ -19,8 +20,16 @@ export function getPlatformSessionDir(platform: Platform): string {
   return join(SESSIONS_DIR, platform);
 }
 
+export function getPlatformConnectionDir(platform: Platform): string {
+  return join(CONNECTIONS_DIR, platform);
+}
+
 export function getSessionPath(platform: Platform, account: string): string {
   return join(getPlatformSessionDir(platform), `${sanitizeAccountName(account)}.json`);
+}
+
+export function getConnectionPath(platform: Platform, account: string): string {
+  return join(getPlatformConnectionDir(platform), `${sanitizeAccountName(account)}.json`);
 }
 
 export async function ensureDirectory(path: string): Promise<void> {
@@ -34,6 +43,15 @@ export async function ensureSessionDirectory(platform?: Platform): Promise<void>
   }
 
   await ensureDirectory(SESSIONS_DIR);
+}
+
+export async function ensureConnectionDirectory(platform?: Platform): Promise<void> {
+  if (platform) {
+    await ensureDirectory(getPlatformConnectionDir(platform));
+    return;
+  }
+
+  await ensureDirectory(CONNECTIONS_DIR);
 }
 
 export async function ensureParentDirectory(filePath: string): Promise<void> {

@@ -1,6 +1,6 @@
 import { CookieJar } from "tough-cookie";
 
-import { getPlatformAuthCookieNames, getPlatformHomeUrl } from "../platforms.js";
+import { getPlatformAuthCookieNames, getPlatformHomeUrl } from "../platforms/config.js";
 import type { Platform, PlatformSession } from "../types.js";
 
 export type AutoRefreshCapability = "auto" | "manual";

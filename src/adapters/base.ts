@@ -1,6 +1,6 @@
 import { CookieManager, createSessionFile, serializeCookieJar } from "../utils/cookie-manager.js";
 import { SessionHttpClient } from "../utils/http-client.js";
-import { getPlatformDisplayName } from "../platforms.js";
+import { getPlatformDisplayName } from "../platforms/config.js";
 import type { AdapterStatusResult, Platform, PlatformAdapter, PlatformSession, SessionStatus, SessionUser } from "../types.js";
 
 export abstract class BasePlatformAdapter implements PlatformAdapter {

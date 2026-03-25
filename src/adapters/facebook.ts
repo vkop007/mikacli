@@ -1,5 +1,5 @@
 import { AutoCliError } from "../errors.js";
-import { getPlatformHomeUrl, getPlatformOrigin } from "../platforms.js";
+import { getPlatformHomeUrl, getPlatformOrigin } from "../platforms/config.js";
 import { serializeCookieJar } from "../utils/cookie-manager.js";
 import { parseFacebookTarget } from "../utils/targets.js";
 import { BasePlatformAdapter } from "./base.js";

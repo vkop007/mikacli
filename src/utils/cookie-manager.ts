@@ -16,7 +16,7 @@ import {
   sanitizeAccountName,
 } from "../config.js";
 import { AutoCliError } from "../errors.js";
-import { getPlatformCookieDomain, getPlatformHomeUrl, isPlatform, PLATFORM_NAMES } from "../platforms.js";
+import { getPlatformCookieDomain, getPlatformHomeUrl, isPlatform, PLATFORM_NAMES } from "../platforms/config.js";
 import type { Platform, PlatformSession, SessionSource } from "../types.js";
 
 const BrowserCookieSchema = z.object({
