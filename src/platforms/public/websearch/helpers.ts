@@ -1,6 +1,6 @@
 import { AutoCliError } from "../../../errors.js";
 
-export const WEB_SEARCH_ENGINES = ["duckduckgo", "bing", "brave", "google"] as const;
+export const WEB_SEARCH_ENGINES = ["duckduckgo", "bing", "brave", "google", "yahoo", "yandex", "baidu"] as const;
 
 export type WebSearchEngine = (typeof WEB_SEARCH_ENGINES)[number];
 
@@ -50,6 +50,30 @@ export const WEB_SEARCH_ENGINE_INFO: Record<WebSearchEngine, WebSearchEngineInfo
     description: "Google web search via the basic HTML view",
     searchUrl(query: string): string {
       return `https://www.google.com/search?hl=en&gbv=1&q=${encodeURIComponent(query)}`;
+    },
+  },
+  yahoo: {
+    id: "yahoo",
+    label: "Yahoo Search",
+    description: "Yahoo web search results",
+    searchUrl(query: string): string {
+      return `https://search.yahoo.com/search?p=${encodeURIComponent(query)}&fr2=sb-top&ei=UTF-8`;
+    },
+  },
+  yandex: {
+    id: "yandex",
+    label: "Yandex",
+    description: "Yandex web search results",
+    searchUrl(query: string): string {
+      return `https://yandex.com/search/?text=${encodeURIComponent(query)}&lr=0`;
+    },
+  },
+  baidu: {
+    id: "baidu",
+    label: "Baidu",
+    description: "Baidu web search results",
+    searchUrl(query: string): string {
+      return `https://www.baidu.com/s?wd=${encodeURIComponent(query)}&ie=utf-8`;
     },
   },
 };
@@ -128,6 +152,33 @@ export function absoluteSearchResultUrl(href: string, pageUrl: string): string |
       }
     }
 
+    if (resolvedUrl.hostname === "r.search.yahoo.com") {
+      const fromPath = resolvedUrl.pathname.match(/\/RU=([^/]+)(?:\/|$)/i)?.[1];
+      const fromQuery = resolvedUrl.searchParams.get("RU");
+      const target = decodeHtmlEntities(fromPath ?? fromQuery ?? "");
+      if (target) {
+        try {
+          return decodeURIComponent(target);
+        } catch {
+          return target;
+        }
+      }
+    }
+
+    if (/\.?yandex\./i.test(resolvedUrl.hostname) && resolvedUrl.pathname.includes("/clck/jsredir")) {
+      const target = resolvedUrl.searchParams.get("url") ?? resolvedUrl.searchParams.get("target");
+      if (target) {
+        return target;
+      }
+    }
+
+    if (/\.?baidu\.com$/i.test(resolvedUrl.hostname) && resolvedUrl.pathname === "/link") {
+      const target = resolvedUrl.searchParams.get("url") ?? resolvedUrl.searchParams.get("target");
+      if (target && /^https?:\/\//i.test(target)) {
+        return target;
+      }
+    }
+
     return resolvedUrl.toString();
   } catch {
     return undefined;
@@ -150,7 +201,7 @@ export function isUsefulSearchResult(url: string, title: string, engineUrl: stri
     return false;
   }
 
-  return !/^https?:\/\/(duckduckgo\.com|html\.duckduckgo\.com|bing\.com|search\.brave\.com|google\.com)\b/i.test(url);
+  return !/^https?:\/\/(duckduckgo\.com|html\.duckduckgo\.com|bing\.com|search\.brave\.com|google\.com|search\.yahoo\.com|r\.search\.yahoo\.com|(?:www\.)?yandex\.(?:com|ru|by|kz|uz|com\.tr)|(?:www\.)?baidu\.com)\b/i.test(url);
 }
 
 export function dedupeWebSearchResults(results: WebSearchResult[], limit: number): WebSearchResult[] {

@@ -10,7 +10,7 @@ export function createWebSearchSearchCapability(adapter: WebSearchAdapter) {
     spinnerText: "Searching the web...",
     successMessage: "Web search completed.",
     options: [
-      { flags: "--engine <engine>", description: "Search engine: duckduckgo, bing, brave, google" },
+      { flags: "--engine <engine>", description: "Search engine: duckduckgo, bing, brave, google, yahoo, yandex, baidu" },
       { flags: "--all", description: "Search all supported engines and group the results" },
       { flags: "--limit <number>", description: "Maximum results per engine (default: 10)", parser: parsePositiveInteger },
       { flags: "--summary", description: "Fetch and extract page summaries for the first few results" },

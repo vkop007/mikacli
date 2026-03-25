@@ -19,20 +19,34 @@ export class WebSearchClient {
   }): Promise<{ engine: WebSearchEngine; query: string; searchUrl: string; results: WebSearchResult[] }> {
     const engineInfo = getWebSearchEngineInfo(input.engine);
     const searchUrl = engineInfo.searchUrl(input.query);
-    const response = await fetch(searchUrl, {
-      headers: {
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
-        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "accept-language": "en-US,en;q=0.9",
-      },
-    });
+    let response: Response;
+    try {
+      response = await fetch(searchUrl, {
+        signal: AbortSignal.timeout(12000),
+        headers: {
+          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "accept-language": "en-US,en;q=0.9",
+        },
+      });
+    } catch (error) {
+      throw createSearchFetchError(input.engine, engineInfo.label, searchUrl, input.query, error);
+    }
 
     if (!response.ok) {
-      throw new Error(`${engineInfo.label} search returned ${response.status} ${response.statusText}.`);
+      throw new AutoCliError("WEBSEARCH_ENGINE_HTTP_ERROR", `${engineInfo.label} search returned ${response.status} ${response.statusText}.`, {
+        details: {
+          engine: input.engine,
+          query: input.query,
+          searchUrl,
+          status: response.status,
+          statusText: response.statusText,
+        },
+      });
     }
 
     const html = await response.text();
-    if (isBlockedSearchResponse(input.engine, html)) {
+    if (response.headers.get("x-yandex-captcha") === "captcha" || isBlockedSearchResponse(input.engine, html)) {
       throw new AutoCliError(
         "WEBSEARCH_ENGINE_BLOCKED",
         `${engineInfo.label} returned an anti-bot or JavaScript fallback page instead of real search results.`,
@@ -106,7 +120,16 @@ export function parseSearchResults(engine: WebSearchEngine, html: string, pageUr
     return [];
   }
 
-  const parsers = [parseDuckDuckGoResults, parseBingResults, parseBraveResults, parseGoogleResults, parseGenericAnchorResults];
+  const parsers = [
+    parseDuckDuckGoResults,
+    parseBingResults,
+    parseBraveResults,
+    parseGoogleResults,
+    parseYahooResults,
+    parseYandexResults,
+    parseBaiduResults,
+    parseGenericAnchorResults,
+  ];
 
   for (const parser of parsers) {
     const parsed = parser(engine, html, pageUrl, limit);
@@ -126,6 +149,17 @@ function isBlockedSearchResponse(engine: WebSearchEngine, html: string): boolean
       normalized.includes("if you're having trouble accessing google search") ||
       normalized.includes("/httpservice/retry/enablejs") ||
       normalized.includes("id=\"yvlrue\"")
+    );
+  }
+
+  if (engine === "yandex") {
+    return (
+      normalized.includes("<title>verification</title>") ||
+      normalized.includes("checking your browser before redirecting to yandex.com") ||
+      normalized.includes("/showcaptchafast?") ||
+      normalized.includes("/checkcaptchafast?") ||
+      normalized.includes("smart-captcha") ||
+      normalized.includes("x-yandex-captcha")
     );
   }
 
@@ -329,6 +363,107 @@ function parseGoogleResults(engine: WebSearchEngine, html: string, pageUrl: stri
   return results;
 }
 
+function parseYahooResults(engine: WebSearchEngine, html: string, pageUrl: string, limit: number): WebSearchResult[] {
+  if (engine !== "yahoo") {
+    return [];
+  }
+
+  const results: WebSearchResult[] = [];
+  const blocks = collectBlocksByStartTag(html, /<div[^>]+class="[^"]*\balgo-sr\b[^"]*"[^>]*>/gi);
+  const candidates =
+    blocks.length > 0
+      ? blocks
+      : [...html.matchAll(/<div[^>]+class="[^"]*\balgo\b[^"]*"[^>]*>([\s\S]*?)<\/div>/gi)].map((match) => match[0]);
+
+  for (const block of candidates) {
+    const headingMatch =
+      block.match(/<div[^>]+class="[^"]*\bcompTitle\b[^"]*"[^>]*>[\s\S]*?<a[^>]+href="([^"]+)"[^>]*>[\s\S]*?<h3[^>]*>([\s\S]*?)<\/h3>[\s\S]*?<\/a>/i) ??
+      block.match(/<a[^>]+href="([^"]+)"[^>]*>\s*<h3[^>]*>([\s\S]*?)<\/h3>\s*<\/a>/i) ??
+      block.match(/<h3[^>]*>\s*<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/h3>/i);
+    if (!headingMatch) {
+      continue;
+    }
+
+    const url = absoluteSearchResultUrl(headingMatch[1] ?? "", pageUrl);
+    const title = stripHtml(headingMatch[2] ?? "");
+    const snippet =
+      stripHtml(block.match(/<div[^>]+class="[^"]*\bcompText\b[^"]*"[^>]*>[\s\S]*?<p[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? "") ||
+      stripHtml(block.match(/<div[^>]+class="[^"]*\bcompText\b[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[1] ?? "") ||
+      stripHtml(block.match(/<span[^>]+class="[^"]*(?:compText|lh-22)[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1] ?? "") ||
+      stripHtml(block.match(/<p[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? "");
+    if (!url || !isUsefulSearchResult(url, title, pageUrl) || title.length < 3) {
+      continue;
+    }
+    results.push({ engine, title, url, snippet });
+    if (results.length >= limit) {
+      break;
+    }
+  }
+
+  return results;
+}
+
+function parseYandexResults(engine: WebSearchEngine, html: string, pageUrl: string, limit: number): WebSearchResult[] {
+  if (engine !== "yandex") {
+    return [];
+  }
+
+  const results: WebSearchResult[] = [];
+  const blockRegex = /<li[^>]+class="[^"]*serp-item[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
+  for (const blockMatch of html.matchAll(blockRegex)) {
+    const block = blockMatch[1] ?? "";
+    const headingMatch = block.match(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i);
+    if (!headingMatch) {
+      continue;
+    }
+    const url = absoluteSearchResultUrl(headingMatch[1] ?? "", pageUrl);
+    const title = stripHtml(headingMatch[2] ?? "");
+    const snippet =
+      stripHtml(block.match(/<div[^>]+class="[^"]*(?:OrganicTextContentSpan|organic__content-wrapper|organic__text|text-container)[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[1] ?? "") ||
+      stripHtml(block.match(/<p[^>]*>([\s\S]*?)<\/p>/i)?.[1] ?? "");
+    if (!url || !isUsefulSearchResult(url, title, pageUrl) || title.length < 3) {
+      continue;
+    }
+    results.push({ engine, title, url, snippet });
+    if (results.length >= limit) {
+      break;
+    }
+  }
+
+  return results;
+}
+
+function parseBaiduResults(engine: WebSearchEngine, html: string, pageUrl: string, limit: number): WebSearchResult[] {
+  if (engine !== "baidu") {
+    return [];
+  }
+
+  const results: WebSearchResult[] = [];
+  const headingRegex = /<h3[^>]*>\s*<a[^>]+href="([^"]+)"([^>]*)>([\s\S]*?)<\/a>\s*<\/h3>/gi;
+  for (const match of html.matchAll(headingRegex)) {
+    const href = match[1] ?? "";
+    const attrs = match[2] ?? "";
+    const title = stripHtml(match[3] ?? "");
+    const mu = attrs.match(/\bmu="([^"]+)"/i)?.[1];
+    const url = absoluteSearchResultUrl(mu ?? href, pageUrl) ?? (mu ? absoluteSearchResultUrl(mu, pageUrl) : undefined);
+    const tailStart = (match.index ?? 0) + match[0].length;
+    const tail = html.slice(tailStart, tailStart + 1200);
+    const snippet =
+      stripHtml(tail.match(/<div[^>]+class="[^"]*(?:c-abstract|content-right_8Zs40)[^"]*"[^>]*>([\s\S]*?)<\/div>/i)?.[1] ?? "") ||
+      stripHtml(tail.match(/<span[^>]+class="[^"]*(?:c-color-text|content-right_8Zs40)[^"]*"[^>]*>([\s\S]*?)<\/span>/i)?.[1] ?? "");
+
+    if (!url || !isUsefulSearchResult(url, title, pageUrl) || title.length < 3) {
+      continue;
+    }
+    results.push({ engine, title, url, snippet });
+    if (results.length >= limit) {
+      break;
+    }
+  }
+
+  return results;
+}
+
 function parseGenericAnchorResults(engine: WebSearchEngine, html: string, pageUrl: string, limit: number): WebSearchResult[] {
   const results: WebSearchResult[] = [];
   const anchorRegex = /<a\b[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi;
@@ -352,4 +487,60 @@ function parseGenericAnchorResults(engine: WebSearchEngine, html: string, pageUr
   }
 
   return results;
+}
+
+function collectBlocksByStartTag(html: string, startRegex: RegExp): string[] {
+  const matches = [...html.matchAll(startRegex)];
+  if (matches.length === 0) {
+    return [];
+  }
+
+  return matches.map((match, index) => {
+    const start = match.index ?? 0;
+    const end = matches[index + 1]?.index ?? html.length;
+    return html.slice(start, end);
+  });
+}
+
+function createSearchFetchError(
+  engine: WebSearchEngine,
+  label: string,
+  searchUrl: string,
+  query: string,
+  error: unknown,
+): AutoCliError {
+  const message = error instanceof Error ? error.message : String(error);
+  const name = error instanceof Error ? error.name : "Error";
+  const lowered = `${name} ${message}`.toLowerCase();
+  const timedOut = lowered.includes("timeout") || lowered.includes("timed out") || lowered.includes("abort");
+
+  if (engine === "baidu" && timedOut) {
+    return new AutoCliError(
+      "WEBSEARCH_ENGINE_UNREACHABLE",
+      "Baidu did not respond before the request timed out. It may be blocked or unreachable from the current network.",
+      {
+        details: {
+          engine,
+          query,
+          searchUrl,
+          reason: message,
+        },
+        cause: error,
+      },
+    );
+  }
+
+  return new AutoCliError(
+    "WEBSEARCH_ENGINE_UNREACHABLE",
+    timedOut ? `${label} did not respond before the request timed out.` : `Unable to reach ${label}.`,
+    {
+      details: {
+        engine,
+        query,
+        searchUrl,
+        reason: message,
+      },
+      cause: error,
+    },
+  );
 }

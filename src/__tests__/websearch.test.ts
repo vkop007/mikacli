@@ -7,6 +7,9 @@ describe("websearch helpers", () => {
   it("normalizes engines and defaults to duckduckgo", () => {
     expect(normalizeWebSearchEngine(undefined)).toBe("duckduckgo");
     expect(normalizeWebSearchEngine("BING")).toBe("bing");
+    expect(normalizeWebSearchEngine("Yahoo")).toBe("yahoo");
+    expect(normalizeWebSearchEngine("YANDEX")).toBe("yandex");
+    expect(normalizeWebSearchEngine("baidu")).toBe("baidu");
   });
 
   it("extracts google redirect urls", () => {
@@ -73,6 +76,54 @@ describe("websearch helpers", () => {
     expect(results[0]?.snippet).toBe("This is the Bing snippet for the result.");
   });
 
+  it("parses yahoo style html", () => {
+    const html = `
+      <div class="dd algo algo-sr relsrch Sr">
+        <div class="compTitle options-toggle">
+          <a href="https://r.search.yahoo.com/_ylt=test/RV=2/RE=1/RO=10/RU=https%3a%2f%2fexample.com%2fyahoo-doc/RK=2/RS=abc">
+            <h3 class="title"><span class="d-b">Yahoo Result</span></h3>
+          </a>
+        </div>
+        <div class="compText aAbs">
+          <p>Yahoo snippet for this result.</p>
+        </div>
+      </div>
+    `;
+
+    const results = parseSearchResults("yahoo", html, "https://search.yahoo.com/search?p=test", 5);
+    expect(results).toHaveLength(1);
+    expect(results[0]?.url).toBe("https://example.com/yahoo-doc");
+    expect(results[0]?.snippet).toBe("Yahoo snippet for this result.");
+  });
+
+  it("parses yandex style html", () => {
+    const html = `
+      <li class="serp-item">
+        <a class="OrganicTitle-Link organic__url link" href="https://example.com/yandex-doc">Yandex Result</a>
+        <div class="OrganicTextContentSpan">Yandex snippet text.</div>
+      </li>
+    `;
+
+    const results = parseSearchResults("yandex", html, "https://yandex.com/search/?text=test", 5);
+    expect(results).toHaveLength(1);
+    expect(results[0]?.url).toBe("https://example.com/yandex-doc");
+    expect(results[0]?.snippet).toBe("Yandex snippet text.");
+  });
+
+  it("parses baidu results using mu target url", () => {
+    const html = `
+      <div class="result c-container">
+        <h3><a href="https://www.baidu.com/link?url=abc123" mu="https://example.cn/article">Baidu Result</a></h3>
+        <div class="c-abstract">Baidu snippet text.</div>
+      </div>
+    `;
+
+    const results = parseSearchResults("baidu", html, "https://www.baidu.com/s?wd=test", 5);
+    expect(results).toHaveLength(1);
+    expect(results[0]?.url).toBe("https://example.cn/article");
+    expect(results[0]?.snippet).toBe("Baidu snippet text.");
+  });
+
   it("returns no results for blocked google fallback pages", () => {
     const html = `
       <!DOCTYPE html>
@@ -84,6 +135,22 @@ describe("websearch helpers", () => {
     `;
 
     const results = parseSearchResults("google", html, "https://www.google.com/search?gbv=1&q=test", 5);
+    expect(results).toHaveLength(0);
+  });
+
+  it("returns no results for blocked yandex verification pages", () => {
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head><title>Verification</title></head>
+        <body>
+          <main>Checking your browser before redirecting to yandex.com</main>
+          <form action="/checkcaptchafast?d=test"></form>
+        </body>
+      </html>
+    `;
+
+    const results = parseSearchResults("yandex", html, "https://yandex.com/search/?text=test", 5);
     expect(results).toHaveLength(0);
   });
 
