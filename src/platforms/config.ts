@@ -1,16 +1,21 @@
 export const PLATFORM_NAMES = [
+  "cheat",
   "discordbot",
   "facebook",
   "github",
   "githubbot",
   "gitlab",
+  "ip",
   "instagram",
   "linkedin",
   "linear",
   "notion",
+  "qr",
   "slackbot",
   "telegrambot",
   "tiktok",
+  "time",
+  "weather",
   "websearch",
   "x",
   "youtube",
@@ -27,6 +32,13 @@ export interface PlatformConfig {
 }
 
 export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
+  cheat: {
+    displayName: "Cheat",
+    origin: "https://cht.sh",
+    homeUrl: "https://cht.sh/",
+    cookieDomain: "cht.sh",
+    authCookieNames: [],
+  },
   discordbot: {
     displayName: "Discord Bot",
     origin: "https://discord.com",
@@ -62,6 +74,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "gitlab.com",
     authCookieNames: [],
   },
+  ip: {
+    displayName: "IP",
+    origin: "https://api64.ipify.org",
+    homeUrl: "https://www.ipify.org/",
+    cookieDomain: "ipify.org",
+    authCookieNames: [],
+  },
   instagram: {
     displayName: "Instagram",
     origin: "https://www.instagram.com",
@@ -90,6 +109,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "notion.so",
     authCookieNames: [],
   },
+  qr: {
+    displayName: "QR",
+    origin: "https://qrenco.de",
+    homeUrl: "https://qrenco.de/",
+    cookieDomain: "qrenco.de",
+    authCookieNames: [],
+  },
   slackbot: {
     displayName: "Slack Bot",
     origin: "https://slack.com",
@@ -110,6 +136,20 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://www.tiktok.com/",
     cookieDomain: "tiktok.com",
     authCookieNames: ["sid_tt"],
+  },
+  time: {
+    displayName: "Time",
+    origin: "https://worldtimeapi.org",
+    homeUrl: "https://worldtimeapi.org/",
+    cookieDomain: "worldtimeapi.org",
+    authCookieNames: [],
+  },
+  weather: {
+    displayName: "Weather",
+    origin: "https://wttr.in",
+    homeUrl: "https://wttr.in/",
+    cookieDomain: "wttr.in",
+    authCookieNames: [],
   },
   websearch: {
     displayName: "Web Search",

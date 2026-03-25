@@ -27,6 +27,11 @@ src/platforms/
       adapter.ts
       manifest.ts
       capabilities/
+  public/
+    <name>/
+      adapter.ts
+      manifest.ts
+      capabilities/
   bots/
     <name>/
       adapter.ts
@@ -62,5 +67,5 @@ Current examples:
 - All current platforms are capability-based.
 - Bot-token platforms: `src/platforms/bots/discordbot/`, `src/platforms/bots/githubbot/`, `src/platforms/bots/slackbot/`, `src/platforms/bots/telegrambot/`
 - API-token platforms: `src/platforms/api/github/`, `src/platforms/api/gitlab/`, `src/platforms/api/linear/`, `src/platforms/api/notion/`
-- No-auth utility platforms: `src/platforms/public/websearch/`
+- Public utility platforms: `src/platforms/public/cheat/`, `src/platforms/public/ip/`, `src/platforms/public/qr/`, `src/platforms/public/time/`, `src/platforms/public/weather/`, `src/platforms/public/websearch/`
 - Cookie-backed platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`

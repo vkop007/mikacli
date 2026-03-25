@@ -75,6 +75,13 @@ Reference points:
   - `create-issue`
   - `update-issue`
   - `comment`
+- Cheat
+  - `cheat <topic>`
+  - optional `--shell` and `--lang` context
+- IP
+  - `ip`
+  - `ip --version 4|6|any`
+  - `ip --details`
 - TikTok
   - `login`
   - `status`
@@ -82,6 +89,9 @@ Reference points:
 - Web Search
   - `engines`
   - `search`
+- QR
+  - `qr <text>`
+  - optional `--size`, `--margin`, `--url`
 - Slack Bot
   - `login --token`
   - `me`
@@ -115,6 +125,12 @@ Reference points:
   - `like`
   - `unlike`
   - `comment`
+- Time
+  - `time`
+  - `time <timezone>`
+- Weather
+  - `weather [location]`
+  - optional `--days` and `--lang`
 - Global
   - `status`
 
@@ -145,6 +161,7 @@ That gives you a much more durable production system than relying on private web
     ├── platforms
     │   ├── api
     │   ├── bots
+    │   ├── public
     │   ├── shared
     │   ├── social
     │   ├── config.ts
