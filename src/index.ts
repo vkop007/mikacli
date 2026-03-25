@@ -19,7 +19,7 @@ async function main(): Promise<void> {
 
   program
     .name("autocli")
-    .description("Automate social media platforms from the terminal using imported browser sessions and token-based bot connections.")
+    .description("Automate social and developer platforms from the terminal using imported browser sessions and saved API or bot tokens.")
     .version(packageJson.version, "-v, --version", "Show the installed version")
     .option("--json", "Emit machine-readable JSON output")
     .option("--verbose", "Enable verbose logging")

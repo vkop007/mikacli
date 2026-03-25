@@ -22,6 +22,18 @@ Reference points:
   - `login`
   - `status`
   - `post`, `like`, and `comment` commands return explicit Facebook-specific errors until the write layer is implemented
+- GitHub
+  - `login --token`
+  - `me`
+  - `repos`
+  - `repo`
+  - `search-repos`
+  - `issues`
+  - `issue`
+  - `create-issue`
+  - `create-repo`
+  - `star`
+  - `unstar`
 - Discord Bot
   - `login --token`
   - `me`
@@ -107,6 +119,7 @@ That gives you a much more durable production system than relying on private web
     │   ├── status.ts
     │   └── ...
     ├── platforms
+    │   ├── api
     │   ├── bots
     │   ├── shared
     │   ├── social
@@ -163,6 +176,8 @@ Token-based bot connections are stored under:
 ~/.autocli/connections/<platform>/<account>.json
 ```
 
+API-token connections, including GitHub personal access tokens, are stored in the same `~/.autocli/connections/` tree.
+
 AutoCLI supports importing:
 
 - Netscape `cookies.txt`
@@ -183,6 +198,42 @@ If you have not linked the package globally yet, use the local one-shot runner i
 
 ```bash
 bun run dev status
+```
+
+## GitHub
+
+Save a GitHub personal access token:
+
+```bash
+autocli github login --token github_pat_xxx
+```
+
+Inspect the authenticated account and repos:
+
+```bash
+autocli github me
+autocli github user torvalds
+autocli github repos
+autocli github repo openai/openai-node
+autocli github search-repos "typescript cli" --limit 10
+autocli github starred
+autocli github branches openai/openai-node
+autocli github pulls openai/openai-node --state open --limit 10
+autocli github releases openai/openai-node --limit 5
+autocli github readme openai/openai-node
+```
+
+Work with issues and repository actions:
+
+```bash
+autocli github issues openai/openai-node --state open --limit 10
+autocli github issue openai/openai-node 1
+autocli github create-issue owner/repo --title "Bug report" --body "Details here"
+autocli github comment owner/repo 123 --body "Looks good to me"
+autocli github create-repo autocli-playground --private --auto-init
+autocli github fork openai/openai-node
+autocli github star openai/openai-node
+autocli github unstar openai/openai-node
 ```
 
 ## Default flow

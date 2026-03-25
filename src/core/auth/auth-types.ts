@@ -18,7 +18,7 @@ export interface OAuth2ConnectionAuth {
 export interface ApiKeyConnectionAuth {
   kind: "apiKey";
   provider?: string;
-  token?: string;
+  token: string;
 }
 
 export interface BotTokenConnectionAuth {

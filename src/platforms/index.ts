@@ -1,6 +1,7 @@
 import { discordBotPlatformDefinition } from "./bots/discordbot/manifest.js";
 import { slackbotPlatformDefinition } from "./bots/slackbot/manifest.js";
 import { telegrambotPlatformDefinition } from "./bots/telegrambot/manifest.js";
+import { githubPlatformDefinition } from "./api/github/manifest.js";
 import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
 import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
@@ -14,6 +15,7 @@ import type { PlatformName } from "./config.js";
 const definitions: readonly PlatformDefinition[] = [
   discordBotPlatformDefinition,
   facebookPlatformDefinition,
+  githubPlatformDefinition,
   instagramPlatformDefinition,
   linkedinPlatformDefinition,
   slackbotPlatformDefinition,

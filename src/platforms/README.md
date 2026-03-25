@@ -22,6 +22,11 @@ Recommended layout:
 
 ```text
 src/platforms/
+  api/
+    <name>/
+      adapter.ts
+      manifest.ts
+      capabilities/
   bots/
     <name>/
       adapter.ts
@@ -56,4 +61,5 @@ Current examples:
 
 - All current platforms are capability-based.
 - Bot-token platforms: `src/platforms/bots/discordbot/`, `src/platforms/bots/slackbot/`, `src/platforms/bots/telegrambot/`
+- API-token platforms: `src/platforms/api/github/`
 - Cookie-backed platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`

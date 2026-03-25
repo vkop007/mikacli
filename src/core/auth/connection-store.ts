@@ -14,7 +14,7 @@ import { isPlatform } from "../../platforms/config.js";
 import { CookieManager } from "../../utils/cookie-manager.js";
 
 import type { Platform, PlatformSession, SessionStatus, SessionUser } from "../../types.js";
-import type { BotTokenConnectionAuth, ConnectionRecord } from "./auth-types.js";
+import type { ApiKeyConnectionAuth, BotTokenConnectionAuth, ConnectionRecord } from "./auth-types.js";
 
 const ConnectionRecordSchema = {
   parse(input: unknown): ConnectionRecord {
@@ -42,6 +42,10 @@ const ConnectionRecordSchema = {
 
     if (record.auth.kind === "botToken" && typeof (record.auth as { token?: unknown }).token !== "string") {
       throw new AutoCliError("INVALID_CONNECTION_FILE", "Bot token connection is missing its token.");
+    }
+
+    if (record.auth.kind === "apiKey" && typeof (record.auth as { token?: unknown }).token !== "string") {
+      throw new AutoCliError("INVALID_CONNECTION_FILE", "API token connection is missing its token.");
     }
 
     return record as ConnectionRecord;
@@ -143,6 +147,48 @@ export class ConnectionStore {
     });
   }
 
+  async saveApiKeyConnection(input: {
+    platform: Platform;
+    account: string;
+    provider?: string;
+    token: string;
+    user?: SessionUser;
+    status?: SessionStatus;
+    metadata?: Record<string, unknown>;
+  }): Promise<string> {
+    const now = new Date().toISOString();
+    let createdAt = now;
+
+    try {
+      const existing = await this.loadStoredConnection(input.platform, input.account);
+      createdAt = existing.connection.createdAt;
+    } catch (error) {
+      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+        throw error;
+      }
+    }
+
+    return this.saveConnection({
+      version: 1,
+      platform: input.platform,
+      account: sanitizeAccountName(input.account),
+      createdAt,
+      updatedAt: now,
+      auth: {
+        kind: "apiKey",
+        provider: input.provider,
+        token: input.token,
+      },
+      status: input.status ?? {
+        state: "unknown",
+        message: "API token saved.",
+        lastValidatedAt: now,
+      },
+      user: input.user,
+      metadata: input.metadata,
+    });
+  }
+
   async loadBotTokenConnection(
     platform: Platform,
     account?: string,
@@ -152,6 +198,32 @@ export class ConnectionStore {
       throw new AutoCliError(
         "INVALID_CONNECTION_AUTH",
         `The saved ${platform} connection does not use a bot token auth strategy.`,
+        {
+          details: {
+            platform,
+            account: loaded.connection.account,
+            authKind: loaded.connection.auth.kind,
+            connectionPath: loaded.path,
+          },
+        },
+      );
+    }
+
+    return {
+      ...loaded,
+      auth: loaded.connection.auth,
+    };
+  }
+
+  async loadApiKeyConnection(
+    platform: Platform,
+    account?: string,
+  ): Promise<{ connection: ConnectionRecord; path: string; auth: ApiKeyConnectionAuth }> {
+    const loaded = await this.loadConnection(platform, account);
+    if (loaded.connection.auth.kind !== "apiKey") {
+      throw new AutoCliError(
+        "INVALID_CONNECTION_AUTH",
+        `The saved ${platform} connection does not use an API token auth strategy.`,
         {
           details: {
             platform,
