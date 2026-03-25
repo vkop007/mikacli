@@ -5,6 +5,7 @@ export const PLATFORM_NAMES = [
   "githubbot",
   "instagram",
   "linkedin",
+  "notion",
   "slackbot",
   "telegrambot",
   "tiktok",
@@ -64,6 +65,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://www.linkedin.com/",
     cookieDomain: "linkedin.com",
     authCookieNames: ["li_at", "JSESSIONID"],
+  },
+  notion: {
+    displayName: "Notion",
+    origin: "https://api.notion.com",
+    homeUrl: "https://www.notion.so/",
+    cookieDomain: "notion.so",
+    authCookieNames: [],
   },
   slackbot: {
     displayName: "Slack Bot",

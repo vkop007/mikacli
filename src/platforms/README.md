@@ -61,5 +61,5 @@ Current examples:
 
 - All current platforms are capability-based.
 - Bot-token platforms: `src/platforms/bots/discordbot/`, `src/platforms/bots/githubbot/`, `src/platforms/bots/slackbot/`, `src/platforms/bots/telegrambot/`
-- API-token platforms: `src/platforms/api/github/`
+- API-token platforms: `src/platforms/api/github/`, `src/platforms/api/notion/`
 - Cookie-backed platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`

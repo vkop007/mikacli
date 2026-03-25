@@ -248,6 +248,25 @@ autocli githubbot pulls openai/openai-node --state open --limit 10
 autocli githubbot create-issue owner/repo --title "Bug report" --body "Details here"
 autocli githubbot star openai/openai-node
 ```
+
+## Notion
+
+Use a Notion integration token to search, inspect, and edit pages and data sources shared with the integration:
+
+```bash
+autocli notion login --token secret_xxx
+autocli notion me
+autocli notion search "roadmap"
+autocli notion pages "launch"
+autocli notion page <page-id-or-url>
+autocli notion create-page --parent <page-or-data-source-id> --title "AutoCLI Notes" --content "Shipped from terminal"
+autocli notion update-page <page-id-or-url> --title "Updated title"
+autocli notion append <page-id-or-url> --text "Another paragraph"
+autocli notion databases
+autocli notion database <data-source-id-or-url>
+autocli notion query <data-source-id-or-url> --limit 10
+autocli notion comment <page-id-or-url> --text "Looks good"
+```
 autocli github unstar openai/openai-node
 ```
 
