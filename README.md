@@ -60,6 +60,12 @@ Reference points:
   - `post` with media + caption
   - `like`
   - `comment`
+- News
+  - `sources`
+  - `top`
+  - `search`
+  - `feed <url>`
+  - no API key required
 - LinkedIn
   - `login`
   - `post` / `share` with text
@@ -353,6 +359,18 @@ autocli websearch search "bun cookies fetch" --summary
 autocli websearch search "typescript cli" --engine bing
 autocli websearch search "llm agent frameworks" --engine brave --limit 5
 autocli websearch search "terminal weather" --all --limit 3
+```
+
+## News
+
+Read headlines and feeds from no-key sources such as Google News RSS, GDELT, Hacker News, Reddit, and generic RSS/Atom URLs:
+
+```bash
+autocli news sources
+autocli news top
+autocli news search "typescript cli"
+autocli news search "ai agents" --source google
+autocli news feed "https://news.ycombinator.com/rss"
 ```
 
 ## Default flow

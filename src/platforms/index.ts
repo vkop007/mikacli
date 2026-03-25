@@ -14,6 +14,7 @@ import { weatherPlatformDefinition } from "./public/weather/manifest.js";
 import { webSearchPlatformDefinition } from "./public/websearch/manifest.js";
 import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
+import { newsPlatformDefinition } from "./public/news/manifest.js";
 import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
 import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
 import { xPlatformDefinition } from "./social/x/manifest.js";
@@ -31,6 +32,7 @@ const definitions: readonly PlatformDefinition[] = [
   gitlabPlatformDefinition,
   ipPlatformDefinition,
   instagramPlatformDefinition,
+  newsPlatformDefinition,
   linkedinPlatformDefinition,
   linearPlatformDefinition,
   notionPlatformDefinition,

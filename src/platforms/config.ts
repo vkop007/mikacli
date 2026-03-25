@@ -7,6 +7,7 @@ export const PLATFORM_NAMES = [
   "gitlab",
   "ip",
   "instagram",
+  "news",
   "linkedin",
   "linear",
   "notion",
@@ -87,6 +88,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://www.instagram.com/",
     cookieDomain: "instagram.com",
     authCookieNames: ["sessionid", "csrftoken", "ds_user_id"],
+  },
+  news: {
+    displayName: "News",
+    origin: "https://news.google.com",
+    homeUrl: "https://news.google.com/",
+    cookieDomain: "news.google.com",
+    authCookieNames: [],
   },
   linkedin: {
     displayName: "LinkedIn",
