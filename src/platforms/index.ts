@@ -1,12 +1,12 @@
-import { discordBotPlatformDefinition } from "./discordbot/manifest.js";
-import { facebookPlatformDefinition } from "./facebook/manifest.js";
-import { instagramPlatformDefinition } from "./instagram/manifest.js";
-import { linkedinPlatformDefinition } from "./linkedin/manifest.js";
-import { slackbotPlatformDefinition } from "./slackbot/manifest.js";
-import { telegrambotPlatformDefinition } from "./telegrambot/manifest.js";
-import { tiktokPlatformDefinition } from "./tiktok/manifest.js";
-import { xPlatformDefinition } from "./x/manifest.js";
-import { youtubePlatformDefinition } from "./youtube/manifest.js";
+import { discordBotPlatformDefinition } from "./bots/discordbot/manifest.js";
+import { slackbotPlatformDefinition } from "./bots/slackbot/manifest.js";
+import { telegrambotPlatformDefinition } from "./bots/telegrambot/manifest.js";
+import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
+import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
+import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
+import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
+import { xPlatformDefinition } from "./social/x/manifest.js";
+import { youtubePlatformDefinition } from "./social/youtube/manifest.js";
 
 import type { PlatformDefinition } from "../core/runtime/platform-definition.js";
 import type { PlatformName } from "./config.js";
