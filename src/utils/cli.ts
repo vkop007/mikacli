@@ -45,10 +45,26 @@ export async function runCommandAction<T>(input: {
 }): Promise<void> {
   try {
     const result = await input.action();
-    input.spinner?.succeed(input.successMessage);
+    if (input.spinner) {
+      const resultMessage = extractResultMessage(result);
+      if (resultMessage && resultMessage === input.successMessage) {
+        input.spinner.stop();
+      } else {
+        input.spinner.succeed(input.successMessage);
+      }
+    }
     input.onSuccess(result);
   } catch (error) {
     input.spinner?.stop();
     throw error;
   }
+}
+
+function extractResultMessage<T>(result: T): string | undefined {
+  if (!result || typeof result !== "object" || Array.isArray(result)) {
+    return undefined;
+  }
+
+  const message = (result as { message?: unknown }).message;
+  return typeof message === "string" && message.length > 0 ? message : undefined;
 }

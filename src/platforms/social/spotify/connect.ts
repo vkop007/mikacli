@@ -1,6 +1,8 @@
 import { randomBytes } from "node:crypto";
+import { readFile, writeFile } from "node:fs/promises";
 import WebSocket, { type RawData } from "ws";
 
+import { ensureParentDirectory, getCachePath } from "../../../config.js";
 import { AutoCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { formatSpotifyDuration, spotifyUriToUrl } from "./helpers.js";
@@ -12,6 +14,7 @@ import {
   SPOTIFY_CONNECT_STATE_BASE,
   SPOTIFY_CONNECT_VERSION,
   SPOTIFY_DEALER_URL,
+  SPOTIFY_PATHFINDER_ENDPOINT,
   SPOTIFY_TRACK_PLAYBACK_BASE,
   SPOTIFY_USER_AGENT,
 } from "./constants.js";
@@ -82,17 +85,37 @@ export type SpotifyConnectQueueSummary = {
   queue: SpotifyConnectTrackSummary[];
 };
 
+export type SpotifyConnectSearchItem = {
+  type: SpotifyEntityType;
+  id?: string;
+  title?: string;
+  subtitle?: string;
+  detail?: string;
+  url?: string;
+  imageUrl?: string;
+};
+
+export type SpotifyConnectSearchSummary = {
+  total: number;
+  items: SpotifyConnectSearchItem[];
+};
+
 export class SpotifyConnectClient {
   private clientToken?: string;
   private clientTokenExpiresAt?: number;
   private readonly connectDeviceId = randomHex(32);
+  private readonly operationHashes = new Map<string, string>();
+  private readonly operationHashCachePath: string;
+  private operationHashCacheLoaded = false;
   private connectionId?: string;
   private connectionRegisteredAt?: number;
 
   constructor(
     private readonly client: SessionHttpClient,
     private readonly auth: SpotifyConnectAuth,
-  ) {}
+  ) {
+    this.operationHashCachePath = getCachePath("spotify", `pathfinder-${sanitizeCacheFragment(auth.clientVersion)}.json`);
+  }
 
   async devices(): Promise<SpotifyConnectDeviceSummary[]> {
     const state = await this.getState();
@@ -107,6 +130,30 @@ export class SpotifyConnectClient {
   async queue(): Promise<SpotifyConnectQueueSummary> {
     const state = await this.getState();
     return this.mapQueue(state);
+  }
+
+  async search(kind: SpotifyEntityType, query: string, limit = 5, offset = 0): Promise<SpotifyConnectSearchSummary> {
+    if (query.trim().length === 0) {
+      throw new AutoCliError("INVALID_TARGET", "Spotify search requires a non-empty query.", {
+        details: {
+          kind,
+          query,
+        },
+      });
+    }
+
+    const payload = await this.graphQL("searchDesktop", {
+      searchTerm: query,
+      offset: Math.max(0, offset),
+      limit: Math.max(1, limit),
+      numberOfTopResults: 5,
+      includeAudiobooks: true,
+      includePreReleases: true,
+      includeLocalConcertsField: false,
+      includeArtistHasConcertsField: false,
+    });
+
+    return extractSearchSummary(payload, kind);
   }
 
   async transfer(target: string): Promise<SpotifyConnectDeviceSummary> {
@@ -493,10 +540,158 @@ export class SpotifyConnectClient {
     return token;
   }
 
+  private async graphQL(operation: string, variables: Record<string, unknown>): Promise<JsonRecord> {
+    const hash = await this.resolveOperationHash(operation);
+    const params = new URLSearchParams({
+      operationName: operation,
+      variables: JSON.stringify(variables),
+      extensions: JSON.stringify({
+        persistedQuery: {
+          version: 1,
+          sha256Hash: hash,
+        },
+      }),
+    });
+
+    const response = await this.request<JsonRecord>(`${SPOTIFY_PATHFINDER_ENDPOINT}?${params.toString()}`, {
+      method: "POST",
+      headers: await this.createConnectHeaders(),
+      expectedStatus: 200,
+    });
+
+    const pathfinderErrors = Array.isArray(response.errors) ? response.errors : [];
+    if (pathfinderErrors.length > 0) {
+      const firstError = asRecord(pathfinderErrors[0]);
+      throw new AutoCliError(
+        "SPOTIFY_PATHFINDER_ERROR",
+        typeof firstError?.message === "string" && firstError.message.length > 0 ? firstError.message : "Spotify pathfinder request failed.",
+        {
+          details: {
+            operation,
+            errors: pathfinderErrors,
+          },
+        },
+      );
+    }
+
+    return response;
+  }
+
+  private async resolveOperationHash(operation: string): Promise<string> {
+    await this.loadOperationHashesFromCache();
+    const cached = this.operationHashes.get(operation);
+    if (cached) {
+      return cached;
+    }
+
+    await this.loadOperationHashes([operation]);
+    const resolved = this.operationHashes.get(operation);
+    if (!resolved) {
+      throw new AutoCliError("SPOTIFY_PATHFINDER_HASH_NOT_FOUND", `Spotify web-player hash for ${operation} was not found.`, {
+        details: {
+          operation,
+        },
+      });
+    }
+
+    return resolved;
+  }
+
+  private async loadOperationHashes(operations: string[]): Promise<void> {
+    await this.loadOperationHashesFromCache();
+    const missing = operations.filter((operation) => !this.operationHashes.get(operation));
+    if (missing.length === 0) {
+      return;
+    }
+
+    const homeHtml = await this.client.request<string>("https://open.spotify.com/", {
+      responseType: "text",
+      expectedStatus: 200,
+      headers: {
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+    });
+
+    const mainBundleUrl = pickWebPlayerBundle(homeHtml);
+    const mainBody = await this.client.request<string>(mainBundleUrl, {
+      responseType: "text",
+      expectedStatus: 200,
+    });
+
+    const directMatches = findOperationHashes(mainBody, missing);
+    for (const [operation, hash] of Object.entries(directMatches)) {
+      this.operationHashes.set(operation, hash);
+    }
+
+    let remaining = missing.filter((operation) => !this.operationHashes.get(operation));
+    if (remaining.length === 0) {
+      return;
+    }
+
+    const [nameMap, hashMap] = parseWebpackMaps(mainBody);
+    const bundleBase = bundleBaseUrl(mainBundleUrl);
+    const chunkNames = combineChunkNames(nameMap, hashMap);
+
+    for (const chunkName of chunkNames) {
+      if (remaining.length === 0) {
+        break;
+      }
+
+      try {
+        const chunkBody = await this.client.request<string>(new URL(chunkName, bundleBase).toString(), {
+          responseType: "text",
+          expectedStatus: 200,
+        });
+        const chunkMatches = findOperationHashes(chunkBody, remaining);
+        for (const [operation, hash] of Object.entries(chunkMatches)) {
+          this.operationHashes.set(operation, hash);
+        }
+        remaining = remaining.filter((operation) => !this.operationHashes.get(operation));
+      } catch {
+        continue;
+      }
+    }
+
+    await this.persistOperationHashesToCache();
+  }
+
+  private async loadOperationHashesFromCache(): Promise<void> {
+    if (this.operationHashCacheLoaded) {
+      return;
+    }
+
+    this.operationHashCacheLoaded = true;
+
+    try {
+      const raw = await readFile(this.operationHashCachePath, "utf8");
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      for (const [operation, hash] of Object.entries(parsed)) {
+        if (typeof hash === "string" && hash.length === 64) {
+          this.operationHashes.set(operation, hash);
+        }
+      }
+    } catch {
+      return;
+    }
+  }
+
+  private async persistOperationHashesToCache(): Promise<void> {
+    if (this.operationHashes.size === 0) {
+      return;
+    }
+
+    try {
+      await ensureParentDirectory(this.operationHashCachePath);
+      await writeFile(this.operationHashCachePath, JSON.stringify(Object.fromEntries(this.operationHashes), null, 2));
+    } catch {
+      return;
+    }
+  }
+
   private async createConnectHeaders(input: {
     contentType?: string;
     connectionId?: string;
-  }): Promise<Record<string, string>> {
+  } = {}): Promise<Record<string, string>> {
     const clientToken = await this.ensureClientToken();
     const headers: Record<string, string> = {
       accept: "application/json",
@@ -951,4 +1146,417 @@ function rawDataToText(data: RawData): string {
   }
 
   return Buffer.from(data).toString("utf8");
+}
+
+function extractSearchSummary(payload: JsonRecord, kind: SpotifyEntityType): SpotifyConnectSearchSummary {
+  for (const path of searchContainerPaths(kind)) {
+    const container = getRecordAtPath(payload, path);
+    if (!container) {
+      continue;
+    }
+
+    const items = extractSearchItemsFromContainer(container, kind);
+    const total = getNumber(container, "totalCount") ?? items.length;
+    return {
+      total,
+      items,
+    };
+  }
+
+  const items = collectSearchItemsByKind(payload, kind);
+  return {
+    total: items.length,
+    items,
+  };
+}
+
+function searchContainerPaths(kind: SpotifyEntityType): string[][] {
+  switch (kind) {
+    case "track":
+      return [["data", "searchV2", "tracksV2"]];
+    case "album":
+      return [["data", "searchV2", "albumsV2"], ["data", "searchV2", "albums"]];
+    case "artist":
+      return [["data", "searchV2", "artists"]];
+    case "playlist":
+      return [["data", "searchV2", "playlists"]];
+    default:
+      return [];
+  }
+}
+
+function getRecordAtPath(value: unknown, path: string[]): JsonRecord | undefined {
+  let current: unknown = value;
+  for (const segment of path) {
+    const record = asRecord(current);
+    if (!record) {
+      return undefined;
+    }
+
+    current = record[segment];
+  }
+
+  return asRecord(current);
+}
+
+function extractSearchItemsFromContainer(container: JsonRecord, kind: SpotifyEntityType): SpotifyConnectSearchItem[] {
+  const rawItems = Array.isArray(container.items) ? container.items : [];
+  if (rawItems.length === 0) {
+    return collectSearchItemsByKind(container, kind);
+  }
+
+  const items = rawItems
+    .map((item) => extractSearchItem(item, kind))
+    .filter((item): item is SpotifyConnectSearchItem => Boolean(item));
+
+  return items.length > 0 ? dedupeSearchItems(items) : collectSearchItemsByKind(container, kind);
+}
+
+function collectSearchItemsByKind(value: unknown, kind: SpotifyEntityType): SpotifyConnectSearchItem[] {
+  const items: SpotifyConnectSearchItem[] = [];
+
+  walkMaps(value, (record) => {
+    const item = extractSearchItem(record, kind);
+    if (item) {
+      items.push(item);
+    }
+  });
+
+  return dedupeSearchItems(items);
+}
+
+function extractSearchItem(value: unknown, kind: SpotifyEntityType): SpotifyConnectSearchItem | undefined {
+  const record = asRecord(value);
+  if (!record) {
+    return undefined;
+  }
+
+  const candidate =
+    asRecord(record.data) ??
+    asRecord(record.item) ??
+    (kind === "track" ? asRecord(record.track) : undefined) ??
+    record;
+  const uri = findFirstUri(candidate, kind);
+  if (!uri || !uri.startsWith(`spotify:${kind}:`)) {
+    return undefined;
+  }
+
+  const id = idFromUri(uri);
+  const title = findFirstName(candidate) || undefined;
+  const artists = extractArtistNames(candidate);
+  const fallbackArtists = artists.length > 0 ? artists : extractArtistNames(record);
+  const album = extractAlbumName(candidate) || extractAlbumName(record);
+  const owner = extractOwnerName(candidate) || extractOwnerName(record);
+  const durationMs =
+    getNumber(candidate, "duration_ms") ??
+    getNumber(candidate, "durationMs") ??
+    getNumber(record, "duration_ms") ??
+    getNumber(record, "durationMs");
+  const totalTracks =
+    getNumber(candidate, "totalTracks") ??
+    getNumber(candidate, "totalCount") ??
+    getNumber(candidate, "total") ??
+    getNumber(record, "totalTracks") ??
+    getNumber(record, "totalCount") ??
+    getNumber(record, "total");
+  const releaseDate =
+    getString(candidate, "releaseDate") ||
+    getString(candidate, "date") ||
+    getString(candidate, "release_date") ||
+    getString(record, "releaseDate") ||
+    getString(record, "date") ||
+    getString(record, "release_date");
+  const followers =
+    getNumber(asRecord(candidate.followers), "total") ??
+    getNumber(candidate, "followers") ??
+    getNumber(asRecord(candidate.stats), "followers") ??
+    getNumber(asRecord(record.followers), "total") ??
+    getNumber(record, "followers") ??
+    getNumber(asRecord(record.stats), "followers");
+
+  return {
+    type: kind,
+    id,
+    title,
+    subtitle:
+      kind === "track" || kind === "album"
+        ? fallbackArtists.length > 0
+          ? fallbackArtists.join(", ")
+          : undefined
+        : kind === "artist"
+          ? typeof followers === "number"
+            ? `${followers.toLocaleString("en-US")} followers`
+            : undefined
+          : owner || undefined,
+    detail:
+      kind === "track"
+        ? [album || undefined, typeof durationMs === "number" ? formatSpotifyDuration(durationMs) : undefined]
+            .filter((entry): entry is string => typeof entry === "string" && entry.length > 0)
+            .join(" • ") || undefined
+        : kind === "album"
+          ? [releaseDate || undefined, typeof totalTracks === "number" ? `${totalTracks} tracks` : undefined]
+              .filter((entry): entry is string => typeof entry === "string" && entry.length > 0)
+              .join(" • ") || undefined
+          : kind === "playlist"
+            ? typeof totalTracks === "number"
+              ? `${totalTracks} tracks`
+              : undefined
+            : undefined,
+    url: spotifyUriToUrl(uri) ?? (id ? `https://open.spotify.com/${kind}/${id}` : undefined),
+    imageUrl: extractImageUrl(candidate) ?? extractImageUrl(record),
+  };
+}
+
+function dedupeSearchItems(items: SpotifyConnectSearchItem[]): SpotifyConnectSearchItem[] {
+  const seen = new Set<string>();
+  const unique: SpotifyConnectSearchItem[] = [];
+
+  for (const item of items) {
+    const key = `${item.type}:${item.id ?? item.url ?? item.title ?? ""}`;
+    if (!item.id && !item.url && !item.title) {
+      continue;
+    }
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    unique.push(item);
+  }
+
+  return unique;
+}
+
+function extractOwnerName(value: unknown): string {
+  let owner = "";
+
+  walkMaps(value, (record) => {
+    if (owner) {
+      return;
+    }
+
+    const nestedOwner = asRecord(record.owner);
+    if (nestedOwner) {
+      owner = getString(nestedOwner, "name") || getString(nestedOwner, "display_name") || getString(nestedOwner, "username");
+      if (owner) {
+        return;
+      }
+    }
+
+    const ownerV2Data = asRecord(asRecord(record.ownerV2)?.data);
+    if (ownerV2Data) {
+      owner = getString(ownerV2Data, "name") || getString(ownerV2Data, "username");
+      if (owner) {
+        return;
+      }
+    }
+
+    const nestedUser = asRecord(record.user);
+    if (nestedUser) {
+      owner = getString(nestedUser, "name") || getString(nestedUser, "display_name") || getString(nestedUser, "username");
+    }
+  });
+
+  return owner;
+}
+
+function extractImageUrl(value: unknown): string | undefined {
+  let imageUrl: string | undefined;
+
+  walkMaps(value, (record) => {
+    if (imageUrl) {
+      return;
+    }
+
+    for (const source of [
+      record.images,
+      record.sources,
+      asRecord(record.coverArt)?.sources,
+      asRecord(asRecord(record.visuals)?.avatarImage)?.sources,
+      asRecord(record.avatarImage)?.sources,
+    ]) {
+      const resolved = firstImageUrl(source);
+      if (resolved) {
+        imageUrl = resolved;
+        return;
+      }
+    }
+
+    if (typeof record.url === "string" && /^https?:\/\//.test(record.url) && /\.(?:png|jpe?g|webp)(?:\?|$)/i.test(record.url)) {
+      imageUrl = record.url;
+    }
+  });
+
+  return imageUrl;
+}
+
+function firstImageUrl(value: unknown): string | undefined {
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      const record = asRecord(entry);
+      if (record && typeof record.url === "string" && record.url.length > 0) {
+        return record.url;
+      }
+    }
+  }
+
+  const record = asRecord(value);
+  if (record && typeof record.url === "string" && record.url.length > 0) {
+    return record.url;
+  }
+
+  return undefined;
+}
+
+function pickWebPlayerBundle(html: string): string {
+  const matches = [...html.matchAll(/<script[^>]+src="([^"]+)"/g)];
+  for (const match of matches) {
+    const source = match[1];
+    if (!source) {
+      continue;
+    }
+
+    if (source.endsWith(".js") && (source.includes("/web-player/") || source.includes("/mobile-web-player/"))) {
+      return new URL(source, "https://open.spotify.com/").toString();
+    }
+  }
+
+  throw new AutoCliError("SPOTIFY_PATHFINDER_BUNDLE_NOT_FOUND", "Spotify web-player bundle could not be located.");
+}
+
+function bundleBaseUrl(bundleUrl: string): string {
+  return bundleUrl.slice(0, bundleUrl.lastIndexOf("/") + 1);
+}
+
+function parseWebpackMaps(js: string): [Map<number, string>, Map<number, string>] {
+  const matches = js.match(/\{(?:\d+:"[^"]+",?)+\}/g) ?? [];
+  if (matches.length === 0) {
+    throw new AutoCliError("SPOTIFY_PATHFINDER_MAPS_NOT_FOUND", "Spotify webpack chunk maps could not be located.");
+  }
+
+  const hashMaps: Array<{ score: number; values: Map<number, string> }> = [];
+  const nameMaps: Array<{ score: number; values: Map<number, string> }> = [];
+
+  for (const match of matches) {
+    const parsed = parseMapLiteral(match);
+    if (parsed.size === 0) {
+      continue;
+    }
+
+    const hashScore = scoreHashMap(parsed);
+    const nameScore = scoreNameMap(parsed);
+
+    if (hashScore > 0.4) {
+      hashMaps.push({ score: hashScore, values: parsed });
+    }
+
+    if (nameScore > 0.4) {
+      nameMaps.push({ score: nameScore, values: parsed });
+    }
+  }
+
+  hashMaps.sort((left, right) => right.score - left.score);
+  nameMaps.sort((left, right) => right.score - left.score);
+
+  const bestNames = nameMaps[0]?.values;
+  const bestHashes = hashMaps[0]?.values;
+  if (!bestNames || !bestHashes) {
+    throw new AutoCliError("SPOTIFY_PATHFINDER_MAPS_NOT_FOUND", "Spotify webpack chunk maps could not be resolved.");
+  }
+
+  return [bestNames, bestHashes];
+}
+
+function parseMapLiteral(raw: string): Map<number, string> {
+  const jsonLike = raw.replace(/(\d+):/g, '"$1":');
+
+  try {
+    const parsed = JSON.parse(jsonLike) as Record<string, unknown>;
+    const values = new Map<number, string>();
+    for (const [key, value] of Object.entries(parsed)) {
+      const index = Number.parseInt(key, 10);
+      if (!Number.isFinite(index) || typeof value !== "string") {
+        continue;
+      }
+
+      values.set(index, value);
+    }
+
+    return values;
+  } catch {
+    return new Map<number, string>();
+  }
+}
+
+function scoreHashMap(values: Map<number, string>): number {
+  if (values.size === 0) {
+    return 0;
+  }
+
+  let hits = 0;
+  for (const value of values.values()) {
+    if (/^[a-f0-9]{6,12}$/i.test(value)) {
+      hits += 1;
+    }
+  }
+
+  return hits / values.size;
+}
+
+function scoreNameMap(values: Map<number, string>): number {
+  if (values.size === 0) {
+    return 0;
+  }
+
+  let hits = 0;
+  for (const value of values.values()) {
+    if (value.includes("-") || value.includes("/")) {
+      hits += 1;
+    }
+  }
+
+  return hits / values.size;
+}
+
+function combineChunkNames(nameMap: Map<number, string>, hashMap: Map<number, string>): string[] {
+  const entries = [...nameMap.entries()].sort((left, right) => left[0] - right[0]);
+  const chunks: string[] = [];
+
+  for (const [key, name] of entries) {
+    const hash = hashMap.get(key);
+    if (!name || !hash) {
+      continue;
+    }
+
+    chunks.push(`${name}.${hash}.js`);
+  }
+
+  return chunks;
+}
+
+function findOperationHashes(body: string, operations: string[]): Record<string, string> {
+  const matches: Record<string, string> = {};
+
+  for (const operation of operations) {
+    if (!operation) {
+      continue;
+    }
+
+    const escaped = operation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const hashedQuery =
+      body.match(new RegExp(`${escaped}.{0,400}?sha256Hash":"([a-f0-9]{64})`, "s"))?.[1] ??
+      body.match(new RegExp(`"${escaped}","(?:query|mutation)","([a-f0-9]{64})"`))?.[1];
+
+    if (hashedQuery) {
+      matches[operation] = hashedQuery;
+    }
+  }
+
+  return matches;
+}
+
+function sanitizeCacheFragment(value: string): string {
+  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
+  return normalized.length > 0 ? normalized : "unknown";
 }

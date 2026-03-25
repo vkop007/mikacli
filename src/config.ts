@@ -7,6 +7,7 @@ import type { Platform } from "./types.js";
 export const AUTOCLI_DIR = join(homedir(), ".autocli");
 export const SESSIONS_DIR = join(AUTOCLI_DIR, "sessions");
 export const CONNECTIONS_DIR = join(AUTOCLI_DIR, "connections");
+export const CACHE_DIR = join(AUTOCLI_DIR, "cache");
 export const SESSION_FILE_VERSION = 1 as const;
 export const DEFAULT_ACCOUNT_NAME = "default";
 
@@ -32,6 +33,10 @@ export function getConnectionPath(platform: Platform, account: string): string {
   return join(getPlatformConnectionDir(platform), `${sanitizeAccountName(account)}.json`);
 }
 
+export function getCachePath(...segments: string[]): string {
+  return join(CACHE_DIR, ...segments);
+}
+
 export async function ensureDirectory(path: string): Promise<void> {
   await mkdir(path, { recursive: true });
 }
@@ -52,6 +57,10 @@ export async function ensureConnectionDirectory(platform?: Platform): Promise<vo
   }
 
   await ensureDirectory(CONNECTIONS_DIR);
+}
+
+export async function ensureCacheDirectory(...segments: string[]): Promise<void> {
+  await ensureDirectory(join(CACHE_DIR, ...segments));
 }
 
 export async function ensureParentDirectory(filePath: string): Promise<void> {

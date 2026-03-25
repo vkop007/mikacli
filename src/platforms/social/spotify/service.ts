@@ -713,11 +713,35 @@ export class SpotifyAdapter extends BasePlatformAdapter {
   }
 
   async search(input: SpotifySearchInput): Promise<AdapterActionResult> {
-    const { session } = await this.ensureSavedSession(input.account);
-    const client = await this.createSpotifyClient(session);
-    const accessToken = await this.resolveAccessToken(client, session.account);
     const limit = input.limit ?? 5;
     const type = input.type ?? "track";
+
+    try {
+      const { session, connect } = await this.createConnectContext(input.account);
+      const response = await connect.search(type, input.query, limit, 0);
+
+      return {
+        ok: true,
+        platform: this.platform,
+        account: session.account,
+        action: "search",
+        message: `Spotify search returned ${response.items.length} ${type} result${response.items.length === 1 ? "" : "s"}.`,
+        data: {
+          query: input.query,
+          type,
+          limit,
+          total: response.total,
+          engine: "connect",
+          results: response.items,
+        },
+      };
+    } catch (error) {
+      if (!this.shouldFallbackSpotifySearch(error)) {
+        throw error;
+      }
+    }
+
+    const { session, client, accessToken } = await this.createAuthorizedContext(input.account);
     const query = new URLSearchParams({
       q: input.query,
       type,
@@ -735,6 +759,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
         query: input.query,
         type,
         limit,
+        engine: "web",
         results: this.normalizeSearchResults(response, type),
       },
     };
@@ -2298,6 +2323,19 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     }
 
     return error.code.startsWith("SPOTIFY_CONNECT_") || error.code === "SPOTIFY_DEVICE_NOT_FOUND";
+  }
+
+  private shouldFallbackSpotifySearch(error: unknown): boolean {
+    if (!isAutoCliError(error)) {
+      return false;
+    }
+
+    return (
+      this.shouldFallbackFromConnect(error) ||
+      error.code.startsWith("SPOTIFY_PATHFINDER_") ||
+      error.code === "SPOTIFY_CONNECT_REQUEST_FAILED" ||
+      error.code === "HTTP_REQUEST_FAILED"
+    );
   }
 
   private withEngine(result: AdapterActionResult, engine: "connect" | "web"): AdapterActionResult {
