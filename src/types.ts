@@ -1,5 +1,5 @@
 import type { SerializedCookieJar } from "tough-cookie";
-import type { PlatformName } from "./platforms.js";
+import type { PlatformName } from "./platforms/config.js";
 
 export type Platform = PlatformName;
 

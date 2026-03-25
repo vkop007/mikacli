@@ -4,14 +4,10 @@ import { Command } from "commander";
 import pc from "picocolors";
 
 import packageJson from "../package.json" with { type: "json" };
-import { createFacebookCommand } from "./commands/facebook.js";
-import { createInstagramCommand } from "./commands/instagram.js";
-import { createLinkedInCommand } from "./commands/linkedin.js";
+import { buildPlatformCommand } from "./core/runtime/build-platform-command.js";
 import { createStatusCommand } from "./commands/status.js";
-import { createTikTokCommand } from "./commands/tiktok.js";
-import { createXCommand } from "./commands/x.js";
-import { createYouTubeCommand } from "./commands/youtube.js";
 import { errorToJson } from "./errors.js";
+import { getPlatformDefinitions } from "./platforms/index.js";
 import { printJson } from "./utils/output.js";
 
 const HELP_FRAME = `${pc.bold(pc.cyan("AutoCLI"))}
@@ -29,13 +25,11 @@ async function main(): Promise<void> {
     .option("--verbose", "Enable verbose logging")
     .showHelpAfterError()
     .addHelpText("beforeAll", `${HELP_FRAME}\n`)
-    .addCommand(createStatusCommand())
-    .addCommand(createFacebookCommand())
-    .addCommand(createInstagramCommand())
-    .addCommand(createLinkedInCommand())
-    .addCommand(createTikTokCommand())
-    .addCommand(createYouTubeCommand())
-    .addCommand(createXCommand());
+    .addCommand(createStatusCommand());
+
+  for (const definition of getPlatformDefinitions()) {
+    program.addCommand(buildPlatformCommand(definition));
+  }
 
   try {
     await program.parseAsync(process.argv);

@@ -6,7 +6,7 @@ import { join, resolve } from "node:path";
 
 import { AutoCliError, isAutoCliError } from "../errors.js";
 import { maybeAutoRefreshSession } from "../utils/autorefresh.js";
-import { getPlatformHomeUrl, getPlatformOrigin } from "../platforms.js";
+import { getPlatformHomeUrl, getPlatformOrigin } from "../platforms/config.js";
 import { parseYouTubeChannelTarget, parseYouTubePlaylistTarget, parseYouTubeTarget } from "../utils/targets.js";
 import { BasePlatformAdapter } from "./base.js";
 import { Cookie, CookieJar } from "tough-cookie";

@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 
 import { AutoCliError, isAutoCliError } from "../errors.js";
-import { getPlatformOrigin } from "../platforms.js";
+import { getPlatformOrigin } from "../platforms/config.js";
 import { parseLinkedInTarget } from "../utils/targets.js";
 import { BasePlatformAdapter } from "./base.js";
 import { CookieJar, Cookie } from "tough-cookie";
