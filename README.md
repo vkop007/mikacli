@@ -569,6 +569,29 @@ YouTube downloads use `yt-dlp` plus `ffmpeg`. That is the correct implementation
 
 YouTube video uploads and community posting are not implemented yet. `autocli youtube upload ...` exists as the eventual entrypoint, but it currently returns a structured unsupported-action error because the Studio upload flow is separate from the watch-page action flow.
 
+Use YouTube Music search and browse actions:
+
+```bash
+autocli youtube-music play "dandelions"
+autocli youtube-music pause
+autocli youtube-music next
+autocli youtube-music queue
+autocli youtube-music queueadd "taylor swift"
+autocli youtube-music search "dandelions"
+autocli youtube-music songid "HZbsLxL7GeM"
+autocli youtube-music related "HZbsLxL7GeM"
+autocli youtube-music albumid "MPREb_uPJnzIv7Wl1"
+autocli youtube-music artistid "UCOx12K3GqOMcIeyNTNj1Z6Q"
+autocli youtube-music playlistid "VLOLAK5uy_n2FuJRR4HTkLC7qK_aQX2Mjx-hW6TI5_k"
+autocli youtube-music login --cookies ./youtube.cookies.txt
+autocli youtube-music like "HZbsLxL7GeM"
+autocli youtube-music unlike "HZbsLxL7GeM"
+```
+
+YouTube Music playback control is local to this machine. `play`, `pause`, `next`, `previous`, `queue`, and `queueadd` use `yt-dlp` to resolve playable audio and `ffplay` to run a lightweight local controller without opening the browser.
+
+YouTube Music read commands can fall back to public browsing when there is no valid saved session. Write commands like `like`, `dislike`, and `unlike` still require a fresh imported YouTube cookie export.
+
 Save a Telegram bot token:
 
 ```bash
