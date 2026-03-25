@@ -13,8 +13,8 @@ import { AutoCliError } from "../../errors.js";
 import { isPlatform } from "../../platforms/config.js";
 import { CookieManager } from "../../utils/cookie-manager.js";
 
-import type { Platform, PlatformSession } from "../../types.js";
-import type { ConnectionRecord } from "./auth-types.js";
+import type { Platform, PlatformSession, SessionStatus, SessionUser } from "../../types.js";
+import type { BotTokenConnectionAuth, ConnectionRecord } from "./auth-types.js";
 
 const ConnectionRecordSchema = {
   parse(input: unknown): ConnectionRecord {
@@ -38,6 +38,10 @@ const ConnectionRecordSchema = {
       typeof record.status.state !== "string"
     ) {
       throw new AutoCliError("INVALID_CONNECTION_FILE", "Connection file is missing required fields.");
+    }
+
+    if (record.auth.kind === "botToken" && typeof (record.auth as { token?: unknown }).token !== "string") {
+      throw new AutoCliError("INVALID_CONNECTION_FILE", "Bot token connection is missing its token.");
     }
 
     return record as ConnectionRecord;
@@ -95,6 +99,74 @@ export class ConnectionStore {
     await ensureParentDirectory(connectionPath);
     await writeFile(connectionPath, `${JSON.stringify(connection, null, 2)}\n`, "utf8");
     return connectionPath;
+  }
+
+  async saveBotTokenConnection(input: {
+    platform: Platform;
+    account: string;
+    provider?: string;
+    token: string;
+    user?: SessionUser;
+    status?: SessionStatus;
+    metadata?: Record<string, unknown>;
+  }): Promise<string> {
+    const now = new Date().toISOString();
+    let createdAt = now;
+
+    try {
+      const existing = await this.loadStoredConnection(input.platform, input.account);
+      createdAt = existing.connection.createdAt;
+    } catch (error) {
+      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+        throw error;
+      }
+    }
+
+    return this.saveConnection({
+      version: 1,
+      platform: input.platform,
+      account: sanitizeAccountName(input.account),
+      createdAt,
+      updatedAt: now,
+      auth: {
+        kind: "botToken",
+        provider: input.provider,
+        token: input.token,
+      },
+      status: input.status ?? {
+        state: "unknown",
+        message: "Bot token saved.",
+        lastValidatedAt: now,
+      },
+      user: input.user,
+      metadata: input.metadata,
+    });
+  }
+
+  async loadBotTokenConnection(
+    platform: Platform,
+    account?: string,
+  ): Promise<{ connection: ConnectionRecord; path: string; auth: BotTokenConnectionAuth }> {
+    const loaded = await this.loadConnection(platform, account);
+    if (loaded.connection.auth.kind !== "botToken") {
+      throw new AutoCliError(
+        "INVALID_CONNECTION_AUTH",
+        `The saved ${platform} connection does not use a bot token auth strategy.`,
+        {
+          details: {
+            platform,
+            account: loaded.connection.account,
+            authKind: loaded.connection.auth.kind,
+            connectionPath: loaded.path,
+          },
+        },
+      );
+    }
+
+    return {
+      ...loaded,
+      auth: loaded.connection.auth,
+    };
   }
 
   private toConnectionRecord(session: PlatformSession): ConnectionRecord {
@@ -169,20 +241,15 @@ export class ConnectionStore {
   }
 
   private async resolveDefaultStoredAccount(platform: Platform): Promise<string> {
-    await ensureConnectionDirectory(platform);
-    const platformDir = getPlatformConnectionDir(platform);
-    const files = await readdir(platformDir, { withFileTypes: true }).catch(() => []);
-    const candidates = files
-      .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
-      .map((entry) => entry.name.replace(/\.json$/u, ""));
-
-    if (candidates.length === 0) {
+    const platformConnections = (await this.listStoredConnections()).filter(({ connection }) => connection.platform === platform);
+    if (platformConnections.length === 0) {
       throw new AutoCliError("CONNECTION_NOT_FOUND", `No saved ${platform} connections found.`, {
         details: { platform },
       });
     }
 
-    return candidates.sort((left, right) => right.localeCompare(left))[0] ?? sanitizeAccountName("default");
+    return platformConnections.sort((left, right) => right.connection.updatedAt.localeCompare(left.connection.updatedAt))[0]
+      ?.connection.account ?? sanitizeAccountName("default");
   }
 
   private toKey(platform: Platform, account: string): string {

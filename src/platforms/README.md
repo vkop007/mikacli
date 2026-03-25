@@ -40,9 +40,14 @@ Rules:
 - Use `manifest.ts` as the single entrypoint for a platform.
 - Prefer `capabilities` for new work.
 - Keep `src/commands/*` as compatibility wrappers only.
+- Use the shared connection layer in `src/core/auth/connection-store.ts`.
+- Pick the correct auth strategy in `manifest.ts`:
+  - `cookies` for imported browser sessions
+  - `botToken` for Telegram/Discord/Slack style bot adapters
+  - `oauth2`, `apiKey`, or `none` for future API-first platforms
 
 Current examples:
 
 - All current platforms are capability-based.
-- Small capability sets: `src/platforms/facebook/`, `src/platforms/linkedin/`, `src/platforms/tiktok/`
-- Larger capability sets with platform-local helpers: `src/platforms/x/`, `src/platforms/instagram/`, `src/platforms/youtube/`
+- Bot-token platforms: `src/platforms/discordbot/`, `src/platforms/slackbot/`, `src/platforms/telegrambot/`
+- Cookie-backed platforms: `src/platforms/facebook/`, `src/platforms/instagram/`, `src/platforms/linkedin/`, `src/platforms/tiktok/`, `src/platforms/x/`, `src/platforms/youtube/`

@@ -1,6 +1,6 @@
 # AutoCLI
 
-AutoCLI is a Bun-first TypeScript CLI for browserless social automation. It imports an existing authenticated browser session once, stores it under `~/.autocli/sessions/` with account-based filenames, and then performs actions headlessly from the terminal without launching Playwright or Puppeteer.
+AutoCLI is a Bun-first TypeScript CLI for browserless social automation. It supports both imported browser sessions and token-based bot connections, stores them under `~/.autocli/sessions/` and `~/.autocli/connections/`, and runs subsequent actions headlessly from the terminal without launching Playwright or Puppeteer.
 
 ## Why `Commander.js + Zod`
 
@@ -22,6 +22,16 @@ Reference points:
   - `login`
   - `status`
   - `post`, `like`, and `comment` commands return explicit Facebook-specific errors until the write layer is implemented
+- Discord Bot
+  - `login --token`
+  - `me`
+  - `guilds`
+  - `channels`
+  - `history`
+  - `send`
+  - `send-file`
+  - `edit`
+  - `delete`
 - Instagram
   - `login`
   - `post` with media + caption
@@ -36,6 +46,29 @@ Reference points:
   - `login`
   - `status`
   - `post`, `like`, and `comment` commands are wired, but TikTok web write signing is not implemented yet
+- Slack Bot
+  - `login --token`
+  - `me`
+  - `channels`
+  - `history`
+  - `send`
+  - `send-file`
+  - `edit`
+  - `delete`
+- Telegram Bot
+  - `login --token`
+  - `me`
+  - `getchat`
+  - `chats`
+  - `updates`
+  - `send`
+  - `send-photo`
+  - `send-document`
+  - `send-video`
+  - `send-audio`
+  - `send-voice`
+  - `edit`
+  - `delete`
 - X
   - `login`
   - `post` / `tweet` with optional image
@@ -67,27 +100,27 @@ That gives you a much more durable production system than relying on private web
 ├── tsconfig.json
 └── src
     ├── __tests__
-    │   └── cookie-manager.test.ts
-    ├── adapters
-    │   ├── base.ts
-    │   ├── facebook.ts
-    │   ├── index.ts
-    │   ├── instagram.ts
-    │   ├── linkedin.ts
-    │   ├── youtube.ts
-    │   ├── tiktok.ts
-    │   └── x.ts
+    ├── core
+    │   ├── auth
+    │   └── runtime
     ├── commands
-    │   ├── facebook.ts
-    │   ├── instagram.ts
-    │   ├── linkedin.ts
     │   ├── status.ts
-    │   ├── youtube.ts
-    │   ├── tiktok.ts
-    │   └── x.ts
+    │   └── ...
+    ├── platforms
+    │   ├── config.ts
+    │   ├── discordbot
+    │   ├── facebook
+    │   ├── instagram
+    │   ├── linkedin
+    │   ├── slackbot
+    │   ├── telegrambot
+    │   ├── tiktok
+    │   ├── x
+    │   └── youtube
     ├── utils
     │   ├── cli.ts
     │   ├── cookie-manager.ts
+    │   ├── file-source.ts
     │   ├── http-client.ts
     │   ├── media.ts
     │   ├── output.ts
@@ -129,6 +162,12 @@ Sessions are stored as JSON under:
 ~/.autocli/sessions/<platform>/<account>.json
 ```
 
+Token-based bot connections are stored under:
+
+```text
+~/.autocli/connections/<platform>/<account>.json
+```
+
 AutoCLI supports importing:
 
 - Netscape `cookies.txt`
@@ -157,7 +196,7 @@ The intended workflow is:
 
 1. Connect a platform once with `login`.
 2. AutoCLI stores that session under the detected account name.
-3. Later commands omit `--account` and AutoCLI uses the most recently saved session for that platform.
+3. Later commands omit `--account` or `--bot` and AutoCLI uses the most recently saved connection for that platform.
 
 Import Instagram cookies:
 
@@ -308,6 +347,50 @@ autocli youtube unsubscribe "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd
 YouTube downloads use `yt-dlp` plus `ffmpeg`. That is the correct implementation path; raw `ffmpeg` alone is not enough to resolve YouTube formats and signatures reliably.
 
 YouTube video uploads and community posting are not implemented yet. `autocli youtube upload ...` exists as the eventual entrypoint, but it currently returns a structured unsupported-action error because the Studio upload flow is separate from the watch-page action flow.
+
+Save a Telegram bot token:
+
+```bash
+autocli telegrambot login --token 123456:ABCDEF --name alerts-bot
+autocli telegrambot me
+autocli telegrambot me --bot alerts-bot
+autocli telegrambot chats --limit 25
+autocli telegrambot updates --limit 10
+autocli telegrambot send 123456789 "Hello from AutoCLI"
+autocli telegrambot send-photo 123456789 ./photo.jpg --caption "Hello"
+autocli telegrambot send-audio 123456789 ./clip.mp3 --caption "Listen"
+autocli telegrambot send-voice 123456789 ./voice.ogg
+autocli telegrambot edit 123456789 42 "Updated text"
+autocli telegrambot delete 123456789 42
+```
+
+Save a Discord bot token:
+
+```bash
+autocli discordbot login --token <bot-token> --name ops-bot
+autocli discordbot me
+autocli discordbot guilds --bot ops-bot
+autocli discordbot channels 123456789012345678
+autocli discordbot history 123456789012345678 --limit 20
+autocli discordbot send 123456789012345678 "hello world"
+autocli discordbot send-file 123456789012345678 ./report.pdf --content "build output"
+autocli discordbot edit 123456789012345678 234567890123456789 "updated message"
+autocli discordbot delete 123456789012345678 234567890123456789
+```
+
+Save a Slack bot token:
+
+```bash
+autocli slackbot login --token xoxb-123 --name alerts-bot
+autocli slackbot me
+autocli slackbot me --bot alerts-bot
+autocli slackbot channels
+autocli slackbot history general --limit 20
+autocli slackbot send general "hello from AutoCLI"
+autocli slackbot send-file general ./build.log --comment "nightly build"
+autocli slackbot edit general 1700000000.000000 "updated text"
+autocli slackbot delete general 1700000000.000000
+```
 
 If you connect multiple accounts for the same platform, AutoCLI keeps them all as named session files and uses the most recently logged-in one by default.
 

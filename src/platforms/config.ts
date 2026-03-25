@@ -1,4 +1,14 @@
-export const PLATFORM_NAMES = ["facebook", "instagram", "linkedin", "tiktok", "x", "youtube"] as const;
+export const PLATFORM_NAMES = [
+  "discordbot",
+  "facebook",
+  "instagram",
+  "linkedin",
+  "slackbot",
+  "telegrambot",
+  "tiktok",
+  "x",
+  "youtube",
+] as const;
 
 export type PlatformName = (typeof PLATFORM_NAMES)[number];
 
@@ -11,6 +21,13 @@ export interface PlatformConfig {
 }
 
 export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
+  discordbot: {
+    displayName: "Discord Bot",
+    origin: "https://discord.com",
+    homeUrl: "https://discord.com/developers/applications",
+    cookieDomain: "discord.com",
+    authCookieNames: [],
+  },
   facebook: {
     displayName: "Facebook",
     origin: "https://www.facebook.com",
@@ -31,6 +48,20 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://www.linkedin.com/",
     cookieDomain: "linkedin.com",
     authCookieNames: ["li_at", "JSESSIONID"],
+  },
+  slackbot: {
+    displayName: "Slack Bot",
+    origin: "https://slack.com",
+    homeUrl: "https://api.slack.com",
+    cookieDomain: "slack.com",
+    authCookieNames: [],
+  },
+  telegrambot: {
+    displayName: "Telegram Bot",
+    origin: "https://api.telegram.org",
+    homeUrl: "https://core.telegram.org/bots/api",
+    cookieDomain: "telegram.org",
+    authCookieNames: [],
   },
   tiktok: {
     displayName: "TikTok",

@@ -2,7 +2,6 @@ import type { Command } from "commander";
 
 import type { AuthStrategyKind } from "../auth/auth-types.js";
 import type { PlatformName } from "../../platforms/config.js";
-import type { PlatformAdapter } from "../../types.js";
 
 export interface PlatformDefinition {
   id: PlatformName;
@@ -13,7 +12,7 @@ export interface PlatformDefinition {
   examples?: readonly string[];
   capabilities?: readonly PlatformCapability[];
   buildCommand?: () => Command;
-  adapter?: PlatformAdapter;
+  adapter?: unknown;
 }
 
 export interface PlatformCapability {
