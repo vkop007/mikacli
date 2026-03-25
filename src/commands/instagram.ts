@@ -22,6 +22,9 @@ Examples:
   autocli instagram mediaid https://www.instagram.com/p/SHORTCODE/
   autocli instagram profileid @username
   autocli instagram posts @username
+  autocli instagram stories @username
+  autocli instagram followers @username --limit 5
+  autocli instagram following @username --limit 5
   autocli instagram download https://www.instagram.com/p/SHORTCODE/
   autocli instagram post ./photo.jpg --caption "Ship it"
   autocli instagram like https://www.instagram.com/p/SHORTCODE/
@@ -151,6 +154,82 @@ Examples:
           }),
         onSuccess: (result) => {
           printInstagramPostsResult(result, ctx.json);
+        },
+      });
+    });
+
+  command
+    .command("stories <target>")
+    .description("List active Instagram stories for a profile URL, @username, username, or numeric user ID")
+    .option("--limit <number>", "Maximum number of story items to return (1-25, default: 5)", parseLimitOption)
+    .option("--account <name>", "Optional override for a specific saved Instagram session")
+    .action(async (target, options, cmd) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Loading Instagram stories...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram stories loaded.",
+        action: () =>
+          adapter.stories({
+            account: options.account,
+            target,
+            limit: options.limit,
+          }),
+        onSuccess: (result) => {
+          printInstagramStoriesResult(result, ctx.json);
+        },
+      });
+    });
+
+  command
+    .command("followers <target>")
+    .description("List Instagram followers for a profile URL, @username, username, or numeric user ID")
+    .option("--limit <number>", "Maximum number of followers to return (1-25, default: 5)", parseLimitOption)
+    .option("--cursor <value>", "Pagination cursor from a previous --json response")
+    .option("--account <name>", "Optional override for a specific saved Instagram session")
+    .action(async (target, options, cmd) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Loading Instagram followers...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram followers loaded.",
+        action: () =>
+          adapter.followers({
+            account: options.account,
+            target,
+            limit: options.limit,
+            cursor: options.cursor,
+          }),
+        onSuccess: (result) => {
+          printInstagramUserListResult(result, ctx.json);
+        },
+      });
+    });
+
+  command
+    .command("following <target>")
+    .description("List Instagram following accounts for a profile URL, @username, username, or numeric user ID")
+    .option("--limit <number>", "Maximum number of following accounts to return (1-25, default: 5)", parseLimitOption)
+    .option("--cursor <value>", "Pagination cursor from a previous --json response")
+    .option("--account <name>", "Optional override for a specific saved Instagram session")
+    .action(async (target, options, cmd) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Loading Instagram following...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Instagram following loaded.",
+        action: () =>
+          adapter.following({
+            account: options.account,
+            target,
+            limit: options.limit,
+            cursor: options.cursor,
+          }),
+        onSuccess: (result) => {
+          printInstagramUserListResult(result, ctx.json);
         },
       });
     });
@@ -364,6 +443,50 @@ function printInstagramSearchResult(result: AdapterActionResult, json: boolean):
   }
 }
 
+function printInstagramUserListResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+
+  const results = Array.isArray(result.data?.results) ? result.data.results : [];
+  for (const [index, rawItem] of results.entries()) {
+    if (!rawItem || typeof rawItem !== "object") {
+      continue;
+    }
+
+    const item = rawItem as {
+      username?: string;
+      fullName?: string;
+      followerCount?: number;
+      isPrivate?: boolean;
+      isVerified?: boolean;
+      url?: string;
+    };
+
+    const meta = [
+      typeof item.fullName === "string" ? item.fullName : undefined,
+      typeof item.followerCount === "number" ? `${item.followerCount} followers` : undefined,
+      item.isVerified ? "verified" : undefined,
+      item.isPrivate ? "private" : "public",
+    ].filter((value): value is string => typeof value === "string" && value.length > 0);
+
+    console.log(`${index + 1}. @${item.username ?? "unknown"}`);
+    if (meta.length > 0) {
+      console.log(`   ${meta.join(" • ")}`);
+    }
+    if (item.url) {
+      console.log(`   ${item.url}`);
+    }
+  }
+
+  if (typeof result.data?.nextCursor === "string" && result.data.nextCursor.length > 0) {
+    console.log(`next cursor: ${result.data.nextCursor}`);
+  }
+}
+
 function printInstagramDownloadResult(result: AdapterActionResult, json: boolean): void {
   if (json) {
     printJson(result);
@@ -420,6 +543,44 @@ function printInstagramPostsResult(result: AdapterActionResult, json: boolean): 
     if (typeof post.caption === "string" && post.caption.length > 0) {
       const preview = post.caption.length > 180 ? `${post.caption.slice(0, 180)}...` : post.caption;
       console.log(`   ${preview.replace(/\s+/g, " ").trim()}`);
+    }
+  }
+}
+
+function printInstagramStoriesResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+
+  const stories = Array.isArray(result.data?.stories) ? result.data.stories : [];
+  for (const [index, rawStory] of stories.entries()) {
+    if (!rawStory || typeof rawStory !== "object") {
+      continue;
+    }
+
+    const story = rawStory as {
+      mediaType?: string;
+      takenAt?: string;
+      expiresAt?: string;
+      url?: string;
+      assetUrl?: string;
+    };
+
+    const meta = [
+      typeof story.mediaType === "string" ? story.mediaType : undefined,
+      typeof story.takenAt === "string" ? story.takenAt : undefined,
+      typeof story.expiresAt === "string" ? `expires ${story.expiresAt}` : undefined,
+    ].filter((value): value is string => typeof value === "string" && value.length > 0);
+
+    console.log(`${index + 1}. ${story.url ?? "Instagram story"}`);
+    if (meta.length > 0) {
+      console.log(`   ${meta.join(" • ")}`);
+    }
+    if (typeof story.assetUrl === "string" && story.assetUrl.length > 0) {
+      console.log(`   asset: ${story.assetUrl}`);
     }
   }
 }

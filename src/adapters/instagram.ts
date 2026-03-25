@@ -120,6 +120,7 @@ interface InstagramMediaPayload {
   play_count?: number;
   view_count?: number;
   taken_at?: number;
+  expiring_at?: number;
   user?: InstagramUserPayload;
   caption?: {
     text?: string;
@@ -139,6 +140,24 @@ interface InstagramUserFeedResponse {
   items?: InstagramMediaPayload[];
   num_results?: number;
   more_available?: boolean;
+}
+
+interface InstagramFriendshipListResponse {
+  users?: InstagramUserPayload[];
+  next_max_id?: string;
+  has_more?: boolean;
+  page_size?: number;
+  big_list?: boolean;
+}
+
+interface InstagramStoryResponse {
+  reel?: {
+    id?: string;
+    user?: InstagramUserPayload;
+    expiring_at?: number;
+    items?: InstagramMediaPayload[];
+  } | null;
+  status?: string;
 }
 
 interface InstagramPostSummary {
@@ -161,6 +180,16 @@ interface InstagramDownloadAsset {
   mediaType: string;
   index: number;
 }
+
+interface InstagramStoryItem {
+  id: string;
+  url?: string;
+  mediaType?: string;
+  takenAt?: string;
+  expiresAt?: string;
+  thumbnailUrl?: string;
+  assetUrl?: string;
+ }
 
 interface InstagramSearchResultItem {
   id: string;
@@ -519,6 +548,71 @@ export class InstagramAdapter extends BasePlatformAdapter {
         profile: { ...profile },
         limit,
         posts: posts.map((post) => ({ ...post })),
+      },
+    };
+  }
+
+  async followers(input: {
+    account?: string;
+    target: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<AdapterActionResult> {
+    return this.listFriendships({
+      ...input,
+      kind: "followers",
+    });
+  }
+
+  async following(input: {
+    account?: string;
+    target: string;
+    limit?: number;
+    cursor?: string;
+  }): Promise<AdapterActionResult> {
+    return this.listFriendships({
+      ...input,
+      kind: "following",
+    });
+  }
+
+  async stories(input: {
+    account?: string;
+    target: string;
+    limit?: number;
+  }): Promise<AdapterActionResult> {
+    const { session } = await this.prepareSession(input.account);
+    const probe = await this.ensureActiveSession(session);
+    const client = await this.createInstagramClient(session);
+    const profile = await this.resolveInstagramProfileInfo(client, probe.metadata, input.target);
+    const limit = this.normalizeSearchLimit(input.limit);
+
+    const response = await client.request<InstagramStoryResponse>(
+      `${INSTAGRAM_ORIGIN}/api/v1/feed/user/${encodeURIComponent(profile.id)}/story/`,
+      {
+        expectedStatus: 200,
+        headers: await this.buildInstagramHeaders(client, probe.metadata),
+      },
+    );
+
+    const items = (response.reel?.items ?? []).slice(0, limit).map((item) => this.toInstagramStoryItem(item));
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "stories",
+      message:
+        items.length > 0
+          ? `Loaded ${items.length} Instagram stor${items.length === 1 ? "y" : "ies"} for ${profile.username ?? profile.id}.`
+          : `No active Instagram stories found for ${profile.username ?? profile.id}.`,
+      id: profile.id,
+      url: profile.url,
+      user: probe.user,
+      data: {
+        profile: { ...profile },
+        limit,
+        stories: items.map((item) => ({ ...item })),
       },
     };
   }
@@ -1029,6 +1123,21 @@ export class InstagramAdapter extends BasePlatformAdapter {
     };
   }
 
+  private toInstagramStoryItem(media: InstagramMediaPayload): InstagramStoryItem {
+    const info = this.toInstagramMediaInfo(media);
+    const ownerUsername = media.user?.username ?? info.ownerUsername;
+    const storyId = String(media.pk ?? media.id ?? "");
+    return {
+      id: storyId,
+      url: ownerUsername ? `${INSTAGRAM_ORIGIN}/stories/${ownerUsername}/${storyId}/` : undefined,
+      mediaType: info.mediaType,
+      takenAt: info.takenAt,
+      expiresAt: this.toIsoTimestamp(media.expiring_at),
+      thumbnailUrl: info.thumbnailUrl,
+      assetUrl: media.video_versions?.[0]?.url ?? media.image_versions2?.candidates?.[0]?.url,
+    };
+  }
+
   private describeInstagramMediaType(media: InstagramMediaPayload): string | undefined {
     if (media.product_type === "clips") {
       return "reel";
@@ -1126,6 +1235,60 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
   private sanitizeFilename(value: string): string {
     return value.replace(/[^A-Za-z0-9._-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || "media";
+  }
+
+  private async listFriendships(input: {
+    account?: string;
+    target: string;
+    limit?: number;
+    cursor?: string;
+    kind: "followers" | "following";
+  }): Promise<AdapterActionResult> {
+    const { session } = await this.prepareSession(input.account);
+    const probe = await this.ensureActiveSession(session);
+    const client = await this.createInstagramClient(session);
+    const profile = await this.resolveInstagramProfileInfo(client, probe.metadata, input.target);
+    const limit = this.normalizeSearchLimit(input.limit);
+
+    const searchParams = new URLSearchParams({
+      count: String(limit),
+    });
+    if (input.cursor) {
+      searchParams.set("max_id", input.cursor);
+    }
+
+    const response = await client.request<InstagramFriendshipListResponse>(
+      `${INSTAGRAM_ORIGIN}/api/v1/friendships/${encodeURIComponent(profile.id)}/${input.kind}/?${searchParams.toString()}`,
+      {
+        expectedStatus: 200,
+        headers: await this.buildInstagramHeaders(client, probe.metadata),
+      },
+    );
+
+    const users = (response.users ?? []).slice(0, limit).map((user) => this.toInstagramSearchResult(user));
+    const label = input.kind === "following" ? "following accounts" : "followers";
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: input.kind,
+      message:
+        users.length > 0
+          ? `Loaded ${users.length} Instagram ${label} for ${profile.username ?? profile.id}.`
+          : `No Instagram ${label} found for ${profile.username ?? profile.id}.`,
+      id: profile.id,
+      url: profile.url,
+      user: probe.user,
+      data: {
+        profile: { ...profile },
+        limit,
+        cursor: input.cursor,
+        nextCursor: response.next_max_id,
+        hasMore: response.has_more,
+        results: users.map((item) => ({ ...item })),
+      },
+    };
   }
 
   private async resolveInstagramProfileInfo(
