@@ -20,6 +20,7 @@ import { spotifyPlatformDefinition } from "./social/spotify/manifest.js";
 import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
 import { xPlatformDefinition } from "./social/x/manifest.js";
 import { youtubePlatformDefinition } from "./social/youtube/manifest.js";
+import { youtubeMusicPlatformDefinition } from "./social/youtube-music/manifest.js";
 
 import type { PlatformDefinition } from "../core/runtime/platform-definition.js";
 import type { PlatformName } from "./config.js";
@@ -47,6 +48,7 @@ const definitions: readonly PlatformDefinition[] = [
   webSearchPlatformDefinition,
   xPlatformDefinition,
   youtubePlatformDefinition,
+  youtubeMusicPlatformDefinition,
 ];
 
 export function getPlatformDefinitions(): readonly PlatformDefinition[] {

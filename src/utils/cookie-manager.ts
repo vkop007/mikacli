@@ -151,7 +151,7 @@ export class CookieManager {
     });
 
     const raw = await readFile(sessionPath, "utf8");
-    const parsed = SessionFileSchema.parse(JSON.parse(raw)) as PlatformSession;
+    const parsed = this.parseSessionFile(raw, sessionPath);
     return { session: parsed, path: sessionPath };
   }
 
@@ -348,12 +348,37 @@ export class CookieManager {
       }
 
       const path = `${platformDir}/${file.name}`;
-      const raw = await readFile(path, "utf8");
-      const parsed = SessionFileSchema.parse(JSON.parse(raw)) as PlatformSession;
-      sessions.push({ session: parsed, path });
+      try {
+        const raw = await readFile(path, "utf8");
+        const parsed = this.parseSessionFile(raw, path);
+        sessions.push({ session: parsed, path });
+      } catch (error) {
+        if (error instanceof AutoCliError && error.code === "SESSION_INVALID") {
+          continue;
+        }
+        throw error;
+      }
     }
 
     return sessions.sort((left, right) => right.session.updatedAt.localeCompare(left.session.updatedAt));
+  }
+
+  private parseSessionFile(raw: string, path: string): PlatformSession {
+    try {
+      return SessionFileSchema.parse(JSON.parse(raw)) as PlatformSession;
+    } catch (error) {
+      throw new AutoCliError(
+        "SESSION_INVALID",
+        `Saved session file is corrupted: ${path}. Re-import cookies or remove the broken session file.`,
+        {
+          cause: error,
+          details: {
+            path,
+            message: error instanceof Error ? error.message : String(error),
+          },
+        },
+      );
+    }
   }
 }
 

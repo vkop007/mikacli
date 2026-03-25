@@ -21,6 +21,7 @@ export const PLATFORM_NAMES = [
   "websearch",
   "x",
   "youtube",
+  "youtube-music",
 ] as const;
 
 export type PlatformName = (typeof PLATFORM_NAMES)[number];
@@ -185,6 +186,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     displayName: "YouTube",
     origin: "https://www.youtube.com",
     homeUrl: "https://www.youtube.com/",
+    cookieDomain: "youtube.com",
+    authCookieNames: ["SAPISID", "LOGIN_INFO", "__Secure-3PSID", "SSID"],
+  },
+  "youtube-music": {
+    displayName: "YouTube Music",
+    origin: "https://music.youtube.com",
+    homeUrl: "https://music.youtube.com/",
     cookieDomain: "youtube.com",
     authCookieNames: ["SAPISID", "LOGIN_INFO", "__Secure-3PSID", "SSID"],
   },

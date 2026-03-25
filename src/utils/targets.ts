@@ -343,6 +343,68 @@ export function parseYouTubePlaylistTarget(target: string): {
   });
 }
 
+export type YouTubeMusicBrowseTargetType = "album" | "artist" | "playlist";
+
+export function parseYouTubeMusicBrowseTarget(
+  target: string,
+  type: YouTubeMusicBrowseTargetType,
+): {
+  browseId: string;
+  url?: string;
+  canonicalTarget?: string;
+} {
+  const trimmed = target.trim();
+
+  const browseUrlMatch = trimmed.match(/music\.youtube\.com\/browse\/([A-Za-z0-9_-]+)/i);
+  if (browseUrlMatch?.[1]) {
+    return {
+      browseId: browseUrlMatch[1],
+      url: trimmed,
+    };
+  }
+
+  if (type === "playlist") {
+    const playlistUrlMatch = trimmed.match(/(?:music\.)?youtube\.com\/playlist\?(?:[^#]*&)?list=([A-Za-z0-9_-]+)/i);
+    if (playlistUrlMatch?.[1]) {
+      return {
+        browseId: normalizeYouTubeMusicPlaylistBrowseId(playlistUrlMatch[1]),
+        url: trimmed,
+        canonicalTarget: playlistUrlMatch[1],
+      };
+    }
+
+    if (/^(?:VL)?(?:PL|UU|LL|FL|RD|OLAK5uy_)[A-Za-z0-9_-]+$/.test(trimmed)) {
+      return {
+        browseId: normalizeYouTubeMusicPlaylistBrowseId(trimmed),
+        canonicalTarget: trimmed.startsWith("VL") ? trimmed.slice(2) : trimmed,
+      };
+    }
+  }
+
+  if (type === "artist" && /^UC[A-Za-z0-9_-]{22}$/.test(trimmed)) {
+    return {
+      browseId: trimmed,
+    };
+  }
+
+  if (type === "album" && /^MPREb[_A-Za-z0-9-]+$/.test(trimmed)) {
+    return {
+      browseId: trimmed,
+    };
+  }
+
+  if (type === "playlist" && /^VL[A-Za-z0-9_-]+$/.test(trimmed)) {
+    return {
+      browseId: trimmed,
+      canonicalTarget: trimmed.slice(2),
+    };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", formatYouTubeMusicBrowseTargetError(type), {
+    details: { target, type },
+  });
+}
+
 export type SpotifyEntityType = "track" | "album" | "artist" | "playlist";
 
 const SPOTIFY_ENTITY_TYPES = ["track", "album", "artist", "playlist"] as const;
@@ -505,4 +567,21 @@ function formatSpotifyTargetError(allowedTypes: readonly SpotifyEntityType[]): s
   }
 
   return `Expected a Spotify ${allowedTypes.join(", ")} URL or spotify: URI.`;
+}
+
+function normalizeYouTubeMusicPlaylistBrowseId(playlistId: string): string {
+  return playlistId.startsWith("VL") ? playlistId : `VL${playlistId}`;
+}
+
+function formatYouTubeMusicBrowseTargetError(type: YouTubeMusicBrowseTargetType): string {
+  switch (type) {
+    case "album":
+      return "Expected a YouTube Music album browse URL or MPRE... browse ID.";
+    case "artist":
+      return "Expected a YouTube Music artist browse URL or raw UC... artist browse ID.";
+    case "playlist":
+      return "Expected a YouTube Music playlist URL, playlist ID, or VL... browse ID.";
+    default:
+      return "Expected a valid YouTube Music browse target.";
+  }
 }
