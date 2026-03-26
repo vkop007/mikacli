@@ -574,12 +574,22 @@ Category routes are supported too, so you can group commands by provider type:
 ```bash
 autocli api github me
 autocli api discordbot me
+autocli llm zai text "Hello my name is Justine"
 autocli social youtube search "rick astley"
 autocli music spotify search "dandelions"
 autocli music youtube-music play "dandelions"
 ```
 
 The original top-level routes like `autocli youtube ...` and `autocli spotify ...` still work.
+
+Cookie-backed LLM providers are scaffolded too:
+
+```bash
+autocli llm zai login --cookies ./zai.cookies.json
+autocli llm zai text "Outline a landing page for AutoCLI"
+```
+
+These providers now share a proper cookie-session command surface with `login`, `status`, `text`, `image`, and `video`. The web session plumbing is in place, but the private generation request flows are still provider-specific and remain experimental.
 
 Use YouTube Music search and browse actions:
 

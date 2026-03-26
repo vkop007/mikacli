@@ -1,10 +1,13 @@
 export const PLATFORM_NAMES = [
   "cheat",
+  "chatgpt",
   "discordbot",
   "facebook",
+  "gemini",
   "github",
   "githubbot",
   "gitlab",
+  "grok",
   "ip",
   "instagram",
   "news",
@@ -14,6 +17,7 @@ export const PLATFORM_NAMES = [
   "qr",
   "slackbot",
   "spotify",
+  "zai",
   "telegrambot",
   "tiktok",
   "time",
@@ -42,6 +46,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "cht.sh",
     authCookieNames: [],
   },
+  chatgpt: {
+    displayName: "ChatGPT",
+    origin: "https://chatgpt.com",
+    homeUrl: "https://chatgpt.com/",
+    cookieDomain: "chatgpt.com",
+    authCookieNames: ["__Secure-next-auth.session-token", "__Secure-authjs.session-token", "_puid"],
+  },
   discordbot: {
     displayName: "Discord Bot",
     origin: "https://discord.com",
@@ -55,6 +66,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://www.facebook.com/",
     cookieDomain: "facebook.com",
     authCookieNames: ["c_user", "xs"],
+  },
+  gemini: {
+    displayName: "Gemini",
+    origin: "https://gemini.google.com",
+    homeUrl: "https://gemini.google.com/",
+    cookieDomain: "google.com",
+    authCookieNames: ["SAPISID", "__Secure-1PSID", "__Secure-3PSID", "SSID"],
   },
   github: {
     displayName: "GitHub",
@@ -76,6 +94,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://gitlab.com/",
     cookieDomain: "gitlab.com",
     authCookieNames: [],
+  },
+  grok: {
+    displayName: "Grok",
+    origin: "https://grok.com",
+    homeUrl: "https://grok.com/",
+    cookieDomain: "grok.com",
+    authCookieNames: ["sso", "sso-rw", "x-userid"],
   },
   ip: {
     displayName: "IP",
@@ -139,6 +164,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://open.spotify.com/",
     cookieDomain: "spotify.com",
     authCookieNames: ["sp_dc", "sp_key"],
+  },
+  zai: {
+    displayName: "Z.ai",
+    origin: "https://chat.z.ai",
+    homeUrl: "https://chat.z.ai/",
+    cookieDomain: "z.ai",
+    authCookieNames: ["token"],
   },
   telegrambot: {
     displayName: "Telegram Bot",

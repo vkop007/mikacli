@@ -3,7 +3,7 @@ import type { Command } from "commander";
 import type { AuthStrategyKind } from "../auth/auth-types.js";
 import type { PlatformName } from "../../platforms/config.js";
 
-export type PlatformCategory = "music" | "social" | "bots" | "forum" | "api" | "public";
+export type PlatformCategory = "llm" | "music" | "social" | "bots" | "forum" | "api" | "public";
 
 export interface PlatformCommandBuildOptions {
   examplePrefix?: string;

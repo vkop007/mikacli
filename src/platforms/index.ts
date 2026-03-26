@@ -14,6 +14,7 @@ import { qrPlatformDefinition } from "./public/qr/manifest.js";
 import { timePlatformDefinition } from "./public/time/manifest.js";
 import { weatherPlatformDefinition } from "./public/weather/manifest.js";
 import { webSearchPlatformDefinition } from "./public/websearch/manifest.js";
+import { zaiPlatformDefinition } from "./llm/zai/manifest.js";
 import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
 import { newsPlatformDefinition } from "./public/news/manifest.js";
@@ -49,6 +50,7 @@ const definitions: readonly PlatformDefinition[] = [
   xPlatformDefinition,
   youtubePlatformDefinition,
   youtubeMusicPlatformDefinition,
+  zaiPlatformDefinition,
 ];
 
 export function getPlatformDefinitions(): readonly PlatformDefinition[] {
@@ -67,7 +69,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["music", "social", "bots", "api", "public", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "music", "social", "bots", "api", "public", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];

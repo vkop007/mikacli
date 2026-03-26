@@ -4,6 +4,11 @@ import { buildCategoryCommand } from "../core/runtime/build-category-command.js"
 import { getPlatformCategories, getPlatformDefinitionsByCategory } from "../platforms/index.js";
 
 describe("platform category routing", () => {
+  test("includes the llm category and providers", () => {
+    expect(getPlatformCategories()).toContain("llm");
+    expect(getPlatformDefinitionsByCategory("llm").map((definition) => definition.id)).toEqual(["zai"]);
+  });
+
   test("includes the new music category", () => {
     expect(getPlatformCategories()).toContain("music");
     expect(getPlatformDefinitionsByCategory("music").map((definition) => definition.id)).toEqual([

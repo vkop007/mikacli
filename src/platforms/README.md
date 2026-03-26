@@ -32,6 +32,10 @@ src/platforms/
         adapter.ts
         manifest.ts
         capabilities/
+  llm/
+    <name>/
+      adapter.ts
+      manifest.ts
   music/
     <name>/
       adapter.ts
@@ -72,6 +76,8 @@ Current examples:
 - All current platforms are capability-based.
 - API-token platforms: `src/platforms/api/github/`, `src/platforms/api/gitlab/`, `src/platforms/api/linear/`, `src/platforms/api/notion/`
 - Bot-token API platforms: `src/platforms/api/bots/discordbot/`, `src/platforms/api/bots/githubbot/`, `src/platforms/api/bots/slackbot/`, `src/platforms/api/bots/telegrambot/`
+- Active browserless LLM platform: `src/platforms/llm/zai/`
+- Experimental LLM scaffolds kept out of the CLI until they have proven browserless flows: `src/platforms/llm/chatgpt/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`
 - Music platforms: `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
 - Public utility platforms: `src/platforms/public/cheat/`, `src/platforms/public/ip/`, `src/platforms/public/news/`, `src/platforms/public/qr/`, `src/platforms/public/time/`, `src/platforms/public/weather/`, `src/platforms/public/websearch/`
 - Cookie-backed social platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
