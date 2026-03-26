@@ -31,7 +31,7 @@
     "prepare": "bun run build",
     "link:global": "bun run scripts/link-global.ts",
     "typecheck": "tsc --noEmit",
-    "build": "bun build --target=node --format=esm --outfile dist/index.js ./src/index.ts",
+    "build": "bun build --target=node --format=esm --outdir dist ./src/index.ts",
     "build:bin": "bun build --compile --target=bun --outfile bin/autocli ./src/index.ts",
     "test": "bun test"
   },

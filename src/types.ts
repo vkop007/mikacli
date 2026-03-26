@@ -44,6 +44,7 @@ export interface LoginInput {
   cookieFile?: string;
   cookieString?: string;
   cookieJson?: string;
+  token?: string;
 }
 
 export interface PostMediaInput {

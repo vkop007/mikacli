@@ -7,6 +7,7 @@ import { gitlabPlatformDefinition } from "./api/gitlab/manifest.js";
 import { linearPlatformDefinition } from "./api/linear/manifest.js";
 import { chatgptPlatformDefinition } from "./llm/chatgpt/manifest.js";
 import { claudePlatformDefinition } from "./llm/claude/manifest.js";
+import { deepSeekPlatformDefinition } from "./llm/deepseek/manifest.js";
 import { geminiPlatformDefinition } from "./llm/gemini/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
@@ -33,6 +34,7 @@ const definitions: readonly PlatformDefinition[] = [
   cheatPlatformDefinition,
   chatgptPlatformDefinition,
   claudePlatformDefinition,
+  deepSeekPlatformDefinition,
   discordBotPlatformDefinition,
   facebookPlatformDefinition,
   geminiPlatformDefinition,

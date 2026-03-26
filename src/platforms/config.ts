@@ -2,6 +2,7 @@ export const PLATFORM_NAMES = [
   "cheat",
   "chatgpt",
   "claude",
+  "deepseek",
   "discordbot",
   "facebook",
   "gemini",
@@ -60,6 +61,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://claude.ai/chats",
     cookieDomain: "claude.ai",
     authCookieNames: ["sessionKey"],
+  },
+  deepseek: {
+    displayName: "DeepSeek",
+    origin: "https://chat.deepseek.com",
+    homeUrl: "https://chat.deepseek.com/",
+    cookieDomain: "deepseek.com",
+    authCookieNames: [],
   },
   discordbot: {
     displayName: "Discord Bot",
