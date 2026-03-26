@@ -1,10 +1,13 @@
 import { Command } from "commander";
 
-import type { PlatformDefinition } from "./platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "./platform-definition.js";
 
-export function buildPlatformCommand(definition: PlatformDefinition): Command {
+export function buildPlatformCommand(
+  definition: PlatformDefinition,
+  options: PlatformCommandBuildOptions = {},
+): Command {
   if (definition.buildCommand) {
-    return definition.buildCommand();
+    return definition.buildCommand(options);
   }
 
   if (!definition.capabilities || definition.capabilities.length === 0) {
@@ -22,7 +25,7 @@ export function buildPlatformCommand(definition: PlatformDefinition): Command {
       "afterAll",
       `
 Examples:
-${definition.examples.map((example) => `  ${example}`).join("\n")}
+${definition.examples.map((example) => `  ${prefixPlatformExample(example, definition, options.examplePrefix)}`).join("\n")}
 `,
     );
   }
@@ -32,4 +35,20 @@ ${definition.examples.map((example) => `  ${example}`).join("\n")}
   }
 
   return command;
+}
+
+function prefixPlatformExample(example: string, definition: PlatformDefinition, prefix: string | undefined): string {
+  if (!prefix) {
+    return example;
+  }
+
+  const candidates = [definition.id, ...(definition.aliases ?? [])];
+  for (const candidate of candidates) {
+    const literal = `autocli ${candidate}`;
+    if (example === literal || example.startsWith(`${literal} `)) {
+      return example.replace(literal, `autocli ${prefix} ${candidate}`);
+    }
+  }
+
+  return example;
 }

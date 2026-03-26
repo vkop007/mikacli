@@ -3,8 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import { TelegramBotApi } from "../platforms/bots/telegrambot/api.js";
-import { TelegramBotAdapter } from "../platforms/bots/telegrambot/adapter.js";
+import { TelegramBotApi } from "../platforms/api/bots/telegrambot/api.js";
+import { TelegramBotAdapter } from "../platforms/api/bots/telegrambot/adapter.js";
 
 const TEST_BOT = {
   id: 42,

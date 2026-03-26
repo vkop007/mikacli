@@ -4,10 +4,11 @@ import { Command } from "commander";
 import pc from "picocolors";
 
 import packageJson from "../package.json" with { type: "json" };
+import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
 import { buildPlatformCommand } from "./core/runtime/build-platform-command.js";
 import { createStatusCommand } from "./commands/status.js";
 import { errorToJson } from "./errors.js";
-import { getPlatformDefinitions } from "./platforms/index.js";
+import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
 import { printJson } from "./utils/output.js";
 
 const HELP_FRAME = `${pc.bold(pc.cyan("AutoCLI"))}
@@ -26,6 +27,13 @@ async function main(): Promise<void> {
     .showHelpAfterError()
     .addHelpText("beforeAll", `${HELP_FRAME}\n`)
     .addCommand(createStatusCommand());
+
+  for (const category of getPlatformCategories()) {
+    const definitions = getPlatformDefinitionsByCategory(category);
+    if (definitions.length > 0) {
+      program.addCommand(buildCategoryCommand(category, definitions));
+    }
+  }
 
   for (const definition of getPlatformDefinitions()) {
     program.addCommand(buildPlatformCommand(definition));

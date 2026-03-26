@@ -321,14 +321,14 @@ autocli github star openai/openai-node
 Use a GitHub App installation token or bot-style token with the same GitHub command surface:
 
 ```bash
-autocli githubbot login --token <github-app-or-bot-token>
-autocli githubbot me
-autocli githubbot repos
-autocli githubbot repo openai/openai-node
-autocli githubbot issues openai/openai-node --state open --limit 10
-autocli githubbot pulls openai/openai-node --state open --limit 10
-autocli githubbot create-issue owner/repo --title "Bug report" --body "Details here"
-autocli githubbot star openai/openai-node
+autocli api githubbot login --token <github-app-or-bot-token>
+autocli api githubbot me
+autocli api githubbot repos
+autocli api githubbot repo openai/openai-node
+autocli api githubbot issues openai/openai-node --state open --limit 10
+autocli api githubbot pulls openai/openai-node --state open --limit 10
+autocli api githubbot create-issue owner/repo --title "Bug report" --body "Details here"
+autocli api githubbot star openai/openai-node
 ```
 
 ## GitLab
@@ -569,23 +569,35 @@ YouTube downloads use `yt-dlp` plus `ffmpeg`. That is the correct implementation
 
 YouTube video uploads and community posting are not implemented yet. `autocli youtube upload ...` exists as the eventual entrypoint, but it currently returns a structured unsupported-action error because the Studio upload flow is separate from the watch-page action flow.
 
+Category routes are supported too, so you can group commands by provider type:
+
+```bash
+autocli api github me
+autocli api discordbot me
+autocli social youtube search "rick astley"
+autocli music spotify search "dandelions"
+autocli music youtube-music play "dandelions"
+```
+
+The original top-level routes like `autocli youtube ...` and `autocli spotify ...` still work.
+
 Use YouTube Music search and browse actions:
 
 ```bash
-autocli youtube-music play "dandelions"
-autocli youtube-music pause
-autocli youtube-music next
-autocli youtube-music queue
-autocli youtube-music queueadd "taylor swift"
-autocli youtube-music search "dandelions"
-autocli youtube-music songid "HZbsLxL7GeM"
-autocli youtube-music related "HZbsLxL7GeM"
-autocli youtube-music albumid "MPREb_uPJnzIv7Wl1"
-autocli youtube-music artistid "UCOx12K3GqOMcIeyNTNj1Z6Q"
-autocli youtube-music playlistid "VLOLAK5uy_n2FuJRR4HTkLC7qK_aQX2Mjx-hW6TI5_k"
-autocli youtube-music login --cookies ./youtube.cookies.txt
-autocli youtube-music like "HZbsLxL7GeM"
-autocli youtube-music unlike "HZbsLxL7GeM"
+autocli music youtube-music play "dandelions"
+autocli music youtube-music pause
+autocli music youtube-music next
+autocli music youtube-music queue
+autocli music youtube-music queueadd "taylor swift"
+autocli music youtube-music search "dandelions"
+autocli music youtube-music songid "HZbsLxL7GeM"
+autocli music youtube-music related "HZbsLxL7GeM"
+autocli music youtube-music albumid "MPREb_uPJnzIv7Wl1"
+autocli music youtube-music artistid "UCOx12K3GqOMcIeyNTNj1Z6Q"
+autocli music youtube-music playlistid "VLOLAK5uy_n2FuJRR4HTkLC7qK_aQX2Mjx-hW6TI5_k"
+autocli music youtube-music login --cookies ./youtube.cookies.txt
+autocli music youtube-music like "HZbsLxL7GeM"
+autocli music youtube-music unlike "HZbsLxL7GeM"
 ```
 
 YouTube Music playback control is local to this machine. `play`, `pause`, `next`, `previous`, `queue`, and `queueadd` use `yt-dlp` to resolve playable audio and `ffplay` to run a lightweight local controller without opening the browser.
@@ -595,45 +607,45 @@ YouTube Music read commands can fall back to public browsing when there is no va
 Save a Telegram bot token:
 
 ```bash
-autocli telegrambot login --token 123456:ABCDEF --name alerts-bot
-autocli telegrambot me
-autocli telegrambot me --bot alerts-bot
-autocli telegrambot chats --limit 25
-autocli telegrambot updates --limit 10
-autocli telegrambot send 123456789 "Hello from AutoCLI"
-autocli telegrambot send-photo 123456789 ./photo.jpg --caption "Hello"
-autocli telegrambot send-audio 123456789 ./clip.mp3 --caption "Listen"
-autocli telegrambot send-voice 123456789 ./voice.ogg
-autocli telegrambot edit 123456789 42 "Updated text"
-autocli telegrambot delete 123456789 42
+autocli api telegrambot login --token 123456:ABCDEF --name alerts-bot
+autocli api telegrambot me
+autocli api telegrambot me --bot alerts-bot
+autocli api telegrambot chats --limit 25
+autocli api telegrambot updates --limit 10
+autocli api telegrambot send 123456789 "Hello from AutoCLI"
+autocli api telegrambot send-photo 123456789 ./photo.jpg --caption "Hello"
+autocli api telegrambot send-audio 123456789 ./clip.mp3 --caption "Listen"
+autocli api telegrambot send-voice 123456789 ./voice.ogg
+autocli api telegrambot edit 123456789 42 "Updated text"
+autocli api telegrambot delete 123456789 42
 ```
 
 Save a Discord bot token:
 
 ```bash
-autocli discordbot login --token <bot-token> --name ops-bot
-autocli discordbot me
-autocli discordbot guilds --bot ops-bot
-autocli discordbot channels 123456789012345678
-autocli discordbot history 123456789012345678 --limit 20
-autocli discordbot send 123456789012345678 "hello world"
-autocli discordbot send-file 123456789012345678 ./report.pdf --content "build output"
-autocli discordbot edit 123456789012345678 234567890123456789 "updated message"
-autocli discordbot delete 123456789012345678 234567890123456789
+autocli api discordbot login --token <bot-token> --name ops-bot
+autocli api discordbot me
+autocli api discordbot guilds --bot ops-bot
+autocli api discordbot channels 123456789012345678
+autocli api discordbot history 123456789012345678 --limit 20
+autocli api discordbot send 123456789012345678 "hello world"
+autocli api discordbot send-file 123456789012345678 ./report.pdf --content "build output"
+autocli api discordbot edit 123456789012345678 234567890123456789 "updated message"
+autocli api discordbot delete 123456789012345678 234567890123456789
 ```
 
 Save a Slack bot token:
 
 ```bash
-autocli slackbot login --token xoxb-123 --name alerts-bot
-autocli slackbot me
-autocli slackbot me --bot alerts-bot
-autocli slackbot channels
-autocli slackbot history general --limit 20
-autocli slackbot send general "hello from AutoCLI"
-autocli slackbot send-file general ./build.log --comment "nightly build"
-autocli slackbot edit general 1700000000.000000 "updated text"
-autocli slackbot delete general 1700000000.000000
+autocli api slackbot login --token xoxb-123 --name alerts-bot
+autocli api slackbot me
+autocli api slackbot me --bot alerts-bot
+autocli api slackbot channels
+autocli api slackbot history general --limit 20
+autocli api slackbot send general "hello from AutoCLI"
+autocli api slackbot send-file general ./build.log --comment "nightly build"
+autocli api slackbot edit general 1700000000.000000 "updated text"
+autocli api slackbot delete general 1700000000.000000
 ```
 
 If you connect multiple accounts for the same platform, AutoCLI keeps them all as named session files and uses the most recently logged-in one by default.

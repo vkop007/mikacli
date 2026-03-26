@@ -27,15 +27,19 @@ src/platforms/
       adapter.ts
       manifest.ts
       capabilities/
-  public/
+    bots/
+      <name>/
+        adapter.ts
+        manifest.ts
+        capabilities/
+  music/
     <name>/
       adapter.ts
       manifest.ts
       capabilities/
-  bots/
+  public/
     <name>/
       adapter.ts
-      command.ts
       manifest.ts
       capabilities/
   social/
@@ -54,6 +58,7 @@ Rules:
 - Keep root CLI wiring out of `src/index.ts`; the root only loads platform definitions.
 - Use `manifest.ts` as the single entrypoint for a platform.
 - Set `category` in every `PlatformDefinition`.
+- Category commands are mounted automatically as `autocli <category> <platform>`.
 - Prefer `capabilities` for new work.
 - Keep `src/commands/*` as compatibility wrappers only.
 - Use the shared connection layer in `src/core/auth/connection-store.ts`.
@@ -65,10 +70,11 @@ Rules:
 Current examples:
 
 - All current platforms are capability-based.
-- Bot-token platforms: `src/platforms/bots/discordbot/`, `src/platforms/bots/githubbot/`, `src/platforms/bots/slackbot/`, `src/platforms/bots/telegrambot/`
 - API-token platforms: `src/platforms/api/github/`, `src/platforms/api/gitlab/`, `src/platforms/api/linear/`, `src/platforms/api/notion/`
+- Bot-token API platforms: `src/platforms/api/bots/discordbot/`, `src/platforms/api/bots/githubbot/`, `src/platforms/api/bots/slackbot/`, `src/platforms/api/bots/telegrambot/`
+- Music platforms: `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
 - Public utility platforms: `src/platforms/public/cheat/`, `src/platforms/public/ip/`, `src/platforms/public/news/`, `src/platforms/public/qr/`, `src/platforms/public/time/`, `src/platforms/public/weather/`, `src/platforms/public/websearch/`
-- Cookie-backed platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/spotify/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
+- Cookie-backed social platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
 - Spotify specifically now uses an internal engine split:
   - `web` for standard Web API endpoints
   - `connect` for connect-state playback/device/queue control
