@@ -388,7 +388,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
   async postText(_input: TextPostInput): Promise<AdapterActionResult> {
     throw new AutoCliError(
       "UNSUPPORTED_ACTION",
-      "Instagram web sessions cannot publish a text-only post. Use `autocli instagram post <media-path> --caption ...`.",
+      "Instagram web sessions cannot publish a text-only post. Use `autocli social instagram post <media-path> --caption ...`.",
     );
   }
 
