@@ -11,6 +11,7 @@ describe("platform category routing", () => {
       "claude",
       "deepseek",
       "gemini",
+      "grok",
       "qwen",
       "zai",
     ]);
@@ -45,5 +46,19 @@ describe("platform category routing", () => {
     const command = buildCategoryCommand("music", getPlatformDefinitionsByCategory("music"));
     expect(command.name()).toBe("music");
     expect(command.commands.map((nested) => nested.name())).toEqual(["spotify", "youtube-music"]);
+  });
+
+  test("includes the new no-key public utility providers", () => {
+    const publicIds = getPlatformDefinitionsByCategory("public").map((definition) => definition.id);
+    expect(publicIds).toContain("translate");
+    expect(publicIds).toContain("currency");
+    expect(publicIds).toContain("dns");
+    expect(publicIds).toContain("whois");
+    expect(publicIds).toContain("rss");
+    expect(publicIds).toContain("sitemap");
+    expect(publicIds).toContain("robots");
+    expect(publicIds).toContain("stocks");
+    expect(publicIds).toContain("crypto");
+    expect(publicIds).toContain("markdown-fetch");
   });
 });

@@ -1,0 +1,55 @@
+import { Command } from "commander";
+
+import { Logger } from "../../../logger.js";
+import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
+import { cryptoAdapter } from "./adapter.js";
+import { cryptoCapabilities } from "./capabilities/index.js";
+import { printCryptoResult } from "./output.js";
+
+import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+
+function buildCryptoCommand(): Command {
+  const command = new Command("crypto").description("Load crypto prices from a public no-key market feed");
+  command.argument("<asset>", "Crypto asset id, symbol, or name");
+  command.option("--vs <currency>", "Quote currency such as usd, inr, eur (default: usd)", "usd");
+  command.addHelpText(
+    "afterAll",
+    `
+Examples:
+  autocli crypto bitcoin
+  autocli crypto btc --vs usd
+  autocli crypto ethereum --vs inr
+`,
+  );
+
+  command.action(async (asset: string, options: Record<string, unknown>, cmd: Command) => {
+    const ctx = resolveCommandContext(cmd);
+    const logger = new Logger(ctx);
+    const spinner = logger.spinner("Loading crypto price...");
+
+    await runCommandAction({
+      spinner,
+      successMessage: "Crypto price loaded.",
+      action: () =>
+        cryptoAdapter.price({
+          asset,
+          vs: options.vs as string | undefined,
+        }),
+      onSuccess: (result) => printCryptoResult(result, ctx.json),
+    });
+  });
+
+  return command;
+}
+
+export const cryptoPlatformDefinition: PlatformDefinition = {
+  id: "crypto" as PlatformDefinition["id"],
+  category: "public",
+  displayName: "Crypto",
+  description: "Load crypto prices from CoinGecko without any account setup",
+  authStrategies: ["none"],
+  buildCommand: buildCryptoCommand,
+  adapter: cryptoAdapter,
+  capabilities: cryptoCapabilities,
+  examples: ["autocli crypto bitcoin", "autocli crypto btc --vs usd", "autocli crypto ethereum --vs inr"],
+};

@@ -15,11 +15,21 @@ import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
 import { notionPlatformDefinition } from "./api/notion/manifest.js";
 import { cheatPlatformDefinition } from "./public/cheat/manifest.js";
+import { cryptoPlatformDefinition } from "./public/crypto/manifest.js";
+import { currencyPlatformDefinition } from "./public/currency/manifest.js";
+import { dnsPlatformDefinition } from "./public/dns/manifest.js";
 import { ipPlatformDefinition } from "./public/ip/manifest.js";
+import { markdownFetchPlatformDefinition } from "./public/markdown-fetch/manifest.js";
 import { qrPlatformDefinition } from "./public/qr/manifest.js";
+import { robotsPlatformDefinition } from "./public/robots/manifest.js";
+import { rssPlatformDefinition } from "./public/rss/manifest.js";
+import { sitemapPlatformDefinition } from "./public/sitemap/manifest.js";
+import { stocksPlatformDefinition } from "./public/stocks/manifest.js";
 import { timePlatformDefinition } from "./public/time/manifest.js";
+import { translatePlatformDefinition } from "./public/translate/manifest.js";
 import { weatherPlatformDefinition } from "./public/weather/manifest.js";
 import { webSearchPlatformDefinition } from "./public/websearch/manifest.js";
+import { whoisPlatformDefinition } from "./public/whois/manifest.js";
 import { zaiPlatformDefinition } from "./llm/zai/manifest.js";
 import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
@@ -36,7 +46,10 @@ const definitions: readonly PlatformDefinition[] = [
   cheatPlatformDefinition,
   chatgptPlatformDefinition,
   claudePlatformDefinition,
+  cryptoPlatformDefinition,
+  currencyPlatformDefinition,
   deepSeekPlatformDefinition,
+  dnsPlatformDefinition,
   discordBotPlatformDefinition,
   facebookPlatformDefinition,
   geminiPlatformDefinition,
@@ -47,18 +60,25 @@ const definitions: readonly PlatformDefinition[] = [
   gitlabPlatformDefinition,
   ipPlatformDefinition,
   instagramPlatformDefinition,
+  markdownFetchPlatformDefinition,
   newsPlatformDefinition,
   linkedinPlatformDefinition,
   linearPlatformDefinition,
   notionPlatformDefinition,
   qrPlatformDefinition,
+  robotsPlatformDefinition,
+  rssPlatformDefinition,
+  sitemapPlatformDefinition,
   slackbotPlatformDefinition,
   spotifyPlatformDefinition,
+  stocksPlatformDefinition,
   telegrambotPlatformDefinition,
   tiktokPlatformDefinition,
   timePlatformDefinition,
+  translatePlatformDefinition,
   weatherPlatformDefinition,
   webSearchPlatformDefinition,
+  whoisPlatformDefinition,
   xPlatformDefinition,
   youtubePlatformDefinition,
   youtubeMusicPlatformDefinition,
