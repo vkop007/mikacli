@@ -13,6 +13,8 @@ export function printSubtitleEditorResult(result: AdapterActionResult, json: boo
 
   const data = result.data ?? {};
   const outputPath = asString(data.outputPath);
+  const videoPath = asString(data.videoPath);
+  const subtitlePath = asString(data.subtitlePath);
   const format = asString(data.format);
   const cueCount = asNumber(data.cueCount);
   const shiftMs = asNumber(data.shiftMs);
@@ -21,6 +23,14 @@ export function printSubtitleEditorResult(result: AdapterActionResult, json: boo
 
   if (outputPath) {
     console.log(`file: ${outputPath}`);
+  }
+
+  if (videoPath) {
+    console.log(`video: ${videoPath}`);
+  }
+
+  if (subtitlePath) {
+    console.log(`subtitle: ${subtitlePath}`);
   }
 
   if (format) {

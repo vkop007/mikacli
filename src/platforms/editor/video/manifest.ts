@@ -12,10 +12,12 @@ const EXAMPLES = [
   "autocli video info ./clip.mp4",
   "autocli video trim ./clip.mp4 --start 00:00:05 --duration 10",
   "autocli video split ./clip.mp4 --duration 00:00:15 --output-dir ./parts",
+  "autocli video scene-detect ./clip.mp4",
   "autocli video convert ./clip.mov --to mp4",
   "autocli video compress ./clip.mp4 --crf 28",
   "autocli video speed ./clip.mp4 --factor 1.5",
   "autocli video reverse ./clip.mp4",
+  "autocli video boomerang ./clip.mp4",
   "autocli video overlay-image ./clip.mp4 --overlay ./logo.png --position bottom-right",
   'autocli video overlay-text ./clip.mp4 "Ship it" --position bottom-center',
   "autocli video audio-replace ./clip.mp4 --audio ./music.mp3",
@@ -112,6 +114,27 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
     );
 
   command
+    .command("scene-detect")
+    .description("Detect scene changes in a local video")
+    .argument("<inputPath>", "Input video path")
+    .option("--threshold <value>", "Scene change threshold between 0 and 100", "10")
+    .action(async (inputPath: string, input: { threshold?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Detecting scene changes...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Scene changes detected.",
+        action: () =>
+          videoEditorAdapter.sceneDetect({
+            inputPath,
+            threshold: input.threshold,
+          }),
+        onSuccess: (result) => printVideoEditorResult(result, ctx.json),
+      });
+    });
+
+  command
     .command("convert")
     .description("Convert a local video to another format")
     .argument("<inputPath>", "Input video path")
@@ -203,6 +226,23 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
         spinner,
         successMessage: "Video reversed.",
         action: () => videoEditorAdapter.reverse({ inputPath, output: input.output }),
+        onSuccess: (result) => printVideoEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("boomerang")
+    .description("Create a boomerang-style video that plays forward and backward")
+    .argument("<inputPath>", "Input video path")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Creating boomerang...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Boomerang created.",
+        action: () => videoEditorAdapter.boomerang({ inputPath, output: input.output }),
         onSuccess: (result) => printVideoEditorResult(result, ctx.json),
       });
     });

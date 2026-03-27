@@ -1,4 +1,5 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import { basename, extname, join, parse, resolve } from "node:path";
 
@@ -29,6 +30,11 @@ type VideoTrimInput = {
   output?: string;
 };
 
+type VideoSceneDetectInput = {
+  inputPath: string;
+  threshold?: number | string;
+};
+
 type VideoConvertInput = {
   inputPath: string;
   to: string;
@@ -50,6 +56,11 @@ type VideoSpeedInput = {
 };
 
 type VideoReverseInput = {
+  inputPath: string;
+  output?: string;
+};
+
+type VideoBoomerangInput = {
   inputPath: string;
   output?: string;
 };
@@ -228,6 +239,60 @@ export class VideoEditorAdapter {
         start: input.start ?? null,
         end: input.end ?? null,
         duration: input.duration ?? null,
+      },
+    });
+  }
+
+  async sceneDetect(input: VideoSceneDetectInput): Promise<AdapterActionResult> {
+    const resolvedInput = await assertLocalInputFile(input.inputPath);
+    const probe = await runFfprobe(resolvedInput);
+    const videoStream = (probe.streams ?? []).find((entry) => entry.codec_type === "video");
+
+    if (!videoStream) {
+      throw new AutoCliError("VIDEO_INFO_UNAVAILABLE", "Could not read video stream information from the file.", {
+        details: {
+          inputPath: resolvedInput,
+        },
+      });
+    }
+
+    const rawThreshold = clampNumber(toNumber(input.threshold) ?? 10, 0, 100);
+    const threshold = rawThreshold > 1 ? rawThreshold / 100 : rawThreshold;
+    const log = await runVideoAnalysis({
+      inputPath: resolvedInput,
+      args: [
+        "-vf",
+        `scdet=threshold=${formatFilterNumber(threshold)},metadata=print`,
+        "-an",
+        "-f",
+        "null",
+        "-",
+      ],
+    });
+
+    const sceneChanges = parseSceneDetectLog(log);
+    const sceneSegments = buildSceneSegments(sceneChanges, toNumber(probe.format?.duration) ?? toNumber(videoStream.duration));
+
+    return this.buildResult({
+      action: "scene-detect",
+      message:
+        sceneChanges.length > 0
+          ? `Detected ${sceneChanges.length} scene change${sceneChanges.length === 1 ? "" : "s"} in ${basename(resolvedInput)}.`
+          : `No scene changes detected in ${basename(resolvedInput)} at threshold ${rawThreshold}.`,
+      data: {
+        inputPath: resolvedInput,
+        format: probe.format?.format_name ?? null,
+        width: videoStream.width ?? null,
+        height: videoStream.height ?? null,
+        videoCodec: videoStream.codec_name ?? null,
+        audioCodec: (probe.streams ?? []).find((entry) => entry.codec_type === "audio")?.codec_name ?? null,
+        durationSeconds: toNumber(probe.format?.duration) ?? toNumber(videoStream.duration) ?? null,
+        fps: parseRate(videoStream.r_frame_rate) ?? null,
+        threshold: rawThreshold,
+        internalThreshold: threshold,
+        sceneCount: sceneChanges.length,
+        sceneChanges,
+        sceneSegments,
       },
     });
   }
@@ -448,6 +513,60 @@ export class VideoEditorAdapter {
       data: {
         inputPath: input.inputPath,
         outputPath: resolvedOutput,
+        hasAudio,
+      },
+    });
+  }
+
+  async boomerang(input: VideoBoomerangInput): Promise<AdapterActionResult> {
+    const resolvedInput = await assertLocalInputFile(input.inputPath);
+    const probe = await runFfprobe(resolvedInput);
+    const hasAudio = (probe.streams ?? []).some((entry) => entry.codec_type === "audio");
+    const format = normalizeVideoExtension(extname(resolvedInput).replace(/^\./, "") || "mp4");
+    const outputPath = resolveEditorOutputPath({
+      inputPath: resolvedInput,
+      output: input.output,
+      suffix: "boomerang",
+      extension: format,
+    });
+
+    const args = hasAudio
+      ? [
+          "-i",
+          "{input}",
+          "-filter_complex",
+          "[0:v]split[v1][v2];[v2]reverse[vrev];[0:a]asplit[a1][a2];[a2]areverse[arev];[v1][a1][vrev][arev]concat=n=2:v=1:a=1[v][a]",
+          "-map",
+          "[v]",
+          "-map",
+          "[a]",
+          ...buildVideoCodecArgs(format, 21, "medium"),
+          "{output}",
+        ]
+      : [
+          "-i",
+          "{input}",
+          "-filter_complex",
+          "[0:v]split[v1][v2];[v2]reverse[vrev];[v1][vrev]concat=n=2:v=1:a=0[v]",
+          "-map",
+          "[v]",
+          ...buildVideoCodecArgs(format, 21, "medium"),
+          "{output}",
+        ];
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: resolvedInput,
+      outputPath,
+      args,
+    });
+
+    return this.buildResult({
+      action: "boomerang",
+      message: `Saved boomerang video to ${resolvedOutput}.`,
+      data: {
+        inputPath: resolvedInput,
+        outputPath: resolvedOutput,
+        format,
         hasAudio,
       },
     });
@@ -1300,4 +1419,178 @@ function escapeFfmpegConcatPath(value: string): string {
 
 function escapeSubtitleFilterPath(value: string): string {
   return resolve(value).replace(/\\/g, "/").replace(/:/g, "\\:").replace(/'/g, "\\'");
+}
+
+async function runVideoAnalysis(input: {
+  inputPath: string;
+  args: readonly string[];
+}): Promise<string> {
+  const resolvedInput = await assertLocalInputFile(input.inputPath);
+
+  return new Promise<string>((resolvePromise, rejectPromise) => {
+    const child = spawn(process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg", ["-hide_banner", "-nostats", "-loglevel", "info", "-i", resolvedInput, ...input.args], {
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stderr = "";
+
+    child.stderr.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
+
+    child.on("error", (error) => {
+      rejectPromise(
+        new AutoCliError("FFMPEG_NOT_AVAILABLE", "ffmpeg is not installed or not available in PATH.", {
+          details: {
+            command: process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg",
+          },
+          cause: error,
+        }),
+      );
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolvePromise(stderr);
+        return;
+      }
+
+      rejectPromise(
+        new AutoCliError("EDITOR_COMMAND_FAILED", `ffmpeg exited with code ${code}.`, {
+          details: {
+            command: process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg",
+            args: input.args,
+            stderr: stderr.trim() || null,
+          },
+        }),
+      );
+    });
+  });
+}
+
+function parseSceneDetectLog(log: string): Array<{
+  index: number;
+  timestampSeconds: number;
+  timestamp: string;
+  score: number | null;
+  frame: number | null;
+}> {
+  const sceneChanges: Array<{
+    index: number;
+    timestampSeconds: number;
+    timestamp: string;
+    score: number | null;
+    frame: number | null;
+  }> = [];
+  const seenTimestamps = new Set<number>();
+  let currentFrame: number | null = null;
+  let currentScore: number | null = null;
+
+  for (const line of log.split(/\r?\n/)) {
+    const frameMatch = /frame:(\d+)/.exec(line);
+    if (frameMatch) {
+      currentFrame = Number(frameMatch[1]);
+    }
+
+    const scoreMatch = /lavfi\.scd\.score=([0-9]+(?:\.[0-9]+)?)/.exec(line);
+    if (scoreMatch) {
+      currentScore = Number(scoreMatch[1]);
+    }
+
+    const timeMatch = /lavfi\.scd\.time=([0-9]+(?:\.[0-9]+)?)/.exec(line);
+    if (!timeMatch) {
+      continue;
+    }
+
+    const timestampSeconds = Number(timeMatch[1]);
+    if (!Number.isFinite(timestampSeconds)) {
+      continue;
+    }
+
+    const rounded = Number(timestampSeconds.toFixed(3));
+    if (seenTimestamps.has(rounded)) {
+      continue;
+    }
+
+    seenTimestamps.add(rounded);
+    sceneChanges.push({
+      index: sceneChanges.length + 1,
+      timestampSeconds,
+      timestamp: formatSceneTimestamp(timestampSeconds),
+      score: currentScore !== null && Number.isFinite(currentScore) ? currentScore : null,
+      frame: currentFrame !== null && Number.isFinite(currentFrame) ? currentFrame : null,
+    });
+  }
+
+  return sceneChanges;
+}
+
+function buildSceneSegments(
+  sceneChanges: Array<{
+    index: number;
+    timestampSeconds: number;
+    timestamp: string;
+    score: number | null;
+    frame: number | null;
+  }>,
+  durationSeconds: number | undefined,
+): Array<{
+  index: number;
+  startSeconds: number;
+  start: string;
+  endSeconds: number | null;
+  end: string | null;
+  durationSeconds: number | null;
+}> {
+  const boundaries = [0, ...sceneChanges.map((scene) => scene.timestampSeconds)];
+  if (typeof durationSeconds === "number" && Number.isFinite(durationSeconds) && durationSeconds > 0) {
+    boundaries.push(durationSeconds);
+  }
+
+  const segments: Array<{
+    index: number;
+    startSeconds: number;
+    start: string;
+    endSeconds: number | null;
+    end: string | null;
+    durationSeconds: number | null;
+  }> = [];
+
+  for (let index = 0; index < boundaries.length - 1; index += 1) {
+    const startSeconds = boundaries[index]!;
+    const endSeconds = boundaries[index + 1] ?? null;
+    segments.push({
+      index: index + 1,
+      startSeconds,
+      start: formatSceneTimestamp(startSeconds),
+      endSeconds,
+      end: endSeconds !== null ? formatSceneTimestamp(endSeconds) : null,
+      durationSeconds: endSeconds !== null ? Math.max(0, endSeconds - startSeconds) : null,
+    });
+  }
+
+  if (segments.length === 0) {
+    const hasDuration = typeof durationSeconds === "number" && Number.isFinite(durationSeconds) && durationSeconds > 0;
+    segments.push({
+      index: 1,
+      startSeconds: 0,
+      start: formatSceneTimestamp(0),
+      endSeconds: hasDuration ? durationSeconds : null,
+      end: hasDuration ? formatSceneTimestamp(durationSeconds) : null,
+      durationSeconds: hasDuration ? Math.max(0, durationSeconds) : null,
+    });
+  }
+
+  return segments;
+}
+
+function formatSceneTimestamp(seconds: number): string {
+  const totalMillis = Math.max(0, Math.round(seconds * 1000));
+  const hours = Math.floor(totalMillis / 3_600_000);
+  const minutes = Math.floor((totalMillis % 3_600_000) / 60_000);
+  const secs = Math.floor((totalMillis % 60_000) / 1000);
+  const millis = totalMillis % 1000;
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
 }

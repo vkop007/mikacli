@@ -16,6 +16,7 @@ const EXAMPLES = [
   "autocli subtitle sync ./captions.vtt --by 2.5",
   "autocli subtitle clean ./captions.srt",
   "autocli subtitle merge ./chapter1.srt ./chapter2.srt",
+  "autocli subtitle burn ./movie.mp4 --subtitle ./captions.srt --output ./movie.subtitled.mp4",
 ] as const;
 
 function buildSubtitleEditorCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -151,6 +152,29 @@ function buildSubtitleEditorCommand(options: PlatformCommandBuildOptions = {}): 
         });
       },
     );
+
+  command
+    .command("burn")
+    .description("Burn a subtitle file into a local video using ffmpeg")
+    .argument("<inputPath>", "Input video path")
+    .requiredOption("--subtitle <path>", "Subtitle file path to burn into the video")
+    .option("--output <path>", "Exact output video path")
+    .action(async (inputPath: string, input: { subtitle: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Burning subtitles into video...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Subtitles burned into video.",
+        action: () =>
+          subtitleEditorAdapter.burn({
+            inputPath,
+            subtitlePath: input.subtitle,
+            output: input.output,
+          }),
+        onSuccess: (result) => printSubtitleEditorResult(result, ctx.json),
+      });
+    });
 
   return command;
 }

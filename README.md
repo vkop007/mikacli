@@ -134,6 +134,8 @@ Reference points:
   - `normalize`
   - `volume`
   - `denoise`
+  - `silence-detect`
+  - `loudness-report`
   - `waveform`
   - `spectrogram`
 - Cheat
@@ -158,6 +160,8 @@ Reference points:
   - `merge`
   - `split`
   - `extract-pages`
+  - `remove-pages`
+  - `metadata`
   - `rotate`
   - `reorder-pages`
   - `watermark`
@@ -198,15 +202,18 @@ Reference points:
   - `shift`
   - `sync`
   - `clean`
+  - `burn`
   - `merge`
 - Video Editor
   - `info`
   - `trim`
   - `split`
+  - `scene-detect`
   - `convert`
   - `compress`
   - `speed`
   - `reverse`
+  - `boomerang`
   - `overlay-image`
   - `overlay-text`
   - `audio-replace`

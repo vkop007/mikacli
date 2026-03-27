@@ -77,6 +77,19 @@ type AudioVolumeInput = {
   output?: string;
 };
 
+type AudioSilenceDetectInput = {
+  inputPath: string;
+  threshold?: string;
+  duration?: number | string;
+};
+
+type AudioLoudnessReportInput = {
+  inputPath: string;
+  targetLufs?: number | string;
+  truePeak?: number | string;
+  lra?: number | string;
+};
+
 type AudioDenoiseInput = {
   inputPath: string;
   reduction?: number | string;
@@ -491,6 +504,87 @@ export class AudioEditorAdapter {
     });
   }
 
+  async silenceDetect(input: AudioSilenceDetectInput): Promise<AdapterActionResult> {
+    const threshold = input.threshold?.trim() || "-50dB";
+    const durationSeconds = clampDurationSeconds(toNumber(input.duration) ?? 0.5);
+    const probe = await runFfprobe(input.inputPath);
+    const audioStream = (probe.streams ?? []).find((entry) => entry.codec_type === "audio");
+    const output = await runAudioAnalysisCommand([
+      "-hide_banner",
+      "-nostats",
+      "-i",
+      await assertLocalInputFile(input.inputPath),
+      "-af",
+      `silencedetect=n=${threshold}:d=${durationSeconds}`,
+      "-f",
+      "null",
+      "-",
+    ]);
+
+    const parsed = parseSilenceDetectOutput(output.stderr);
+
+    return this.buildResult({
+      action: "silence-detect",
+      message: parsed.segments.length > 0
+        ? `Detected ${parsed.segments.length} silence segment${parsed.segments.length === 1 ? "" : "s"}.`
+        : "No silence segments detected.",
+      data: {
+        inputPath: input.inputPath,
+        format: probe.format?.format_name ?? null,
+        codec: audioStream?.codec_name ?? null,
+        threshold,
+        minimumSilenceDurationSeconds: durationSeconds,
+        segmentCount: parsed.segments.length,
+        totalSilenceDurationSeconds: parsed.totalDurationSeconds,
+        segments: parsed.segments,
+      },
+    });
+  }
+
+  async loudnessReport(input: AudioLoudnessReportInput): Promise<AdapterActionResult> {
+    const targetLufs = toNumber(input.targetLufs) ?? -16;
+    const truePeak = toNumber(input.truePeak) ?? -1.5;
+    const loudnessRange = toNumber(input.lra) ?? 11;
+    const probe = await runFfprobe(input.inputPath);
+    const audioStream = (probe.streams ?? []).find((entry) => entry.codec_type === "audio");
+    const output = await runAudioAnalysisCommand([
+      "-hide_banner",
+      "-nostats",
+      "-i",
+      await assertLocalInputFile(input.inputPath),
+      "-af",
+      `loudnorm=I=${targetLufs}:TP=${truePeak}:LRA=${loudnessRange}:print_format=json`,
+      "-f",
+      "null",
+      "-",
+    ]);
+
+    const report = parseLoudnessReportOutput(output.stderr);
+
+    return this.buildResult({
+      action: "loudness-report",
+      message: "Analyzed audio loudness.",
+      data: {
+        inputPath: input.inputPath,
+        format: probe.format?.format_name ?? null,
+        codec: audioStream?.codec_name ?? null,
+        targetLufs,
+        truePeak,
+        loudnessRange,
+        inputIntegratedLufs: report.inputIntegratedLufs,
+        inputTruePeakDbfs: report.inputTruePeakDbfs,
+        inputLoudnessRangeLu: report.inputLoudnessRangeLu,
+        inputThresholdLufs: report.inputThresholdLufs,
+        outputIntegratedLufs: report.outputIntegratedLufs,
+        outputTruePeakDbfs: report.outputTruePeakDbfs,
+        outputLoudnessRangeLu: report.outputLoudnessRangeLu,
+        outputThresholdLufs: report.outputThresholdLufs,
+        normalizationType: report.normalizationType,
+        targetOffsetDb: report.targetOffsetDb,
+      },
+    });
+  }
+
   async denoise(input: AudioDenoiseInput): Promise<AdapterActionResult> {
     const reduction = clampNumber(toNumber(input.reduction) ?? 18, 0.1, 97);
     const noiseFloor = clampNumber(toNumber(input.noiseFloor) ?? -50, -80, -20);
@@ -723,4 +817,167 @@ async function runAudioCommand(args: readonly string[]): Promise<void> {
       );
     });
   });
+}
+
+async function runAudioAnalysisCommand(args: readonly string[]): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolvePromise, rejectPromise) => {
+    const child = spawn(process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg", args, {
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
+
+    child.on("error", (error) => {
+      rejectPromise(
+        new AutoCliError("FFMPEG_NOT_AVAILABLE", "ffmpeg is not installed or not available in PATH.", {
+          details: {
+            command: process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg",
+          },
+          cause: error,
+        }),
+      );
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolvePromise({ stdout, stderr });
+        return;
+      }
+
+      rejectPromise(
+        new AutoCliError("EDITOR_COMMAND_FAILED", `ffmpeg exited with code ${code}.`, {
+          details: {
+            command: process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg",
+            args,
+            stderr: stderr.trim() || null,
+            stdout: stdout.trim() || null,
+          },
+        }),
+      );
+    });
+  });
+}
+
+export function parseSilenceDetectOutput(stderr: string): {
+  segments: Array<{
+    startSeconds: number;
+    endSeconds: number | null;
+    durationSeconds: number | null;
+  }>;
+  totalDurationSeconds: number;
+} {
+  const segments: Array<{
+    startSeconds: number;
+    endSeconds: number | null;
+    durationSeconds: number | null;
+  }> = [];
+  let currentStart: number | null = null;
+  let totalDurationSeconds = 0;
+
+  for (const line of stderr.split(/\r?\n/)) {
+    const startMatch = line.match(/silence_start:\s*([0-9.]+)/);
+    if (startMatch) {
+      currentStart = Number(startMatch[1]);
+      if (Number.isFinite(currentStart)) {
+        segments.push({ startSeconds: currentStart, endSeconds: null, durationSeconds: null });
+      }
+      continue;
+    }
+
+    const endMatch = line.match(/silence_end:\s*([0-9.]+)\s*\|\s*silence_duration:\s*([0-9.]+)/);
+    if (endMatch) {
+      const endSeconds = Number(endMatch[1]);
+      const durationSeconds = Number(endMatch[2]);
+      if (Number.isFinite(endSeconds) && Number.isFinite(durationSeconds)) {
+        totalDurationSeconds += durationSeconds;
+        for (let index = segments.length - 1; index >= 0; index -= 1) {
+          const segment = segments[index];
+          if (segment && segment.endSeconds === null) {
+            segment.endSeconds = endSeconds;
+            segment.durationSeconds = durationSeconds;
+            break;
+          }
+        }
+        currentStart = null;
+      }
+    }
+  }
+
+  if (currentStart !== null && segments.length > 0) {
+    const lastSegment = segments[segments.length - 1];
+    if (lastSegment && lastSegment.endSeconds === null) {
+      lastSegment.startSeconds = currentStart;
+    }
+  }
+
+  return {
+    segments,
+    totalDurationSeconds,
+  };
+}
+
+export function parseLoudnessReportOutput(stderr: string): {
+  inputIntegratedLufs: number | null;
+  inputTruePeakDbfs: number | null;
+  inputLoudnessRangeLu: number | null;
+  inputThresholdLufs: number | null;
+  outputIntegratedLufs: number | null;
+  outputTruePeakDbfs: number | null;
+  outputLoudnessRangeLu: number | null;
+  outputThresholdLufs: number | null;
+  normalizationType: string | null;
+  targetOffsetDb: number | null;
+} {
+  const jsonBlock = extractLastJsonBlock(stderr);
+  if (!jsonBlock) {
+    throw new AutoCliError("AUDIO_LOUDNESS_REPORT_UNAVAILABLE", "Could not parse ffmpeg loudness analysis output.", {
+      details: {
+        stderr: stderr.trim() || null,
+      },
+    });
+  }
+
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(jsonBlock) as Record<string, unknown>;
+  } catch (error) {
+    throw new AutoCliError("AUDIO_LOUDNESS_REPORT_UNAVAILABLE", "Could not parse ffmpeg loudness analysis output.", {
+      details: {
+        stderr: stderr.trim() || null,
+      },
+      cause: error,
+    });
+  }
+
+  return {
+    inputIntegratedLufs: toNumber(parsed.input_i as string | number | undefined) ?? null,
+    inputTruePeakDbfs: toNumber(parsed.input_tp as string | number | undefined) ?? null,
+    inputLoudnessRangeLu: toNumber(parsed.input_lra as string | number | undefined) ?? null,
+    inputThresholdLufs: toNumber(parsed.input_thresh as string | number | undefined) ?? null,
+    outputIntegratedLufs: toNumber(parsed.output_i as string | number | undefined) ?? null,
+    outputTruePeakDbfs: toNumber(parsed.output_tp as string | number | undefined) ?? null,
+    outputLoudnessRangeLu: toNumber(parsed.output_lra as string | number | undefined) ?? null,
+    outputThresholdLufs: toNumber(parsed.output_thresh as string | number | undefined) ?? null,
+    normalizationType: typeof parsed.normalization_type === "string" ? parsed.normalization_type : null,
+    targetOffsetDb: toNumber(parsed.target_offset as string | number | undefined) ?? null,
+  };
+}
+
+function extractLastJsonBlock(value: string): string | null {
+  const start = value.lastIndexOf("{");
+  const end = value.lastIndexOf("}");
+  if (start < 0 || end < 0 || end <= start) {
+    return null;
+  }
+
+  return value.slice(start, end + 1);
 }

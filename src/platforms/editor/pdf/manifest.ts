@@ -13,6 +13,9 @@ const EXAMPLES = [
   "autocli pdf merge ./out.pdf ./a.pdf ./b.pdf",
   "autocli pdf split ./book.pdf --output-dir ./pages",
   'autocli pdf extract-pages ./book.pdf --pages "1,3-5" --output ./excerpt.pdf',
+  'autocli pdf remove-pages ./book.pdf --pages "2,4-6" --output ./book-trimmed.pdf',
+  'autocli pdf metadata ./book.pdf',
+  'autocli pdf metadata ./book.pdf --title "New Title" --author "AutoCLI" --output ./book-updated.pdf',
   "autocli pdf rotate ./book.pdf --angle 90 --pages 1-3 --output ./book-rotated.pdf",
   'autocli pdf reorder-pages ./book.pdf --pages "3,1-2" --output ./book-reordered.pdf',
   'autocli pdf watermark ./book.pdf --text "CONFIDENTIAL" --pages "1-3"',
@@ -114,6 +117,82 @@ function buildPdfCommand(options: PlatformCommandBuildOptions = {}): Command {
         onSuccess: (result) => printPdfResult(result, ctx.json),
       });
     });
+
+  command
+    .command("remove-pages")
+    .description("Create a new PDF without the selected pages")
+    .argument("<inputPath>", "Input PDF path")
+    .requiredOption("--pages <spec>", "Comma-separated page spec like 1,3-5")
+    .option("--output <path>", "Output PDF path")
+    .action(async (inputPath: string, input: { pages: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Removing PDF pages...");
+      await runCommandAction({
+        spinner,
+        successMessage: "PDF pages removed.",
+        action: () =>
+          pdfEditorAdapter.removePages({
+            inputPath,
+            pages: input.pages,
+            outputPath: input.output,
+          }),
+        onSuccess: (result) => printPdfResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("metadata")
+    .description("Inspect or update PDF metadata")
+    .argument("<inputPath>", "Input PDF path")
+    .option("--output <path>", "Output PDF path")
+    .option("--title <value>", "Metadata title")
+    .option("--author <value>", "Metadata author")
+    .option("--subject <value>", "Metadata subject")
+    .option("--keywords <values>", "Comma-separated metadata keywords")
+    .option("--creator <value>", "Metadata creator")
+    .option("--producer <value>", "Metadata producer")
+    .option("--creation-date <value>", "Metadata creation date (ISO-8601 or parseable date)")
+    .option("--modification-date <value>", "Metadata modification date (ISO-8601 or parseable date)")
+    .action(
+      async (
+        inputPath: string,
+        input: {
+          output?: string;
+          title?: string;
+          author?: string;
+          subject?: string;
+          keywords?: string;
+          creator?: string;
+          producer?: string;
+          creationDate?: string;
+          modificationDate?: string;
+        },
+        cmd: Command,
+      ) => {
+        const ctx = resolveCommandContext(cmd);
+        const logger = new Logger(ctx);
+        const spinner = logger.spinner("Reading PDF metadata...");
+        await runCommandAction({
+          spinner,
+          successMessage: "PDF metadata processed.",
+          action: () =>
+            pdfEditorAdapter.metadata({
+              inputPath,
+              outputPath: input.output,
+              title: input.title,
+              author: input.author,
+              subject: input.subject,
+              keywords: input.keywords,
+              creator: input.creator,
+              producer: input.producer,
+              creationDate: input.creationDate,
+              modificationDate: input.modificationDate,
+            }),
+          onSuccess: (result) => printPdfResult(result, ctx.json),
+        });
+      },
+    );
 
   command
     .command("rotate")

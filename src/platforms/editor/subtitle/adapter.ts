@@ -3,6 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 
 import { ensureParentDirectory } from "../../../config.js";
 import { AutoCliError } from "../../../errors.js";
+import { assertLocalInputFile, normalizeOutputExtension, runFfmpegEdit } from "../shared/ffmpeg.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -31,6 +32,12 @@ type SubtitleCleanInput = {
 
 type SubtitleMergeInput = {
   inputPaths: string[];
+  output?: string;
+};
+
+type SubtitleBurnInput = {
+  inputPath: string;
+  subtitlePath: string;
   output?: string;
 };
 
@@ -188,6 +195,40 @@ export class SubtitleEditorAdapter {
     });
   }
 
+  async burn(input: SubtitleBurnInput): Promise<AdapterActionResult> {
+    const subtitlePath = await assertLocalInputFile(input.subtitlePath);
+    const outputPath = resolveSubtitleBurnOutputPath(input.inputPath, input.output);
+    await ensureParentDirectory(outputPath);
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: [
+        "-i",
+        "{input}",
+        "-vf",
+        `subtitles='${escapeSubtitleFilterPath(subtitlePath)}'`,
+        "-map",
+        "0:v:0",
+        "-map",
+        "0:a?",
+        ...buildBurnVideoCodecArgs(normalizeBurnVideoFormat(outputPath)),
+        "{output}",
+      ],
+    });
+
+    return this.buildResult({
+      action: "burn",
+      message: `Burned subtitles from ${basename(subtitlePath)} into ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        subtitlePath,
+        outputPath: resolvedOutput,
+        format: normalizeOutputExtension(extname(resolvedOutput).replace(/^\./, "") || "mp4"),
+      },
+    });
+  }
+
   private buildResult(input: {
     action: string;
     message: string;
@@ -294,6 +335,17 @@ function resolveSubtitleOutputPath(
   const directory = dirname(absolutePath);
   const stem = basename(absolutePath, extname(absolutePath)) || "subtitles";
   return `${directory}/${stem}.${suffix}.${format}`;
+}
+
+function resolveSubtitleBurnOutputPath(inputPath: string, output: string | undefined): string {
+  if (output) {
+    return resolve(output);
+  }
+
+  const absolutePath = resolve(inputPath);
+  const directory = dirname(absolutePath);
+  const stem = basename(absolutePath, extname(absolutePath)) || "video";
+  return `${directory}/${stem}.subtitled.mp4`;
 }
 
 function shiftSubtitleCues(cues: SubtitleCue[], shiftMs: number): SubtitleCue[] {
@@ -480,6 +532,50 @@ function trimSubtitleTextLines(lines: string[]): string[] {
   }
 
   return lines.slice(start, end).map((line) => line.trimEnd());
+}
+
+function buildBurnVideoCodecArgs(format: string): string[] {
+  if (normalizeOutputExtension(format) === "webm") {
+    return [
+      "-c:v",
+      "libvpx-vp9",
+      "-crf",
+      "32",
+      "-b:v",
+      "0",
+      "-row-mt",
+      "1",
+      "-c:a",
+      "libopus",
+      "-b:a",
+      "128k",
+    ];
+  }
+
+  return [
+    "-c:v",
+    "libx264",
+    "-preset",
+    "medium",
+    "-crf",
+    "21",
+    "-pix_fmt",
+    "yuv420p",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "192k",
+    ...(normalizeOutputExtension(format) === "mp4" ? ["-movflags", "+faststart"] : []),
+  ];
+}
+
+function normalizeBurnVideoFormat(outputPath: string): string {
+  const extension = normalizeOutputExtension(extname(outputPath).replace(/^\./, ""));
+  return extension || "mp4";
+}
+
+function escapeSubtitleFilterPath(value: string): string {
+  return resolve(value).replace(/\\/g, "/").replace(/:/g, "\\:").replace(/'/g, "\\'");
 }
 
 function formatMsToTimestamp(ms: number, srt = false): string {

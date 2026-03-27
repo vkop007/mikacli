@@ -13,6 +13,8 @@ const EXAMPLES = [
   "autocli audio trim ./song.mp3 --start 00:00:10 --duration 30",
   "autocli audio convert ./song.wav --to mp3",
   "autocli audio compress ./song.wav --bitrate 128",
+  "autocli audio silence-detect ./song.mp3 --threshold -45dB",
+  "autocli audio loudness-report ./song.mp3",
   "autocli audio merge ./intro.mp3 ./chapter.mp3",
   "autocli audio fade-in ./song.mp3 --duration 3",
   "autocli audio trim-silence ./podcast.wav --threshold -45dB",
@@ -234,6 +236,60 @@ function buildAudioCommand(options: PlatformCommandBuildOptions = {}): Command {
         onSuccess: (result) => printAudioResult(result, ctx.json),
       });
     });
+
+  command
+    .command("silence-detect")
+    .description("Detect silent segments in an audio file")
+    .argument("<inputPath>", "Input audio path")
+    .option("--threshold <value>", "Silence threshold, e.g. -45dB", "-50dB")
+    .option("--duration <seconds>", "Minimum silence duration", "0.5")
+    .action(async (inputPath: string, input: { threshold?: string; duration?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Detecting silence...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Silence detection complete.",
+        action: () =>
+          audioEditorAdapter.silenceDetect({
+            inputPath,
+            threshold: input.threshold,
+            duration: input.duration,
+          }),
+        onSuccess: (result) => printAudioResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("loudness-report")
+    .description("Measure loudness and normalization stats for an audio file")
+    .argument("<inputPath>", "Input audio path")
+    .option("--target-lufs <value>", "Target loudness value", "-16")
+    .option("--true-peak <value>", "Target true peak in dBFS", "-1.5")
+    .option("--lra <value>", "Target loudness range", "11")
+    .action(
+      async (
+        inputPath: string,
+        input: { targetLufs?: string; truePeak?: string; lra?: string },
+        cmd: Command,
+      ) => {
+        const ctx = resolveCommandContext(cmd);
+        const logger = new Logger(ctx);
+        const spinner = logger.spinner("Measuring loudness...");
+        await runCommandAction({
+          spinner,
+          successMessage: "Loudness report generated.",
+          action: () =>
+            audioEditorAdapter.loudnessReport({
+              inputPath,
+              targetLufs: input.targetLufs,
+              truePeak: input.truePeak,
+              lra: input.lra,
+            }),
+          onSuccess: (result) => printAudioResult(result, ctx.json),
+        });
+      },
+    );
 
   command
     .command("volume")

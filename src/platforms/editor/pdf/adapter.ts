@@ -32,6 +32,25 @@ type PdfExtractPagesInput = {
   outputPath: string;
 };
 
+type PdfRemovePagesInput = {
+  inputPath: string;
+  pages: string;
+  outputPath?: string;
+};
+
+type PdfMetadataInput = {
+  inputPath: string;
+  outputPath?: string;
+  title?: string;
+  author?: string;
+  subject?: string;
+  keywords?: string;
+  creator?: string;
+  producer?: string;
+  creationDate?: string;
+  modificationDate?: string;
+};
+
 type PdfRotateInput = {
   inputPath: string;
   angle: number;
@@ -82,6 +101,17 @@ type PdfInfo = {
   encrypted: boolean;
   encryptionSummary?: string;
   sizeBytes: number;
+};
+
+type PdfMetadata = {
+  title: string | null;
+  author: string | null;
+  subject: string | null;
+  keywords: string | null;
+  creator: string | null;
+  producer: string | null;
+  creationDate: string | null;
+  modificationDate: string | null;
 };
 
 const QPDF_BIN = process.env.AUTOCLI_QPDF_BIN || "qpdf";
@@ -181,6 +211,95 @@ export class PdfEditorAdapter {
         outputPath,
         pages: input.pages,
         ranges,
+      },
+    });
+  }
+
+  async removePages(input: PdfRemovePagesInput): Promise<AdapterActionResult> {
+    const resolvedInput = await assertReadableFile(input.inputPath);
+    const outputPath = resolve(input.outputPath ?? buildSiblingOutputPath(resolvedInput, ".trimmed.pdf"));
+    await ensureParentDirectory(outputPath);
+
+    const pdf = await PDFDocument.load(await readFile(resolvedInput));
+    const totalPages = pdf.getPageCount();
+    const removedPages = expandOrderedPageSpec(input.pages, totalPages);
+    const removedSet = new Set(removedPages);
+    if (removedSet.size === 0) {
+      throw new AutoCliError("PDF_PAGES_REQUIRED", "At least one page is required for remove-pages.");
+    }
+
+    const selectedPages = Array.from(removedSet).sort((left, right) => left - right);
+    const keptPages = Array.from({ length: totalPages }, (_value, index) => index + 1).filter((page) => !removedSet.has(page));
+    if (keptPages.length === 0) {
+      throw new AutoCliError("PDF_REMOVE_PAGES_EMPTY", "remove-pages would remove every page from the PDF.");
+    }
+
+    const output = await PDFDocument.create();
+    copyPdfMetadata(pdf, output);
+    const copiedPages = await output.copyPages(
+      pdf,
+      keptPages.map((pageNumber) => pageNumber - 1),
+    );
+    for (const copiedPage of copiedPages) {
+      output.addPage(copiedPage);
+    }
+
+    await writeFile(outputPath, await output.save());
+
+    return this.buildResult({
+      action: "remove-pages",
+      message: `Removed ${describeRanges(rangesFromPages(selectedPages))} from ${parse(resolvedInput).base}.`,
+      data: {
+        inputPath: resolvedInput,
+        outputPath,
+        pages: input.pages,
+        removedPages: selectedPages,
+        keptPages,
+        remainingPages: keptPages,
+        removedPageCount: selectedPages.length,
+        keptPageCount: keptPages.length,
+      },
+    });
+  }
+
+  async metadata(input: PdfMetadataInput): Promise<AdapterActionResult> {
+    const resolvedInput = await assertReadableFile(input.inputPath);
+    const source = await PDFDocument.load(await readFile(resolvedInput));
+    const currentMetadata = readPdfMetadata(source);
+    const updates = buildMetadataUpdates(input);
+    const shouldWrite = updates.length > 0 || Boolean(input.outputPath);
+    const writingMetadata = updates.length > 0;
+
+    if (!shouldWrite) {
+      return this.buildResult({
+        action: "metadata",
+        message: `Inspected metadata for ${parse(resolvedInput).base}.`,
+        data: {
+          inputPath: resolvedInput,
+          updated: false,
+          updatedFields: [],
+          metadata: currentMetadata,
+        },
+      });
+    }
+
+    const outputPath = resolve(input.outputPath ?? buildSiblingOutputPath(resolvedInput, ".metadata.pdf"));
+    await ensureParentDirectory(outputPath);
+
+    applyMetadataUpdates(source, input);
+    await writeFile(outputPath, await source.save());
+
+    return this.buildResult({
+      action: "metadata",
+      message: writingMetadata
+        ? `Updated metadata for ${parse(resolvedInput).base} and saved to ${outputPath}.`
+        : `Saved a copy of ${parse(resolvedInput).base} to ${outputPath}.`,
+      data: {
+        inputPath: resolvedInput,
+        outputPath,
+        updated: writingMetadata,
+        updatedFields: updates,
+        metadata: readPdfMetadata(source),
       },
     });
   }
@@ -356,6 +475,7 @@ export class PdfEditorAdapter {
     }
 
     const destination = await PDFDocument.create();
+    copyPdfMetadata(source, destination);
     const copiedPages = await destination.copyPages(
       source,
       pageOrder.map((pageNumber) => pageNumber - 1),
@@ -618,6 +738,175 @@ function normalizeOptionalString(value: string): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function readPdfMetadata(pdf: PDFDocument): PdfMetadata {
+  return {
+    title: normalizeMetadataString(pdf.getTitle()),
+    author: normalizeMetadataString(pdf.getAuthor()),
+    subject: normalizeMetadataString(pdf.getSubject()),
+    keywords: normalizeMetadataKeywords(pdf.getKeywords()),
+    creator: normalizeMetadataString(pdf.getCreator()),
+    producer: normalizeMetadataString(pdf.getProducer()),
+    creationDate: formatMetadataDate(pdf.getCreationDate()),
+    modificationDate: formatMetadataDate(pdf.getModificationDate()),
+  };
+}
+
+function applyMetadataUpdates(pdf: PDFDocument, input: PdfMetadataInput): void {
+  const title = normalizeMetadataString(input.title);
+  if (title !== null) {
+    pdf.setTitle(title);
+  }
+
+  const author = normalizeMetadataString(input.author);
+  if (author !== null) {
+    pdf.setAuthor(author);
+  }
+
+  const subject = normalizeMetadataString(input.subject);
+  if (subject !== null) {
+    pdf.setSubject(subject);
+  }
+
+  const keywords = normalizeMetadataKeywordsInput(input.keywords);
+  if (keywords !== undefined) {
+    pdf.setKeywords(keywords);
+  }
+
+  const creator = normalizeMetadataString(input.creator);
+  if (creator !== null) {
+    pdf.setCreator(creator);
+  }
+
+  const producer = normalizeMetadataString(input.producer);
+  if (producer !== null) {
+    pdf.setProducer(producer);
+  }
+
+  const creationDate = normalizeMetadataDate(input.creationDate);
+  if (creationDate !== undefined) {
+    pdf.setCreationDate(creationDate);
+  }
+
+  const modificationDate = normalizeMetadataDate(input.modificationDate);
+  if (modificationDate !== undefined) {
+    pdf.setModificationDate(modificationDate);
+  }
+}
+
+function buildMetadataUpdates(input: PdfMetadataInput): string[] {
+  const updates: string[] = [];
+  if (normalizeMetadataString(input.title) !== null) updates.push("title");
+  if (normalizeMetadataString(input.author) !== null) updates.push("author");
+  if (normalizeMetadataString(input.subject) !== null) updates.push("subject");
+  if (normalizeMetadataKeywordsInput(input.keywords) !== undefined) updates.push("keywords");
+  if (normalizeMetadataString(input.creator) !== null) updates.push("creator");
+  if (normalizeMetadataString(input.producer) !== null) updates.push("producer");
+  if (normalizeMetadataDate(input.creationDate) !== undefined) updates.push("creationDate");
+  if (normalizeMetadataDate(input.modificationDate) !== undefined) updates.push("modificationDate");
+  return updates;
+}
+
+function normalizeMetadataString(value: string | undefined): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeMetadataKeywords(value: string | undefined): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function normalizeMetadataKeywordsInput(value: string | undefined): string[] | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value
+    .split(",")
+    .map((keyword) => keyword.trim())
+    .filter((keyword) => keyword.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+function splitMetadataKeywords(value: string): string[] {
+  return value
+    .split(",")
+    .map((keyword) => keyword.trim())
+    .filter((keyword) => keyword.length > 0);
+}
+
+function normalizeMetadataDate(value: string | undefined): Date | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return undefined;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Invalid date value "${value}".`, {
+      details: {
+        value,
+      },
+    });
+  }
+
+  return parsed;
+}
+
+function formatMetadataDate(value: Date | undefined): string | null {
+  return value instanceof Date && !Number.isNaN(value.getTime()) ? value.toISOString() : null;
+}
+
+function copyPdfMetadata(source: PDFDocument, destination: PDFDocument): void {
+  const metadata = readPdfMetadata(source);
+  if (metadata.title !== null) destination.setTitle(metadata.title);
+  if (metadata.author !== null) destination.setAuthor(metadata.author);
+  if (metadata.subject !== null) destination.setSubject(metadata.subject);
+  if (metadata.keywords !== null) destination.setKeywords(splitMetadataKeywords(metadata.keywords));
+  if (metadata.creator !== null) destination.setCreator(metadata.creator);
+  if (metadata.producer !== null) destination.setProducer(metadata.producer);
+  if (metadata.creationDate !== null) destination.setCreationDate(new Date(metadata.creationDate));
+  if (metadata.modificationDate !== null) destination.setModificationDate(new Date(metadata.modificationDate));
+}
+
+function rangesFromPages(pages: number[]): Array<{ start: number; end: number }> {
+  if (pages.length === 0) {
+    return [];
+  }
+
+  const sorted = [...pages].sort((left, right) => left - right);
+  const ranges: Array<{ start: number; end: number }> = [];
+  let start = sorted[0]!;
+  let end = start;
+
+  for (let index = 1; index < sorted.length; index += 1) {
+    const page = sorted[index]!;
+    if (page === end + 1) {
+      end = page;
+      continue;
+    }
+
+    ranges.push({ start, end });
+    start = page;
+    end = page;
+  }
+
+  ranges.push({ start, end });
+  return ranges;
+}
+
 function normalizePassword(value: string | undefined): string | undefined {
   if (typeof value !== "string") {
     return undefined;
@@ -672,6 +961,24 @@ function expandPageTargets(value: string | undefined, totalPages: number): numbe
     return Array.from({ length: totalPages }, (_value, index) => index + 1);
   }
   return expandOrderedPageSpec(value, totalPages);
+}
+
+function expandPageNumberSet(value: string, totalPages: number): Set<number> {
+  const pages = new Set<number>();
+  for (const range of parsePageSpec(value)) {
+    for (let page = range.start; page <= range.end; page += 1) {
+      if (page > totalPages) {
+        throw new AutoCliError("PDF_PAGE_SPEC_INVALID", `Page ${page} is outside the PDF page count (${totalPages}).`, {
+          details: {
+            value,
+            totalPages,
+          },
+        });
+      }
+      pages.add(page);
+    }
+  }
+  return pages;
 }
 
 function parsePdfColor(value: string | undefined): ReturnType<typeof rgb> {
