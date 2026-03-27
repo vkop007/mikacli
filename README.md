@@ -28,12 +28,12 @@ Reference points:
 
 | Category | Providers | Count | Route pattern |
 | --- | --- | ---: | --- |
-| LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Qwen, Z.ai | 7 | `autocli llm <provider> ...` |
+| LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Poe, Qwen, Z.ai | 10 | `autocli llm <provider> ...` |
 | Music | Spotify, YouTube Music | 2 | `autocli music <provider> ...` |
 | Social | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | `autocli social <provider> ...` |
 | API | Discord Bot, GitHub, GitHub Bot, GitLab, Linear, Notion, Slack Bot, Telegram Bot | 8 | `autocli api <provider> ...` |
 | Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Sitemap, Stocks, Time, Translate, Weather, Web Search, Whois | 17 | `autocli public <provider> ...` |
-| Total | 40 providers across 5 command groups | 40 | category-only |
+| Total | 43 providers across 5 command groups | 43 | category-only |
 
 ### Capability highlights
 
@@ -596,6 +596,9 @@ autocli api discordbot me
 autocli llm chatgpt text "Hello my name is Justine"
 autocli llm claude text "Summarize this changelog"
 autocli llm deepseek text "Draft release notes for AutoCLI"
+autocli llm perplexity login --cookies ./perplexity.cookies.json
+autocli llm mistral login --cookies ./mistral.cookies.json
+autocli llm poe login --cookies ./poe.cookies.json
 autocli llm qwen text "Design a clean onboarding flow for AutoCLI"
 autocli llm zai text "Hello my name is Justine"
 autocli llm gemini text "Draft a polite follow-up email"
@@ -617,13 +620,16 @@ autocli llm deepseek login --cookies ./deepseek.cookies.json --token <userToken>
 autocli llm deepseek text "Explain retrieval-augmented generation"
 autocli llm gemini login --cookies ./gemini.cookies.json
 autocli llm gemini text "Draft a polite follow-up email"
+autocli llm perplexity login --cookies ./perplexity.cookies.json
+autocli llm mistral login --cookies ./mistral.cookies.json
+autocli llm poe login --cookies ./poe.cookies.json
 autocli llm qwen login --cookies ./qwen.cookies.json
 autocli llm qwen login --cookies ./qwen.cookies.json --token <bearerToken>
 autocli llm qwen text "Explain retrieval-augmented generation"
 autocli llm zai text "Outline a landing page for AutoCLI"
 ```
 
-These providers now share a proper command surface. Gemini, Claude, and Z.ai use saved browser sessions for active generation. ChatGPT currently uses the browserless anonymous web flow for `text` and image prompts, while `login` and `status` only validate imported ChatGPT sessions. DeepSeek uses the browser cookies plus the `userToken` stored in localStorage on DeepSeek’s site. Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie, and `--token` is only needed when that cookie is missing from the export.
+These providers now share a proper command surface. Gemini, Claude, and Z.ai use saved browser sessions for active generation. ChatGPT currently uses the browserless anonymous web flow for `text` and image prompts, while `login` and `status` only validate imported ChatGPT sessions. DeepSeek uses the browser cookies plus the `userToken` stored in localStorage on DeepSeek’s site. Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie, and `--token` is only needed when that cookie is missing from the export. Perplexity, Mistral, and Poe are now registered as cookie-backed LLM providers with `login`, `status`, `text`, `image`, and `video` command surfaces, but their private prompt flows are still scaffolded until we validate live browserless request traces for each site.
 
 Use YouTube Music search and browse actions:
 

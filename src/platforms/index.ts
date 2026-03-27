@@ -10,6 +10,9 @@ import { claudePlatformDefinition } from "./llm/claude/manifest.js";
 import { deepSeekPlatformDefinition } from "./llm/deepseek/manifest.js";
 import { geminiPlatformDefinition } from "./llm/gemini/manifest.js";
 import { grokPlatformDefinition } from "./llm/grok/manifest.js";
+import { mistralPlatformDefinition } from "./llm/mistral/manifest.js";
+import { perplexityPlatformDefinition } from "./llm/perplexity/manifest.js";
+import { poePlatformDefinition } from "./llm/poe/manifest.js";
 import { qwenPlatformDefinition } from "./llm/qwen/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
@@ -54,7 +57,11 @@ const definitions: readonly PlatformDefinition[] = [
   facebookPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
+  mistralPlatformDefinition,
+  perplexityPlatformDefinition,
+  poePlatformDefinition,
   qwenPlatformDefinition,
+  zaiPlatformDefinition,
   githubPlatformDefinition,
   githubbotPlatformDefinition,
   gitlabPlatformDefinition,
@@ -82,7 +89,6 @@ const definitions: readonly PlatformDefinition[] = [
   xPlatformDefinition,
   youtubePlatformDefinition,
   youtubeMusicPlatformDefinition,
-  zaiPlatformDefinition,
 ];
 
 export function getPlatformDefinitions(): readonly PlatformDefinition[] {

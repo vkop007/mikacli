@@ -15,6 +15,6 @@ export const qwenPlatformDefinition: PlatformDefinition = {
     "autocli qwen login --cookies ./qwen.cookies.json",
     "autocli qwen login --cookies ./qwen.cookies.json --token <bearerToken>",
     'autocli qwen text "Explain retrieval-augmented generation"',
-    'autocli llm qwen text "Draft a concise launch tweet"',
+    'autocli qwen text "Draft a concise launch tweet"',
   ],
 };

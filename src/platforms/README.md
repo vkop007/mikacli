@@ -76,7 +76,7 @@ Current examples:
 - All current platforms are capability-based.
 - API-token platforms: `src/platforms/api/github/`, `src/platforms/api/gitlab/`, `src/platforms/api/linear/`, `src/platforms/api/notion/`
 - Bot-token API platforms: `src/platforms/api/bots/discordbot/`, `src/platforms/api/bots/githubbot/`, `src/platforms/api/bots/slackbot/`, `src/platforms/api/bots/telegrambot/`
-- Active browserless LLM platforms: `src/platforms/llm/chatgpt/`, `src/platforms/llm/claude/`, `src/platforms/llm/deepseek/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`, `src/platforms/llm/qwen/`, `src/platforms/llm/zai/`
+- Active browserless LLM platforms: `src/platforms/llm/chatgpt/`, `src/platforms/llm/claude/`, `src/platforms/llm/deepseek/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`, `src/platforms/llm/mistral/`, `src/platforms/llm/perplexity/`, `src/platforms/llm/poe/`, `src/platforms/llm/qwen/`, `src/platforms/llm/zai/`
 - DeepSeek uses imported browser cookies plus the `userToken` from localStorage when the export does not already include it.
 - Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie. Use `--token` only when that cookie is missing.
 - Grok now uses the official `grok.com` web flow and returns a Grok-specific anti-bot error when xAI blocks browserless prompt writes.
