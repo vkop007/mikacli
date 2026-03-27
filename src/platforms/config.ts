@@ -7,6 +7,7 @@ export const PLATFORM_NAMES = [
   "deepseek",
   "dns",
   "discordbot",
+  "image",
   "facebook",
   "gemini",
   "github",
@@ -37,6 +38,7 @@ export const PLATFORM_NAMES = [
   "time",
   "translate",
   "uptime",
+  "video",
   "weather",
   "websearch",
   "whois",
@@ -110,6 +112,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://discord.com",
     homeUrl: "https://discord.com/developers/applications",
     cookieDomain: "discord.com",
+    authCookieNames: [],
+  },
+  image: {
+    displayName: "Image Editor",
+    origin: "https://ffmpeg.org",
+    homeUrl: "https://ffmpeg.org/",
+    cookieDomain: "ffmpeg.org",
     authCookieNames: [],
   },
   facebook: {
@@ -320,6 +329,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://example.com",
     homeUrl: "https://example.com/",
     cookieDomain: "example.com",
+    authCookieNames: [],
+  },
+  video: {
+    displayName: "Video Editor",
+    origin: "https://ffmpeg.org",
+    homeUrl: "https://ffmpeg.org/",
+    cookieDomain: "ffmpeg.org",
     authCookieNames: [],
   },
   weather: {

@@ -22,6 +22,12 @@ Recommended layout:
 
 ```text
 src/platforms/
+  editor/
+    <name>/
+      adapter.ts
+      manifest.ts
+      output.ts
+    shared/
   api/
     <name>/
       adapter.ts
@@ -74,6 +80,7 @@ Rules:
 Current examples:
 
 - All current platforms are capability-based.
+- Local editor platforms: `src/platforms/editor/image/`, `src/platforms/editor/video/`
 - API-token platforms: `src/platforms/api/github/`, `src/platforms/api/gitlab/`, `src/platforms/api/linear/`, `src/platforms/api/notion/`
 - Bot-token API platforms: `src/platforms/api/bots/discordbot/`, `src/platforms/api/bots/githubbot/`, `src/platforms/api/bots/slackbot/`, `src/platforms/api/bots/telegrambot/`
 - Active browserless LLM platforms: `src/platforms/llm/chatgpt/`, `src/platforms/llm/claude/`, `src/platforms/llm/deepseek/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`, `src/platforms/llm/mistral/`, `src/platforms/llm/perplexity/`, `src/platforms/llm/qwen/`, `src/platforms/llm/zai/`

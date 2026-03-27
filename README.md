@@ -5,6 +5,7 @@ AutoCLI is a Bun-first TypeScript CLI for browserless social automation. It supp
 Commands are organized by category only:
 
 - `autocli llm ...`
+- `autocli editor ...`
 - `autocli social ...`
 - `autocli api ...`
 - `autocli music ...`
@@ -29,11 +30,12 @@ Reference points:
 | Category | Providers | Count | Route pattern |
 | --- | --- | ---: | --- |
 | LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Qwen, Z.ai | 9 | `autocli llm <provider> ...` |
+| Editor | Image Editor, Video Editor | 2 | `autocli editor <provider> ...` |
 | Music | Spotify, YouTube Music | 2 | `autocli music <provider> ...` |
 | Social | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | `autocli social <provider> ...` |
 | API | Discord Bot, GitHub, GitHub Bot, GitLab, Linear, Notion, Slack Bot, Telegram Bot | 8 | `autocli api <provider> ...` |
 | Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Screenshot, Sitemap, Stocks, Time, Translate, Uptime, Weather, Web Search, Whois | 19 | `autocli public <provider> ...` |
-| Total | 44 providers across 5 command groups | 44 | category-only |
+| Total | 46 providers across 6 command groups | 46 | category-only |
 
 ### Capability highlights
 
@@ -103,6 +105,12 @@ Reference points:
 - Cheat
   - `cheat <topic>`
   - optional `--shell` and `--lang` context
+- Image Editor
+  - `info`
+  - `resize`
+  - `crop`
+  - `convert`
+  - `rotate`
 - IP
   - `ip`
   - `ip --version 4|6|any`
@@ -119,6 +127,12 @@ Reference points:
   - `uptime <url>`
   - `uptime <url> --method HEAD|GET`
   - `uptime <url> --timeout 15000`
+- Video Editor
+  - `info`
+  - `trim`
+  - `convert`
+  - `compress`
+  - `thumbnail`
 - Web Search
   - `engines`
   - `search`

@@ -5,6 +5,8 @@ import { telegrambotPlatformDefinition } from "./api/bots/telegrambot/manifest.j
 import { githubPlatformDefinition } from "./api/github/manifest.js";
 import { gitlabPlatformDefinition } from "./api/gitlab/manifest.js";
 import { linearPlatformDefinition } from "./api/linear/manifest.js";
+import { imageEditorPlatformDefinition } from "./editor/image/manifest.js";
+import { videoEditorPlatformDefinition } from "./editor/video/manifest.js";
 import { chatgptPlatformDefinition } from "./llm/chatgpt/manifest.js";
 import { claudePlatformDefinition } from "./llm/claude/manifest.js";
 import { deepSeekPlatformDefinition } from "./llm/deepseek/manifest.js";
@@ -55,6 +57,7 @@ const definitions: readonly PlatformDefinition[] = [
   deepSeekPlatformDefinition,
   dnsPlatformDefinition,
   discordBotPlatformDefinition,
+  imageEditorPlatformDefinition,
   facebookPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
@@ -85,6 +88,7 @@ const definitions: readonly PlatformDefinition[] = [
   timePlatformDefinition,
   translatePlatformDefinition,
   uptimePlatformDefinition,
+  videoEditorPlatformDefinition,
   weatherPlatformDefinition,
   webSearchPlatformDefinition,
   whoisPlatformDefinition,
@@ -109,7 +113,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "music", "social", "bots", "api", "public", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "music", "social", "bots", "api", "public", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];
