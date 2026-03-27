@@ -30,7 +30,10 @@ describe("platform category routing", () => {
   test("includes the editor category and providers", () => {
     expect(getPlatformCategories()).toContain("editor");
     expect(getPlatformDefinitionsByCategory("editor").map((definition) => definition.id)).toEqual([
+      "archive",
       "audio",
+      "document",
+      "gif",
       "image",
       "pdf",
       "subtitle",

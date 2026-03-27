@@ -5,7 +5,10 @@ import { telegrambotPlatformDefinition } from "./api/bots/telegrambot/manifest.j
 import { githubPlatformDefinition } from "./api/github/manifest.js";
 import { gitlabPlatformDefinition } from "./api/gitlab/manifest.js";
 import { linearPlatformDefinition } from "./api/linear/manifest.js";
+import { archiveEditorPlatformDefinition } from "./editor/archive/manifest.js";
 import { audioEditorPlatformDefinition } from "./editor/audio/manifest.js";
+import { documentEditorPlatformDefinition } from "./editor/document/manifest.js";
+import { gifEditorPlatformDefinition } from "./editor/gif/manifest.js";
 import { imageEditorPlatformDefinition } from "./editor/image/manifest.js";
 import { pdfPlatformDefinition } from "./editor/pdf/manifest.js";
 import { subtitleEditorPlatformDefinition } from "./editor/subtitle/manifest.js";
@@ -60,7 +63,10 @@ const definitions: readonly PlatformDefinition[] = [
   deepSeekPlatformDefinition,
   dnsPlatformDefinition,
   discordBotPlatformDefinition,
+  archiveEditorPlatformDefinition,
   audioEditorPlatformDefinition,
+  documentEditorPlatformDefinition,
+  gifEditorPlatformDefinition,
   imageEditorPlatformDefinition,
   facebookPlatformDefinition,
   geminiPlatformDefinition,

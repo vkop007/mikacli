@@ -30,22 +30,15 @@ Reference points:
 | Category | Providers | Count | Route pattern |
 | --- | --- | ---: | --- |
 | LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Qwen, Z.ai | 9 | `autocli llm <provider> ...` |
-| Editor | Archive Editor, Audio Editor, Document Editor, GIF Editor, Image Editor, PDF Editor, Subtitle Editor, Video Editor | 8 | `autocli editor <provider> ...` |
+| Editor | Audio Editor, Image Editor, PDF Editor, Subtitle Editor, Video Editor | 5 | `autocli editor <provider> ...` |
 | Music | Spotify, YouTube Music | 2 | `autocli music <provider> ...` |
 | Social | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | `autocli social <provider> ...` |
 | API | Discord Bot, GitHub, GitHub Bot, GitLab, Linear, Notion, Slack Bot, Telegram Bot | 8 | `autocli api <provider> ...` |
 | Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Screenshot, Sitemap, Stocks, Time, Translate, Uptime, Weather, Web Search, Whois | 19 | `autocli public <provider> ...` |
-| Total | 52 providers across 6 command groups | 52 | category-only |
+| Total | 49 providers across 6 command groups | 49 | category-only |
 
 ### Capability highlights
 
-- Archive Editor
-  - `info`
-  - `list`
-  - `create`
-  - `extract`
-  - `gzip`
-  - `gunzip`
 - Facebook
   - `login`
   - `status`
@@ -83,17 +76,6 @@ Reference points:
   - `send-file`
   - `edit`
   - `delete`
-- Document Editor
-  - `info`
-  - `convert`
-  - `extract-text`
-  - `to-markdown`
-  - `metadata`
-- GIF Editor
-  - `info`
-  - `create` / `from-video`
-  - `optimize`
-  - `to-video`
 - Instagram
   - `login`
   - `post` with media + caption
