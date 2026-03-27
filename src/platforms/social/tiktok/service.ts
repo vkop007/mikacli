@@ -106,7 +106,7 @@ export class TikTokAdapter extends BasePlatformAdapter {
     await this.ensureSavedSession(input.account);
     throw new AutoCliError(
       "UNSUPPORTED_ACTION",
-      "TikTok web sessions do not support a text-only post in this CLI. Use `autocli tiktok post <media-path> --caption ...` once TikTok request signing support is added.",
+      "TikTok web sessions do not support a text-only post in this CLI. Use `autocli social tiktok post <media-path> --caption ...` once TikTok request signing support is added.",
       {
         details: {
           platform: this.platform,

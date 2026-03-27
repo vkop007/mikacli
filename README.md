@@ -295,34 +295,34 @@ bun run dev status
 Save a GitHub personal access token:
 
 ```bash
-autocli github login --token github_pat_xxx
+autocli api github login --token github_pat_xxx
 ```
 
 Inspect the authenticated account and repos:
 
 ```bash
-autocli github me
-autocli github user torvalds
-autocli github repos
-autocli github repo openai/openai-node
-autocli github search-repos "typescript cli" --limit 10
-autocli github starred
-autocli github branches openai/openai-node
-autocli github pulls openai/openai-node --state open --limit 10
-autocli github releases openai/openai-node --limit 5
-autocli github readme openai/openai-node
+autocli api github me
+autocli api github user torvalds
+autocli api github repos
+autocli api github repo openai/openai-node
+autocli api github search-repos "typescript cli" --limit 10
+autocli api github starred
+autocli api github branches openai/openai-node
+autocli api github pulls openai/openai-node --state open --limit 10
+autocli api github releases openai/openai-node --limit 5
+autocli api github readme openai/openai-node
 ```
 
 Work with issues and repository actions:
 
 ```bash
-autocli github issues openai/openai-node --state open --limit 10
-autocli github issue openai/openai-node 1
-autocli github create-issue owner/repo --title "Bug report" --body "Details here"
-autocli github comment owner/repo 123 --body "Looks good to me"
-autocli github create-repo autocli-playground --private --auto-init
-autocli github fork openai/openai-node
-autocli github star openai/openai-node
+autocli api github issues openai/openai-node --state open --limit 10
+autocli api github issue openai/openai-node 1
+autocli api github create-issue owner/repo --title "Bug report" --body "Details here"
+autocli api github comment owner/repo 123 --body "Looks good to me"
+autocli api github create-repo autocli-playground --private --auto-init
+autocli api github fork openai/openai-node
+autocli api github star openai/openai-node
 
 ## GitHub Bot
 
@@ -344,16 +344,16 @@ autocli api githubbot star openai/openai-node
 Use a GitLab personal access token to inspect projects, issues, and merge requests:
 
 ```bash
-autocli gitlab login --token glpat_xxx
-autocli gitlab me
-autocli gitlab projects "autocli" --limit 10
-autocli gitlab project group/subgroup/project
-autocli gitlab search-projects "typescript cli" --limit 10
-autocli gitlab issues group/project --state opened --limit 10
-autocli gitlab issue group/project 123
-autocli gitlab create-issue group/project --title "Bug report" --body "Details here"
-autocli gitlab merge-requests group/project --state opened --limit 10
-autocli gitlab merge-request group/project 123
+autocli api gitlab login --token glpat_xxx
+autocli api gitlab me
+autocli api gitlab projects "autocli" --limit 10
+autocli api gitlab project group/subgroup/project
+autocli api gitlab search-projects "typescript cli" --limit 10
+autocli api gitlab issues group/project --state opened --limit 10
+autocli api gitlab issue group/project 123
+autocli api gitlab create-issue group/project --title "Bug report" --body "Details here"
+autocli api gitlab merge-requests group/project --state opened --limit 10
+autocli api gitlab merge-request group/project 123
 ```
 
 ## Linear
@@ -361,15 +361,15 @@ autocli gitlab merge-request group/project 123
 Use a Linear personal API key to inspect teams, projects, and issues:
 
 ```bash
-autocli linear login --token lin_api_xxx
-autocli linear me
-autocli linear teams
-autocli linear projects
-autocli linear issues --team ENG --limit 20
-autocli linear issue ENG-123
-autocli linear create-issue --team ENG --title "Bug report" --description "Details here"
-autocli linear update-issue ENG-123 --title "Updated title"
-autocli linear comment ENG-123 --body "Looks good"
+autocli api linear login --token lin_api_xxx
+autocli api linear me
+autocli api linear teams
+autocli api linear projects
+autocli api linear issues --team ENG --limit 20
+autocli api linear issue ENG-123
+autocli api linear create-issue --team ENG --title "Bug report" --description "Details here"
+autocli api linear update-issue ENG-123 --title "Updated title"
+autocli api linear comment ENG-123 --body "Looks good"
 ```
 
 ## Notion
@@ -377,18 +377,18 @@ autocli linear comment ENG-123 --body "Looks good"
 Use a Notion integration token to search, inspect, and edit pages and data sources shared with the integration:
 
 ```bash
-autocli notion login --token secret_xxx
-autocli notion me
-autocli notion search "roadmap"
-autocli notion pages "launch"
-autocli notion page <page-id-or-url>
-autocli notion create-page --parent <page-or-data-source-id> --title "AutoCLI Notes" --content "Shipped from terminal"
-autocli notion update-page <page-id-or-url> --title "Updated title"
-autocli notion append <page-id-or-url> --text "Another paragraph"
-autocli notion databases
-autocli notion database <data-source-id-or-url>
-autocli notion query <data-source-id-or-url> --limit 10
-autocli notion comment <page-id-or-url> --text "Looks good"
+autocli api notion login --token secret_xxx
+autocli api notion me
+autocli api notion search "roadmap"
+autocli api notion pages "launch"
+autocli api notion page <page-id-or-url>
+autocli api notion create-page --parent <page-or-data-source-id> --title "AutoCLI Notes" --content "Shipped from terminal"
+autocli api notion update-page <page-id-or-url> --title "Updated title"
+autocli api notion append <page-id-or-url> --text "Another paragraph"
+autocli api notion databases
+autocli api notion database <data-source-id-or-url>
+autocli api notion query <data-source-id-or-url> --limit 10
+autocli api notion comment <page-id-or-url> --text "Looks good"
 ```
 
 ## Web Search
@@ -396,15 +396,15 @@ autocli notion comment <page-id-or-url> --text "Looks good"
 Search the web with multiple engines without any account setup:
 
 ```bash
-autocli websearch engines
-autocli websearch search "bun cookies fetch"
-autocli websearch search "bun cookies fetch" --summary
-autocli websearch search "typescript cli" --engine bing
-autocli websearch search "typescript cli" --engine yahoo
-autocli websearch search "typescript cli" --engine yandex
-autocli websearch search "typescript cli" --engine baidu
-autocli websearch search "llm agent frameworks" --engine brave --limit 5
-autocli websearch search "terminal weather" --all --limit 3
+autocli public websearch engines
+autocli public websearch search "bun cookies fetch"
+autocli public websearch search "bun cookies fetch" --summary
+autocli public websearch search "typescript cli" --engine bing
+autocli public websearch search "typescript cli" --engine yahoo
+autocli public websearch search "typescript cli" --engine yandex
+autocli public websearch search "typescript cli" --engine baidu
+autocli public websearch search "llm agent frameworks" --engine brave --limit 5
+autocli public websearch search "terminal weather" --all --limit 3
 ```
 
 ## News
@@ -412,11 +412,11 @@ autocli websearch search "terminal weather" --all --limit 3
 Read headlines and feeds from no-key sources such as Google News RSS, GDELT, Hacker News, Reddit, and generic RSS/Atom URLs:
 
 ```bash
-autocli news sources
-autocli news top
-autocli news search "typescript cli"
-autocli news search "ai agents" --source google
-autocli news feed "https://news.ycombinator.com/rss"
+autocli public news sources
+autocli public news top
+autocli public news search "typescript cli"
+autocli public news search "ai agents" --source google
+autocli public news feed "https://news.ycombinator.com/rss"
 ```
 
 ## Default flow
@@ -430,44 +430,44 @@ The intended workflow is:
 Import Instagram cookies:
 
 ```bash
-autocli instagram login --cookies ./instagram.cookies.txt
+autocli social instagram login --cookies ./instagram.cookies.txt
 ```
 
 Post to Instagram:
 
 ```bash
-autocli instagram post ./photo.jpg --caption "Shipping from the terminal"
+autocli social instagram post ./photo.jpg --caption "Shipping from the terminal"
 ```
 
 Like or comment on Instagram:
 
 ```bash
-autocli instagram search "blackpink"
-autocli instagram posts @username --limit 5
-autocli instagram posts @username --type reel --limit 5
-autocli instagram stories @username
-autocli instagram stories @username --videos-only
-autocli instagram storydownload @username
-autocli instagram storydownload @username --photos-only
-autocli instagram downloadposts @username --limit 3
-autocli instagram batch download ./targets.txt
-autocli instagram batch storydownload ./profiles.txt --limit 1
-autocli instagram followers @username --limit 5
-autocli instagram following @username --limit 5
-autocli instagram mediaid https://www.instagram.com/p/SHORTCODE/
-autocli instagram profileid @username
-autocli instagram download https://www.instagram.com/p/SHORTCODE/
-autocli instagram like https://www.instagram.com/p/SHORTCODE/
-autocli instagram unlike https://www.instagram.com/p/SHORTCODE/
-autocli instagram comment https://www.instagram.com/p/SHORTCODE/ "Looks great"
-autocli instagram follow @username
-autocli instagram unfollow @username
+autocli social instagram search "blackpink"
+autocli social instagram posts @username --limit 5
+autocli social instagram posts @username --type reel --limit 5
+autocli social instagram stories @username
+autocli social instagram stories @username --videos-only
+autocli social instagram storydownload @username
+autocli social instagram storydownload @username --photos-only
+autocli social instagram downloadposts @username --limit 3
+autocli social instagram batch download ./targets.txt
+autocli social instagram batch storydownload ./profiles.txt --limit 1
+autocli social instagram followers @username --limit 5
+autocli social instagram following @username --limit 5
+autocli social instagram mediaid https://www.instagram.com/p/SHORTCODE/
+autocli social instagram profileid @username
+autocli social instagram download https://www.instagram.com/p/SHORTCODE/
+autocli social instagram like https://www.instagram.com/p/SHORTCODE/
+autocli social instagram unlike https://www.instagram.com/p/SHORTCODE/
+autocli social instagram comment https://www.instagram.com/p/SHORTCODE/ "Looks great"
+autocli social instagram follow @username
+autocli social instagram unfollow @username
 ```
 
 Import Facebook cookies:
 
 ```bash
-autocli facebook login --cookies ./facebook.cookies.json
+autocli social facebook login --cookies ./facebook.cookies.json
 ```
 
 Check the saved Facebook session:
@@ -479,59 +479,59 @@ autocli status
 Facebook write commands are present, but this adapter currently returns structured Facebook-specific errors for write actions:
 
 ```bash
-autocli facebook post "Posting from AutoCLI"
-autocli facebook like "https://www.facebook.com/permalink.php?story_fbid=456&id=123"
-autocli facebook comment "123_456" "Nice post"
+autocli social facebook post "Posting from AutoCLI"
+autocli social facebook like "https://www.facebook.com/permalink.php?story_fbid=456&id=123"
+autocli social facebook comment "123_456" "Nice post"
 ```
 
 Import X cookies:
 
 ```bash
-autocli x login --cookies ./x.cookies.txt
+autocli social x login --cookies ./x.cookies.txt
 ```
 
 Post to X:
 
 ```bash
-autocli x post "Launching AutoCLI" --image ./launch.png
-autocli x tweet "Plain text post" --json
+autocli social x post "Launching AutoCLI" --image ./launch.png
+autocli social x tweet "Plain text post" --json
 ```
 
 Inspect and search X:
 
 ```bash
-autocli x search "openai" --limit 5
-autocli x profileid @OpenAI
-autocli x tweets @OpenAI --limit 5
-autocli x tweetid https://x.com/OpenAI/status/2029620619743219811
+autocli social x search "openai" --limit 5
+autocli social x profileid @OpenAI
+autocli social x tweets @OpenAI --limit 5
+autocli social x tweetid https://x.com/OpenAI/status/2029620619743219811
 ```
 
 Like or reply on X:
 
 ```bash
-autocli x like https://x.com/user/status/1234567890
-autocli x unlike 1234567890
-autocli x comment 1234567890 "Nice work"
+autocli social x like https://x.com/user/status/1234567890
+autocli social x unlike 1234567890
+autocli social x comment 1234567890 "Nice work"
 ```
 
 Import LinkedIn cookies:
 
 ```bash
-autocli linkedin login --cookies ./linkedin.cookies.txt
+autocli social linkedin login --cookies ./linkedin.cookies.txt
 ```
 
 Post, like, or comment on LinkedIn:
 
 ```bash
-autocli linkedin post "Shipping browserless automation from the terminal"
-autocli linkedin like "https://www.linkedin.com/feed/update/urn:li:activity:1234567890123456789/"
-autocli linkedin comment "urn:li:activity:1234567890123456789" "Nice launch"
+autocli social linkedin post "Shipping browserless automation from the terminal"
+autocli social linkedin like "https://www.linkedin.com/feed/update/urn:li:activity:1234567890123456789/"
+autocli social linkedin comment "urn:li:activity:1234567890123456789" "Nice launch"
 ```
 
 Import TikTok cookies:
 
 ```bash
-autocli tiktok login --cookies ./tiktok.cookies.json
+autocli social tiktok login --cookies ./tiktok.cookies.json
 ```
 
 Check the saved TikTok session:
@@ -543,39 +543,39 @@ autocli status
 TikTok write commands are present, but the adapter currently returns a structured `TIKTOK_SIGNING_REQUIRED` error until the TikTok web request-signing layer is added:
 
 ```bash
-autocli tiktok post ./clip.mp4 --caption "Posting from AutoCLI"
-autocli tiktok like "https://www.tiktok.com/@user/video/7486727777941556488"
-autocli tiktok comment "7486727777941556488" "Nice clip"
+autocli social tiktok post ./clip.mp4 --caption "Posting from AutoCLI"
+autocli social tiktok like "https://www.tiktok.com/@user/video/7486727777941556488"
+autocli social tiktok comment "7486727777941556488" "Nice clip"
 ```
 
 Import YouTube cookies:
 
 ```bash
-autocli youtube login --cookies ./youtube.cookies.txt
+autocli social youtube login --cookies ./youtube.cookies.txt
 ```
 
 Use YouTube engagement actions:
 
 ```bash
-autocli youtube download "dQw4w9WgXcQ"
-autocli youtube download "dQw4w9WgXcQ" --audio-only
-autocli youtube search "rick astley"
-autocli youtube videoid "dQw4w9WgXcQ"
-autocli youtube channelid "@RickAstleyYT"
-autocli youtube playlistid "PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI"
-autocli youtube related "dQw4w9WgXcQ"
-autocli youtube captions "dQw4w9WgXcQ"
-autocli youtube like "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-autocli youtube dislike "dQw4w9WgXcQ"
-autocli youtube unlike "dQw4w9WgXcQ"
-autocli youtube comment "dQw4w9WgXcQ" "Nice video"
-autocli youtube subscribe "@RickAstleyYT"
-autocli youtube unsubscribe "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
+autocli social youtube download "dQw4w9WgXcQ"
+autocli social youtube download "dQw4w9WgXcQ" --audio-only
+autocli social youtube search "rick astley"
+autocli social youtube videoid "dQw4w9WgXcQ"
+autocli social youtube channelid "@RickAstleyYT"
+autocli social youtube playlistid "PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI"
+autocli social youtube related "dQw4w9WgXcQ"
+autocli social youtube captions "dQw4w9WgXcQ"
+autocli social youtube like "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+autocli social youtube dislike "dQw4w9WgXcQ"
+autocli social youtube unlike "dQw4w9WgXcQ"
+autocli social youtube comment "dQw4w9WgXcQ" "Nice video"
+autocli social youtube subscribe "@RickAstleyYT"
+autocli social youtube unsubscribe "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw"
 ```
 
 YouTube downloads use `yt-dlp` plus `ffmpeg`. That is the correct implementation path; raw `ffmpeg` alone is not enough to resolve YouTube formats and signatures reliably.
 
-YouTube video uploads and community posting are not implemented yet. `autocli youtube upload ...` exists as the eventual entrypoint, but it currently returns a structured unsupported-action error because the Studio upload flow is separate from the watch-page action flow.
+YouTube video uploads and community posting are not implemented yet. `autocli social youtube upload ...` exists as the eventual entrypoint, but it currently returns a structured unsupported-action error because the Studio upload flow is separate from the watch-page action flow.
 
 Commands are category-based, so provider routes always live under their provider type:
 
@@ -727,7 +727,7 @@ Run the CLI locally one time:
 
 ```bash
 bun run dev --help
-bun run dev x login --cookies ./cookie.json
+bun run dev social x login --cookies ./cookie.json
 ```
 
 Use watch mode only when you explicitly want it:

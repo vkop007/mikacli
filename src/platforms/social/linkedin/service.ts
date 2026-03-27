@@ -153,7 +153,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
   async postMedia(_input: PostMediaInput): Promise<AdapterActionResult> {
     throw new AutoCliError(
       "UNSUPPORTED_ACTION",
-      "LinkedIn media upload is not implemented yet. Use `autocli linkedin post \"text\"` for now.",
+      "LinkedIn media upload is not implemented yet. Use `autocli social linkedin post \"text\"` for now.",
     );
   }
 
