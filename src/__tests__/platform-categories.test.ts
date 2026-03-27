@@ -14,7 +14,6 @@ describe("platform category routing", () => {
       "grok",
       "mistral",
       "perplexity",
-      "poe",
       "qwen",
       "zai",
     ]);
@@ -58,10 +57,12 @@ describe("platform category routing", () => {
     expect(publicIds).toContain("dns");
     expect(publicIds).toContain("whois");
     expect(publicIds).toContain("rss");
+    expect(publicIds).toContain("screenshot");
     expect(publicIds).toContain("sitemap");
     expect(publicIds).toContain("robots");
     expect(publicIds).toContain("stocks");
     expect(publicIds).toContain("crypto");
     expect(publicIds).toContain("markdown-fetch");
+    expect(publicIds).toContain("uptime");
   });
 });
