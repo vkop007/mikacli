@@ -15,6 +15,7 @@ export const grokPlatformDefinition: PlatformDefinition = {
     "autocli grok login --cookies ./grok.cookies.json",
     'autocli grok text "Summarize this sprint"',
     'autocli grok image "Minimal orange fox logo on white background"',
+    "autocli grok image-download <job-id>",
     'autocli grok video "Cyberpunk city flythrough"',
   ],
 };

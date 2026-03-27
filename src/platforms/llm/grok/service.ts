@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
-import { extname } from "node:path";
+import { extname, join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 
 import { Cookie, CookieJar } from "tough-cookie";
@@ -183,6 +183,11 @@ export interface GrokImageExecutionResult extends GrokTextExecutionResult {
   imageUuid?: string;
 }
 
+export interface GrokImageDownloadResult {
+  outputUrls: string[];
+  outputPaths: string[];
+}
+
 export interface GrokVideoExecutionResult extends GrokTextExecutionResult {
   status: "completed" | "processing";
   outputUrl?: string;
@@ -192,6 +197,17 @@ export interface GrokVideoExecutionResult extends GrokTextExecutionResult {
   progress?: number;
   seedImageUrl?: string;
   seedImagePath?: string;
+}
+
+export interface GrokVideoStatusResult extends GrokTextExecutionResult {
+  status: "processing" | "completed" | "canceled" | "failed" | "unknown";
+  message: string;
+  outputUrl?: string;
+  outputUrls: string[];
+  outputPaths: string[];
+  videoId?: string;
+  progress?: number;
+  inflightResponseIds: string[];
 }
 
 interface ParsedGrokConversationStream {
@@ -343,6 +359,47 @@ export class GrokService {
     }
   }
 
+  async downloadImages(
+    client: SessionHttpClient,
+    input: {
+      outputUrls: string[];
+      conversationId?: string;
+      outputDir?: string;
+    },
+  ): Promise<GrokImageDownloadResult> {
+    try {
+      return await withGrokTlsSession(client.jar, async (session) => {
+        const outputUrls = dedupeValues(input.outputUrls);
+        if (outputUrls.length === 0) {
+          throw new AutoCliError(
+            "GROK_IMAGE_DOWNLOAD_UNAVAILABLE",
+            "Grok did not provide any downloadable image asset URLs for this job.",
+            {
+              details: {
+                conversationId: input.conversationId,
+              },
+            },
+          );
+        }
+        const outputPaths = await Promise.all(
+          outputUrls.map((outputUrl, index) =>
+            downloadGrokAsset(session, client.jar, outputUrl, "images", {
+              prefix: `${input.conversationId ?? "grok-image"}-${index + 1}`,
+              outputDir: input.outputDir,
+            }),
+          ),
+        );
+
+        return {
+          outputUrls,
+          outputPaths,
+        };
+      });
+    } catch (error) {
+      throw mapGrokError(error, "Failed to download the Grok image.");
+    }
+  }
+
   async executeVideo(
     client: SessionHttpClient,
     input: {
@@ -426,6 +483,207 @@ export class GrokService {
       });
     } catch (error) {
       throw mapGrokError(error, "Failed to generate the Grok video.");
+    }
+  }
+
+  async getVideoStatus(
+    client: SessionHttpClient,
+    input: {
+      conversationId?: string;
+      videoId?: string;
+      responseId?: string;
+      model?: string;
+      progress?: number;
+      outputText?: string;
+      outputUrl?: string;
+    },
+  ): Promise<GrokVideoStatusResult> {
+    try {
+      return await withGrokTlsSession(client.jar, async (session) =>
+        inspectGrokVideoJob(session, client.jar, {
+          ...input,
+          model: input.model ?? "imagine-video-gen",
+        }),
+      );
+    } catch (error) {
+      throw mapGrokError(error, "Failed to load the Grok video job status.");
+    }
+  }
+
+  async waitForVideo(
+    client: SessionHttpClient,
+    input: {
+      conversationId?: string;
+      videoId?: string;
+      responseId?: string;
+      model?: string;
+      progress?: number;
+      outputText?: string;
+      outputUrl?: string;
+      timeoutMs?: number;
+      intervalMs?: number;
+    },
+  ): Promise<GrokVideoStatusResult> {
+    try {
+      return await withGrokTlsSession(client.jar, async (session) => {
+        const deadline = Date.now() + (input.timeoutMs ?? GROK_VIDEO_POLL_TIMEOUT_MS);
+        const intervalMs = input.intervalMs ?? GROK_VIDEO_POLL_INTERVAL_MS;
+        let current = await inspectGrokVideoJob(session, client.jar, {
+          ...input,
+          model: input.model ?? "imagine-video-gen",
+        });
+
+        while (Date.now() < deadline && current.status === "processing" && !current.outputUrl) {
+          await delay(intervalMs);
+          current = await inspectGrokVideoJob(session, client.jar, {
+            ...input,
+            conversationId: current.conversationId ?? input.conversationId,
+            videoId: current.videoId ?? input.videoId,
+            responseId: current.responseId ?? input.responseId,
+            model: current.model || input.model || "imagine-video-gen",
+            progress: current.progress ?? input.progress,
+            outputText: current.outputText || input.outputText,
+            outputUrl: current.outputUrl ?? input.outputUrl,
+          });
+        }
+
+        return current;
+      });
+    } catch (error) {
+      throw mapGrokError(error, "Failed while waiting for the Grok video job.");
+    }
+  }
+
+  async downloadVideo(
+    client: SessionHttpClient,
+    input: {
+      conversationId?: string;
+      videoId?: string;
+      responseId?: string;
+      model?: string;
+      progress?: number;
+      outputText?: string;
+      outputUrl?: string;
+      outputDir?: string;
+    },
+  ): Promise<GrokVideoStatusResult> {
+    try {
+      return await withGrokTlsSession(client.jar, async (session) => {
+        const status = await inspectGrokVideoJob(session, client.jar, {
+          ...input,
+          model: input.model ?? "imagine-video-gen",
+        });
+
+        if (!status.outputUrl) {
+          throw new AutoCliError(
+            "GROK_VIDEO_NOT_READY",
+            "Grok has not exposed the final video asset URL yet. Run `grok video-wait` or `grok video-status` again later.",
+            {
+              details: {
+                conversationId: status.conversationId ?? input.conversationId,
+                videoId: status.videoId ?? input.videoId,
+                progress: status.progress,
+              },
+            },
+          );
+        }
+
+        const outputPath = await downloadGrokAsset(session, client.jar, status.outputUrl, "videos", {
+          prefix: `${status.conversationId ?? input.conversationId ?? "grok"}-${status.videoId ?? input.videoId ?? "video"}`,
+          outputDir: input.outputDir,
+        });
+
+        return {
+          ...status,
+          status: "completed",
+          message: `Downloaded the Grok video to ${outputPath}.`,
+          outputPaths: dedupeValues([outputPath, ...status.outputPaths]),
+          outputUrls: dedupeValues([status.outputUrl, ...status.outputUrls]),
+        };
+      });
+    } catch (error) {
+      throw mapGrokError(error, "Failed to download the Grok video.");
+    }
+  }
+
+  async cancelVideo(
+    client: SessionHttpClient,
+    input: {
+      conversationId?: string;
+      videoId?: string;
+      responseId?: string;
+      model?: string;
+      progress?: number;
+      outputText?: string;
+      outputUrl?: string;
+    },
+  ): Promise<GrokVideoStatusResult> {
+    try {
+      return await withGrokTlsSession(client.jar, async (session) => {
+        const current = await inspectGrokVideoJob(session, client.jar, {
+          ...input,
+          model: input.model ?? "imagine-video-gen",
+        });
+
+        if (current.outputUrl) {
+          return {
+            ...current,
+            status: "completed",
+            message: "The Grok video job already completed, so there is nothing to cancel.",
+          };
+        }
+
+        if (!current.conversationId && !input.conversationId) {
+          return {
+            ...current,
+            status: "unknown",
+            message: "A conversation ID is required to request cancellation for this Grok video job.",
+          };
+        }
+
+        if (current.inflightResponseIds.length === 0) {
+          return {
+            ...current,
+            message:
+              "Grok no longer reports this video job as inflight. The exposed stop endpoints cannot confirm background cancellation after the render has been accepted.",
+          };
+        }
+
+        const conversationId = current.conversationId ?? input.conversationId!;
+        await stopGrokConversationInflightResponses(session, client.jar, conversationId);
+        await Promise.all(
+          current.inflightResponseIds.map(async (responseId) => {
+            await stopGrokInflightResponse(session, client.jar, responseId).catch(() => {});
+          }),
+        );
+
+        const after = await inspectGrokVideoJob(session, client.jar, {
+          ...input,
+          conversationId,
+          videoId: current.videoId ?? input.videoId,
+          responseId: current.responseId ?? input.responseId,
+          model: current.model,
+          progress: current.progress,
+          outputText: current.outputText,
+        });
+
+        if (after.outputUrl) {
+          return {
+            ...after,
+            status: "completed",
+            message: "The Grok video completed before cancellation took effect.",
+          };
+        }
+
+        return {
+          ...after,
+          status: "canceled",
+          message: "Requested cancellation for the current Grok inflight video job.",
+          inflightResponseIds: [],
+        };
+      });
+    } catch (error) {
+      throw mapGrokError(error, "Failed to cancel the Grok video job.");
     }
   }
 
@@ -944,6 +1202,88 @@ async function pollForGrokVideoUrl(
   return undefined;
 }
 
+async function inspectGrokVideoJob(
+  session: SessionClient,
+  jar: CookieJar,
+  input: {
+    conversationId?: string;
+    videoId?: string;
+    responseId?: string;
+    model?: string;
+    progress?: number;
+    outputText?: string;
+    outputUrl?: string;
+  },
+): Promise<GrokVideoStatusResult> {
+  const responseBodies = await Promise.all([
+    input.conversationId ? fetchGrokConversationResponses(session, jar, input.conversationId) : Promise.resolve(undefined),
+    input.conversationId ? fetchGrokResponseNodes(session, jar, input.conversationId) : Promise.resolve(undefined),
+    input.conversationId ? fetchGrokConversationV2(session, jar, input.conversationId) : Promise.resolve(undefined),
+    input.videoId ? fetchGrokMediaPost(session, jar, input.videoId) : Promise.resolve(undefined),
+  ]);
+
+  const outputUrl =
+    input.outputUrl ??
+    responseBodies
+      .map((body) => extractGrokVideoUrl(body))
+      .find((value): value is string => typeof value === "string" && value.length > 0);
+  const progress = selectLargestNumber([
+    input.progress,
+    ...responseBodies.map((body) => extractGrokVideoProgress(body)),
+  ]);
+  const inflightResponseIds = dedupeValues(responseBodies.flatMap((body) => extractGrokInflightResponseIds(body)));
+  const videoId =
+    input.videoId ??
+    responseBodies
+      .map((body) => extractGrokVideoId(body))
+      .find((value): value is string => typeof value === "string" && value.length > 0);
+  const responseId =
+    input.responseId ??
+    responseBodies
+      .map((body) => extractGrokResponseId(body))
+      .find((value): value is string => typeof value === "string" && value.length > 0);
+  const model =
+    input.model ??
+    responseBodies
+      .map((body) => extractGrokModelName(body))
+      .find((value): value is string => typeof value === "string" && value.length > 0) ??
+    "imagine-video-gen";
+  const outputText =
+    input.outputText ??
+    responseBodies
+      .map((body) => extractGrokAssistantMessage(body))
+      .find((value): value is string => typeof value === "string" && value.length > 0) ??
+    "";
+
+  const status: GrokVideoStatusResult["status"] = outputUrl
+    ? "completed"
+    : inflightResponseIds.length > 0 || typeof progress === "number" || input.conversationId || input.videoId
+      ? "processing"
+      : "unknown";
+  const message =
+    status === "completed"
+      ? "The Grok video asset is ready to download."
+      : status === "processing"
+        ? "The Grok video job is still processing."
+        : "Could not confirm the Grok video job status from the current browserless endpoints.";
+
+  return {
+    outputText,
+    conversationId: input.conversationId,
+    responseId,
+    model,
+    followUpSuggestions: [],
+    status,
+    message,
+    outputUrl,
+    outputUrls: outputUrl ? [outputUrl] : [],
+    outputPaths: [],
+    videoId,
+    progress,
+    inflightResponseIds,
+  };
+}
+
 async function fetchGrokConversationResponses(
   session: SessionClient,
   jar: CookieJar,
@@ -966,6 +1306,22 @@ async function fetchGrokConversationV2(
   conversationId: string,
 ): Promise<string | undefined> {
   const url = `https://grok.com/rest/app-chat/conversations_v2/${encodeURIComponent(conversationId)}?includeTaskResult=true`;
+  const response = await session.get(url, {
+    headers: buildGrokHeaders({
+      accept: "application/json, text/plain, */*",
+      includeCorsHints: true,
+    }),
+  });
+  await applyTlsCookiesToJar(jar, GROK_HOME_URL, response.headers);
+  return response.status === 200 ? response.body : undefined;
+}
+
+async function fetchGrokResponseNodes(
+  session: SessionClient,
+  jar: CookieJar,
+  conversationId: string,
+): Promise<string | undefined> {
+  const url = `https://grok.com/rest/app-chat/conversations/${encodeURIComponent(conversationId)}/response-node?includeThreads=true`;
   const response = await session.get(url, {
     headers: buildGrokHeaders({
       accept: "application/json, text/plain, */*",
@@ -1009,6 +1365,7 @@ async function downloadGrokAsset(
   kind: "images" | "videos",
   input: {
     prefix: string;
+    outputDir?: string;
   },
 ): Promise<string> {
   const response = await session.get(assetUrl, {
@@ -1026,16 +1383,24 @@ async function downloadGrokAsset(
     throw createGrokRequestError(response.status, response.body);
   }
 
-  const outputPath = buildGrokAssetOutputPath(kind, input.prefix, assetUrl);
+  const outputPath = buildGrokAssetOutputPath(kind, input.prefix, assetUrl, input.outputDir);
   await ensureParentDirectory(outputPath);
   await writeFile(outputPath, decodeTlsBinaryBody(response.body));
   return outputPath;
 }
 
-function buildGrokAssetOutputPath(kind: "images" | "videos", prefix: string, assetUrl: string): string {
+function buildGrokAssetOutputPath(
+  kind: "images" | "videos",
+  prefix: string,
+  assetUrl: string,
+  outputDir?: string,
+): string {
   const url = new URL(assetUrl);
   const extension = extname(url.pathname) || (kind === "videos" ? ".mp4" : ".jpg");
   const fileName = `${sanitizeFileFragment(prefix)}-${randomUUID()}${extension}`;
+  if (outputDir) {
+    return join(outputDir, fileName);
+  }
   return getCachePath("grok", "generated", kind, fileName);
 }
 
@@ -1201,6 +1566,174 @@ function extractGrokVideoUrl(body?: string): string | undefined {
   }
 }
 
+function extractGrokVideoProgress(body?: string): number | undefined {
+  if (!body) {
+    return undefined;
+  }
+
+  try {
+    return extractGrokVideoProgressFromValue(JSON.parse(body));
+  } catch {
+    return undefined;
+  }
+}
+
+function extractGrokVideoProgressFromValue(value: unknown): number | undefined {
+  let max: number | undefined;
+
+  visitJson(value, (entry) => {
+    if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+      return;
+    }
+
+    const progress = (entry as { progress?: unknown }).progress;
+    if (typeof progress === "number") {
+      max = typeof max === "number" ? Math.max(max, progress) : progress;
+    }
+  });
+
+  return max;
+}
+
+function extractGrokInflightResponseIds(body?: string): string[] {
+  if (!body) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>;
+    const values: string[] = [];
+    visitJson(parsed, (entry) => {
+      if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+        return;
+      }
+
+      const inflight = (entry as { inflightResponses?: unknown }).inflightResponses;
+      if (!Array.isArray(inflight)) {
+        return;
+      }
+
+      for (const item of inflight) {
+        if (!item || typeof item !== "object" || Array.isArray(item)) {
+          continue;
+        }
+
+        const responseId = (item as { responseId?: unknown }).responseId;
+        if (typeof responseId === "string" && responseId.length > 0) {
+          values.push(responseId);
+        }
+      }
+    });
+
+    return dedupeValues(values);
+  } catch {
+    return [];
+  }
+}
+
+function extractGrokVideoId(body?: string): string | undefined {
+  if (!body) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(body);
+    let value: string | undefined;
+    visitJson(parsed, (entry) => {
+      if (value || !entry || typeof entry !== "object" || Array.isArray(entry)) {
+        return;
+      }
+
+      const direct = (entry as { videoId?: unknown }).videoId;
+      if (typeof direct === "string" && direct.length > 0) {
+        value = direct;
+      }
+    });
+    return value;
+  } catch {
+    return undefined;
+  }
+}
+
+function extractGrokResponseId(body?: string): string | undefined {
+  if (!body) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>;
+    if (Array.isArray(parsed.responses)) {
+      const assistant = [...parsed.responses]
+        .reverse()
+        .find(
+          (entry): entry is { responseId?: unknown; sender?: unknown } =>
+            Boolean(entry) && typeof entry === "object" && !Array.isArray(entry) && (entry as { sender?: unknown }).sender !== "human",
+        );
+      if (assistant && typeof assistant.responseId === "string" && assistant.responseId.length > 0) {
+        return assistant.responseId;
+      }
+    }
+
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function extractGrokModelName(body?: string): string | undefined {
+  if (!body) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(body);
+    let value: string | undefined;
+    visitJson(parsed, (entry) => {
+      if (value || !entry || typeof entry !== "object" || Array.isArray(entry)) {
+        return;
+      }
+
+      const direct =
+        typeof (entry as { modelName?: unknown }).modelName === "string"
+          ? ((entry as { modelName?: string }).modelName ?? undefined)
+          : typeof (entry as { model?: unknown }).model === "string"
+            ? ((entry as { model?: string }).model ?? undefined)
+            : undefined;
+      if (direct && direct.length > 0) {
+        value = direct;
+      }
+    });
+    return value;
+  } catch {
+    return undefined;
+  }
+}
+
+function extractGrokAssistantMessage(body?: string): string | undefined {
+  if (!body) {
+    return undefined;
+  }
+
+  try {
+    const parsed = JSON.parse(body) as Record<string, unknown>;
+    if (!Array.isArray(parsed.responses)) {
+      return undefined;
+    }
+
+    const messages = parsed.responses
+      .filter(
+        (entry): entry is { sender?: unknown; message?: unknown } =>
+          Boolean(entry) && typeof entry === "object" && !Array.isArray(entry) && (entry as { sender?: unknown }).sender !== "human",
+      )
+      .map((entry) => (typeof entry.message === "string" ? entry.message : ""))
+      .filter((value): value is string => value.length > 0);
+
+    return selectLongestValue(messages);
+  } catch {
+    return undefined;
+  }
+}
+
 function extractGrokVideoUrlFromValue(value: unknown): string | undefined {
   if (typeof value === "string") {
     if (/^https:\/\/assets\.grok\.com\/.+\.(?:mp4|mov|webm)$/iu.test(value)) {
@@ -1242,6 +1775,25 @@ function extractGrokVideoUrlFromValue(value: unknown): string | undefined {
   return undefined;
 }
 
+function visitJson(value: unknown, visit: (entry: unknown) => void): void {
+  visit(value);
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      visitJson(entry, visit);
+    }
+    return;
+  }
+
+  if (!value || typeof value !== "object") {
+    return;
+  }
+
+  for (const entry of Object.values(value)) {
+    visitJson(entry, visit);
+  }
+}
+
 function dedupeValues(values: readonly string[]): string[] {
   const seen = new Set<string>();
   const deduped: string[] = [];
@@ -1257,6 +1809,52 @@ function dedupeValues(values: readonly string[]): string[] {
   }
 
   return deduped;
+}
+
+function selectLargestNumber(values: Array<number | undefined>): number | undefined {
+  let selected: number | undefined;
+  for (const value of values) {
+    if (typeof value !== "number") {
+      continue;
+    }
+
+    selected = typeof selected === "number" ? Math.max(selected, value) : value;
+  }
+  return selected;
+}
+
+async function stopGrokConversationInflightResponses(
+  session: SessionClient,
+  jar: CookieJar,
+  conversationId: string,
+): Promise<void> {
+  const url = `https://grok.com/rest/app-chat/conversations/${encodeURIComponent(conversationId)}/stop-inflight-responses`;
+  const response = await session.post(
+    url,
+    null,
+    {
+      headers: buildGrokHeaders({
+        accept: "application/json, text/plain, */*",
+        includeCorsHints: true,
+      }),
+    },
+  );
+  await applyTlsCookiesToJar(jar, GROK_HOME_URL, response.headers);
+}
+
+async function stopGrokInflightResponse(
+  session: SessionClient,
+  jar: CookieJar,
+  responseId: string,
+): Promise<void> {
+  const url = `https://grok.com/rest/app-chat/conversations/inflight-response/${encodeURIComponent(responseId)}`;
+  const response = await session.delete(url, {
+    headers: buildGrokHeaders({
+      accept: "application/json, text/plain, */*",
+      includeCorsHints: true,
+    }),
+  });
+  await applyTlsCookiesToJar(jar, GROK_HOME_URL, response.headers);
 }
 
 async function exportJarCookiesForTls(
