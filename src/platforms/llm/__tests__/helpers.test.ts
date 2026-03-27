@@ -32,4 +32,14 @@ describe("llm shared helpers", () => {
 
     expect(status.state).toBe("expired");
   });
+
+  test("supports wildcard auth cookie prefixes", () => {
+    const status = buildCookieLlmSessionStatus({
+      displayName: "Mistral",
+      cookieNames: ["ory_session_coolcurranf83m3srkfl", "anonymousUser"],
+      authCookieNames: ["ory_session_*"],
+    });
+
+    expect(status.state).toBe("active");
+  });
 });

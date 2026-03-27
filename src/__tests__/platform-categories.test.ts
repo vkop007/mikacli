@@ -12,6 +12,8 @@ describe("platform category routing", () => {
       "deepseek",
       "gemini",
       "grok",
+      "mistral",
+      "perplexity",
       "qwen",
       "zai",
     ]);
@@ -22,6 +24,20 @@ describe("platform category routing", () => {
     expect(getPlatformDefinitionsByCategory("music").map((definition) => definition.id)).toEqual([
       "spotify",
       "youtube-music",
+    ]);
+  });
+
+  test("includes the editor category and providers", () => {
+    expect(getPlatformCategories()).toContain("editor");
+    expect(getPlatformDefinitionsByCategory("editor").map((definition) => definition.id)).toEqual([
+      "archive",
+      "audio",
+      "document",
+      "gif",
+      "image",
+      "pdf",
+      "subtitle",
+      "video",
     ]);
   });
 
@@ -55,10 +71,12 @@ describe("platform category routing", () => {
     expect(publicIds).toContain("dns");
     expect(publicIds).toContain("whois");
     expect(publicIds).toContain("rss");
+    expect(publicIds).toContain("screenshot");
     expect(publicIds).toContain("sitemap");
     expect(publicIds).toContain("robots");
     expect(publicIds).toContain("stocks");
     expect(publicIds).toContain("crypto");
     expect(publicIds).toContain("markdown-fetch");
+    expect(publicIds).toContain("uptime");
   });
 });

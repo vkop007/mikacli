@@ -5,11 +5,21 @@ import { telegrambotPlatformDefinition } from "./api/bots/telegrambot/manifest.j
 import { githubPlatformDefinition } from "./api/github/manifest.js";
 import { gitlabPlatformDefinition } from "./api/gitlab/manifest.js";
 import { linearPlatformDefinition } from "./api/linear/manifest.js";
+import { archiveEditorPlatformDefinition } from "./editor/archive/manifest.js";
+import { audioEditorPlatformDefinition } from "./editor/audio/manifest.js";
+import { documentEditorPlatformDefinition } from "./editor/document/manifest.js";
+import { gifEditorPlatformDefinition } from "./editor/gif/manifest.js";
+import { imageEditorPlatformDefinition } from "./editor/image/manifest.js";
+import { pdfPlatformDefinition } from "./editor/pdf/manifest.js";
+import { subtitleEditorPlatformDefinition } from "./editor/subtitle/manifest.js";
+import { videoEditorPlatformDefinition } from "./editor/video/manifest.js";
 import { chatgptPlatformDefinition } from "./llm/chatgpt/manifest.js";
 import { claudePlatformDefinition } from "./llm/claude/manifest.js";
 import { deepSeekPlatformDefinition } from "./llm/deepseek/manifest.js";
 import { geminiPlatformDefinition } from "./llm/gemini/manifest.js";
 import { grokPlatformDefinition } from "./llm/grok/manifest.js";
+import { mistralPlatformDefinition } from "./llm/mistral/manifest.js";
+import { perplexityPlatformDefinition } from "./llm/perplexity/manifest.js";
 import { qwenPlatformDefinition } from "./llm/qwen/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
@@ -21,12 +31,14 @@ import { dnsPlatformDefinition } from "./public/dns/manifest.js";
 import { ipPlatformDefinition } from "./public/ip/manifest.js";
 import { markdownFetchPlatformDefinition } from "./public/markdown-fetch/manifest.js";
 import { qrPlatformDefinition } from "./public/qr/manifest.js";
+import { screenshotPlatformDefinition } from "./public/screenshot/manifest.js";
 import { robotsPlatformDefinition } from "./public/robots/manifest.js";
 import { rssPlatformDefinition } from "./public/rss/manifest.js";
 import { sitemapPlatformDefinition } from "./public/sitemap/manifest.js";
 import { stocksPlatformDefinition } from "./public/stocks/manifest.js";
 import { timePlatformDefinition } from "./public/time/manifest.js";
 import { translatePlatformDefinition } from "./public/translate/manifest.js";
+import { uptimePlatformDefinition } from "./public/uptime/manifest.js";
 import { weatherPlatformDefinition } from "./public/weather/manifest.js";
 import { webSearchPlatformDefinition } from "./public/websearch/manifest.js";
 import { whoisPlatformDefinition } from "./public/whois/manifest.js";
@@ -51,10 +63,18 @@ const definitions: readonly PlatformDefinition[] = [
   deepSeekPlatformDefinition,
   dnsPlatformDefinition,
   discordBotPlatformDefinition,
+  archiveEditorPlatformDefinition,
+  audioEditorPlatformDefinition,
+  documentEditorPlatformDefinition,
+  gifEditorPlatformDefinition,
+  imageEditorPlatformDefinition,
   facebookPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
+  mistralPlatformDefinition,
+  perplexityPlatformDefinition,
   qwenPlatformDefinition,
+  zaiPlatformDefinition,
   githubPlatformDefinition,
   githubbotPlatformDefinition,
   gitlabPlatformDefinition,
@@ -65,7 +85,9 @@ const definitions: readonly PlatformDefinition[] = [
   linkedinPlatformDefinition,
   linearPlatformDefinition,
   notionPlatformDefinition,
+  pdfPlatformDefinition,
   qrPlatformDefinition,
+  screenshotPlatformDefinition,
   robotsPlatformDefinition,
   rssPlatformDefinition,
   sitemapPlatformDefinition,
@@ -76,13 +98,15 @@ const definitions: readonly PlatformDefinition[] = [
   tiktokPlatformDefinition,
   timePlatformDefinition,
   translatePlatformDefinition,
+  uptimePlatformDefinition,
+  subtitleEditorPlatformDefinition,
+  videoEditorPlatformDefinition,
   weatherPlatformDefinition,
   webSearchPlatformDefinition,
   whoisPlatformDefinition,
   xPlatformDefinition,
   youtubePlatformDefinition,
   youtubeMusicPlatformDefinition,
-  zaiPlatformDefinition,
 ];
 
 export function getPlatformDefinitions(): readonly PlatformDefinition[] {
@@ -101,7 +125,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "music", "social", "bots", "api", "public", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "music", "social", "bots", "api", "public", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];

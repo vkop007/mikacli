@@ -26,7 +26,7 @@ export function buildCookieLlmSessionStatus(input: {
     };
   }
 
-  if (expectedAuthCookies.some((cookieName) => cookieNames.has(cookieName))) {
+  if (expectedAuthCookies.some((cookieName) => hasMatchingCookie(cookieNames, cookieName))) {
     return {
       state: "active",
       message: `${input.displayName} auth cookies were detected. Live endpoint validation is still experimental for this provider.`,
@@ -40,4 +40,23 @@ export function buildCookieLlmSessionStatus(input: {
     lastValidatedAt,
     lastErrorCode: "AUTH_COOKIE_MISSING",
   };
+}
+
+function hasMatchingCookie(cookieNames: ReadonlySet<string>, expectedCookieName: string): boolean {
+  if (!expectedCookieName.endsWith("*")) {
+    return cookieNames.has(expectedCookieName);
+  }
+
+  const prefix = expectedCookieName.slice(0, -1);
+  if (!prefix) {
+    return false;
+  }
+
+  for (const cookieName of cookieNames) {
+    if (cookieName.startsWith(prefix)) {
+      return true;
+    }
+  }
+
+  return false;
 }

@@ -5,6 +5,7 @@ AutoCLI is a Bun-first TypeScript CLI for browserless social automation. It supp
 Commands are organized by category only:
 
 - `autocli llm ...`
+- `autocli editor ...`
 - `autocli social ...`
 - `autocli api ...`
 - `autocli music ...`
@@ -28,15 +29,23 @@ Reference points:
 
 | Category | Providers | Count | Route pattern |
 | --- | --- | ---: | --- |
-| LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Qwen, Z.ai | 7 | `autocli llm <provider> ...` |
+| LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Qwen, Z.ai | 9 | `autocli llm <provider> ...` |
+| Editor | Archive Editor, Audio Editor, Document Editor, GIF Editor, Image Editor, PDF Editor, Subtitle Editor, Video Editor | 8 | `autocli editor <provider> ...` |
 | Music | Spotify, YouTube Music | 2 | `autocli music <provider> ...` |
 | Social | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | `autocli social <provider> ...` |
 | API | Discord Bot, GitHub, GitHub Bot, GitLab, Linear, Notion, Slack Bot, Telegram Bot | 8 | `autocli api <provider> ...` |
-| Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Sitemap, Stocks, Time, Translate, Weather, Web Search, Whois | 17 | `autocli public <provider> ...` |
-| Total | 40 providers across 5 command groups | 40 | category-only |
+| Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Screenshot, Sitemap, Stocks, Time, Translate, Uptime, Weather, Web Search, Whois | 19 | `autocli public <provider> ...` |
+| Total | 52 providers across 6 command groups | 52 | category-only |
 
 ### Capability highlights
 
+- Archive Editor
+  - `info`
+  - `list`
+  - `create`
+  - `extract`
+  - `gzip`
+  - `gunzip`
 - Facebook
   - `login`
   - `status`
@@ -74,6 +83,17 @@ Reference points:
   - `send-file`
   - `edit`
   - `delete`
+- Document Editor
+  - `info`
+  - `convert`
+  - `extract-text`
+  - `to-markdown`
+  - `metadata`
+- GIF Editor
+  - `info`
+  - `create` / `from-video`
+  - `optimize`
+  - `to-video`
 - Instagram
   - `login`
   - `post` with media + caption
@@ -100,17 +120,85 @@ Reference points:
   - `create-issue`
   - `update-issue`
   - `comment`
+- Audio Editor
+  - `info`
+  - `trim`
+  - `convert`
+  - `compress`
+  - `merge`
+  - `fade-in`
+  - `fade-out`
+  - `trim-silence`
+  - `normalize`
+  - `volume`
+  - `waveform`
+  - `spectrogram`
 - Cheat
   - `cheat <topic>`
   - optional `--shell` and `--lang` context
+- Image Editor
+  - `info`
+  - `resize`
+  - `crop`
+  - `convert`
+  - `rotate`
+  - `compress`
+  - `grayscale`
+  - `blur`
+  - `sharpen`
+  - `thumbnail`
+  - `strip-metadata`
+  - `watermark`
+- PDF Editor
+  - `info`
+  - `merge`
+  - `split`
+  - `extract-pages`
+  - `rotate`
+  - `optimize` / `compress`
+  - `encrypt`
+  - `decrypt`
 - IP
   - `ip`
   - `ip --version 4|6|any`
   - `ip --details`
+- Screenshot
+  - `screenshot <url>`
+  - `screenshot <url> --output-dir ./shots`
+  - `screenshot <url> --output ./page.png`
 - TikTok
   - `login`
   - `status`
   - `post`, `like`, and `comment` commands are wired, but TikTok web write signing is not implemented yet
+- Uptime
+  - `uptime <url>`
+  - `uptime <url> --method HEAD|GET`
+  - `uptime <url> --timeout 15000`
+- Subtitle Editor
+  - `info`
+  - `convert`
+  - `shift`
+  - `sync`
+  - `clean`
+  - `merge`
+- Video Editor
+  - `info`
+  - `trim`
+  - `convert`
+  - `compress`
+  - `speed`
+  - `reverse`
+  - `overlay-image`
+  - `audio-replace`
+  - `frame-extract`
+  - `thumbnail`
+  - `resize`
+  - `crop`
+  - `extract-audio`
+  - `mute`
+  - `gif`
+  - `concat`
+  - `subtitle-burn`
 - Web Search
   - `engines`
   - `search`
@@ -596,6 +684,8 @@ autocli api discordbot me
 autocli llm chatgpt text "Hello my name is Justine"
 autocli llm claude text "Summarize this changelog"
 autocli llm deepseek text "Draft release notes for AutoCLI"
+autocli llm perplexity login --cookies ./perplexity.cookies.json
+autocli llm mistral login --cookies ./mistral.cookies.json
 autocli llm qwen text "Design a clean onboarding flow for AutoCLI"
 autocli llm zai text "Hello my name is Justine"
 autocli llm gemini text "Draft a polite follow-up email"
@@ -617,13 +707,15 @@ autocli llm deepseek login --cookies ./deepseek.cookies.json --token <userToken>
 autocli llm deepseek text "Explain retrieval-augmented generation"
 autocli llm gemini login --cookies ./gemini.cookies.json
 autocli llm gemini text "Draft a polite follow-up email"
+autocli llm perplexity login --cookies ./perplexity.cookies.json
+autocli llm mistral login --cookies ./mistral.cookies.json
 autocli llm qwen login --cookies ./qwen.cookies.json
 autocli llm qwen login --cookies ./qwen.cookies.json --token <bearerToken>
 autocli llm qwen text "Explain retrieval-augmented generation"
 autocli llm zai text "Outline a landing page for AutoCLI"
 ```
 
-These providers now share a proper command surface. Gemini, Claude, and Z.ai use saved browser sessions for active generation. ChatGPT currently uses the browserless anonymous web flow for `text` and image prompts, while `login` and `status` only validate imported ChatGPT sessions. DeepSeek uses the browser cookies plus the `userToken` stored in localStorage on DeepSeek’s site. Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie, and `--token` is only needed when that cookie is missing from the export.
+These providers now share a proper command surface. Gemini, Claude, and Z.ai use saved browser sessions for active generation. ChatGPT currently uses the browserless anonymous web flow for `text` and image prompts, while `login` and `status` only validate imported ChatGPT sessions. DeepSeek uses the browser cookies plus the `userToken` stored in localStorage on DeepSeek’s site. Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie, and `--token` is only needed when that cookie is missing from the export. Perplexity and Mistral are cookie-backed LLM providers with working browserless text flows, while image and video expansion still depends on validating each provider’s private upload endpoints.
 
 Use YouTube Music search and browse actions:
 

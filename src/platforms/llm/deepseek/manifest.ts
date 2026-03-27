@@ -14,6 +14,6 @@ export const deepSeekPlatformDefinition: PlatformDefinition = {
   examples: [
     "autocli deepseek login --cookies ./deepseek.cookies.json --token <userToken>",
     'autocli deepseek text "Explain vector databases"',
-    'autocli llm deepseek text "Draft a short release note"',
+    'autocli deepseek text "Draft a short release note"',
   ],
 };

@@ -6,7 +6,15 @@ import { assertCategoryOnlyInvocation, createProgram } from "../program.js";
 describe("root program routing", () => {
   test("registers only global commands and category commands at the top level", () => {
     const program = createProgram();
-    expect(program.commands.map((command) => command.name())).toEqual(["status", "llm", "music", "social", "api", "public"]);
+    expect(program.commands.map((command) => command.name())).toEqual([
+      "status",
+      "llm",
+      "editor",
+      "music",
+      "social",
+      "api",
+      "public",
+    ]);
   });
 
   test("rejects legacy direct provider invocations with a category hint", () => {
@@ -34,6 +42,7 @@ describe("root program routing", () => {
 
   test("allows category-based invocations", () => {
     expect(() => assertCategoryOnlyInvocation(["llm", "chatgpt", "text", "Hello"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["editor", "image", "info", "./photo.png"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["public", "translate", "hello"])).not.toThrow();
   });
 });

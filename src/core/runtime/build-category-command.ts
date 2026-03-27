@@ -15,6 +15,9 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   bots: {
     description: "Bot-token providers like Telegram, Discord, and Slack",
   },
+  editor: {
+    description: "Local media editors powered by tools like ffmpeg",
+  },
   forum: {
     description: "Forum-style communities and discussion platforms",
   },
