@@ -3,7 +3,7 @@ import { printJson } from "../../../utils/output.js";
 
 import type { AdapterActionResult } from "../../../types.js";
 
-export function printVideoEditorResult(result: AdapterActionResult, json: boolean): void {
+export function printAudioResult(result: AdapterActionResult, json: boolean): void {
   if (json) {
     printJson(result);
     return;
@@ -13,28 +13,13 @@ export function printVideoEditorResult(result: AdapterActionResult, json: boolea
 
   const data = result.data ?? {};
   const outputPath = asString(data.outputPath);
-  const outputDir = asString(data.outputDir);
-  const outputPattern = asString(data.outputPattern);
-  const width = asNumber(data.width);
-  const height = asNumber(data.height);
-  const durationSeconds = asNumber(data.durationSeconds);
   const format = asString(data.format);
-  const fps = asNumber(data.fps);
+  const durationSeconds = asNumber(data.durationSeconds);
+  const sampleRate = asNumber(data.sampleRate);
+  const channels = asNumber(data.channels);
 
   if (outputPath) {
     console.log(`file: ${outputPath}`);
-  }
-
-  if (outputDir) {
-    console.log(`output-dir: ${outputDir}`);
-  }
-
-  if (outputPattern && outputPattern !== outputPath) {
-    console.log(`pattern: ${outputPattern}`);
-  }
-
-  if (typeof width === "number" && typeof height === "number") {
-    console.log(`size: ${width}x${height}`);
   }
 
   if (format) {
@@ -45,8 +30,12 @@ export function printVideoEditorResult(result: AdapterActionResult, json: boolea
     console.log(`duration: ${durationSeconds.toFixed(2)}s`);
   }
 
-  if (typeof fps === "number") {
-    console.log(`fps: ${fps.toFixed(2)}`);
+  if (typeof sampleRate === "number") {
+    console.log(`sample-rate: ${sampleRate} Hz`);
+  }
+
+  if (typeof channels === "number") {
+    console.log(`channels: ${channels}`);
   }
 }
 

@@ -30,12 +30,12 @@ Reference points:
 | Category | Providers | Count | Route pattern |
 | --- | --- | ---: | --- |
 | LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Qwen, Z.ai | 9 | `autocli llm <provider> ...` |
-| Editor | Image Editor, Video Editor | 2 | `autocli editor <provider> ...` |
+| Editor | Audio Editor, Image Editor, PDF Editor, Subtitle Editor, Video Editor | 5 | `autocli editor <provider> ...` |
 | Music | Spotify, YouTube Music | 2 | `autocli music <provider> ...` |
 | Social | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | `autocli social <provider> ...` |
 | API | Discord Bot, GitHub, GitHub Bot, GitLab, Linear, Notion, Slack Bot, Telegram Bot | 8 | `autocli api <provider> ...` |
 | Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Screenshot, Sitemap, Stocks, Time, Translate, Uptime, Weather, Web Search, Whois | 19 | `autocli public <provider> ...` |
-| Total | 46 providers across 6 command groups | 46 | category-only |
+| Total | 49 providers across 6 command groups | 49 | category-only |
 
 ### Capability highlights
 
@@ -102,6 +102,19 @@ Reference points:
   - `create-issue`
   - `update-issue`
   - `comment`
+- Audio Editor
+  - `info`
+  - `trim`
+  - `convert`
+  - `compress`
+  - `merge`
+  - `fade-in`
+  - `fade-out`
+  - `trim-silence`
+  - `normalize`
+  - `volume`
+  - `waveform`
+  - `spectrogram`
 - Cheat
   - `cheat <topic>`
   - optional `--shell` and `--lang` context
@@ -111,6 +124,22 @@ Reference points:
   - `crop`
   - `convert`
   - `rotate`
+  - `compress`
+  - `grayscale`
+  - `blur`
+  - `sharpen`
+  - `thumbnail`
+  - `strip-metadata`
+  - `watermark`
+- PDF Editor
+  - `info`
+  - `merge`
+  - `split`
+  - `extract-pages`
+  - `rotate`
+  - `optimize` / `compress`
+  - `encrypt`
+  - `decrypt`
 - IP
   - `ip`
   - `ip --version 4|6|any`
@@ -127,12 +156,31 @@ Reference points:
   - `uptime <url>`
   - `uptime <url> --method HEAD|GET`
   - `uptime <url> --timeout 15000`
+- Subtitle Editor
+  - `info`
+  - `convert`
+  - `shift`
+  - `sync`
+  - `clean`
+  - `merge`
 - Video Editor
   - `info`
   - `trim`
   - `convert`
   - `compress`
+  - `speed`
+  - `reverse`
+  - `overlay-image`
+  - `audio-replace`
+  - `frame-extract`
   - `thumbnail`
+  - `resize`
+  - `crop`
+  - `extract-audio`
+  - `mute`
+  - `gif`
+  - `concat`
+  - `subtitle-burn`
 - Web Search
   - `engines`
   - `search`

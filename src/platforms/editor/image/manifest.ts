@@ -14,6 +14,9 @@ const EXAMPLES = [
   "autocli image crop ./photo.png --width 1080 --height 1080",
   "autocli image convert ./photo.webp --to png",
   "autocli image rotate ./photo.png --degrees 90",
+  "autocli image compress ./photo.png --quality 82",
+  "autocli image grayscale ./photo.png",
+  "autocli image watermark ./photo.png --watermark ./logo.png --position bottom-right",
 ] as const;
 
 function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -141,6 +144,167 @@ function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Com
         onSuccess: (result) => printImageEditorResult(result, ctx.json),
       });
     });
+
+  command
+    .command("compress")
+    .description("Compress an image to a smaller JPEG output")
+    .argument("<inputPath>", "Input image path")
+    .option("--quality <value>", "JPEG quality from 1 to 100", "82")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { quality?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Compressing image...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Image compressed.",
+        action: () =>
+          imageEditorAdapter.compress({
+            inputPath,
+            quality: input.quality,
+            output: input.output,
+          }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("grayscale")
+    .description("Convert an image to grayscale")
+    .argument("<inputPath>", "Input image path")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Applying grayscale...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Grayscale image saved.",
+        action: () => imageEditorAdapter.grayscale({ inputPath, output: input.output }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("blur")
+    .description("Blur an image")
+    .argument("<inputPath>", "Input image path")
+    .option("--radius <value>", "Blur radius/sigma", "3")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { radius?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Blurring image...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Blurred image saved.",
+        action: () =>
+          imageEditorAdapter.blur({
+            inputPath,
+            radius: input.radius,
+            output: input.output,
+          }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("sharpen")
+    .description("Sharpen an image")
+    .argument("<inputPath>", "Input image path")
+    .option("--amount <value>", "Sharpen amount", "1.5")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { amount?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Sharpening image...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Sharpened image saved.",
+        action: () =>
+          imageEditorAdapter.sharpen({
+            inputPath,
+            amount: input.amount,
+            output: input.output,
+          }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("thumbnail")
+    .description("Generate a smaller image thumbnail")
+    .argument("<inputPath>", "Input image path")
+    .option("--width <px>", "Thumbnail width in pixels", "320")
+    .option("--height <px>", "Optional thumbnail height in pixels")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { width?: string; height?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Creating thumbnail...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Thumbnail created.",
+        action: () =>
+          imageEditorAdapter.thumbnail({
+            inputPath,
+            width: input.width,
+            height: input.height,
+            output: input.output,
+          }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("strip-metadata")
+    .description("Write a copy of the image without embedded metadata")
+    .argument("<inputPath>", "Input image path")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Removing metadata...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Metadata removed.",
+        action: () => imageEditorAdapter.stripMetadata({ inputPath, output: input.output }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("watermark")
+    .description("Overlay a watermark image on top of an image")
+    .argument("<inputPath>", "Input image path")
+    .requiredOption("--watermark <path>", "Watermark image path")
+    .option("--position <value>", "Overlay position: top-left, top-right, bottom-left, bottom-right, center")
+    .option("--margin <px>", "Overlay margin in pixels", "16")
+    .option("--output <path>", "Exact output file path")
+    .action(
+      async (
+        inputPath: string,
+        input: { watermark: string; position?: string; margin?: string; output?: string },
+        cmd: Command,
+      ) => {
+        const ctx = resolveCommandContext(cmd);
+        const logger = new Logger(ctx);
+        const spinner = logger.spinner("Applying watermark...");
+        await runCommandAction({
+          spinner,
+          successMessage: "Watermark applied.",
+          action: () =>
+            imageEditorAdapter.watermark({
+              inputPath,
+              watermarkPath: input.watermark,
+              position: input.position,
+              margin: input.margin,
+              output: input.output,
+            }),
+          onSuccess: (result) => printImageEditorResult(result, ctx.json),
+        });
+      },
+    );
 
   return command;
 }

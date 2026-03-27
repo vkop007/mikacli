@@ -186,6 +186,15 @@ export function parseRate(value: string | undefined): number | null {
   return numerator / denominator;
 }
 
+export function clampNumber(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+export function normalizeOutputExtension(value: string): string {
+  const trimmed = value.trim().toLowerCase();
+  return trimmed.startsWith(".") ? trimmed.slice(1) : trimmed;
+}
+
 async function runBinary(
   command: string,
   args: readonly string[],

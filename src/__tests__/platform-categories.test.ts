@@ -29,7 +29,13 @@ describe("platform category routing", () => {
 
   test("includes the editor category and providers", () => {
     expect(getPlatformCategories()).toContain("editor");
-    expect(getPlatformDefinitionsByCategory("editor").map((definition) => definition.id)).toEqual(["image", "video"]);
+    expect(getPlatformDefinitionsByCategory("editor").map((definition) => definition.id)).toEqual([
+      "audio",
+      "image",
+      "pdf",
+      "subtitle",
+      "video",
+    ]);
   });
 
   test("exposes bot providers under api too", () => {

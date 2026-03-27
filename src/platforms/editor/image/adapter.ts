@@ -1,6 +1,8 @@
 import { basename } from "node:path";
 
 import {
+  assertLocalInputFile,
+  clampNumber,
   requireNonNegativeInteger,
   requirePositiveInteger,
   resolveEditorOutputPath,
@@ -41,6 +43,39 @@ type ImageConvertInput = {
 type ImageRotateInput = {
   inputPath: string;
   degrees: number | string;
+  output?: string;
+};
+
+type ImageCompressInput = {
+  inputPath: string;
+  quality?: number | string;
+  output?: string;
+};
+
+type ImageBlurInput = {
+  inputPath: string;
+  radius?: number | string;
+  output?: string;
+};
+
+type ImageSharpenInput = {
+  inputPath: string;
+  amount?: number | string;
+  output?: string;
+};
+
+type ImageThumbnailInput = {
+  inputPath: string;
+  width?: number | string;
+  height?: number | string;
+  output?: string;
+};
+
+type ImageWatermarkInput = {
+  inputPath: string;
+  watermarkPath: string;
+  position?: string;
+  margin?: number | string;
   output?: string;
 };
 
@@ -204,6 +239,200 @@ export class ImageEditorAdapter {
     });
   }
 
+  async compress(input: ImageCompressInput): Promise<AdapterActionResult> {
+    const quality = clampNumber(Math.round(toNumber(input.quality) ?? 82), 1, 100);
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "compressed",
+      extension: "jpg",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: [
+        "-i",
+        "{input}",
+        "-q:v",
+        String(convertQualityToQscale(quality)),
+        "-map_metadata",
+        "-1",
+        "{output}",
+      ],
+    });
+
+    return this.buildResult({
+      action: "compress",
+      message: `Saved compressed image to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+        quality,
+      },
+    });
+  }
+
+  async grayscale(input: { inputPath: string; output?: string }): Promise<AdapterActionResult> {
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "grayscale",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: ["-i", "{input}", "-vf", "hue=s=0", "{output}"],
+    });
+
+    return this.buildResult({
+      action: "grayscale",
+      message: `Saved grayscale image to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+      },
+    });
+  }
+
+  async blur(input: ImageBlurInput): Promise<AdapterActionResult> {
+    const radius = clampNumber(toNumber(input.radius) ?? 3, 0.1, 50);
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "blurred",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: ["-i", "{input}", "-vf", `gblur=sigma=${radius}`, "{output}"],
+    });
+
+    return this.buildResult({
+      action: "blur",
+      message: `Saved blurred image to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+        radius,
+      },
+    });
+  }
+
+  async sharpen(input: ImageSharpenInput): Promise<AdapterActionResult> {
+    const amount = clampNumber(toNumber(input.amount) ?? 1.5, 0.1, 10);
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "sharpened",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: ["-i", "{input}", "-vf", buildSharpenFilter(amount), "{output}"],
+    });
+
+    return this.buildResult({
+      action: "sharpen",
+      message: `Saved sharpened image to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+        amount,
+      },
+    });
+  }
+
+  async thumbnail(input: ImageThumbnailInput): Promise<AdapterActionResult> {
+    const width = input.width !== undefined ? requirePositiveInteger(input.width, "width") : 320;
+    const height = input.height !== undefined ? requirePositiveInteger(input.height, "height") : undefined;
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "thumbnail",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: ["-i", "{input}", "-vf", buildScaleFilter(width, height), "{output}"],
+    });
+
+    return this.buildResult({
+      action: "thumbnail",
+      message: `Saved image thumbnail to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+        width,
+        height: height ?? null,
+      },
+    });
+  }
+
+  async stripMetadata(input: { inputPath: string; output?: string }): Promise<AdapterActionResult> {
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "clean",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: ["-i", "{input}", "-map_metadata", "-1", "{output}"],
+    });
+
+    return this.buildResult({
+      action: "strip-metadata",
+      message: `Saved metadata-stripped image to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+      },
+    });
+  }
+
+  async watermark(input: ImageWatermarkInput): Promise<AdapterActionResult> {
+    const watermarkPath = await assertLocalInputFile(input.watermarkPath);
+    const margin = input.margin !== undefined ? requireNonNegativeInteger(input.margin, "margin") : 16;
+    const position = normalizeOverlayPosition(input.position);
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "watermarked",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: [
+        "-i",
+        "{input}",
+        "-i",
+        watermarkPath,
+        "-filter_complex",
+        `overlay=${buildOverlayPosition(position, margin)}`,
+        "{output}",
+      ],
+    });
+
+    return this.buildResult({
+      action: "watermark",
+      message: `Saved watermarked image to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        watermarkPath,
+        outputPath: resolvedOutput,
+        position,
+        margin,
+      },
+    });
+  }
+
   private buildResult(input: {
     action: string;
     message: string;
@@ -252,4 +481,56 @@ function normalizeImageFormat(value: string): "png" | "jpeg" | "webp" | "bmp" {
       supportedFormats: ["png", "jpg", "jpeg", "webp", "bmp"],
     },
   });
+}
+
+function convertQualityToQscale(quality: number): number {
+  if (quality >= 96) {
+    return 2;
+  }
+
+  const qscale = Math.round(((100 - quality) / 100) * 29) + 2;
+  return clampNumber(qscale, 2, 31);
+}
+
+function buildSharpenFilter(amount: number): string {
+  const intensity = Math.max(3, Math.round(amount * 5));
+  return `unsharp=5:5:${intensity / 10}:5:5:0.0`;
+}
+
+function normalizeOverlayPosition(value: string | undefined): "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center" {
+  const normalized = value?.trim().toLowerCase() ?? "bottom-right";
+  if (
+    normalized === "top-left" ||
+    normalized === "top-right" ||
+    normalized === "bottom-left" ||
+    normalized === "bottom-right" ||
+    normalized === "center"
+  ) {
+    return normalized;
+  }
+
+  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported watermark position "${value}".`, {
+    details: {
+      supportedPositions: ["top-left", "top-right", "bottom-left", "bottom-right", "center"],
+    },
+  });
+}
+
+function buildOverlayPosition(
+  position: "top-left" | "top-right" | "bottom-left" | "bottom-right" | "center",
+  margin: number,
+): string {
+  switch (position) {
+    case "top-left":
+      return `${margin}:${margin}`;
+    case "top-right":
+      return `main_w-overlay_w-${margin}:${margin}`;
+    case "bottom-left":
+      return `${margin}:main_h-overlay_h-${margin}`;
+    case "center":
+      return "(main_w-overlay_w)/2:(main_h-overlay_h)/2";
+    case "bottom-right":
+    default:
+      return `main_w-overlay_w-${margin}:main_h-overlay_h-${margin}`;
+  }
 }
