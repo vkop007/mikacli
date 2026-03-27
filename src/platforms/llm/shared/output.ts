@@ -47,10 +47,19 @@ export function printCookieLlmMediaResult(result: AdapterActionResult, json: boo
   const outputUrls = Array.isArray(result.data?.outputUrls)
     ? result.data.outputUrls.filter((value): value is string => typeof value === "string" && value.length > 0)
     : [];
+  const outputPaths = Array.isArray(result.data?.outputPaths)
+    ? result.data.outputPaths.filter((value): value is string => typeof value === "string" && value.length > 0)
+    : [];
 
   if (outputText) {
     console.log("");
     console.log(outputText);
+  }
+
+  if (outputPaths.length > 0) {
+    for (const nextPath of outputPaths) {
+      console.log(`file: ${nextPath}`);
+    }
   }
 
   if (outputUrl) {

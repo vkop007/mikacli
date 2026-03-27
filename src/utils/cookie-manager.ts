@@ -24,11 +24,13 @@ const BrowserCookieSchema = z.object({
   key: z.string().optional(),
   value: z.string(),
   domain: z.string().optional(),
+  hostOnly: z.boolean().optional(),
   path: z.string().optional(),
   secure: z.boolean().optional(),
   httpOnly: z.boolean().optional(),
   expirationDate: z.number().optional(),
   expires: z.union([z.string(), z.number(), z.null()]).optional(),
+  session: z.boolean().optional(),
   sameSite: z.string().nullable().optional(),
 });
 
@@ -297,7 +299,7 @@ export class CookieManager {
         continue;
       }
 
-      const [domainRaw, , pathRaw, secureFlagRaw, expiresRaw, nameRaw, ...valueParts] = parts;
+      const [domainRaw, includeSubdomainsRaw, pathRaw, secureFlagRaw, expiresRaw, nameRaw, ...valueParts] = parts;
       const domain = normalizeCookieDomain(domainRaw ?? defaultCookieDomain(platform));
       const path = pathRaw || "/";
       const secureFlag = secureFlagRaw ?? "FALSE";
@@ -310,6 +312,7 @@ export class CookieManager {
         key: name,
         value: valueParts.join("\t"),
         domain,
+        hostOnly: String(includeSubdomainsRaw ?? "").toUpperCase() !== "TRUE",
         path,
         secure: secureFlag.toUpperCase() === "TRUE",
         expires: parseCookieExpiry(expiresRaw ?? ""),
@@ -473,15 +476,20 @@ function createCookieFromLooseObject(
   cookie: z.infer<typeof BrowserCookieSchema>,
 ): Cookie {
   const expiresRaw = cookie.expirationDate ?? cookie.expires;
+  const rawDomain = cookie.domain ?? defaultCookieDomain(platform);
+  const normalizedDomain = normalizeCookieDomain(rawDomain);
+  const hostOnly = cookie.hostOnly ?? !rawDomain.startsWith(".");
   return new Cookie({
     key: cookie.name ?? cookie.key ?? "cookie",
     value: cookie.value,
-    domain: normalizeCookieDomain(cookie.domain ?? defaultCookieDomain(platform)),
+    domain: normalizedDomain,
+    hostOnly,
     path: cookie.path ?? "/",
     secure: cookie.secure ?? true,
     httpOnly: cookie.httpOnly ?? false,
     sameSite: normalizeSameSite(cookie.sameSite ?? undefined),
-    expires: expiresRaw === undefined ? "Infinity" : parseCookieExpiry(String(expiresRaw)),
+    expires:
+      cookie.session === true || expiresRaw === undefined ? "Infinity" : parseCookieExpiry(String(expiresRaw)),
   });
 }
 
