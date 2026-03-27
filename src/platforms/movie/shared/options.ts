@@ -6,3 +6,12 @@ export function parseMovieLimitOption(value: string): number {
 
   return parsed;
 }
+
+export function parseMovieCountryOption(value: string): string {
+  const normalized = value.trim().toUpperCase();
+  if (!/^[A-Z]{2}$/.test(normalized)) {
+    throw new Error(`Invalid country code "${value}". Expected a 2-letter code like US or IN.`);
+  }
+
+  return normalized;
+}
