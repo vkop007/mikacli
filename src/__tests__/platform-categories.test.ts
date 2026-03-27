@@ -46,6 +46,8 @@ describe("platform category routing", () => {
     expect(getPlatformDefinitionsByCategory("movie").map((definition) => definition.id)).toEqual([
       "anilist",
       "imdb",
+      "justwatch",
+      "kitsu",
       "myanimelist",
       "tvmaze",
     ]);

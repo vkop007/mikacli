@@ -25,6 +25,8 @@ import { perplexityPlatformDefinition } from "./llm/perplexity/manifest.js";
 import { qwenPlatformDefinition } from "./llm/qwen/manifest.js";
 import { aniListPlatformDefinition } from "./movie/anilist/manifest.js";
 import { imdbPlatformDefinition } from "./movie/imdb/manifest.js";
+import { justWatchPlatformDefinition } from "./movie/justwatch/manifest.js";
+import { kitsuPlatformDefinition } from "./movie/kitsu/manifest.js";
 import { myAnimeListPlatformDefinition } from "./movie/myanimelist/manifest.js";
 import { tvMazePlatformDefinition } from "./movie/tvmaze/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
@@ -81,6 +83,8 @@ const definitions: readonly PlatformDefinition[] = [
   grokPlatformDefinition,
   aniListPlatformDefinition,
   imdbPlatformDefinition,
+  justWatchPlatformDefinition,
+  kitsuPlatformDefinition,
   mistralPlatformDefinition,
   myAnimeListPlatformDefinition,
   perplexityPlatformDefinition,
