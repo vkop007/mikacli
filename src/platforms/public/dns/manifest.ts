@@ -1,25 +1,21 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { dnsAdapter } from "./adapter.js";
 import { dnsCapabilities } from "./capabilities/index.js";
 import { printDnsResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildDnsCommand(): Command {
+const EXAMPLES = ["autocli dns openai.com", "autocli dns openai.com --type MX"] as const;
+
+function buildDnsCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("dns").description("Resolve DNS records through public DNS-over-HTTPS services");
   command.argument("<name>", "Hostname to resolve");
   command.option("--type <value>", "DNS record type (A, AAAA, MX, TXT, CNAME, etc.)", "A");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli dns openai.com
-  autocli dns openai.com --type MX
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (name: string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -50,5 +46,5 @@ export const dnsPlatformDefinition: PlatformDefinition = {
   buildCommand: buildDnsCommand,
   adapter: dnsAdapter,
   capabilities: dnsCapabilities,
-  examples: ["autocli dns openai.com", "autocli dns openai.com --type MX"],
+  examples: EXAMPLES,
 };

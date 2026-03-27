@@ -1,26 +1,21 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { cryptoAdapter } from "./adapter.js";
 import { cryptoCapabilities } from "./capabilities/index.js";
 import { printCryptoResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildCryptoCommand(): Command {
+const EXAMPLES = ["autocli crypto bitcoin", "autocli crypto btc --vs usd", "autocli crypto ethereum --vs inr"] as const;
+
+function buildCryptoCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("crypto").description("Load crypto prices from a public no-key market feed");
   command.argument("<asset>", "Crypto asset id, symbol, or name");
   command.option("--vs <currency>", "Quote currency such as usd, inr, eur (default: usd)", "usd");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli crypto bitcoin
-  autocli crypto btc --vs usd
-  autocli crypto ethereum --vs inr
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (asset: string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -51,5 +46,5 @@ export const cryptoPlatformDefinition: PlatformDefinition = {
   buildCommand: buildCryptoCommand,
   adapter: cryptoAdapter,
   capabilities: cryptoCapabilities,
-  examples: ["autocli crypto bitcoin", "autocli crypto btc --vs usd", "autocli crypto ethereum --vs inr"],
+  examples: EXAMPLES,
 };

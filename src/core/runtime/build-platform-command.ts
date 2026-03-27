@@ -1,5 +1,7 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "./example-help.js";
+
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "./platform-definition.js";
 
 export function buildPlatformCommand(
@@ -21,13 +23,7 @@ export function buildPlatformCommand(
   }
 
   if (definition.examples && definition.examples.length > 0) {
-    command.addHelpText(
-      "afterAll",
-      `
-Examples:
-${definition.examples.map((example) => `  ${prefixPlatformExample(example, definition, options.examplePrefix)}`).join("\n")}
-`,
-    );
+    command.addHelpText("afterAll", buildExamplesHelpText(definition.examples, options));
   }
 
   for (const capability of definition.capabilities) {
@@ -35,20 +31,4 @@ ${definition.examples.map((example) => `  ${prefixPlatformExample(example, defin
   }
 
   return command;
-}
-
-function prefixPlatformExample(example: string, definition: PlatformDefinition, prefix: string | undefined): string {
-  if (!prefix) {
-    return example;
-  }
-
-  const candidates = [definition.id, ...(definition.aliases ?? [])];
-  for (const candidate of candidates) {
-    const literal = `autocli ${candidate}`;
-    if (example === literal || example.startsWith(`${literal} `)) {
-      return example.replace(literal, `autocli ${prefix} ${candidate}`);
-    }
-  }
-
-  return example;
 }

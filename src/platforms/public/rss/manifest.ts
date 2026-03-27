@@ -1,28 +1,27 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { rssAdapter } from "./adapter.js";
 import { rssCapabilities } from "./capabilities/index.js";
 import { printRssResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildRssCommand(): Command {
+const EXAMPLES = [
+  "autocli rss https://hnrss.org/frontpage",
+  "autocli rss https://example.com/feed.xml --limit 5",
+  "autocli rss https://example.com/feed.xml --summary --summary-limit 2",
+] as const;
+
+function buildRssCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("rss").description("Fetch and parse an RSS or Atom feed URL");
   command.argument("<feedUrl>", "RSS or Atom feed URL");
   command.option("--limit <number>", "Maximum number of feed items to load (default: 10)", parsePositiveInteger, 10);
   command.option("--summary", "Fetch article summaries for the first items when available");
   command.option("--summary-limit <number>", "Maximum items to summarize (default: 3)", parsePositiveInteger, 3);
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli rss https://hnrss.org/frontpage
-  autocli rss https://example.com/feed.xml --limit 5
-  autocli rss https://example.com/feed.xml --summary --summary-limit 2
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (feedUrl: string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -64,9 +63,5 @@ export const rssPlatformDefinition: PlatformDefinition = {
   buildCommand: buildRssCommand,
   adapter: rssAdapter,
   capabilities: rssCapabilities,
-  examples: [
-    "autocli rss https://hnrss.org/frontpage",
-    "autocli rss https://example.com/feed.xml --limit 5",
-    "autocli rss https://example.com/feed.xml --summary --summary-limit 2",
-  ],
+  examples: EXAMPLES,
 };

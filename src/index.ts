@@ -1,45 +1,16 @@
 #!/usr/bin/env node
 
-import { Command } from "commander";
 import pc from "picocolors";
 
-import packageJson from "../package.json" with { type: "json" };
-import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
-import { buildPlatformCommand } from "./core/runtime/build-platform-command.js";
-import { createStatusCommand } from "./commands/status.js";
 import { errorToJson } from "./errors.js";
-import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
+import { assertCategoryOnlyInvocation, createProgram } from "./program.js";
 import { printJson } from "./utils/output.js";
 
-const HELP_FRAME = `${pc.bold(pc.cyan("AutoCLI"))}
-${pc.dim("Browserless social automation from the terminal")}
-`;
-
 async function main(): Promise<void> {
-  const program = new Command();
-
-  program
-    .name("autocli")
-    .description("Automate social and developer platforms from the terminal using imported browser sessions and saved API or bot tokens.")
-    .version(packageJson.version, "-v, --version", "Show the installed version")
-    .option("--json", "Emit machine-readable JSON output")
-    .option("--verbose", "Enable verbose logging")
-    .showHelpAfterError()
-    .addHelpText("beforeAll", `${HELP_FRAME}\n`)
-    .addCommand(createStatusCommand());
-
-  for (const category of getPlatformCategories()) {
-    const definitions = getPlatformDefinitionsByCategory(category);
-    if (definitions.length > 0) {
-      program.addCommand(buildCategoryCommand(category, definitions));
-    }
-  }
-
-  for (const definition of getPlatformDefinitions()) {
-    program.addCommand(buildPlatformCommand(definition));
-  }
+  const program = createProgram();
 
   try {
+    assertCategoryOnlyInvocation(process.argv.slice(2));
     await program.parseAsync(process.argv);
   } catch (error) {
     const wantsJson = process.argv.includes("--json");

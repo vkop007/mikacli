@@ -2,6 +2,14 @@
 
 AutoCLI is a Bun-first TypeScript CLI for browserless social automation. It supports both imported browser sessions and token-based bot connections, stores them under `~/.autocli/sessions/` and `~/.autocli/connections/`, and runs subsequent actions headlessly from the terminal without launching Playwright or Puppeteer.
 
+Commands are organized by category only:
+
+- `autocli llm ...`
+- `autocli social ...`
+- `autocli api ...`
+- `autocli music ...`
+- `autocli public ...`
+
 ## Why `Commander.js + Zod`
 
 I chose `Commander.js + Zod` over `oclif` and `Clerc` for this build because the goal here is a Bun-first, single-binary CLI with a small runtime surface:
@@ -569,7 +577,7 @@ YouTube downloads use `yt-dlp` plus `ffmpeg`. That is the correct implementation
 
 YouTube video uploads and community posting are not implemented yet. `autocli youtube upload ...` exists as the eventual entrypoint, but it currently returns a structured unsupported-action error because the Studio upload flow is separate from the watch-page action flow.
 
-Category routes are supported too, so you can group commands by provider type:
+Commands are category-based, so provider routes always live under their provider type:
 
 ```bash
 autocli api github me
@@ -585,7 +593,7 @@ autocli music spotify search "dandelions"
 autocli music youtube-music play "dandelions"
 ```
 
-The original top-level routes like `autocli youtube ...` and `autocli spotify ...` still work.
+Top-level provider routes like `autocli youtube ...` and `autocli spotify ...` are intentionally disabled now to avoid namespace conflicts as more providers are added.
 
 Cookie-backed LLM providers are scaffolded too:
 

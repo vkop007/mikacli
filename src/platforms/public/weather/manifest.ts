@@ -1,28 +1,27 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { weatherAdapter } from "./adapter.js";
 import { weatherCapabilities } from "./capabilities/index.js";
 import { printWeatherResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildWeatherCommand(): Command {
+const EXAMPLES = [
+  "autocli weather",
+  "autocli weather London",
+  'autocli weather "San Francisco" --days 3',
+  "autocli weather Tokyo --lang ja",
+] as const;
+
+function buildWeatherCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("weather").description("Get current conditions and short forecast from wttr.in");
   command.argument("[location]", "Optional location, defaults to auto-detect by IP");
   command.option("--days <number>", "Forecast days to include (1-3, default: 1)", parseDayCount, 1);
   command.option("--lang <code>", "Response language code, for example en, es, fr, hi");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli weather
-  autocli weather London
-  autocli weather "San Francisco" --days 3
-  autocli weather Tokyo --lang ja
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (location: string | undefined, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -63,10 +62,5 @@ export const weatherPlatformDefinition: PlatformDefinition = {
   buildCommand: buildWeatherCommand,
   adapter: weatherAdapter,
   capabilities: weatherCapabilities,
-  examples: [
-    "autocli weather",
-    "autocli weather London",
-    'autocli weather "San Francisco" --days 3',
-    "autocli weather Tokyo --lang ja",
-  ],
+  examples: EXAMPLES,
 };

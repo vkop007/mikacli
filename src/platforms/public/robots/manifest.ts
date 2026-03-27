@@ -1,25 +1,21 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { robotsAdapter } from "./adapter.js";
 import { robotsCapabilities } from "./capabilities/index.js";
 import { printRobotsResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildRobotsCommand(): Command {
+const EXAMPLES = ["autocli robots https://example.com", "autocli robots https://example.com/robots.txt"] as const;
+
+function buildRobotsCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("robots").description("Fetch and parse a robots.txt file");
   command.argument("<url>", "Site URL or robots.txt URL");
   command.option("--follow-sitemaps", "Return sitemap directives in the parsed data");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli robots https://example.com
-  autocli robots https://example.com/robots.txt
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (url: string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -50,5 +46,5 @@ export const robotsPlatformDefinition: PlatformDefinition = {
   buildCommand: buildRobotsCommand,
   adapter: robotsAdapter,
   capabilities: robotsCapabilities,
-  examples: ["autocli robots https://example.com", "autocli robots https://example.com/robots.txt"],
+  examples: EXAMPLES,
 };

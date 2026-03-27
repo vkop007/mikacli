@@ -1,28 +1,27 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { cheatAdapter } from "./adapter.js";
 import { cheatCapabilities } from "./capabilities/index.js";
 import { printCheatResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildCheatCommand(): Command {
+const EXAMPLES = [
+  "autocli cheat git status",
+  "autocli cheat --shell bash reverse list",
+  "autocli cheat --lang python list comprehension",
+] as const;
+
+function buildCheatCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("cheat").description("Look up quick cheat sheet snippets from cht.sh");
   command.alias("cht");
   command.argument("<topic...>", "Topic to look up");
   command.option("--shell <bash|zsh|fish|powershell>", "Optional shell context for the lookup");
   command.option("--lang <lang>", "Optional language or context prefix");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli cheat git status
-  autocli cheat --shell bash reverse list
-  autocli cheat --lang python list comprehension
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (topic: string[] | string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -55,9 +54,5 @@ export const cheatPlatformDefinition: PlatformDefinition = {
   buildCommand: buildCheatCommand,
   adapter: cheatAdapter,
   capabilities: cheatCapabilities,
-  examples: [
-    "autocli cheat git status",
-    "autocli cheat --shell bash reverse list",
-    "autocli cheat --lang python list comprehension",
-  ],
+  examples: EXAMPLES,
 };

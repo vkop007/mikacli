@@ -1,27 +1,26 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { markdownFetchAdapter } from "./adapter.js";
 import { markdownFetchCapabilities } from "./capabilities/index.js";
 import { printMarkdownFetchResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildMarkdownFetchCommand(): Command {
+const EXAMPLES = [
+  "autocli markdown-fetch https://example.com",
+  "autocli markdown-fetch https://news.ycombinator.com --include-links",
+  "autocli markdown-fetch https://example.com/article --max-chars 12000",
+] as const;
+
+function buildMarkdownFetchCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("markdown-fetch").description("Fetch a web page and convert it into readable markdown");
   command.argument("<url>", "Web page URL");
   command.option("--max-chars <number>", "Maximum markdown characters to keep (default: 6000)", parsePositiveInteger, 6000);
   command.option("--include-links", "Preserve inline links in markdown output");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli markdown-fetch https://example.com
-  autocli markdown-fetch https://news.ycombinator.com --include-links
-  autocli markdown-fetch https://example.com/article --max-chars 12000
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (url: string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -62,9 +61,5 @@ export const markdownFetchPlatformDefinition: PlatformDefinition = {
   buildCommand: buildMarkdownFetchCommand,
   adapter: markdownFetchAdapter,
   capabilities: markdownFetchCapabilities,
-  examples: [
-    "autocli markdown-fetch https://example.com",
-    "autocli markdown-fetch https://news.ycombinator.com --include-links",
-    "autocli markdown-fetch https://example.com/article --max-chars 12000",
-  ],
+  examples: EXAMPLES,
 };

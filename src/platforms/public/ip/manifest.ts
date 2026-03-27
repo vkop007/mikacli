@@ -1,27 +1,21 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { ipAdapter } from "./adapter.js";
 import { ipCapabilities } from "./capabilities/index.js";
 import { printIpResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildIpCommand(): Command {
+const EXAMPLES = ["autocli ip", "autocli ip --version 4", "autocli ip --version 6", "autocli ip --details"] as const;
+
+function buildIpCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("ip").description("Resolve your public IP address");
   command.option("--version <value>", "IP version preference: 4, 6, any (default: any)", parseIpVersion, "any");
   command.option("--details", "Include country/city/org details when available");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli ip
-  autocli ip --version 4
-  autocli ip --version 6
-  autocli ip --details
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -61,5 +55,5 @@ export const ipPlatformDefinition: PlatformDefinition = {
   buildCommand: buildIpCommand,
   adapter: ipAdapter,
   capabilities: ipCapabilities,
-  examples: ["autocli ip", "autocli ip --version 4", "autocli ip --version 6", "autocli ip --details"],
+  examples: EXAMPLES,
 };

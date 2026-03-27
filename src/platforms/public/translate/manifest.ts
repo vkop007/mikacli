@@ -1,28 +1,27 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { translateAdapter } from "./adapter.js";
 import { translateCapabilities } from "./capabilities/index.js";
 import { printTranslateResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 import type { PlatformName } from "../../config.js";
 
-function buildTranslateCommand(): Command {
+const EXAMPLES = [
+  'autocli translate "hello world"',
+  'autocli translate "hello world" --to hi',
+  'autocli translate "good morning" --from en --to es',
+] as const;
+
+function buildTranslateCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("translate").description("Translate text using Google's public no-key translation endpoint");
   command.argument("<text...>", "Text to translate");
   command.option("--from <lang>", "Source language code or auto/detect", "auto");
   command.option("--to <lang>", "Target language code", "en");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli translate "hello world"
-  autocli translate "hello world" --to hi
-  autocli translate "good morning" --from en --to es
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (text: string[] | string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -54,9 +53,5 @@ export const translatePlatformDefinition: PlatformDefinition = {
   buildCommand: buildTranslateCommand,
   adapter: translateAdapter,
   capabilities: translateCapabilities,
-  examples: [
-    'autocli translate "hello world"',
-    'autocli translate "hello world" --to hi',
-    'autocli translate "good morning" --from en --to es',
-  ],
+  examples: EXAMPLES,
 };

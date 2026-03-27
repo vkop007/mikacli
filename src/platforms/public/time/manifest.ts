@@ -1,25 +1,20 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { timeAdapter } from "./adapter.js";
 import { timeCapabilities } from "./capabilities/index.js";
 import { printTimeResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildTimeCommand(): Command {
+const EXAMPLES = ["autocli time", "autocli time Asia/Kolkata", "autocli time America/New_York"] as const;
+
+function buildTimeCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("time").description("Show local time by IP or a specific timezone");
   command.argument("[timezone]", "Optional IANA timezone, e.g. Asia/Kolkata");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli time
-  autocli time Asia/Kolkata
-  autocli time America/New_York
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (timezone: string | undefined, _options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -49,5 +44,5 @@ export const timePlatformDefinition: PlatformDefinition = {
   buildCommand: buildTimeCommand,
   adapter: timeAdapter,
   capabilities: timeCapabilities,
-  examples: ["autocli time", "autocli time Asia/Kolkata", "autocli time America/New_York"],
+  examples: EXAMPLES,
 };

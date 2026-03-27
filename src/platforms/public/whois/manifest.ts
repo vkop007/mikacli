@@ -1,24 +1,20 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { whoisAdapter } from "./adapter.js";
 import { whoisCapabilities } from "./capabilities/index.js";
 import { printWhoisResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildWhoisCommand(): Command {
+const EXAMPLES = ["autocli whois openai.com", "autocli whois 8.8.8.8"] as const;
+
+function buildWhoisCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("whois").description("Load WHOIS / RDAP data for a domain or IP address");
   command.argument("<target>", "Domain or IP address to inspect");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli whois openai.com
-  autocli whois 8.8.8.8
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (target: string, _options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -48,5 +44,5 @@ export const whoisPlatformDefinition: PlatformDefinition = {
   buildCommand: buildWhoisCommand,
   adapter: whoisAdapter,
   capabilities: whoisCapabilities,
-  examples: ["autocli whois openai.com", "autocli whois 8.8.8.8"],
+  examples: EXAMPLES,
 };

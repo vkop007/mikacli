@@ -1,28 +1,27 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { currencyAdapter } from "./adapter.js";
 import { currencyCapabilities } from "./capabilities/index.js";
 import { printCurrencyResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 import type { PlatformName } from "../../config.js";
 
-function buildCurrencyCommand(): Command {
+const EXAMPLES = [
+  "autocli currency 100 USD INR",
+  "autocli currency 100 USD EUR GBP",
+  "autocli currency 2500 INR USD",
+] as const;
+
+function buildCurrencyCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("currency").description("Convert currencies using a public no-key exchange-rate endpoint");
   command.argument("<amount>", "Amount to convert");
   command.argument("<from>", "Source currency code");
   command.argument("<to...>", "Target currency codes");
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli currency 100 USD INR
-  autocli currency 100 USD EUR GBP
-  autocli currency 2500 INR USD
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (amount: string, from: string, to: string[] | string, _options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -54,9 +53,5 @@ export const currencyPlatformDefinition: PlatformDefinition = {
   buildCommand: buildCurrencyCommand,
   adapter: currencyAdapter,
   capabilities: currencyCapabilities,
-  examples: [
-    "autocli currency 100 USD INR",
-    "autocli currency 100 USD EUR GBP",
-    "autocli currency 2500 INR USD",
-  ],
+  examples: EXAMPLES,
 };

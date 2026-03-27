@@ -1,27 +1,26 @@
 import { Command } from "commander";
 
+import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { sitemapAdapter } from "./adapter.js";
 import { sitemapCapabilities } from "./capabilities/index.js";
 import { printSitemapResult } from "./output.js";
 
-import type { PlatformDefinition } from "../../../core/runtime/platform-definition.js";
+import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-function buildSitemapCommand(): Command {
+const EXAMPLES = [
+  "autocli sitemap https://example.com/sitemap.xml",
+  "autocli sitemap https://example.com --limit 250",
+  "autocli sitemap https://example.com --depth 2",
+] as const;
+
+function buildSitemapCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("sitemap").description("Fetch and parse a sitemap.xml or sitemap index");
   command.argument("<url>", "Sitemap URL or site URL");
   command.option("--limit <number>", "Maximum number of URLs to return (default: 100)", parsePositiveInteger, 100);
   command.option("--depth <number>", "How many sitemap index levels to follow (default: 1)", parsePositiveInteger, 1);
-  command.addHelpText(
-    "afterAll",
-    `
-Examples:
-  autocli sitemap https://example.com/sitemap.xml
-  autocli sitemap https://example.com --limit 250
-  autocli sitemap https://example.com --depth 2
-`,
-  );
+  command.addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
   command.action(async (url: string, options: Record<string, unknown>, cmd: Command) => {
     const ctx = resolveCommandContext(cmd);
@@ -62,9 +61,5 @@ export const sitemapPlatformDefinition: PlatformDefinition = {
   buildCommand: buildSitemapCommand,
   adapter: sitemapAdapter,
   capabilities: sitemapCapabilities,
-  examples: [
-    "autocli sitemap https://example.com/sitemap.xml",
-    "autocli sitemap https://example.com --limit 250",
-    "autocli sitemap https://example.com --depth 2",
-  ],
+  examples: EXAMPLES,
 };
