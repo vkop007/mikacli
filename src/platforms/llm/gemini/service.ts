@@ -1,5 +1,8 @@
 import { randomInt, randomUUID } from "node:crypto";
+import { writeFile } from "node:fs/promises";
+import { extname, join } from "node:path";
 
+import { ensureDirectory, getCachePath } from "../../../config.js";
 import { AutoCliError, isAutoCliError } from "../../../errors.js";
 import { readMediaFile } from "../../../utils/media.js";
 
@@ -85,6 +88,11 @@ export interface GeminiTextExecutionResult {
 export interface GeminiMediaExecutionResult extends GeminiTextExecutionResult {
   outputUrls?: string[];
   thumbnailUrls?: string[];
+}
+
+export interface GeminiMediaDownloadResult {
+  outputUrls: string[];
+  outputPaths: string[];
 }
 
 export class GeminiService {
@@ -217,6 +225,69 @@ export class GeminiService {
       return result;
     } catch (error) {
       throw mapGeminiError(error, "Failed to complete the Gemini video prompt.");
+    }
+  }
+
+  async downloadMedia(
+    client: SessionHttpClient,
+    input: {
+      kind: "image" | "video";
+      outputUrls: string[];
+      outputDir?: string;
+      chatId?: string;
+    },
+  ): Promise<GeminiMediaDownloadResult> {
+    try {
+      const outputUrls = dedupeGeminiValues(input.outputUrls);
+      if (outputUrls.length === 0) {
+        throw new AutoCliError(
+          "GEMINI_MEDIA_DOWNLOAD_UNAVAILABLE",
+          `Gemini did not provide any downloadable ${input.kind} URLs for this job.`,
+          {
+            details: {
+              kind: input.kind,
+              chatId: input.chatId,
+            },
+          },
+        );
+      }
+
+      const outputDir = input.outputDir ?? getCachePath("gemini", "generated", input.kind === "image" ? "images" : "videos");
+      await ensureDirectory(outputDir);
+
+      const outputPaths: string[] = [];
+      for (const [index, outputUrl] of outputUrls.entries()) {
+        const response = await client.requestWithResponse<ArrayBuffer>(outputUrl, {
+          responseType: "arrayBuffer",
+          expectedStatus: 200,
+          headers: {
+            referer: input.chatId ? `https://gemini.google.com/app/${input.chatId}` : GEMINI_APP_URL,
+            "user-agent": GEMINI_USER_AGENT,
+          },
+        });
+
+        const extension = normalizeGeminiDownloadExtension(
+          outputUrl,
+          response.response.headers.get("content-type") ?? undefined,
+          input.kind,
+        );
+        const filename = buildGeminiDownloadFilename({
+          chatId: input.chatId,
+          kind: input.kind,
+          index,
+          extension,
+        });
+        const outputPath = join(outputDir, filename);
+        await writeFile(outputPath, Buffer.from(response.data));
+        outputPaths.push(outputPath);
+      }
+
+      return {
+        outputUrls,
+        outputPaths,
+      };
+    } catch (error) {
+      throw mapGeminiError(error, `Failed to download the Gemini ${input.kind}.`);
     }
   }
 
@@ -583,6 +654,79 @@ function parseGeminiGeneratedVideoUrls(candidate: unknown[]): {
     videoUrls,
     thumbnailUrls,
   };
+}
+
+function buildGeminiDownloadFilename(input: {
+  chatId?: string;
+  kind: "image" | "video";
+  index: number;
+  extension: string;
+}): string {
+  const identity = sanitizeGeminiFilename(input.chatId ?? "gemini");
+  return `${identity}-${input.kind}-${input.index + 1}-${randomUUID()}.${input.extension}`;
+}
+
+function normalizeGeminiDownloadExtension(
+  outputUrl: string,
+  contentType: string | undefined,
+  kind: "image" | "video",
+): string {
+  const pathnameExtension = extname(safeGeminiUrlPathname(outputUrl)).replace(/^\./u, "").toLowerCase();
+  if (pathnameExtension) {
+    return pathnameExtension;
+  }
+
+  const normalizedContentType = contentType?.split(";")[0]?.trim().toLowerCase();
+  switch (normalizedContentType) {
+    case "image/jpeg":
+      return "jpg";
+    case "image/png":
+      return "png";
+    case "image/webp":
+      return "webp";
+    case "image/gif":
+      return "gif";
+    case "video/mp4":
+      return "mp4";
+    case "video/webm":
+      return "webm";
+    case "video/quicktime":
+      return "mov";
+    default:
+      return kind === "image" ? "png" : "mp4";
+  }
+}
+
+function safeGeminiUrlPathname(outputUrl: string): string {
+  try {
+    return new URL(outputUrl).pathname;
+  } catch {
+    return outputUrl;
+  }
+}
+
+function sanitizeGeminiFilename(value: string): string {
+  return value.replace(/[^A-Za-z0-9._-]+/gu, "-").replace(/-+/gu, "-").replace(/^-|-$/gu, "") || "gemini";
+}
+
+function dedupeGeminiValues(values: readonly string[] | undefined): string[] {
+  if (!values) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const deduped: string[] = [];
+  for (const value of values) {
+    const normalized = value.trim();
+    if (!normalized || seen.has(normalized)) {
+      continue;
+    }
+
+    seen.add(normalized);
+    deduped.push(normalized);
+  }
+
+  return deduped;
 }
 
 function isGeminiExpiredError(error: unknown): boolean {

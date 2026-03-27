@@ -15,5 +15,7 @@ export const geminiPlatformDefinition: PlatformDefinition = {
     "autocli gemini login --cookies ./gemini.cookies.json",
     'autocli gemini text "Draft a polite follow-up email"',
     'autocli gemini image ./diagram.png --caption "Explain this architecture"',
+    'autocli gemini video "A tiny orange fox made of paper blinking softly"',
+    "autocli gemini video-download <job-id>",
   ],
 };

@@ -7,6 +7,7 @@ import type {
   AdapterStatusResult,
   LoginInput,
   PlatformSession,
+  SessionStatus,
 } from "../../../types.js";
 
 export class ChatGptAdapter extends CookieLlmAdapter {
@@ -34,8 +35,13 @@ export class ChatGptAdapter extends CookieLlmAdapter {
     const { session, path } = await this.loadSession(account);
     const inspection = await this.inspectSavedSession(session);
     const persisted = await this.persistExistingSession(session, {
+      jar: inspection.jar,
       user: inspection.user,
       status: inspection.status,
+      metadata: {
+        ...(session.metadata ?? {}),
+        backendAccessible: inspection.backendAccessible,
+      },
     });
 
     return this.buildStatusResult({
@@ -44,6 +50,36 @@ export class ChatGptAdapter extends CookieLlmAdapter {
       status: inspection.status,
       user: inspection.user,
     });
+  }
+
+  async statusAction(account?: string): Promise<AdapterActionResult> {
+    const { session, path } = await this.loadSession(account);
+    const inspection = await this.inspectSavedSession(session);
+    const persisted = await this.persistExistingSession(session, {
+      jar: inspection.jar,
+      user: inspection.user,
+      status: inspection.status,
+      metadata: {
+        ...(session.metadata ?? {}),
+        backendAccessible: inspection.backendAccessible,
+      },
+    });
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: persisted.account,
+      action: "status",
+      message: inspection.status.message ?? `ChatGPT session is ${inspection.status.state}.`,
+      sessionPath: path,
+      user: inspection.user,
+      data: {
+        status: inspection.status.state,
+        connected: inspection.status.state === "active",
+        lastValidatedAt: inspection.status.lastValidatedAt,
+        backendAccessible: inspection.backendAccessible ?? false,
+      },
+    };
   }
 
   async text(input: {
@@ -56,15 +92,51 @@ export class ChatGptAdapter extends CookieLlmAdapter {
       throw new AutoCliError("INVALID_PROMPT", "Expected a non-empty ChatGPT text prompt.");
     }
 
-    const result = await this.service.executeText({
+    const { session } = await this.loadSession(input.account);
+    const client = await this.createClient(session);
+    const inspection = await this.service.inspectSession(client);
+    const inspectedSession = await this.persistExistingSession(session, {
+      jar: client.jar,
+      user: inspection.user,
+      status: inspection.status,
+      metadata: {
+        ...(session.metadata ?? {}),
+        backendAccessible: inspection.backendAccessible,
+      },
+    });
+
+    if (inspection.status.state === "expired") {
+      throw new AutoCliError("SESSION_EXPIRED", inspection.status.message ?? "ChatGPT session expired. Re-import cookies.", {
+        details: {
+          platform: this.platform,
+          account: inspectedSession.account,
+        },
+      });
+    }
+
+    const result = await this.service.executeAuthenticatedText(client, {
       prompt,
       model: input.model,
+    });
+    const status: SessionStatus = {
+      state: "active",
+      message: "ChatGPT session is active. Browserless authenticated prompting is available.",
+      lastValidatedAt: new Date().toISOString(),
+    };
+    const persisted = await this.persistExistingSession(inspectedSession, {
+      jar: client.jar,
+      user: inspection.user ?? inspectedSession.user,
+      status,
+      metadata: {
+        ...(inspectedSession.metadata ?? {}),
+        backendAccessible: true,
+      },
     });
 
     return {
       ok: true,
       platform: this.platform,
-      account: input.account ?? "anonymous",
+      account: persisted.account,
       action: "text",
       message: `ChatGPT replied using ${result.model} (${result.mode}).`,
       id: result.messageId,
@@ -125,8 +197,13 @@ export class ChatGptAdapter extends CookieLlmAdapter {
     const { session, path } = await this.loadSession(account);
     const inspection = await this.inspectSavedSession(session);
     const persisted = await this.persistExistingSession(session, {
+      jar: inspection.jar,
       user: inspection.user,
       status: inspection.status,
+      metadata: {
+        ...(session.metadata ?? {}),
+        backendAccessible: inspection.backendAccessible,
+      },
     });
 
     return {
@@ -142,13 +219,17 @@ export class ChatGptAdapter extends CookieLlmAdapter {
       user: inspection.user,
       data: {
         status: inspection.status.state,
+        backendAccessible: inspection.backendAccessible ?? false,
       },
     };
   }
 
   private async inspectSavedSession(session: PlatformSession) {
     const client = await this.createClient(session);
-    return this.service.inspectSession(client);
+    return {
+      ...(await this.service.inspectSession(client)),
+      jar: client.jar,
+    };
   }
 }
 

@@ -9,12 +9,18 @@ import type { SessionHttpClient as SessionHttpClientType } from "../../../utils/
 import type { SessionStatus, SessionUser } from "../../../types.js";
 
 const CHATGPT_HOME_URL = "https://chatgpt.com/";
+const CHATGPT_BACKEND_ME_URL = "https://chatgpt.com/backend-api/me";
 const CHATGPT_AUTH_SESSION_URL = "https://chatgpt.com/api/auth/session";
 const CHATGPT_AUTH_CSRF_URL = "https://chatgpt.com/api/auth/csrf";
+const CHATGPT_CF_JSD_MAIN_URL = "https://chatgpt.com/cdn-cgi/challenge-platform/scripts/jsd/main.js";
 const CHATGPT_REQUIREMENTS_URL = "https://chatgpt.com/backend-anon/sentinel/chat-requirements";
 const CHATGPT_FILES_URL = "https://chatgpt.com/backend-anon/files";
 const CHATGPT_PROCESS_UPLOAD_URL = "https://chatgpt.com/backend-anon/files/process_upload_stream";
 const CHATGPT_CONVERSATION_URL = "https://chatgpt.com/backend-anon/conversation";
+const CHATGPT_AUTH_REQUIREMENTS_PREPARE_URL = "https://chatgpt.com/backend-api/sentinel/chat-requirements/prepare";
+const CHATGPT_AUTH_REQUIREMENTS_FINALIZE_URL = "https://chatgpt.com/backend-api/sentinel/chat-requirements/finalize";
+const CHATGPT_AUTH_CONVERSATION_PREPARE_URL = "https://chatgpt.com/backend-api/f/conversation/prepare";
+const CHATGPT_AUTH_CONVERSATION_URL = "https://chatgpt.com/backend-api/f/conversation";
 
 const CHATGPT_DEFAULT_MODEL = "auto";
 const CHATGPT_ANON_BROWSER = {
@@ -23,6 +29,13 @@ const CHATGPT_ANON_BROWSER = {
   platform: "Windows",
   mobile: "?0",
   ua: 'Not A(Brand";v="8", "Chromium";v="132", "Google Chrome";v="132',
+} as const;
+const CHATGPT_AUTH_BROWSER = {
+  agent:
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+  platform: "macOS",
+  mobile: "?0",
+  ua: '"Chromium";v="146", "Not-A.Brand";v="24", "Google Chrome";v="146"',
 } as const;
 
 interface ChatGptAuthSessionResponse {
@@ -41,11 +54,16 @@ interface ChatGptCsrfResponse {
 
 interface ChatGptRequirementsResponse {
   token?: string;
+  prepare_token?: string;
   proofofwork?: {
     required?: boolean;
     seed?: string;
     difficulty?: string;
   };
+}
+
+interface ChatGptAuthenticatedConversationPrepareResponse {
+  conduit_token?: string;
 }
 
 interface ChatGptAnonymousSession {
@@ -73,6 +91,7 @@ interface ChatGptUploadedImage {
 export interface ChatGptInspectionResult {
   status: SessionStatus;
   user?: SessionUser;
+  backendAccessible?: boolean;
 }
 
 export interface ChatGptTextExecutionResult {
@@ -80,7 +99,7 @@ export interface ChatGptTextExecutionResult {
   conversationId?: string;
   messageId?: string;
   model: string;
-  mode: "anonymous-web";
+  mode: "anonymous-web" | "authenticated-web";
 }
 
 export interface ChatGptImageExecutionResult extends ChatGptTextExecutionResult {
@@ -112,13 +131,17 @@ export class ChatGptService {
         };
       }
 
+      const backendAccessible = await this.probeAuthenticatedBackend(client).catch(() => false);
       return {
         status: {
           state: "active",
-          message: "ChatGPT session is active.",
+          message: backendAccessible
+            ? "ChatGPT session is active. Browserless backend bootstrap is available."
+            : "ChatGPT session is active, but authenticated backend bootstrap could not complete. Browserless prompts will continue using the anonymous fallback.",
           lastValidatedAt: new Date().toISOString(),
         },
         user,
+        backendAccessible,
       };
     } catch (error) {
       if (isChatGptExpiredError(error)) {
@@ -178,6 +201,46 @@ export class ChatGptService {
     }
   }
 
+  async executeAuthenticatedText(
+    client: SessionHttpClientType,
+    input: {
+      prompt: string;
+      model?: string;
+    },
+  ): Promise<ChatGptTextExecutionResult> {
+    try {
+      const model = input.model?.trim() || CHATGPT_DEFAULT_MODEL;
+      const bootstrap = await this.initializeAuthenticatedConversation(client, model);
+      const conversationStream = await this.sendAuthenticatedConversation(client, {
+        body: buildChatGptAuthenticatedTextConversationBody({
+          prompt: input.prompt,
+          model,
+          parentMessageId: bootstrap.parentMessageId,
+        }),
+        deviceId: bootstrap.deviceId,
+        turnTraceId: bootstrap.turnTraceId,
+        conduitToken: bootstrap.conduitToken,
+        requirementsToken: bootstrap.requirementsToken,
+        proofToken: bootstrap.proofToken,
+      });
+      const parsed = parseChatGptConversationStream(conversationStream);
+
+      if (!parsed.outputText) {
+        throw new AutoCliError("CHATGPT_EMPTY_RESPONSE", "ChatGPT returned an empty response.");
+      }
+
+      return {
+        outputText: parsed.outputText,
+        conversationId: parsed.conversationId,
+        messageId: parsed.assistantMessageId,
+        model: parsed.model ?? model,
+        mode: "authenticated-web",
+      };
+    } catch (error) {
+      throw mapChatGptError(error, "Failed to complete the ChatGPT prompt.");
+    }
+  }
+
   async executeImage(
     input: {
       mediaPath: string;
@@ -226,6 +289,23 @@ export class ChatGptService {
     }
   }
 
+  private async probeAuthenticatedBackend(client: SessionHttpClientType): Promise<boolean> {
+    const deviceId = await ensureChatGptDeviceId(client);
+    await this.refreshAuthenticatedCsrfCookie(client);
+    await this.refreshCloudflareChallengeCookies(client);
+
+    const response = await client.requestWithResponse<string>(CHATGPT_BACKEND_ME_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "application/json, text/plain, */*",
+        deviceId,
+      }),
+      expectedStatus: [200, 401],
+      responseType: "text",
+    });
+
+    return response.response.status === 200;
+  }
+
   private async initializeAnonymousSession(client: SessionHttpClientType): Promise<ChatGptAnonymousSession> {
     const deviceId = randomUUID();
     const csrfToken = await this.fetchCsrfToken(client, deviceId);
@@ -241,6 +321,42 @@ export class ChatGptService {
       requirementsToken: requirements.token,
       proofToken,
       oaiSc: requirements.oaiSc,
+    };
+  }
+
+  private async initializeAuthenticatedConversation(client: SessionHttpClientType, model: string): Promise<{
+    deviceId: string;
+    turnTraceId: string;
+    parentMessageId: string;
+    conduitToken: string;
+    requirementsToken: string;
+    proofToken?: string;
+  }> {
+    const deviceId = await ensureChatGptDeviceId(client);
+    await this.refreshAuthenticatedCsrfCookie(client);
+    await this.refreshCloudflareChallengeCookies(client);
+
+    const { requirementsToken, proofToken } = await this.fetchAuthenticatedChatRequirements(client, deviceId);
+    const turnTraceId = randomUUID();
+    const parentMessageId = "client-created-root";
+    const prepare = await this.prepareAuthenticatedConversation(client, {
+      body: buildChatGptAuthenticatedConversationPrepareBody({
+        parentMessageId,
+        model,
+      }),
+      deviceId,
+      turnTraceId,
+      requirementsToken,
+      proofToken,
+    });
+
+    return {
+      deviceId,
+      turnTraceId,
+      parentMessageId,
+      conduitToken: prepare.conduitToken,
+      requirementsToken,
+      proofToken,
     };
   }
 
@@ -273,6 +389,62 @@ export class ChatGptService {
     }
 
     return response.csrfToken;
+  }
+
+  private async refreshAuthenticatedCsrfCookie(client: SessionHttpClientType): Promise<void> {
+    const response = await client.request<ChatGptCsrfResponse>(CHATGPT_AUTH_CSRF_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "application/json",
+      }),
+      expectedStatus: 200,
+    });
+
+    if (typeof response.csrfToken !== "string" || response.csrfToken.length === 0) {
+      return;
+    }
+
+    await client.jar.setCookie(
+      `__Host-next-auth.csrf-token=${response.csrfToken}; Domain=chatgpt.com; Path=/; Secure; HttpOnly; SameSite=Lax`,
+      CHATGPT_HOME_URL,
+    );
+  }
+
+  private async refreshCloudflareChallengeCookies(client: SessionHttpClientType): Promise<void> {
+    const html = await client.request<string>(CHATGPT_HOME_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      }),
+      responseType: "text",
+      expectedStatus: 200,
+    });
+
+    const requestId = extractChatGptCloudflareRequestId(html);
+    if (!requestId) {
+      return;
+    }
+
+    const script = await client.request<string>(CHATGPT_CF_JSD_MAIN_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "*/*",
+      }),
+      responseType: "text",
+      expectedStatus: 200,
+    });
+
+    const challengePath = extractChatGptCloudflareChallengePath(script);
+    if (!challengePath) {
+      return;
+    }
+
+    const url = buildChatGptCloudflareOneShotUrl(requestId, challengePath);
+    await client.request<string>(url, {
+      method: "POST",
+      headers: buildChatGptBrowserHeaders({
+        accept: "*/*",
+      }),
+      responseType: "text",
+      expectedStatus: [200, 204],
+    });
   }
 
   private async fetchChatRequirements(
@@ -334,6 +506,136 @@ export class ChatGptService {
       },
       oaiSc,
     };
+  }
+
+  private async fetchAuthenticatedChatRequirements(
+    client: SessionHttpClientType,
+    deviceId: string,
+  ): Promise<{
+    requirementsToken: string;
+    proofToken?: string;
+  }> {
+    const prepared = await client.request<ChatGptRequirementsResponse>(CHATGPT_AUTH_REQUIREMENTS_PREPARE_URL, {
+      method: "POST",
+      headers: buildChatGptAuthenticatedHeaders({
+        accept: "application/json, text/plain, */*",
+        deviceId,
+        targetPath: "/backend-api/sentinel/chat-requirements/prepare",
+      }),
+      body: JSON.stringify({
+        p: generateFakeSentinelToken(),
+      }),
+      expectedStatus: 200,
+    });
+
+    const prepareToken = prepared.prepare_token ?? prepared.token;
+    if (!prepareToken) {
+      throw new AutoCliError(
+        "CHATGPT_REQUIREMENTS_FAILED",
+        "ChatGPT did not return the authenticated sentinel requirements token.",
+      );
+    }
+
+    const proofToken =
+      prepared.proofofwork?.seed && prepared.proofofwork?.difficulty
+        ? solveChatGptSentinelChallenge(prepared.proofofwork.seed, prepared.proofofwork.difficulty)
+        : undefined;
+    const finalized = await client.request<ChatGptRequirementsResponse>(CHATGPT_AUTH_REQUIREMENTS_FINALIZE_URL, {
+      method: "POST",
+      headers: buildChatGptAuthenticatedHeaders({
+        accept: "application/json, text/plain, */*",
+        deviceId,
+        targetPath: "/backend-api/sentinel/chat-requirements/finalize",
+      }),
+      body: JSON.stringify({
+        prepare_token: prepareToken,
+        ...(proofToken ? { proofofwork: proofToken } : {}),
+      }),
+      expectedStatus: 200,
+    });
+
+    const requirementsToken = finalized.token ?? prepareToken;
+    if (!requirementsToken) {
+      throw new AutoCliError(
+        "CHATGPT_REQUIREMENTS_FAILED",
+        "ChatGPT did not return the finalized authenticated chat requirements token.",
+      );
+    }
+
+    return {
+      requirementsToken,
+      proofToken,
+    };
+  }
+
+  private async prepareAuthenticatedConversation(
+    client: SessionHttpClientType,
+    input: {
+      body: Record<string, unknown>;
+      deviceId: string;
+      turnTraceId: string;
+      requirementsToken: string;
+      proofToken?: string;
+    },
+  ): Promise<{
+    conduitToken: string;
+  }> {
+    const response = await client.request<ChatGptAuthenticatedConversationPrepareResponse>(
+      CHATGPT_AUTH_CONVERSATION_PREPARE_URL,
+      {
+        method: "POST",
+        headers: buildChatGptAuthenticatedHeaders({
+          accept: "application/json, text/plain, */*",
+          deviceId: input.deviceId,
+          targetPath: "/backend-api/f/conversation/prepare",
+          turnTraceId: input.turnTraceId,
+          conduitToken: "no-token",
+          requirementsToken: input.requirementsToken,
+          proofToken: input.proofToken,
+        }),
+        body: JSON.stringify(input.body),
+        expectedStatus: 200,
+      },
+    );
+
+    if (!response.conduit_token) {
+      throw new AutoCliError(
+        "CHATGPT_CONDUIT_TOKEN_MISSING",
+        "ChatGPT did not return the conduit token required for authenticated prompts.",
+      );
+    }
+
+    return {
+      conduitToken: response.conduit_token,
+    };
+  }
+
+  private async sendAuthenticatedConversation(
+    client: SessionHttpClientType,
+    input: {
+      body: Record<string, unknown>;
+      deviceId: string;
+      turnTraceId: string;
+      conduitToken: string;
+      requirementsToken: string;
+      proofToken?: string;
+    },
+  ): Promise<string> {
+    return client.request<string>(CHATGPT_AUTH_CONVERSATION_URL, {
+      method: "POST",
+      headers: buildChatGptAuthenticatedHeaders({
+        accept: "text/event-stream",
+        deviceId: input.deviceId,
+        targetPath: "/backend-api/f/conversation",
+        turnTraceId: input.turnTraceId,
+        conduitToken: input.conduitToken,
+        requirementsToken: input.requirementsToken,
+        proofToken: input.proofToken,
+      }),
+      body: JSON.stringify(input.body),
+      responseType: "text",
+      expectedStatus: 200,
+    });
   }
 
   private async sendConversation(
@@ -655,6 +957,60 @@ function buildChatGptBypassHeaders(input: {
   };
 }
 
+function buildChatGptBrowserHeaders(input: {
+  accept: string;
+  deviceId?: string;
+}): Record<string, string> {
+  return {
+    accept: input.accept,
+    origin: "https://chatgpt.com",
+    referer: "https://chatgpt.com/",
+    "user-agent": CHATGPT_ANON_BROWSER.agent,
+    "oai-language": "en-US",
+    ...(input.deviceId ? { "oai-device-id": input.deviceId } : {}),
+  };
+}
+
+function buildChatGptAuthenticatedHeaders(input: {
+  accept: string;
+  deviceId: string;
+  targetPath: string;
+  turnTraceId?: string;
+  conduitToken?: string;
+  requirementsToken?: string;
+  proofToken?: string;
+}): Record<string, string> {
+  return {
+    accept: input.accept,
+    origin: "https://chatgpt.com",
+    referer: "https://chatgpt.com/",
+    "content-type": "application/json",
+    "user-agent": CHATGPT_AUTH_BROWSER.agent,
+    "oai-language": "en-US",
+    "oai-device-id": input.deviceId,
+    "sec-ch-ua": CHATGPT_AUTH_BROWSER.ua,
+    "sec-ch-ua-mobile": CHATGPT_AUTH_BROWSER.mobile,
+    "sec-ch-ua-platform": `"${CHATGPT_AUTH_BROWSER.platform}"`,
+    "sec-fetch-dest": "empty",
+    "sec-fetch-mode": "cors",
+    "sec-fetch-site": "same-origin",
+    "x-openai-target-route": input.targetPath,
+    "x-openai-target-path": input.targetPath,
+    ...(input.turnTraceId ? { "x-oai-turn-trace-id": input.turnTraceId } : {}),
+    ...(input.conduitToken ? { "x-conduit-token": input.conduitToken } : {}),
+    ...(input.requirementsToken
+      ? {
+          "OpenAI-Sentinel-Chat-Requirements-Token": input.requirementsToken,
+        }
+      : {}),
+    ...(input.proofToken
+      ? {
+          "OpenAI-Sentinel-Proof-Token": input.proofToken,
+        }
+      : {}),
+  };
+}
+
 function buildChatGptCookieHeader(input: {
   csrfToken: string;
   deviceId: string;
@@ -696,6 +1052,70 @@ function buildChatGptTextConversationBody(prompt: string, model: string): Record
     },
     model,
   });
+}
+
+export function buildChatGptAuthenticatedConversationPrepareBody(input: {
+  parentMessageId: string;
+  model: string;
+}): Record<string, unknown> {
+  return {
+    action: "next",
+    parent_message_id: input.parentMessageId,
+    model: input.model,
+    timezone_offset_min: getChatGptWebTimezoneOffsetMinutes(),
+    timezone: getLocalTimezoneName(),
+    suggestions: [],
+    history_and_training_disabled: true,
+    conversation_mode: {
+      kind: "primary_assistant",
+    },
+    system_hints: [],
+    supports_buffering: true,
+    supported_encodings: ["v1"],
+    client_contextual_info: buildChatGptClientContextualInfo(),
+    paragen_cot_summary_display_override: "allow",
+  };
+}
+
+export function buildChatGptAuthenticatedTextConversationBody(input: {
+  prompt: string;
+  model: string;
+  parentMessageId: string;
+}): Record<string, unknown> {
+  return {
+    action: "next",
+    messages: [
+      {
+        id: randomUUID(),
+        author: {
+          role: "user",
+        },
+        content: {
+          content_type: "text",
+          parts: [input.prompt],
+        },
+        metadata: {
+          serialization_metadata: {
+            custom_symbol_offsets: [],
+          },
+        },
+      },
+    ],
+    parent_message_id: input.parentMessageId,
+    model: input.model,
+    timezone_offset_min: getChatGptWebTimezoneOffsetMinutes(),
+    timezone: getLocalTimezoneName(),
+    suggestions: [],
+    history_and_training_disabled: true,
+    conversation_mode: {
+      kind: "primary_assistant",
+    },
+    system_hints: [],
+    supports_buffering: true,
+    supported_encodings: ["v1"],
+    client_contextual_info: buildChatGptClientContextualInfo(),
+    paragen_cot_summary_display_override: "allow",
+  };
 }
 
 function buildChatGptImageConversationBody(input: {
@@ -767,17 +1187,25 @@ function buildChatGptConversationBody(input: {
     system_hints: [],
     supports_buffering: true,
     supported_encodings: ["v1"],
-    client_contextual_info: {
-      is_dark_mode: true,
-      time_since_loaded: 7,
-      page_height: 911,
-      page_width: 1080,
-      pixel_ratio: 1,
-      screen_height: 1080,
-      screen_width: 1920,
-      app_name: "chatgpt.com",
-    },
+    client_contextual_info: buildChatGptClientContextualInfo(),
   };
+}
+
+function buildChatGptClientContextualInfo(): Record<string, unknown> {
+  return {
+    is_dark_mode: true,
+    time_since_loaded: 7,
+    page_height: 911,
+    page_width: 1080,
+    pixel_ratio: 1,
+    screen_height: 1080,
+    screen_width: 1920,
+    app_name: "chatgpt.com",
+  };
+}
+
+function getChatGptWebTimezoneOffsetMinutes(): number {
+  return new Date().getTimezoneOffset();
 }
 
 function buildChatGptBlobUploadHeaders(mimeType: string): Record<string, string> {
@@ -813,6 +1241,33 @@ function extractCookieValueFromResponse(response: Response, name: string): strin
   }
 
   return undefined;
+}
+
+async function ensureChatGptDeviceId(client: SessionHttpClientType): Promise<string> {
+  const existing = await client.getCookieValue("oai-did", CHATGPT_HOME_URL);
+  if (existing) {
+    return existing;
+  }
+
+  const next = randomUUID();
+  await client.jar.setCookie(`oai-did=${next}; Domain=.chatgpt.com; Path=/; SameSite=Lax`, CHATGPT_HOME_URL);
+  return next;
+}
+
+export function extractChatGptCloudflareRequestId(html: string): string | undefined {
+  const match = html.match(/__CF\$cv\$params=\{r:'([^']+)'/u);
+  return match?.[1];
+}
+
+export function extractChatGptCloudflareChallengePath(script: string): string | undefined {
+  const match = script.match(/\/jsd\/oneshot\/[A-Za-z0-9._-]+\/[A-Za-z0-9._:-]+\/?/u);
+  return match?.[0];
+}
+
+export function buildChatGptCloudflareOneShotUrl(requestId: string, challengePath: string): string {
+  const normalizedPath = challengePath.startsWith("/") ? challengePath : `/${challengePath}`;
+  const withTrailingSlash = normalizedPath.endsWith("/") ? normalizedPath : `${normalizedPath}/`;
+  return `https://chatgpt.com/cdn-cgi/challenge-platform/h/g${withTrailingSlash}${requestId}`;
 }
 
 function toChatGptUser(session: ChatGptAuthSessionResponse): SessionUser | undefined {
