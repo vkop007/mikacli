@@ -21,8 +21,10 @@ export const PLATFORM_NAMES = [
   "gitlab",
   "grok",
   "ip",
+  "imdb",
   "instagram",
   "markdown-fetch",
+  "myanimelist",
   "mistral",
   "news",
   "linkedin",
@@ -220,6 +222,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "ipify.org",
     authCookieNames: [],
   },
+  imdb: {
+    displayName: "IMDb",
+    origin: "https://www.imdb.com",
+    homeUrl: "https://www.imdb.com/",
+    cookieDomain: "imdb.com",
+    authCookieNames: [],
+  },
   instagram: {
     displayName: "Instagram",
     origin: "https://www.instagram.com",
@@ -233,6 +242,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://example.com/",
     cookieDomain: "example.com",
     authCookieNames: [],
+  },
+  myanimelist: {
+    displayName: "MyAnimeList",
+    origin: "https://myanimelist.net",
+    homeUrl: "https://myanimelist.net/",
+    cookieDomain: "myanimelist.net",
+    authCookieNames: ["MALHLOGSESSID", "MALSESSIONID", "is_logged_in"],
   },
   mistral: {
     displayName: "Mistral",

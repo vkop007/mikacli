@@ -24,6 +24,9 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   llm: {
     description: "Browserless LLM web apps with proven runtime flows",
   },
+  movie: {
+    description: "Movie and anime lookup tools with public and optional cookie-backed flows",
+  },
   music: {
     description: "Music platforms like Spotify and YouTube Music",
   },

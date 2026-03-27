@@ -8,12 +8,13 @@ import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
 import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
 
 const HELP_FRAME = `${pc.bold(pc.cyan("AutoCLI"))}
-${pc.dim("Terminal automation across LLMs, socials, shopping, APIs, tools, and local editors")}
+${pc.dim("Terminal automation across LLMs, editors, movies, socials, shopping, APIs, and public tools")}
 `;
 
 const ROOT_EXAMPLES = [
   'autocli llm chatgpt text "Hello my name is Justine"',
   'autocli editor image resize ./photo.png --width 1200',
+  'autocli movie imdb search "inception"',
   'autocli social x post "Launching AutoCLI"',
   'autocli shopping amazon search "wireless mouse"',
   "autocli api github me",
@@ -27,7 +28,7 @@ export function createProgram(): Command {
   program
     .name("autocli")
     .description(
-      "Automate platforms from the terminal using category-based commands for llm, editor, music, social, shopping, api, and public tools.",
+      "Automate platforms from the terminal using category-based commands for llm, editor, movie, music, social, shopping, api, and public tools.",
     )
     .version(packageJson.version, "-v, --version", "Show the installed version")
     .option("--json", "Emit machine-readable JSON output")

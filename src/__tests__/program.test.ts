@@ -10,6 +10,7 @@ describe("root program routing", () => {
       "status",
       "llm",
       "editor",
+      "movie",
       "music",
       "social",
       "shopping",

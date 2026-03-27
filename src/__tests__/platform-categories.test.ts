@@ -41,6 +41,11 @@ describe("platform category routing", () => {
     ]);
   });
 
+  test("includes the movie category and providers", () => {
+    expect(getPlatformCategories()).toContain("movie");
+    expect(getPlatformDefinitionsByCategory("movie").map((definition) => definition.id)).toEqual(["imdb", "myanimelist"]);
+  });
+
   test("includes the shopping category and providers", () => {
     expect(getPlatformCategories()).toContain("shopping");
     expect(getPlatformDefinitionsByCategory("shopping").map((definition) => definition.id)).toEqual(["amazon", "flipkart"]);

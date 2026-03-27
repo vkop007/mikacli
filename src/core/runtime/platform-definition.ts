@@ -6,6 +6,7 @@ import type { PlatformName } from "../../platforms/config.js";
 export type PlatformCategory =
   | "llm"
   | "editor"
+  | "movie"
   | "music"
   | "social"
   | "shopping"

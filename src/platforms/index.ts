@@ -23,6 +23,8 @@ import { grokPlatformDefinition } from "./llm/grok/manifest.js";
 import { mistralPlatformDefinition } from "./llm/mistral/manifest.js";
 import { perplexityPlatformDefinition } from "./llm/perplexity/manifest.js";
 import { qwenPlatformDefinition } from "./llm/qwen/manifest.js";
+import { imdbPlatformDefinition } from "./movie/imdb/manifest.js";
+import { myAnimeListPlatformDefinition } from "./movie/myanimelist/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
 import { notionPlatformDefinition } from "./api/notion/manifest.js";
@@ -75,7 +77,9 @@ const definitions: readonly PlatformDefinition[] = [
   flipkartPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
+  imdbPlatformDefinition,
   mistralPlatformDefinition,
+  myAnimeListPlatformDefinition,
   perplexityPlatformDefinition,
   qwenPlatformDefinition,
   zaiPlatformDefinition,
@@ -129,7 +133,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "editor", "music", "social", "shopping", "bots", "api", "public", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "movie", "music", "social", "shopping", "bots", "api", "public", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];

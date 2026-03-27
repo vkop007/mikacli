@@ -6,6 +6,7 @@ Commands are organized by category only:
 
 - `autocli llm ...`
 - `autocli editor ...`
+- `autocli movie ...`
 - `autocli social ...`
 - `autocli shopping ...`
 - `autocli api ...`
@@ -32,12 +33,13 @@ Reference points:
 | --- | --- | ---: | --- |
 | LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Qwen, Z.ai | 9 | `autocli llm <provider> ...` |
 | Editor | Archive Editor, Audio Editor, Document Editor, GIF Editor, Image Editor, PDF Editor, Subtitle Editor, Video Editor | 8 | `autocli editor <provider> ...` |
+| Movie | IMDb, MyAnimeList | 2 | `autocli movie <provider> ...` |
 | Music | Spotify, YouTube Music | 2 | `autocli music <provider> ...` |
 | Social | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | `autocli social <provider> ...` |
 | Shopping | Amazon, Flipkart | 2 | `autocli shopping <provider> ...` |
 | API | Discord Bot, GitHub, GitHub Bot, GitLab, Linear, Notion, Slack Bot, Telegram Bot | 8 | `autocli api <provider> ...` |
 | Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Screenshot, Sitemap, Stocks, Time, Translate, Uptime, Weather, Web Search, Whois | 19 | `autocli public <provider> ...` |
-| Total | 54 providers across 7 command groups | 54 | category-only |
+| Total | 56 providers across 8 command groups | 56 | category-only |
 
 ### Capability highlights
 
@@ -112,6 +114,11 @@ Reference points:
   - `post` / `share` with text
   - `like`
   - `comment`
+- MyAnimeList
+  - `search`
+  - `title` / `info`
+  - `list`
+  - optional `login` / `status` when you want saved-session defaults for your own list
 - Linear
   - `login --token`
   - `me`
@@ -155,6 +162,10 @@ Reference points:
   - `strip-metadata`
   - `background-remove`
   - `watermark`
+- IMDb
+  - `search`
+  - `title` / `info`
+  - public, no cookies required
 - PDF Editor
   - `info`
   - `merge`
