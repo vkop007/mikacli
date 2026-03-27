@@ -9,8 +9,10 @@ import type { SessionHttpClient as SessionHttpClientType } from "../../../utils/
 import type { SessionStatus, SessionUser } from "../../../types.js";
 
 const CHATGPT_HOME_URL = "https://chatgpt.com/";
+const CHATGPT_BACKEND_ME_URL = "https://chatgpt.com/backend-api/me";
 const CHATGPT_AUTH_SESSION_URL = "https://chatgpt.com/api/auth/session";
 const CHATGPT_AUTH_CSRF_URL = "https://chatgpt.com/api/auth/csrf";
+const CHATGPT_CF_JSD_MAIN_URL = "https://chatgpt.com/cdn-cgi/challenge-platform/scripts/jsd/main.js";
 const CHATGPT_REQUIREMENTS_URL = "https://chatgpt.com/backend-anon/sentinel/chat-requirements";
 const CHATGPT_FILES_URL = "https://chatgpt.com/backend-anon/files";
 const CHATGPT_PROCESS_UPLOAD_URL = "https://chatgpt.com/backend-anon/files/process_upload_stream";
@@ -73,6 +75,7 @@ interface ChatGptUploadedImage {
 export interface ChatGptInspectionResult {
   status: SessionStatus;
   user?: SessionUser;
+  backendAccessible?: boolean;
 }
 
 export interface ChatGptTextExecutionResult {
@@ -112,13 +115,17 @@ export class ChatGptService {
         };
       }
 
+      const backendAccessible = await this.probeAuthenticatedBackend(client).catch(() => false);
       return {
         status: {
           state: "active",
-          message: "ChatGPT session is active.",
+          message: backendAccessible
+            ? "ChatGPT session is active. Browserless backend bootstrap is available."
+            : "ChatGPT session is active, but authenticated backend bootstrap could not complete. Browserless prompts will continue using the anonymous fallback.",
           lastValidatedAt: new Date().toISOString(),
         },
         user,
+        backendAccessible,
       };
     } catch (error) {
       if (isChatGptExpiredError(error)) {
@@ -226,6 +233,23 @@ export class ChatGptService {
     }
   }
 
+  private async probeAuthenticatedBackend(client: SessionHttpClientType): Promise<boolean> {
+    const deviceId = await ensureChatGptDeviceId(client);
+    await this.refreshAuthenticatedCsrfCookie(client);
+    await this.refreshCloudflareChallengeCookies(client);
+
+    const response = await client.requestWithResponse<string>(CHATGPT_BACKEND_ME_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "application/json, text/plain, */*",
+        deviceId,
+      }),
+      expectedStatus: [200, 401],
+      responseType: "text",
+    });
+
+    return response.response.status === 200;
+  }
+
   private async initializeAnonymousSession(client: SessionHttpClientType): Promise<ChatGptAnonymousSession> {
     const deviceId = randomUUID();
     const csrfToken = await this.fetchCsrfToken(client, deviceId);
@@ -273,6 +297,62 @@ export class ChatGptService {
     }
 
     return response.csrfToken;
+  }
+
+  private async refreshAuthenticatedCsrfCookie(client: SessionHttpClientType): Promise<void> {
+    const response = await client.request<ChatGptCsrfResponse>(CHATGPT_AUTH_CSRF_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "application/json",
+      }),
+      expectedStatus: 200,
+    });
+
+    if (typeof response.csrfToken !== "string" || response.csrfToken.length === 0) {
+      return;
+    }
+
+    await client.jar.setCookie(
+      `__Host-next-auth.csrf-token=${response.csrfToken}; Domain=chatgpt.com; Path=/; Secure; HttpOnly; SameSite=Lax`,
+      CHATGPT_HOME_URL,
+    );
+  }
+
+  private async refreshCloudflareChallengeCookies(client: SessionHttpClientType): Promise<void> {
+    const html = await client.request<string>(CHATGPT_HOME_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      }),
+      responseType: "text",
+      expectedStatus: 200,
+    });
+
+    const requestId = extractChatGptCloudflareRequestId(html);
+    if (!requestId) {
+      return;
+    }
+
+    const script = await client.request<string>(CHATGPT_CF_JSD_MAIN_URL, {
+      headers: buildChatGptBrowserHeaders({
+        accept: "*/*",
+      }),
+      responseType: "text",
+      expectedStatus: 200,
+    });
+
+    const challengePath = extractChatGptCloudflareChallengePath(script);
+    if (!challengePath) {
+      return;
+    }
+
+    const url = buildChatGptCloudflareOneShotUrl(requestId, challengePath);
+    await client.request<string>(url, {
+      method: "POST",
+      headers: buildChatGptBrowserHeaders({
+        accept: "*/*",
+      }),
+      responseType: "text",
+      expectedStatus: [200, 204],
+    });
   }
 
   private async fetchChatRequirements(
@@ -655,6 +735,20 @@ function buildChatGptBypassHeaders(input: {
   };
 }
 
+function buildChatGptBrowserHeaders(input: {
+  accept: string;
+  deviceId?: string;
+}): Record<string, string> {
+  return {
+    accept: input.accept,
+    origin: "https://chatgpt.com",
+    referer: "https://chatgpt.com/",
+    "user-agent": CHATGPT_ANON_BROWSER.agent,
+    "oai-language": "en-US",
+    ...(input.deviceId ? { "oai-device-id": input.deviceId } : {}),
+  };
+}
+
 function buildChatGptCookieHeader(input: {
   csrfToken: string;
   deviceId: string;
@@ -813,6 +907,33 @@ function extractCookieValueFromResponse(response: Response, name: string): strin
   }
 
   return undefined;
+}
+
+async function ensureChatGptDeviceId(client: SessionHttpClientType): Promise<string> {
+  const existing = await client.getCookieValue("oai-did", CHATGPT_HOME_URL);
+  if (existing) {
+    return existing;
+  }
+
+  const next = randomUUID();
+  await client.jar.setCookie(`oai-did=${next}; Domain=.chatgpt.com; Path=/; SameSite=Lax`, CHATGPT_HOME_URL);
+  return next;
+}
+
+export function extractChatGptCloudflareRequestId(html: string): string | undefined {
+  const match = html.match(/__CF\$cv\$params=\{r:'([^']+)'/u);
+  return match?.[1];
+}
+
+export function extractChatGptCloudflareChallengePath(script: string): string | undefined {
+  const match = script.match(/\/jsd\/oneshot\/[A-Za-z0-9._-]+\/[A-Za-z0-9._:-]+\/?/u);
+  return match?.[0];
+}
+
+export function buildChatGptCloudflareOneShotUrl(requestId: string, challengePath: string): string {
+  const normalizedPath = challengePath.startsWith("/") ? challengePath : `/${challengePath}`;
+  const withTrailingSlash = normalizedPath.endsWith("/") ? normalizedPath : `${normalizedPath}/`;
+  return `https://chatgpt.com/cdn-cgi/challenge-platform/h/g${withTrailingSlash}${requestId}`;
 }
 
 function toChatGptUser(session: ChatGptAuthSessionResponse): SessionUser | undefined {

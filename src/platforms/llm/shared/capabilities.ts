@@ -1,7 +1,8 @@
 import { createAdapterActionCapability } from "../../../core/runtime/capability-helpers.js";
-import { printCookieLlmMediaResult, printCookieLlmStatusResult, printCookieLlmTextResult } from "./output.js";
+import { printCookieLlmMediaJobResult, printCookieLlmMediaResult, printCookieLlmStatusResult, printCookieLlmTextResult } from "./output.js";
 
 import type { PlatformCapability } from "../../../core/runtime/platform-definition.js";
+import type { AdapterActionResult } from "../../../types.js";
 import type { CookieLlmAdapter } from "./base-cookie-llm-adapter.js";
 
 export function createCookieLlmCapabilities(adapter: CookieLlmAdapter): readonly PlatformCapability[] {
@@ -96,5 +97,59 @@ export function createCookieLlmCapabilities(adapter: CookieLlmAdapter): readonly
     onSuccess: printCookieLlmMediaResult,
   });
 
-  return [loginCapability, statusCapability, textCapability, imageCapability, videoCapability] as const;
+  const capabilities: PlatformCapability[] = [loginCapability, statusCapability, textCapability, imageCapability, videoCapability];
+  const downloadCapableAdapter = adapter as CookieLlmAdapter & Partial<CookieLlmDownloadAdapter>;
+
+  if (typeof downloadCapableAdapter.imageDownload === "function") {
+    capabilities.push(
+      createAdapterActionCapability({
+        id: "image-download",
+        command: "image-download <target>",
+        description: `Download or reopen a saved ${adapter.displayName} image job by job ID, conversation ID, or provider output ID`,
+        spinnerText: `Downloading the ${adapter.displayName} image...`,
+        successMessage: `${adapter.displayName} image download completed.`,
+        options: [
+          { flags: "--account <name>", description: "Optional saved session name to use" },
+          { flags: "--output-dir <path>", description: "Directory to write the downloaded image files into" },
+        ],
+        action: ({ args, options }) =>
+          downloadCapableAdapter.imageDownload!({
+            account: options.account as string | undefined,
+            target: String(args[0] ?? ""),
+            outputDir: options.outputDir as string | undefined,
+          }),
+        onSuccess: printCookieLlmMediaJobResult,
+      }),
+    );
+  }
+
+  if (typeof downloadCapableAdapter.videoDownload === "function") {
+    capabilities.push(
+      createAdapterActionCapability({
+        id: "video-download",
+        command: "video-download <target>",
+        description: `Download or reopen a saved ${adapter.displayName} video job by job ID, conversation ID, or provider output ID`,
+        spinnerText: `Downloading the ${adapter.displayName} video...`,
+        successMessage: `${adapter.displayName} video download completed.`,
+        options: [
+          { flags: "--account <name>", description: "Optional saved session name to use" },
+          { flags: "--output-dir <path>", description: "Directory to write the downloaded video into" },
+        ],
+        action: ({ args, options }) =>
+          downloadCapableAdapter.videoDownload!({
+            account: options.account as string | undefined,
+            target: String(args[0] ?? ""),
+            outputDir: options.outputDir as string | undefined,
+          }),
+        onSuccess: printCookieLlmMediaJobResult,
+      }),
+    );
+  }
+
+  return capabilities;
+}
+
+interface CookieLlmDownloadAdapter {
+  imageDownload(input: { account?: string; target: string; outputDir?: string }): Promise<AdapterActionResult>;
+  videoDownload(input: { account?: string; target: string; outputDir?: string }): Promise<AdapterActionResult>;
 }

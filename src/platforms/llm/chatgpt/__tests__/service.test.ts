@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 
 import {
+  buildChatGptCloudflareOneShotUrl,
+  extractChatGptCloudflareChallengePath,
+  extractChatGptCloudflareRequestId,
   generateFakeSentinelToken,
   parseChatGptConversationStream,
   solveChatGptSentinelChallenge,
@@ -42,5 +45,38 @@ data: {"message":{"id":"assistant-123","author":{"role":"assistant"},"content":{
       assistantMessageId: "assistant-123",
       model: "i-mini",
     });
+  });
+
+  test("extracts the Cloudflare request id from the ChatGPT HTML shell", () => {
+    const html = `
+      <script>
+        window.__CF$cv$params={r:'9e2b805c7858b7e9',t:'MTc3NDU4NDE2NQ=='};
+      </script>
+    `;
+
+    expect(extractChatGptCloudflareRequestId(html)).toBe("9e2b805c7858b7e9");
+  });
+
+  test("extracts the Cloudflare oneshot challenge path from the jsd script", () => {
+    const script = `
+      some-obfuscated-prefix
+      /jsd/oneshot/ea2d291c0fdc/0.36707159097325237:1774424211:9_pSV23kWGmNtldQToc5YDBzJFUfKD8QS_h75YB-Zx0/
+      trailing-obfuscated-code
+    `;
+
+    expect(extractChatGptCloudflareChallengePath(script)).toBe(
+      "/jsd/oneshot/ea2d291c0fdc/0.36707159097325237:1774424211:9_pSV23kWGmNtldQToc5YDBzJFUfKD8QS_h75YB-Zx0/",
+    );
+  });
+
+  test("builds the Cloudflare oneshot url from request id and challenge path", () => {
+    expect(
+      buildChatGptCloudflareOneShotUrl(
+        "9e2b805c7858b7e9",
+        "/jsd/oneshot/ea2d291c0fdc/0.36707159097325237:1774424211:9_pSV23kWGmNtldQToc5YDBzJFUfKD8QS_h75YB-Zx0/",
+      ),
+    ).toBe(
+      "https://chatgpt.com/cdn-cgi/challenge-platform/h/g/jsd/oneshot/ea2d291c0fdc/0.36707159097325237:1774424211:9_pSV23kWGmNtldQToc5YDBzJFUfKD8QS_h75YB-Zx0/9e2b805c7858b7e9",
+    );
   });
 });
