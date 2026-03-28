@@ -8,6 +8,8 @@ describe("root program routing", () => {
     const program = createProgram();
     expect(program.commands.map((command) => command.name())).toEqual([
       "status",
+      "doctor",
+      "sessions",
       "llm",
       "editor",
       "finance",

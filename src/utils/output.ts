@@ -51,11 +51,95 @@ export function printStatusTable(
       [
         row.platform.padEnd(widths.platform),
         row.account.padEnd(widths.account),
-        colorizeStatus(row.status).padEnd(widths.status + visibleColorPadding(row.status)),
+        padAnsi(colorizeStatus(row.status), widths.status),
         (row.user ?? "-").padEnd(widths.user),
         row.message ?? "",
       ].join("  "),
     );
+  }
+}
+
+export function printSessionsTable(
+  rows: Array<{
+    platform: string;
+    account: string;
+    auth: string;
+    status: string;
+    updated: string;
+    path: string;
+  }>,
+): void {
+  if (rows.length === 0) {
+    console.log(pc.dim("No saved sessions or connections found."));
+    return;
+  }
+
+  const widths = {
+    platform: Math.max(...rows.map((row) => row.platform.length), "platform".length),
+    account: Math.max(...rows.map((row) => row.account.length), "account".length),
+    auth: Math.max(...rows.map((row) => row.auth.length), "auth".length),
+    status: Math.max(...rows.map((row) => row.status.length), "status".length),
+    updated: Math.max(...rows.map((row) => row.updated.length), "updated".length),
+  };
+
+  const header = [
+    "platform".padEnd(widths.platform),
+    "account".padEnd(widths.account),
+    "auth".padEnd(widths.auth),
+    "status".padEnd(widths.status),
+    "updated".padEnd(widths.updated),
+    "path",
+  ].join("  ");
+
+  console.log(pc.bold(header));
+  console.log(
+    [
+      "-".repeat(widths.platform),
+      "-".repeat(widths.account),
+      "-".repeat(widths.auth),
+      "-".repeat(widths.status),
+      "-".repeat(widths.updated),
+      "-".repeat(20),
+    ].join("  "),
+  );
+
+  for (const row of rows) {
+    console.log(
+      [
+        row.platform.padEnd(widths.platform),
+        row.account.padEnd(widths.account),
+        row.auth.padEnd(widths.auth),
+        padAnsi(colorizeStatus(row.status), widths.status),
+        row.updated.padEnd(widths.updated),
+        row.path,
+      ].join("  "),
+    );
+  }
+}
+
+export function printDoctorTable(
+  rows: Array<{
+    check: string;
+    status: "pass" | "warn" | "fail";
+    message: string;
+  }>,
+): void {
+  if (rows.length === 0) {
+    console.log(pc.dim("No doctor checks ran."));
+    return;
+  }
+
+  const widths = {
+    check: Math.max(...rows.map((row) => row.check.length), "check".length),
+    status: Math.max(...rows.map((row) => row.status.length), "status".length),
+  };
+
+  const header = ["check".padEnd(widths.check), "status".padEnd(widths.status), "message"].join("  ");
+  console.log(pc.bold(header));
+  console.log(["-".repeat(widths.check), "-".repeat(widths.status), "-".repeat(20)].join("  "));
+
+  for (const row of rows) {
+    console.log([row.check.padEnd(widths.check), padAnsi(colorizeDoctorStatus(row.status), widths.status), row.message].join("  "));
   }
 }
 
@@ -70,8 +154,23 @@ function colorizeStatus(status: string): string {
   }
 }
 
-function visibleColorPadding(status: string): number {
-  return status === "active" ? 9 : status === "expired" ? 9 : 9;
+function colorizeDoctorStatus(status: "pass" | "warn" | "fail"): string {
+  switch (status) {
+    case "pass":
+      return pc.green(status);
+    case "warn":
+      return pc.yellow(status);
+    case "fail":
+      return pc.red(status);
+  }
+}
+
+function stripAnsi(value: string): string {
+  return value.replace(/\x1B\[[0-9;]*m/g, "");
+}
+
+function padAnsi(value: string, width: number): string {
+  return value + " ".repeat(Math.max(0, width - stripAnsi(value).length));
 }
 
 export function printError(error: unknown, json: boolean): never {

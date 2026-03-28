@@ -2,6 +2,8 @@ import { Command } from "commander";
 import pc from "picocolors";
 
 import packageJson from "../package.json" with { type: "json" };
+import { createDoctorCommand } from "./commands/doctor.js";
+import { createSessionsCommand } from "./commands/sessions.js";
 import { createStatusCommand } from "./commands/status.js";
 import { AutoCliError } from "./errors.js";
 import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
@@ -13,6 +15,8 @@ ${pc.dim("Terminal automation across LLMs, editors, finance, maps, movies, socia
 
 const ROOT_EXAMPLES = [
   'autocli llm chatgpt text "Hello my name is Justine"',
+  "autocli doctor",
+  "autocli sessions",
   'autocli editor image resize ./photo.png --width 1200',
   'autocli finance stocks AAPL',
   'autocli maps openstreetmap search "Mumbai"',
@@ -45,7 +49,9 @@ Examples:
 ${ROOT_EXAMPLES.map((example) => `  ${example}`).join("\n")}
 `,
     )
-    .addCommand(createStatusCommand());
+    .addCommand(createStatusCommand())
+    .addCommand(createDoctorCommand())
+    .addCommand(createSessionsCommand());
 
   for (const category of getPlatformCategories()) {
     const definitions = getPlatformDefinitionsByCategory(category);
@@ -87,7 +93,7 @@ function findLegacyDirectProviderInvocation(argv: readonly string[]): {
     return undefined;
   }
 
-  const reserved = new Set<string>(["help", "status", ...getPlatformCategories()]);
+  const reserved = new Set<string>(["help", "status", "doctor", "sessions", ...getPlatformCategories()]);
   const isHelpRequest = positionals[0] === "help";
   const candidate = isHelpRequest ? positionals[1] : positionals[0];
   if (!candidate || reserved.has(candidate)) {

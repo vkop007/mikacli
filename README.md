@@ -110,6 +110,8 @@ Check global status:
 ```bash
 autocli status
 autocli status --json
+autocli doctor
+autocli sessions
 ```
 
 If you have not linked the CLI globally yet:
