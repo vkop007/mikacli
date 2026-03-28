@@ -104,7 +104,7 @@ Current examples:
 - Most providers are capability-based; use `buildCommand` directly when the login flow needs QR rendering, interactive prompts, or other custom session UX.
 - Data platforms: `src/platforms/data/csv/`, `src/platforms/data/html/`, `src/platforms/data/json/`, `src/platforms/data/markdown/`, `src/platforms/data/text/`, `src/platforms/data/xml/`, `src/platforms/data/yaml/`
 - Local editor platforms: `src/platforms/editor/archive/`, `src/platforms/editor/audio/`, `src/platforms/editor/document/`, `src/platforms/editor/gif/`, `src/platforms/editor/image/`, `src/platforms/editor/pdf/`, `src/platforms/editor/subtitle/`, `src/platforms/editor/video/`
-- Developer platforms: `src/platforms/developer/github/`, `src/platforms/developer/gitlab/`, `src/platforms/developer/jira/`, `src/platforms/developer/linear/`, `src/platforms/developer/notion/`, `src/platforms/developer/trello/`
+- Developer platforms: `src/platforms/developer/confluence/`, `src/platforms/developer/github/`, `src/platforms/developer/gitlab/`, `src/platforms/developer/jira/`, `src/platforms/developer/linear/`, `src/platforms/developer/notion/`, `src/platforms/developer/trello/`
 - Bot platforms: `src/platforms/bot/discordbot/`, `src/platforms/bot/githubbot/`, `src/platforms/bot/slackbot/`, `src/platforms/bot/telegrambot/`
 - Active browserless LLM platforms: `src/platforms/llm/chatgpt/`, `src/platforms/llm/claude/`, `src/platforms/llm/deepseek/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`, `src/platforms/llm/mistral/`, `src/platforms/llm/perplexity/`, `src/platforms/llm/qwen/`, `src/platforms/llm/zai/`
 - Finance platforms: `src/platforms/finance/crypto/`, `src/platforms/finance/currency/`, `src/platforms/finance/stocks/`

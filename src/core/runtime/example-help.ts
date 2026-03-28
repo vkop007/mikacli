@@ -5,7 +5,12 @@ export function prefixCliExample(example: string, examplePrefix: string | undefi
     return example;
   }
 
-  return example.replace(/^autocli\s+/, `autocli ${examplePrefix} `);
+  const normalized = example.replace(/^autocli\s+/u, "").trim();
+  const expectedPrefix = `${examplePrefix} `;
+  const withoutDuplicatePrefix =
+    normalized.startsWith(expectedPrefix) ? normalized.slice(expectedPrefix.length) : normalized;
+
+  return `autocli ${examplePrefix} ${withoutDuplicatePrefix}`.trim();
 }
 
 export function buildExamplesHelpText(

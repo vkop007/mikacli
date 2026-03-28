@@ -8,6 +8,7 @@ export const PLATFORM_NAMES = [
   "cheat",
   "chatgpt",
   "claude",
+  "confluence",
   "crypto",
   "currency",
   "deepseek",
@@ -162,6 +163,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://claude.ai/chats",
     cookieDomain: "claude.ai",
     authCookieNames: ["sessionKey"],
+  },
+  confluence: {
+    displayName: "Confluence",
+    origin: "https://www.atlassian.com/software/confluence",
+    homeUrl: "https://www.atlassian.com/software/confluence",
+    cookieDomain: "atlassian.net",
+    authCookieNames: ["cloud.session.token", "tenant.session.token", "atlassian.xsrf.token"],
   },
   crypto: {
     displayName: "Crypto",

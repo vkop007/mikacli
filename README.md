@@ -40,6 +40,7 @@ Examples:
 ```bash
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli social x post "Shipping AutoCLI today"
+autocli developer confluence search "release process"
 autocli developer github me
 autocli bot telegrambot send 123456789 "Build finished"
 autocli tools translate "hello world" --to hi
@@ -58,11 +59,11 @@ autocli tools translate "hello world" --to hi
 | `music` | Bandcamp, SoundCloud, Spotify, YouTube Music | 4 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
 | `social` | Bluesky, Facebook, Instagram, LinkedIn, Pinterest, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 11 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
-| `developer` | GitHub, GitLab, Jira, Linear, Notion, Trello | 6 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
+| `developer` | Confluence, GitHub, GitLab, Jira, Linear, Notion, Trello | 7 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, News, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 22 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `88` providers across `12` active command groups.
+AutoCLI currently exposes `89` providers across `12` active command groups.
 
 ## Access Modes
 
@@ -157,6 +158,7 @@ autocli llm grok video "Minimal orange fox logo with subtle camera motion"
 ### Developer and bot automation
 
 ```bash
+autocli developer confluence search "deploy backend"
 autocli developer github me
 autocli developer gitlab projects "autocli" --limit 10
 autocli developer jira projects
@@ -338,6 +340,7 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 
 | Provider | Needs | Best for | Notes |
 | --- | --- | --- | --- |
+| Confluence | cookies | spaces, pages, search, comments, page creation | Uses an Atlassian web session to search and edit workspace documentation from the terminal. |
 | GitHub | cookies | repos, issues, pull requests, stars | Uses a saved GitHub web session for browserless developer automation. |
 | GitLab | cookies | projects, issues, merge requests | Uses a saved GitLab web session instead of personal access tokens. |
 | Jira | cookies | projects, issues, JQL search, issue creation | Saves a site-scoped Jira web session and reuses it for browserless workspace automation. |

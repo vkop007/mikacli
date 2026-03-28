@@ -9,6 +9,7 @@ import { markdownPlatformDefinition } from "./data/markdown/manifest.js";
 import { textPlatformDefinition } from "./data/text/manifest.js";
 import { xmlPlatformDefinition } from "./data/xml/manifest.js";
 import { yamlPlatformDefinition } from "./data/yaml/manifest.js";
+import { confluencePlatformDefinition } from "./developer/confluence/manifest.js";
 import { githubPlatformDefinition } from "./developer/github/manifest.js";
 import { gitlabPlatformDefinition } from "./developer/gitlab/manifest.js";
 import { jiraPlatformDefinition } from "./developer/jira/manifest.js";
@@ -97,6 +98,7 @@ const definitions: readonly PlatformDefinition[] = [
   cheatPlatformDefinition,
   chatgptPlatformDefinition,
   claudePlatformDefinition,
+  confluencePlatformDefinition,
   cryptoPlatformDefinition,
   currencyPlatformDefinition,
   deepSeekPlatformDefinition,

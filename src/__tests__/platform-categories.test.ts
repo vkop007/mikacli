@@ -100,6 +100,7 @@ describe("platform category routing", () => {
   test("includes the developer category and providers", () => {
     expect(getPlatformCategories()).toContain("developer");
     expect(getPlatformDefinitionsByCategory("developer").map((definition) => definition.id)).toEqual([
+      "confluence",
       "github",
       "gitlab",
       "jira",
