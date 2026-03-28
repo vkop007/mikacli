@@ -91,7 +91,7 @@ Rules:
 - Set `category` in every `PlatformDefinition`.
 - Category commands are mounted automatically as `autocli <category> <platform>`.
 - Prefer `capabilities` for new work.
-- Keep `src/commands/*` as compatibility wrappers only.
+- Keep `src/commands/*` only for true root/global commands such as `status`, `doctor`, and `sessions`.
 - Use the shared connection layer in `src/core/auth/connection-store.ts`.
 - Pick the correct auth strategy in `manifest.ts`:
   - `cookies` for imported browser sessions
