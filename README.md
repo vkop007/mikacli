@@ -55,13 +55,13 @@ autocli tools translate "hello world" --to hi
 | `maps` | Geo, OpenStreetMap, OSRM | 3 | none | Geocoding, reverse lookup, routing, geometry helpers | `autocli maps <provider> ...` |
 | `movie` | AniList, IMDb, JustWatch, Kitsu, MyAnimeList, TVMaze | 6 | none or cookies | Public title lookup, anime tracking, streaming availability | `autocli movie <provider> ...` |
 | `music` | SoundCloud, Spotify, YouTube Music | 3 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
-| `social` | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | cookies | Posting, engagement, downloads, public profile and media lookup | `autocli social <provider> ...` |
+| `social` | Bluesky, Facebook, Instagram, LinkedIn, Threads, TikTok, X, YouTube | 8 | none or cookies | Public profile/thread lookup plus cookie-backed posting and engagement where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | GitHub, GitLab, Linear, Notion | 4 | API token | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Headers, IP, Markdown Fetch, Metadata, News, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 20 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `70` providers across `11` active command groups.
+AutoCLI currently exposes `72` providers across `11` active command groups.
 
 ## Access Modes
 
@@ -281,9 +281,11 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 
 | Provider | Needs | Best for | Notes |
 | --- | --- | --- | --- |
+| Bluesky | none | public profile, feed, and thread lookup | Uses Bluesky's public appview API, so it is cleaner and more stable than most social adapters. |
 | Facebook | cookies | session import and future social automation | Protected write flows are still conservative; browser later may help for harder surfaces. |
 | Instagram | cookies | posting, downloads, stories, follows | One of the strongest cookie-backed social adapters in the repo. |
 | LinkedIn | cookies | posting and engagement | Web write flow works, but LinkedIn can drift and may need adapter refreshes over time. |
+| Threads | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
 | TikTok | cookies | session handling and future posting flows | Signing for private web writes is still a known hard part; browser later may help. |
 | X | cookies | posting, likes, profile/tweet lookup | Strong cookie-backed adapter with reliable agent-friendly output. |
 | YouTube | cookies | search, likes, comments, downloads | Upload/community posting are still separate future work. |
