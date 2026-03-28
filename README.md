@@ -6,6 +6,7 @@ Commands are organized by category only:
 
 - `autocli llm ...`
 - `autocli editor ...`
+- `autocli maps ...`
 - `autocli movie ...`
 - `autocli social ...`
 - `autocli shopping ...`
@@ -33,13 +34,14 @@ Reference points:
 | --- | --- | ---: | --- |
 | LLM | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Qwen, Z.ai | 9 | `autocli llm <provider> ...` |
 | Editor | Archive Editor, Audio Editor, Document Editor, GIF Editor, Image Editor, PDF Editor, Subtitle Editor, Video Editor | 8 | `autocli editor <provider> ...` |
+| Maps | Geo, OpenStreetMap, OSRM | 3 | `autocli maps <provider> ...` |
 | Movie | AniList, IMDb, JustWatch, Kitsu, MyAnimeList, TVMaze | 6 | `autocli movie <provider> ...` |
 | Music | Spotify, YouTube Music | 2 | `autocli music <provider> ...` |
 | Social | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | `autocli social <provider> ...` |
 | Shopping | Amazon, Flipkart | 2 | `autocli shopping <provider> ...` |
 | API | Discord Bot, GitHub, GitHub Bot, GitLab, Linear, Notion, Slack Bot, Telegram Bot | 8 | `autocli api <provider> ...` |
 | Public | Cheat, Crypto, Currency, DNS, IP, Markdown Fetch, News, QR, Robots, RSS, Screenshot, Sitemap, Stocks, Time, Translate, Uptime, Weather, Web Search, Whois | 19 | `autocli public <provider> ...` |
-| Total | 60 providers across 8 command groups | 60 | category-only |
+| Total | 63 providers across 9 command groups | 63 | category-only |
 
 ### Capability highlights
 
@@ -153,6 +155,19 @@ Reference points:
   - `loudness-report`
   - `waveform`
   - `spectrogram`
+- Geo
+  - `distance`
+  - `midpoint`
+  - `pluscode-encode`
+  - `pluscode-decode`
+  - local, no cookies or API key required
+- OpenStreetMap
+  - `search` / `geocode`
+  - `reverse`
+  - public, no cookies or API key required
+- OSRM
+  - `route`
+  - public, no cookies or API key required
 - Cheat
   - `cheat <topic>`
   - optional `--shell` and `--lang` context

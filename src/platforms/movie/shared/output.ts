@@ -103,6 +103,40 @@ export function printMovieTitleResult(result: AdapterActionResult, json: boolean
   }
 }
 
+export function printMovieAvailabilityResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+  const data = (result.data ?? {}) as Record<string, unknown>;
+  if (typeof data.title === "string") {
+    console.log(`title: ${data.title}`);
+  }
+  if (typeof data.country === "string") {
+    console.log(`country: ${data.country}`);
+  }
+  if (typeof data.type === "string") {
+    console.log(`type: ${data.type}`);
+  }
+
+  const items = Array.isArray(data.items) ? (data.items as Array<Record<string, unknown>>) : [];
+  if (items.length === 0) {
+    console.log("No offers found.");
+    return;
+  }
+
+  console.log("offers:");
+  for (const item of items) {
+    const provider = String(item.provider ?? "-");
+    const kind = item.kind === undefined ? "-" : String(item.kind);
+    const price = item.price === undefined ? "-" : String(item.price);
+    const currency = item.currency === undefined ? "" : ` ${String(item.currency)}`;
+    console.log(`  ${provider}: ${kind} ${price}${currency}`.trim());
+  }
+}
+
 export function printMovieListResult(result: AdapterActionResult, json: boolean): void {
   if (json) {
     printJson(result);

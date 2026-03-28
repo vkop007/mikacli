@@ -10,6 +10,7 @@ describe("root program routing", () => {
       "status",
       "llm",
       "editor",
+      "maps",
       "movie",
       "music",
       "social",
@@ -45,6 +46,7 @@ describe("root program routing", () => {
   test("allows category-based invocations", () => {
     expect(() => assertCategoryOnlyInvocation(["llm", "chatgpt", "text", "Hello"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["editor", "image", "info", "./photo.png"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["maps", "openstreetmap", "search", "Mumbai"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["public", "translate", "hello"])).not.toThrow();
   });
 });

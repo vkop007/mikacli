@@ -41,6 +41,15 @@ describe("platform category routing", () => {
     ]);
   });
 
+  test("includes the maps category and providers", () => {
+    expect(getPlatformCategories()).toContain("maps");
+    expect(getPlatformDefinitionsByCategory("maps").map((definition) => definition.id)).toEqual([
+      "geo",
+      "openstreetmap",
+      "osrm",
+    ]);
+  });
+
   test("includes the movie category and providers", () => {
     expect(getPlatformCategories()).toContain("movie");
     expect(getPlatformDefinitionsByCategory("movie").map((definition) => definition.id)).toEqual([

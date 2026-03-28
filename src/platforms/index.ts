@@ -8,6 +8,7 @@ import { linearPlatformDefinition } from "./api/linear/manifest.js";
 import { archiveEditorPlatformDefinition } from "./editor/archive/manifest.js";
 import { audioEditorPlatformDefinition } from "./editor/audio/manifest.js";
 import { documentEditorPlatformDefinition } from "./editor/document/manifest.js";
+import { geoPlatformDefinition } from "./maps/geo/manifest.js";
 import { gifEditorPlatformDefinition } from "./editor/gif/manifest.js";
 import { imageEditorPlatformDefinition } from "./editor/image/manifest.js";
 import { pdfPlatformDefinition } from "./editor/pdf/manifest.js";
@@ -29,6 +30,8 @@ import { justWatchPlatformDefinition } from "./movie/justwatch/manifest.js";
 import { kitsuPlatformDefinition } from "./movie/kitsu/manifest.js";
 import { myAnimeListPlatformDefinition } from "./movie/myanimelist/manifest.js";
 import { tvMazePlatformDefinition } from "./movie/tvmaze/manifest.js";
+import { openStreetMapPlatformDefinition } from "./maps/openstreetmap/manifest.js";
+import { osrmPlatformDefinition } from "./maps/osrm/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
 import { notionPlatformDefinition } from "./api/notion/manifest.js";
@@ -75,12 +78,15 @@ const definitions: readonly PlatformDefinition[] = [
   archiveEditorPlatformDefinition,
   audioEditorPlatformDefinition,
   documentEditorPlatformDefinition,
+  geoPlatformDefinition,
   gifEditorPlatformDefinition,
   imageEditorPlatformDefinition,
   facebookPlatformDefinition,
   flipkartPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
+  openStreetMapPlatformDefinition,
+  osrmPlatformDefinition,
   aniListPlatformDefinition,
   imdbPlatformDefinition,
   justWatchPlatformDefinition,
@@ -141,7 +147,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "editor", "movie", "music", "social", "shopping", "bots", "api", "public", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "maps", "movie", "music", "social", "shopping", "bots", "api", "public", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];

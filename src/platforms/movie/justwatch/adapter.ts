@@ -298,19 +298,21 @@ function resolveJustWatchTarget(target: string, countryInput?: string, typeInput
 
   const fullUrl = normalized.match(/^https?:\/\/(?:www\.)?justwatch\.com\/([a-z]{2})\/(movie|tv-show)\/([^/?#]+)/i);
   if (fullUrl) {
+    const [, countryCode = "us", typeSlug = "movie", slug = ""] = fullUrl;
     return {
-      country: fullUrl[1].toLowerCase(),
-      type: fullUrl[2] === "tv-show" ? "show" : "movie",
-      url: `https://www.justwatch.com/${fullUrl[1].toLowerCase()}/${fullUrl[2]}/${fullUrl[3]}`,
+      country: countryCode.toLowerCase(),
+      type: typeSlug === "tv-show" ? "show" : "movie",
+      url: `https://www.justwatch.com/${countryCode.toLowerCase()}/${typeSlug}/${slug}`,
     };
   }
 
   const slugWithCountry = normalized.match(/^\/?([a-z]{2})\/(movie|tv-show)\/([^/?#]+)/i);
   if (slugWithCountry) {
+    const [, countryCode = "us", typeSlug = "movie", slug = ""] = slugWithCountry;
     return {
-      country: slugWithCountry[1].toLowerCase(),
-      type: slugWithCountry[2] === "tv-show" ? "show" : "movie",
-      url: `https://www.justwatch.com/${slugWithCountry[1].toLowerCase()}/${slugWithCountry[2]}/${slugWithCountry[3]}`,
+      country: countryCode.toLowerCase(),
+      type: typeSlug === "tv-show" ? "show" : "movie",
+      url: `https://www.justwatch.com/${countryCode.toLowerCase()}/${typeSlug}/${slug}`,
     };
   }
 

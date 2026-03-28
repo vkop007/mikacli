@@ -1,4 +1,6 @@
 export const PLATFORM_NAMES = [
+  "openstreetmap",
+  "osrm",
   "anilist",
   "amazon",
   "cheat",
@@ -12,6 +14,7 @@ export const PLATFORM_NAMES = [
   "archive",
   "audio",
   "document",
+  "geo",
   "gif",
   "image",
   "facebook",
@@ -72,6 +75,20 @@ export interface PlatformConfig {
 }
 
 export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
+  openstreetmap: {
+    displayName: "OpenStreetMap",
+    origin: "https://nominatim.openstreetmap.org",
+    homeUrl: "https://www.openstreetmap.org/",
+    cookieDomain: "openstreetmap.org",
+    authCookieNames: [],
+  },
+  osrm: {
+    displayName: "OSRM",
+    origin: "https://router.project-osrm.org",
+    homeUrl: "https://project-osrm.org/",
+    cookieDomain: "project-osrm.org",
+    authCookieNames: [],
+  },
   anilist: {
     displayName: "AniList",
     origin: "https://graphql.anilist.co",
@@ -161,6 +178,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://developer.apple.com",
     homeUrl: "https://developer.apple.com/",
     cookieDomain: "apple.com",
+    authCookieNames: [],
+  },
+  geo: {
+    displayName: "Geo",
+    origin: "https://github.com/google/open-location-code",
+    homeUrl: "https://github.com/google/open-location-code",
+    cookieDomain: "github.com",
     authCookieNames: [],
   },
   gif: {
