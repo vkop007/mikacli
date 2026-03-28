@@ -7,7 +7,7 @@ export function createLinearMeCapability(adapter: LinearAdapter) {
     id: "me",
     command: "me",
     aliases: ["whoami"],
-    description: "Load the authenticated Linear account identity",
+    description: "Load the authenticated Linear web identity",
     spinnerText: "Loading Linear identity...",
     successMessage: "Linear identity loaded.",
     action: () => adapter.me(),
@@ -16,4 +16,3 @@ export function createLinearMeCapability(adapter: LinearAdapter) {
 }
 
 export const linearMeCapability = createLinearMeCapability(linearAdapter);
-

@@ -1,62 +1,71 @@
-import { ConnectionStore } from "../../../core/auth/connection-store.js";
 import { AutoCliError } from "../../../errors.js";
 import type { AdapterActionResult, AdapterStatusResult, Platform, SessionStatus, SessionUser } from "../../../types.js";
+import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
+import type { CookieJar } from "tough-cookie";
 import {
-  buildGitLabProjectUrl,
   encodeGitLabProjectTarget,
-  getGitLabProjectDisplayName,
   getGitLabRuntimeBaseUrl,
+  getGitLabRuntimeOrigin,
   normalizeGitLabProjectTarget,
   normalizeGitLabState,
-  normalizeGitLabToken,
 } from "./helpers.js";
-import {
-  GitLabApiClient,
-  type GitLabIssue,
-  type GitLabMergeRequest,
-  type GitLabProject,
-  type GitLabUser,
-} from "./client.js";
+import { GitLabApiClient, type GitLabIssue, type GitLabMergeRequest, type GitLabProject, type GitLabUser } from "./client.js";
 
-type GitLabLoadedConnection = Awaited<ReturnType<ConnectionStore["loadApiKeyConnection"]>>;
+type GitLabCookieLoadedSession = Awaited<ReturnType<CookieManager["loadSession"]>>;
+
+type GitLabLoadedConnection = {
+  session: GitLabCookieLoadedSession["session"];
+  path: string;
+  jar: Awaited<ReturnType<CookieManager["createJar"]>>;
+  baseUrl: string;
+};
 
 export class GitLabAdapter {
   readonly platform: Platform = "gitlab";
   readonly displayName = "GitLab";
 
-  private readonly connectionStore = new ConnectionStore();
+  private readonly cookieManager = new CookieManager();
 
-  async loginWithToken(input: { token: string }): Promise<AdapterActionResult> {
-    const token = normalizeGitLabToken(input.token);
-    const client = this.createClient(token);
+  async login(input: { account?: string; cookieFile?: string; cookieString?: string; cookieJson?: string }): Promise<AdapterActionResult> {
+    const imported = await this.cookieManager.importCookies(this.platform, input);
+    const baseUrl = this.resolveBaseUrl();
+    await this.ensureSessionCookie(imported.jar, baseUrl);
+
+    const client = this.createClient({ jar: imported.jar, baseUrl });
     const me = await client.getMe();
     const user = this.toSessionUser(me);
-    const account = me.username.trim();
-    const status = this.activeStatus("GitLab token validated.");
-    const sessionPath = await this.connectionStore.saveApiKeyConnection({
-      platform: this.platform,
-      account,
-      provider: "gitlab",
-      token,
-      user,
-      status,
-      metadata: {
-        baseUrl: this.resolveBaseUrl(),
-      },
-    });
+    const account = input.account?.trim() || me.username.trim() || String(me.id);
+    const status = this.activeStatus("GitLab web session validated.");
+    const sessionPath = await this.cookieManager.saveSession(
+      createSessionFile({
+        platform: this.platform,
+        account,
+        source: imported.source,
+        user,
+        status,
+        metadata: {
+          baseUrl,
+          gitlabUserId: String(me.id),
+          gitlabUsername: me.username,
+          gitlabProfileUrl: me.web_url,
+        },
+        cookieJar: serializeCookieJar(imported.jar),
+      }),
+    );
 
     return this.buildResult({
       account,
       action: "login",
-      message: `Saved ${this.displayName} token for ${me.username}.`,
+      message: `Saved ${this.displayName} session for ${me.username}.`,
       sessionPath,
       user,
       data: {
         user: {
           ...user,
+          url: me.web_url,
           state: me.state,
           email: me.public_email,
-          baseUrl: this.resolveBaseUrl(),
+          baseUrl,
         },
       },
     });
@@ -64,26 +73,15 @@ export class GitLabAdapter {
 
   async getStatus(account?: string): Promise<AdapterStatusResult> {
     const loaded = await this.loadConnection(account);
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const me = await client.getMe();
     const user = this.toSessionUser(me);
-    const status = this.activeStatus("GitLab token validated.");
-    await this.connectionStore.saveApiKeyConnection({
-      platform: this.platform,
-      account: loaded.connection.account,
-      provider: loaded.auth.provider ?? "gitlab",
-      token: loaded.auth.token,
-      user,
-      status,
-      metadata: {
-        ...(loaded.connection.metadata ?? {}),
-        baseUrl: this.resolveBaseUrl(loaded.connection.metadata),
-      },
-    });
+    const status = this.activeStatus("GitLab web session validated.");
+    await this.touchConnection(loaded, user, status, me);
 
     return {
       platform: this.platform,
-      account: loaded.connection.account,
+      account: loaded.session.account,
       sessionPath: loaded.path,
       connected: true,
       status: "active",
@@ -95,13 +93,13 @@ export class GitLabAdapter {
 
   async me(): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const me = await client.getMe();
     const user = this.toSessionUser(me);
-    await this.touchConnection(loaded, user, "GitLab token validated.");
+    await this.touchConnection(loaded, user, this.activeStatus("GitLab web session validated."), me);
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "me",
       message: "Loaded GitLab account identity.",
       sessionPath: loaded.path,
@@ -109,9 +107,10 @@ export class GitLabAdapter {
       data: {
         user: {
           ...user,
+          url: me.web_url,
           state: me.state,
           email: me.public_email,
-          baseUrl: this.resolveBaseUrl(loaded.connection.metadata),
+          baseUrl: loaded.baseUrl,
         },
       },
     });
@@ -119,16 +118,16 @@ export class GitLabAdapter {
 
   async projects(input: { query?: string; limit?: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const projects = await client.listProjects({ query: input.query, limit: input.limit });
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab projects loaded.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab projects loaded."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "projects",
       message: `Loaded ${projects.length} GitLab project${projects.length === 1 ? "" : "s"}.`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       data: {
         query: input.query,
         projects: projects.map((project) => this.summarizeProject(project)),
@@ -138,16 +137,16 @@ export class GitLabAdapter {
 
   async project(target: string): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const project = await client.getProject(encodeGitLabProjectTarget(target));
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab project loaded.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab project loaded."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "project",
       message: `Loaded GitLab project ${project.path_with_namespace}.`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       id: String(project.id),
       url: project.web_url,
       data: {
@@ -158,16 +157,16 @@ export class GitLabAdapter {
 
   async searchProjects(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const projects = await client.searchProjects({ query: input.query, limit: input.limit });
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab project search completed.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab project search completed."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "search-projects",
       message: `Found ${projects.length} GitLab project${projects.length === 1 ? "" : "s"} for "${input.query}".`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       data: {
         query: input.query,
         projects: projects.map((project) => this.summarizeProject(project)),
@@ -177,21 +176,21 @@ export class GitLabAdapter {
 
   async issues(input: { project: string; state?: string; limit?: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const projectPath = normalizeGitLabProjectTarget(input.project);
     const issues = await client.listIssues({
       project: projectPath,
       state: normalizeGitLabState(input.state),
       limit: input.limit,
     });
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab issues loaded.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab issues loaded."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "issues",
       message: `Loaded ${issues.length} issue${issues.length === 1 ? "" : "s"} from ${projectPath}.`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       data: {
         project: projectPath,
         issues: issues.map((issue) => this.summarizeIssue(issue)),
@@ -201,20 +200,20 @@ export class GitLabAdapter {
 
   async issue(input: { project: string; iid: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const projectPath = normalizeGitLabProjectTarget(input.project);
     const issue = await client.getIssue({
       project: projectPath,
       iid: input.iid,
     });
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab issue loaded.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab issue loaded."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "issue",
       message: `Loaded issue !${issue.iid} from ${projectPath}.`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       id: String(issue.iid),
       url: issue.web_url,
       data: {
@@ -226,21 +225,26 @@ export class GitLabAdapter {
 
   async createIssue(input: { project: string; title: string; body?: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const projectPath = normalizeGitLabProjectTarget(input.project);
+    const title = input.title.trim();
+    if (!title) {
+      throw new AutoCliError("GITLAB_ISSUE_TITLE_INVALID", "GitLab issue title cannot be empty.");
+    }
+
     const issue = await client.createIssue({
       project: projectPath,
-      title: input.title.trim(),
+      title,
       description: input.body?.trim(),
     });
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab issue created.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab issue created."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "create-issue",
       message: `Created GitLab issue !${issue.iid} in ${projectPath}.`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       id: String(issue.iid),
       url: issue.web_url,
       data: {
@@ -252,21 +256,21 @@ export class GitLabAdapter {
 
   async mergeRequests(input: { project: string; state?: string; limit?: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const projectPath = normalizeGitLabProjectTarget(input.project);
     const mergeRequests = await client.listMergeRequests({
       project: projectPath,
       state: normalizeGitLabState(input.state),
       limit: input.limit,
     });
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab merge requests loaded.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab merge requests loaded."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "merge-requests",
       message: `Loaded ${mergeRequests.length} merge request${mergeRequests.length === 1 ? "" : "s"} from ${projectPath}.`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       data: {
         project: projectPath,
         mergeRequests: mergeRequests.map((mergeRequest) => this.summarizeMergeRequest(mergeRequest)),
@@ -276,20 +280,20 @@ export class GitLabAdapter {
 
   async mergeRequest(input: { project: string; iid: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token, this.resolveBaseUrl(loaded.connection.metadata));
+    const client = this.createClientForLoaded(loaded);
     const projectPath = normalizeGitLabProjectTarget(input.project);
     const mergeRequest = await client.getMergeRequest({
       project: projectPath,
       iid: input.iid,
     });
-    await this.touchConnection(loaded, loaded.connection.user, "GitLab merge request loaded.");
+    await this.touchConnection(loaded, loaded.session.user, this.activeStatus("GitLab merge request loaded."));
 
     return this.buildResult({
-      account: loaded.connection.account,
+      account: loaded.session.account,
       action: "merge-request",
       message: `Loaded merge request !${mergeRequest.iid} from ${projectPath}.`,
       sessionPath: loaded.path,
-      user: loaded.connection.user,
+      user: loaded.session.user,
       id: String(mergeRequest.iid),
       url: mergeRequest.web_url,
       data: {
@@ -299,40 +303,68 @@ export class GitLabAdapter {
     });
   }
 
-  private createClient(token: string, baseUrl?: string): GitLabApiClient {
-    return new GitLabApiClient({ token, baseUrl });
+  private createClient(input: { jar: CookieJar; baseUrl: string }): GitLabApiClient {
+    return new GitLabApiClient({
+      jar: input.jar,
+      baseUrl: input.baseUrl,
+    });
+  }
+
+  private createClientForLoaded(loaded: GitLabLoadedConnection): GitLabApiClient {
+    return this.createClient({ jar: loaded.jar, baseUrl: loaded.baseUrl });
   }
 
   private async loadConnection(account?: string): Promise<GitLabLoadedConnection> {
-    const loaded = await this.connectionStore.loadApiKeyConnection(this.platform, account);
-    if (!loaded.auth.token) {
-      throw new AutoCliError("GITLAB_TOKEN_MISSING", "The saved GitLab connection is missing its token.", {
-        details: {
-          account: loaded.connection.account,
-          connectionPath: loaded.path,
-        },
-      });
-    }
-    return loaded;
+    const { session, path } = await this.cookieManager.loadSession(this.platform, account);
+    return {
+      session,
+      path,
+      jar: await this.cookieManager.createJar(session),
+      baseUrl: this.resolveBaseUrl(session.metadata),
+    };
   }
 
-  private async touchConnection(loaded: GitLabLoadedConnection, user: SessionUser | undefined, message: string): Promise<void> {
-    await this.connectionStore.saveApiKeyConnection({
-      platform: this.platform,
-      account: loaded.connection.account,
-      provider: loaded.auth.provider ?? "gitlab",
-      token: loaded.auth.token,
-      user,
-      status: this.activeStatus(message),
-      metadata: {
-        ...(loaded.connection.metadata ?? {}),
-        baseUrl: this.resolveBaseUrl(loaded.connection.metadata),
-      },
-    });
+  private async touchConnection(loaded: GitLabLoadedConnection, user: SessionUser | undefined, status: SessionStatus, me?: GitLabUser): Promise<void> {
+    await this.cookieManager.saveSession(
+      createSessionFile({
+        platform: this.platform,
+        account: loaded.session.account,
+        source: loaded.session.source,
+        user,
+        status,
+        metadata: {
+          ...(loaded.session.metadata ?? {}),
+          baseUrl: loaded.baseUrl,
+          ...(me
+            ? {
+                gitlabUserId: String(me.id),
+                gitlabUsername: me.username,
+                gitlabProfileUrl: me.web_url,
+              }
+            : {}),
+        },
+        cookieJar: serializeCookieJar(loaded.jar),
+        existingSession: loaded.session,
+      }),
+    );
   }
 
   private resolveBaseUrl(metadata?: Record<string, unknown>): string {
     return getGitLabRuntimeBaseUrl(metadata);
+  }
+
+  private async ensureSessionCookie(jar: Awaited<ReturnType<CookieManager["createJar"]>>, baseUrl: string): Promise<void> {
+    const cookies = await jar.getCookies(getGitLabRuntimeOrigin({ baseUrl }));
+    if (cookies.some((cookie) => cookie.key.endsWith("gitlab_session"))) {
+      return;
+    }
+
+    throw new AutoCliError("GITLAB_SESSION_COOKIE_MISSING", "Imported cookies did not include GitLab's _gitlab_session cookie.", {
+      details: {
+        baseUrl,
+        cookieNames: cookies.map((cookie) => cookie.key),
+      },
+    });
   }
 
   private summarizeProject(project: GitLabProject): Record<string, unknown> {

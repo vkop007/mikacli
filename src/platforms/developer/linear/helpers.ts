@@ -3,15 +3,6 @@ import { AutoCliError } from "../../../errors.js";
 const LINEAR_ISSUE_REFERENCE_REGEX = /([A-Z][A-Z0-9]+-\d+)/i;
 const LINEAR_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function normalizeLinearToken(token: string): string {
-  const trimmed = token.trim();
-  if (trimmed.length === 0) {
-    throw new AutoCliError("LINEAR_TOKEN_INVALID", "Linear API key cannot be empty.");
-  }
-
-  return trimmed.replace(/^Bearer\s+/i, "");
-}
-
 export function normalizeLinearAccountName(value: string): string {
   const cleaned = value.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
   return cleaned || "default";
@@ -61,4 +52,3 @@ export function sanitizeLinearSummaryText(value: string | null | undefined): str
   const cleaned = value.trim();
   return cleaned.length > 0 ? cleaned : undefined;
 }
-

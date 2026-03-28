@@ -1,3 +1,6 @@
+import makeFetchCookie from "fetch-cookie";
+import { CookieJar } from "tough-cookie";
+
 import { AutoCliError } from "../../../errors.js";
 
 const GITLAB_API_VERSION = "v4";
@@ -80,15 +83,13 @@ export type GitLabMergeRequest = {
 
 type GitLabListResponse<T> = T[];
 
-export class GitLabApiClient {
-  private readonly token: string;
+export class GitLabWebClient {
+  private readonly cookieFetch: (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
   private readonly baseUrl: string;
-  private readonly fetchImpl: FetchLike;
 
-  constructor(input: { token: string; baseUrl?: string; fetchImpl?: FetchLike }) {
-    this.token = input.token;
+  constructor(input: { jar?: CookieJar; baseUrl?: string; fetchImpl?: FetchLike }) {
     this.baseUrl = normalizeBaseUrl(input.baseUrl ?? "https://gitlab.com/api/v4");
-    this.fetchImpl = input.fetchImpl ?? fetch;
+    this.cookieFetch = makeFetchCookie(input.fetchImpl ?? fetch, input.jar ?? new CookieJar(), true);
   }
 
   async getMe(): Promise<GitLabUser> {
@@ -155,38 +156,59 @@ export class GitLabApiClient {
   }
 
   private async request<T>(path: string, init?: { method?: string; body?: Record<string, unknown> }): Promise<T> {
-    const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
+    const response = await this.cookieFetch(`${this.baseUrl}${path}`, {
       method: init?.method ?? "GET",
-      headers: this.buildHeaders(),
+      headers: this.buildHeaders(init?.body !== undefined),
       ...(init?.body ? { body: JSON.stringify(init.body) } : {}),
     });
+
     if (!response.ok) {
       throw await this.toGitLabError(response);
     }
 
-    return (await response.json()) as T;
+    return (await this.parseJson<T>(response, path)) as T;
   }
 
   private async requestAbsolute<T>(url: URL): Promise<T> {
-    const response = await this.fetchImpl(url, {
+    const response = await this.cookieFetch(url.toString(), {
       method: "GET",
-      headers: this.buildHeaders(),
+      headers: this.buildHeaders(false),
     });
+
     if (!response.ok) {
       throw await this.toGitLabError(response);
     }
 
-    return (await response.json()) as T;
+    return (await this.parseJson<T>(response, url.toString())) as T;
   }
 
-  private buildHeaders(): HeadersInit {
+  private buildHeaders(includeJsonContentType: boolean): HeadersInit {
     return {
-      "PRIVATE-TOKEN": this.token,
       accept: "application/json",
-      "content-type": "application/json",
+      ...(includeJsonContentType ? { "content-type": "application/json" } : {}),
       "user-agent": "AutoCLI",
       "X-GitLab-Api-Version": GITLAB_API_VERSION,
     };
+  }
+
+  private async parseJson<T>(response: Response, url: string): Promise<T> {
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(text) as T;
+    } catch (error) {
+      throw new AutoCliError("GITLAB_RESPONSE_INVALID", "GitLab returned a non-JSON response.", {
+        cause: error,
+        details: {
+          url,
+          status: response.status,
+          preview: text.slice(0, 200),
+        },
+      });
+    }
   }
 
   private async toGitLabError(response: Response): Promise<AutoCliError> {
@@ -202,7 +224,7 @@ export class GitLabApiClient {
 
     const upstreamMessage = extractUpstreamMessage(payload) ?? (bodyText || response.statusText);
     const code =
-      response.status === 401 ? "GITLAB_TOKEN_INVALID"
+      response.status === 401 ? "GITLAB_SESSION_INVALID"
       : response.status === 403 ? "GITLAB_FORBIDDEN"
       : response.status === 404 ? "GITLAB_NOT_FOUND"
       : response.status === 409 ? "GITLAB_CONFLICT"
@@ -211,7 +233,7 @@ export class GitLabApiClient {
       : "GITLAB_REQUEST_FAILED";
 
     const message =
-      code === "GITLAB_TOKEN_INVALID" ? "GitLab rejected the supplied token."
+      code === "GITLAB_SESSION_INVALID" ? "GitLab rejected the saved web session. Re-import fresh cookies."
       : code === "GITLAB_FORBIDDEN" ? "GitLab denied access to that resource."
       : code === "GITLAB_NOT_FOUND" ? "GitLab could not find that resource."
       : code === "GITLAB_CONFLICT" ? "GitLab reported a conflict while processing the request."
@@ -228,6 +250,8 @@ export class GitLabApiClient {
     });
   }
 }
+
+export { GitLabWebClient as GitLabApiClient };
 
 function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, value));
@@ -262,9 +286,11 @@ function extractUpstreamMessage(payload: Record<string, unknown> | undefined): s
 }
 
 function normalizeBaseUrl(value: string): string {
-  const trimmed = value.trim().replace(/\/+$/, "");
-  if (!/^https?:\/\//i.test(trimmed)) {
-    return normalizeBaseUrl(`https://${trimmed}`);
+  const trimmed = value.trim().replace(/\/+$/u, "");
+  const withProtocol = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  if (withProtocol.endsWith("/api/v4")) {
+    return withProtocol;
   }
-  return trimmed.endsWith("/api/v4") ? trimmed : `${trimmed}/api/v4`;
+
+  return `${withProtocol}/api/v4`;
 }

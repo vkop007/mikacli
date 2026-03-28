@@ -1,8 +1,10 @@
 import { AutoCliError } from "../../../errors.js";
+import { SessionHttpClient } from "../../../utils/http-client.js";
 
-const LINEAR_API_URL = "https://api.linear.app/graphql";
-
-type FetchLike = typeof fetch;
+const LINEAR_GRAPHQL_URL = "https://api.linear.app/graphql";
+const LINEAR_WEB_ORIGIN = "https://linear.app";
+const LINEAR_USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";
 
 export type LinearUser = {
   id: string;
@@ -59,14 +61,8 @@ type GraphQLResponse<T> = {
   errors?: GraphQLError[];
 };
 
-export class LinearApiClient {
-  private readonly apiKey: string;
-  private readonly fetchImpl: FetchLike;
-
-  constructor(input: { apiKey: string; fetchImpl?: FetchLike }) {
-    this.apiKey = input.apiKey;
-    this.fetchImpl = input.fetchImpl ?? fetch;
-  }
+export class LinearWebClient {
+  constructor(private readonly http: SessionHttpClient) {}
 
   async getViewer(): Promise<LinearUser> {
     return this.request<{ viewer: LinearUser }>(
@@ -265,12 +261,7 @@ export class LinearApiClient {
   async createComment(input: { issueId: string; body: string }): Promise<LinearComment> {
     return this.request<{ commentCreate: { success: boolean; comment: LinearComment } }>(
       `mutation CommentCreate($issueId: String!, $body: String!) {
-        commentCreate(
-          input: {
-            issueId: $issueId
-            body: $body
-          }
-        ) {
+        commentCreate(input: { issueId: $issueId, body: $body }) {
           success
           comment {
             id
@@ -293,105 +284,85 @@ export class LinearApiClient {
   }
 
   private async request<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
-    const response = await this.fetchImpl(LINEAR_API_URL, {
-      method: "POST",
-      headers: {
-        authorization: this.apiKey,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        query,
-        variables: variables ?? {},
-      }),
+    let response: GraphQLResponse<T>;
+    try {
+      response = await this.http.request<GraphQLResponse<T>>(LINEAR_GRAPHQL_URL, {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          "content-type": "application/json",
+          origin: LINEAR_WEB_ORIGIN,
+          referer: `${LINEAR_WEB_ORIGIN}/`,
+          "user-agent": LINEAR_USER_AGENT,
+        },
+        body: JSON.stringify({
+          query,
+          variables: variables ?? {},
+        }),
+      });
+    } catch (error) {
+      throw this.toLinearError(error);
+    }
+
+    if (Array.isArray(response.errors) && response.errors.length > 0) {
+      const firstError = response.errors[0];
+      const code = firstError?.extensions?.code;
+      const message = firstError?.message || "Unknown Linear GraphQL error.";
+
+      if (code === "AUTHENTICATION_REQUIRED" || /unauth|authenticate|session/i.test(message)) {
+        throw new AutoCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
+          details: {
+            code,
+            message,
+          },
+        });
+      }
+
+      throw new AutoCliError("LINEAR_GRAPHQL_FAILED", `Linear rejected the request: ${message}`, {
+        details: {
+          code,
+          message,
+        },
+      });
+    }
+
+    if (!response.data) {
+      throw new AutoCliError("LINEAR_GRAPHQL_EMPTY", "Linear returned an empty GraphQL response.");
+    }
+
+    return response.data;
+  }
+
+  private toLinearError(error: unknown): AutoCliError {
+    if (error instanceof AutoCliError && error.code === "HTTP_REQUEST_FAILED") {
+      const status = typeof error.details?.status === "number" ? error.details.status : undefined;
+      const body = typeof error.details?.body === "string" ? error.details.body : undefined;
+
+      if (status === 401 || status === 403) {
+        return new AutoCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
+          details: {
+            status,
+            body,
+          },
+        });
+      }
+
+      return new AutoCliError("LINEAR_REQUEST_FAILED", "Linear request failed.", {
+        details: {
+          status,
+          body,
+        },
+        cause: error,
+      });
+    }
+
+    if (error instanceof AutoCliError) {
+      return error;
+    }
+
+    return new AutoCliError("LINEAR_REQUEST_FAILED", error instanceof Error ? error.message : "Linear request failed.", {
+      cause: error,
     });
-
-    const payload = (await response.json().catch(() => undefined)) as GraphQLResponse<T> | undefined;
-
-    if (!response.ok) {
-      throw this.toLinearError(response.status, response.statusText, payload);
-    }
-
-    if (payload?.errors?.length) {
-      throw this.toLinearGraphQLError(payload.errors);
-    }
-
-    if (!payload?.data) {
-      throw new AutoCliError("LINEAR_EMPTY_RESPONSE", "Linear returned an empty response.");
-    }
-
-    return payload.data;
-  }
-
-  private toLinearError(status: number, statusText: string, payload?: GraphQLResponse<unknown>): AutoCliError {
-    const errors = payload?.errors ?? [];
-    const firstError = errors[0];
-    const code =
-      status === 401 ? "LINEAR_TOKEN_INVALID"
-      : status === 403 ? "LINEAR_FORBIDDEN"
-      : status === 404 ? "LINEAR_NOT_FOUND"
-      : status === 429 ? "LINEAR_RATE_LIMITED"
-      : "LINEAR_REQUEST_FAILED";
-
-    return new AutoCliError(code, this.buildErrorMessage(code, status, statusText, firstError), {
-      details: {
-        status,
-        statusText,
-        upstreamCode: firstError?.extensions?.code,
-        upstreamMessage: firstError?.message,
-      },
-    });
-  }
-
-  private toLinearGraphQLError(errors: GraphQLError[]): AutoCliError {
-    const firstError = errors[0];
-    const upstreamCode = firstError?.extensions?.code;
-    const code =
-      upstreamCode === "UNAUTHENTICATED" ? "LINEAR_TOKEN_INVALID"
-      : upstreamCode === "FORBIDDEN" ? "LINEAR_FORBIDDEN"
-      : upstreamCode === "NOT_FOUND" ? "LINEAR_NOT_FOUND"
-      : upstreamCode === "RATE_LIMITED" ? "LINEAR_RATE_LIMITED"
-      : upstreamCode === "VALIDATION_FAILED" ? "LINEAR_VALIDATION_FAILED"
-      : "LINEAR_GRAPHQL_ERROR";
-
-    return new AutoCliError(code, this.buildGraphQLErrorMessage(code, firstError?.message), {
-      details: {
-        upstreamCode,
-        upstreamMessage: firstError?.message,
-      },
-    });
-  }
-
-  private buildErrorMessage(code: string, status: number, statusText: string, error?: GraphQLError): string {
-    const upstreamMessage = error?.message;
-    switch (code) {
-      case "LINEAR_TOKEN_INVALID":
-        return "Linear rejected the supplied token.";
-      case "LINEAR_FORBIDDEN":
-        return "Linear denied access. Make sure the token has permission to the workspace.";
-      case "LINEAR_NOT_FOUND":
-        return "Linear could not find that resource.";
-      case "LINEAR_RATE_LIMITED":
-        return "Linear rate limited the request. Try again in a moment.";
-      default:
-        return upstreamMessage ? `Linear API request failed: ${upstreamMessage}` : `Linear API request failed with HTTP ${status} ${statusText}.`;
-    }
-  }
-
-  private buildGraphQLErrorMessage(code: string, upstreamMessage?: string): string {
-    switch (code) {
-      case "LINEAR_TOKEN_INVALID":
-        return "Linear rejected the supplied token.";
-      case "LINEAR_FORBIDDEN":
-        return "Linear denied access. Make sure the token has permission to the workspace.";
-      case "LINEAR_NOT_FOUND":
-        return "Linear could not find that resource.";
-      case "LINEAR_RATE_LIMITED":
-        return "Linear rate limited the request. Try again in a moment.";
-      case "LINEAR_VALIDATION_FAILED":
-        return upstreamMessage ? `Linear rejected the request: ${upstreamMessage}` : "Linear rejected the request.";
-      default:
-        return upstreamMessage ? `Linear GraphQL request failed: ${upstreamMessage}` : "Linear GraphQL request failed.";
-    }
   }
 }
 

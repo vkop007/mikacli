@@ -1,6 +1,8 @@
+import { sanitizeAccountName } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
 import { AutoCliError } from "../../../errors.js";
-import type { AdapterActionResult, AdapterStatusResult, Platform, SessionStatus, SessionUser } from "../../../types.js";
+import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
+import type { AdapterActionResult, AdapterStatusResult, LoginInput, Platform, PlatformSession, SessionStatus, SessionUser } from "../../../types.js";
 import { buildGitHubIssueUrl, buildGitHubRepoUrl, normalizeGitHubToken, parseGitHubRepoTarget } from "./helpers.js";
 import {
   GitHubApiClient,
@@ -15,18 +17,43 @@ import {
   type GitHubViewer,
 } from "./client.js";
 
-type GitHubLoadedConnection = Awaited<ReturnType<ConnectionStore["loadApiKeyConnection"]>>;
+import type { CookieJar } from "tough-cookie";
+
+type GitHubAuthMode = "cookies" | "apiKey";
 
 type GitHubAdapterOptions = {
   platform?: Platform;
   displayName?: string;
   provider?: string;
+  authMode?: GitHubAuthMode;
+};
+
+type GitHubLoadedConnection = {
+  kind: GitHubAuthMode;
+  account: string;
+  path: string;
+  client: GitHubApiClient;
+  connection: {
+    account: string;
+    metadata?: Record<string, unknown>;
+    user?: SessionUser;
+  };
+  session?: PlatformSession;
+  auth?: {
+    token: string;
+    provider?: string;
+  };
+  jar?: CookieJar;
+  viewer?: GitHubViewer;
+  user?: SessionUser;
 };
 
 export class GitHubAdapter {
   readonly platform: Platform;
   readonly displayName: string;
+  readonly authMode: GitHubAuthMode;
 
+  private readonly cookieManager = new CookieManager();
   private readonly connectionStore = new ConnectionStore();
   private readonly provider: string;
 
@@ -34,15 +61,27 @@ export class GitHubAdapter {
     this.platform = options.platform ?? "github";
     this.displayName = options.displayName ?? "GitHub";
     this.provider = options.provider ?? this.platform;
+    this.authMode = options.authMode ?? (this.platform === "githubbot" ? "apiKey" : "cookies");
+  }
+
+  async login(input: LoginInput): Promise<AdapterActionResult> {
+    if (this.authMode === "apiKey") {
+      return this.loginWithToken({
+        token: input.token ?? "",
+        account: input.account,
+      });
+    }
+
+    return this.loginWithCookies(input);
   }
 
   async loginWithToken(input: { token: string; account?: string }): Promise<AdapterActionResult> {
     const token = normalizeGitHubToken(input.token);
     const client = new GitHubApiClient({ token });
     const viewer = await client.getViewer();
-    const account = input.account?.trim() || viewer.login;
+    const account = sanitizeAccountName(input.account?.trim() || viewer.login);
     const user = this.toSessionUser(viewer);
-    const status = this.activeStatus(`${this.displayName} personal access token validated.`);
+    const status = this.activeStatus(this.validationMessage());
     const sessionPath = await this.connectionStore.saveApiKeyConnection({
       platform: this.platform,
       account,
@@ -50,10 +89,11 @@ export class GitHubAdapter {
       token,
       user,
       status,
-      metadata: {
+      metadata: this.buildMetadata(user, {
+        authMode: "apiKey",
         login: viewer.login,
         profileUrl: viewer.html_url,
-      },
+      }),
     });
 
     return {
@@ -70,44 +110,85 @@ export class GitHubAdapter {
     };
   }
 
-  async getStatus(account?: string): Promise<AdapterStatusResult> {
-    const loaded = await this.loadConnection(account);
-    const client = this.createClient(loaded.auth.token);
+  async loginWithCookies(input: LoginInput): Promise<AdapterActionResult> {
+    const imported = await this.cookieManager.importCookies(this.platform, {
+      cookieFile: input.cookieFile,
+      cookieString: input.cookieString,
+      cookieJson: input.cookieJson,
+    });
+    const client = new GitHubApiClient({ jar: imported.jar });
     const viewer = await client.getViewer();
+    const account = sanitizeAccountName(input.account?.trim() || viewer.login);
     const user = this.toSessionUser(viewer);
-    const status = this.activeStatus(`${this.displayName} token validated.`);
-    await this.connectionStore.saveApiKeyConnection({
+    const status = this.activeStatus(this.validationMessage());
+    const session = createSessionFile({
       platform: this.platform,
-      account: loaded.connection.account,
-      provider: loaded.auth.provider ?? this.provider,
-      token: loaded.auth.token,
+      account,
+      source: imported.source,
       user,
       status,
-      metadata: {
-        ...(loaded.connection.metadata ?? {}),
+      metadata: this.buildMetadata(user, {
+        authMode: "cookies",
         login: viewer.login,
         profileUrl: viewer.html_url,
-      },
+      }),
+      cookieJar: serializeCookieJar(imported.jar),
     });
+    const sessionPath = await this.cookieManager.saveSession(session);
 
     return {
+      ok: true,
       platform: this.platform,
-      account: loaded.connection.account,
-      sessionPath: loaded.path,
-      connected: true,
-      status: "active",
-      message: status.message,
+      account,
+      action: "login",
+      message: `Saved ${this.displayName} web session for ${viewer.login}.`,
+      sessionPath,
       user,
-      lastValidatedAt: status.lastValidatedAt,
+      data: {
+        user,
+      },
     };
+  }
+
+  async getStatus(account?: string): Promise<AdapterStatusResult> {
+    const loaded = await this.loadConnection(account, { validate: false });
+    try {
+      const validated = await this.validateConnection(loaded);
+      const status = this.activeStatus(this.validationMessage());
+      await this.persistConnection(validated, status);
+
+      return {
+        platform: this.platform,
+        account: validated.connection.account,
+        sessionPath: validated.path,
+        connected: true,
+        status: status.state,
+        message: status.message,
+        user: validated.connection.user,
+        lastValidatedAt: status.lastValidatedAt,
+      };
+    } catch (error) {
+      const expired = this.expiredStatus(error);
+      await this.persistConnection(loaded, expired);
+
+      return {
+        platform: this.platform,
+        account: loaded.connection.account,
+        sessionPath: loaded.path,
+        connected: false,
+        status: expired.state,
+        message: expired.message,
+        user: loaded.connection.user,
+        lastValidatedAt: expired.lastValidatedAt,
+      };
+    }
   }
 
   async me(account?: string): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(account);
-    const client = this.createClient(loaded.auth.token);
-    const viewer = await client.getViewer();
-    const user = this.toSessionUser(viewer);
-    await this.touchConnection(loaded, user, `${this.displayName} token validated.`);
+    const viewer = loaded.viewer ?? (await loaded.client.getViewer());
+    const user = loaded.connection.user ?? this.toSessionUser(viewer);
+    await this.touchConnection(loaded, `${this.displayName} session validated.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -129,9 +210,8 @@ export class GitHubAdapter {
 
   async user(login: string): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
-    const user = await client.getUser(login.trim());
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} user loaded.`);
+    const user = await loaded.client.getUser(login.trim());
+    await this.touchConnection(loaded, `${this.displayName} user loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -149,11 +229,12 @@ export class GitHubAdapter {
 
   async repos(input: { account?: string; owner?: string; limit?: number; sort?: string; type?: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
-    const repos = input.owner
-      ? await client.listUserRepos({ owner: input.owner, limit: input.limit, sort: input.sort })
-      : await client.listViewerRepos({ limit: input.limit, sort: input.sort, type: input.type });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} repositories loaded.`);
+    const fallbackOwner = !input.owner && loaded.kind === "cookies" ? loaded.connection.user?.username : undefined;
+    const owner = input.owner ?? fallbackOwner;
+    const repos = owner
+      ? await loaded.client.listUserRepos({ owner, limit: input.limit, sort: input.sort })
+      : await loaded.client.listViewerRepos({ limit: input.limit, sort: input.sort, type: input.type });
+    await this.touchConnection(loaded, `${this.displayName} repositories loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -162,7 +243,7 @@ export class GitHubAdapter {
       sessionPath: loaded.path,
       user: loaded.connection.user,
       data: {
-        owner: input.owner,
+        owner,
         repos: repos.map((repo) => this.summarizeRepo(repo)),
       },
     });
@@ -170,10 +251,9 @@ export class GitHubAdapter {
 
   async repo(input: { account?: string; target: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.target);
-    const repo = await client.getRepo(fullName);
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} repository loaded.`);
+    const repo = await loaded.client.getRepo(fullName);
+    await this.touchConnection(loaded, `${this.displayName} repository loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -191,14 +271,15 @@ export class GitHubAdapter {
 
   async starred(input: { owner?: string; limit?: number; sort?: string; direction?: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
-    const repos = await client.listStarredRepos({
-      owner: input.owner,
+    const fallbackOwner = !input.owner && loaded.kind === "cookies" ? loaded.connection.user?.username : undefined;
+    const owner = input.owner ?? fallbackOwner;
+    const repos = await loaded.client.listStarredRepos({
+      owner,
       limit: input.limit,
       sort: input.sort,
       direction: input.direction,
     });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} starred repositories loaded.`);
+    await this.touchConnection(loaded, `${this.displayName} starred repositories loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -207,7 +288,7 @@ export class GitHubAdapter {
       sessionPath: loaded.path,
       user: loaded.connection.user,
       data: {
-        owner: input.owner,
+        owner,
         repos: repos.map((repo) => this.summarizeRepo(repo)),
       },
     });
@@ -215,10 +296,9 @@ export class GitHubAdapter {
 
   async branches(input: { repo: string; limit?: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const branches = await client.listBranches({ fullName, limit: input.limit });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} branches loaded.`);
+    const branches = await loaded.client.listBranches({ fullName, limit: input.limit });
+    await this.touchConnection(loaded, `${this.displayName} branches loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -235,10 +315,9 @@ export class GitHubAdapter {
 
   async branch(input: { repo: string; branch: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const branch = await client.getBranch({ fullName, branch: input.branch });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} branch loaded.`);
+    const branch = await loaded.client.getBranch({ fullName, branch: input.branch });
+    await this.touchConnection(loaded, `${this.displayName} branch loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -255,14 +334,13 @@ export class GitHubAdapter {
 
   async searchRepos(input: { account?: string; query: string; limit?: number; sort?: string; order?: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
-    const search = await client.searchRepos({
+    const search = await loaded.client.searchRepos({
       query: input.query,
       limit: input.limit,
       sort: input.sort,
       order: input.order,
     });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} repository search completed.`);
+    await this.touchConnection(loaded, `${this.displayName} repository search completed.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -280,10 +358,9 @@ export class GitHubAdapter {
 
   async issues(input: { account?: string; repo: string; state?: string; limit?: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const issues = (await client.listIssues({ fullName, state: input.state, limit: input.limit })).filter((issue) => !issue.pull_request);
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} issues loaded.`);
+    const issues = (await loaded.client.listIssues({ fullName, state: input.state, limit: input.limit })).filter((issue) => !issue.pull_request);
+    await this.touchConnection(loaded, `${this.displayName} issues loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -300,16 +377,15 @@ export class GitHubAdapter {
 
   async pulls(input: { repo: string; state?: string; limit?: number; sort?: string; direction?: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const pulls = await client.listPulls({
+    const pulls = await loaded.client.listPulls({
       fullName,
       state: input.state,
       limit: input.limit,
       sort: input.sort,
       direction: input.direction,
     });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} pull requests loaded.`);
+    await this.touchConnection(loaded, `${this.displayName} pull requests loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -326,10 +402,9 @@ export class GitHubAdapter {
 
   async pull(input: { repo: string; number: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const pull = await client.getPull({ fullName, pullNumber: input.number });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} pull request loaded.`);
+    const pull = await loaded.client.getPull({ fullName, pullNumber: input.number });
+    await this.touchConnection(loaded, `${this.displayName} pull request loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -348,10 +423,9 @@ export class GitHubAdapter {
 
   async issue(input: { account?: string; repo: string; number: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const issue = await client.getIssue({ fullName, issueNumber: input.number });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} issue loaded.`);
+    const issue = await loaded.client.getIssue({ fullName, issueNumber: input.number });
+    await this.touchConnection(loaded, `${this.displayName} issue loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -370,14 +444,13 @@ export class GitHubAdapter {
 
   async comment(input: { repo: string; number: number; body: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const comment = await client.createIssueComment({
+    const comment = await loaded.client.createIssueComment({
       fullName,
       issueNumber: input.number,
       body: input.body.trim(),
     });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} issue comment created.`);
+    await this.touchConnection(loaded, `${this.displayName} issue comment created.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -396,10 +469,9 @@ export class GitHubAdapter {
 
   async createIssue(input: { account?: string; repo: string; title: string; body?: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const issue = await client.createIssue({ fullName, title: input.title.trim(), body: input.body?.trim() });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} issue created.`);
+    const issue = await loaded.client.createIssue({ fullName, title: input.title.trim(), body: input.body?.trim() });
+    await this.touchConnection(loaded, `${this.displayName} issue created.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -418,15 +490,14 @@ export class GitHubAdapter {
 
   async createRepo(input: { account?: string; name: string; description?: string; private?: boolean; homepage?: string; autoInit?: boolean }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
-    const repo = await client.createRepo({
+    const repo = await loaded.client.createRepo({
       name: input.name.trim(),
       description: input.description?.trim(),
       private: input.private,
       homepage: input.homepage?.trim(),
       autoInit: input.autoInit,
     });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} repository created.`);
+    await this.touchConnection(loaded, `${this.displayName} repository created.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -444,10 +515,9 @@ export class GitHubAdapter {
 
   async fork(input: { repo: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const repo = await client.forkRepo(fullName);
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} repository fork created.`);
+    const repo = await loaded.client.forkRepo(fullName);
+    await this.touchConnection(loaded, `${this.displayName} repository fork created.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -465,10 +535,9 @@ export class GitHubAdapter {
 
   async releases(input: { repo: string; limit?: number }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const releases = await client.listReleases({ fullName, limit: input.limit });
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} releases loaded.`);
+    const releases = await loaded.client.listReleases({ fullName, limit: input.limit });
+    await this.touchConnection(loaded, `${this.displayName} releases loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -485,11 +554,10 @@ export class GitHubAdapter {
 
   async readme(input: { repo: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection();
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    const readme = await client.getReadme(fullName);
+    const readme = await loaded.client.getReadme(fullName);
     const content = decodeGitHubReadme(readme);
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} README loaded.`);
+    await this.touchConnection(loaded, `${this.displayName} README loaded.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -507,10 +575,9 @@ export class GitHubAdapter {
 
   async star(input: { account?: string; repo: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    await client.starRepo(fullName);
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} repository starred.`);
+    await loaded.client.starRepo(fullName);
+    await this.touchConnection(loaded, `${this.displayName} repository starred.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -527,10 +594,9 @@ export class GitHubAdapter {
 
   async unstar(input: { account?: string; repo: string }): Promise<AdapterActionResult> {
     const loaded = await this.loadConnection(input.account);
-    const client = this.createClient(loaded.auth.token);
     const { fullName } = parseGitHubRepoTarget(input.repo);
-    await client.unstarRepo(fullName);
-    await this.touchConnection(loaded, loaded.connection.user, `${this.displayName} repository unstarred.`);
+    await loaded.client.unstarRepo(fullName);
+    await this.touchConnection(loaded, `${this.displayName} repository unstarred.`);
 
     return this.buildResult({
       account: loaded.connection.account,
@@ -545,11 +611,45 @@ export class GitHubAdapter {
     });
   }
 
-  private createClient(token: string): GitHubApiClient {
-    return new GitHubApiClient({ token });
+  private async loadConnection(account?: string, options: { validate?: boolean } = {}): Promise<GitHubLoadedConnection> {
+    const loaded =
+      this.authMode === "cookies"
+        ? await this.loadCookieConnection(account)
+        : await this.loadApiKeyConnection(account);
+
+    if (options.validate === false) {
+      return loaded;
+    }
+
+    try {
+      return await this.validateConnection(loaded);
+    } catch (error) {
+      if (error instanceof AutoCliError) {
+        await this.markConnectionExpired(loaded, error);
+      }
+      throw error;
+    }
   }
 
-  private async loadConnection(account?: string): Promise<GitHubLoadedConnection> {
+  private async loadCookieConnection(account?: string): Promise<GitHubLoadedConnection> {
+    const { session, path } = await this.cookieManager.loadSession(this.platform, account);
+    const jar = await this.cookieManager.createJar(session);
+    return {
+      kind: "cookies",
+      account: session.account,
+      path,
+      client: new GitHubApiClient({ jar }),
+      connection: {
+        account: session.account,
+        metadata: session.metadata,
+        user: session.user,
+      },
+      session,
+      jar,
+    };
+  }
+
+  private async loadApiKeyConnection(account?: string): Promise<GitHubLoadedConnection> {
     const loaded = await this.connectionStore.loadApiKeyConnection(this.platform, account);
     if (!loaded.auth.token) {
       throw new AutoCliError("GITHUB_TOKEN_MISSING", "The saved GitHub connection is missing its token.", {
@@ -559,19 +659,127 @@ export class GitHubAdapter {
         },
       });
     }
+
+    return {
+      kind: "apiKey",
+      account: loaded.connection.account,
+      path: loaded.path,
+      client: new GitHubApiClient({ token: loaded.auth.token }),
+      connection: {
+        account: loaded.connection.account,
+        metadata: loaded.connection.metadata,
+        user: loaded.connection.user,
+      },
+      auth: loaded.auth,
+    };
+  }
+
+  private async validateConnection(loaded: GitHubLoadedConnection): Promise<GitHubLoadedConnection> {
+    const viewer = await loaded.client.getViewer();
+    const user = this.toSessionUser(viewer);
+    const metadata = this.buildMetadata(user, {
+      ...(loaded.connection.metadata ?? {}),
+      authMode: loaded.kind === "apiKey" ? "apiKey" : "cookies",
+      login: viewer.login,
+      profileUrl: viewer.html_url,
+    });
+
+    if (loaded.kind === "cookies" && loaded.session) {
+      loaded.session.user = user;
+      loaded.session.metadata = metadata;
+    }
+
+    loaded.viewer = viewer;
+    loaded.user = user;
+    loaded.connection = {
+      ...loaded.connection,
+      user,
+      metadata,
+    };
+
     return loaded;
   }
 
-  private async touchConnection(loaded: GitHubLoadedConnection, user: SessionUser | undefined, message: string): Promise<void> {
+  private async touchConnection(loaded: GitHubLoadedConnection, message: string): Promise<void> {
+    const status = this.activeStatus(message);
+    await this.persistConnection(loaded, status);
+  }
+
+  private async persistConnection(loaded: GitHubLoadedConnection, status: SessionStatus): Promise<void> {
+    if (loaded.kind === "cookies") {
+      if (!loaded.session || !loaded.jar) {
+        throw new AutoCliError("GITHUB_SESSION_INVALID", "GitHub session data is unavailable for persistence.");
+      }
+
+      const session = createSessionFile({
+        platform: this.platform,
+        account: loaded.connection.account,
+        source: loaded.session.source,
+        user: loaded.connection.user,
+        status,
+        metadata: loaded.connection.metadata,
+        cookieJar: serializeCookieJar(loaded.jar),
+        existingSession: loaded.session,
+      });
+      await this.cookieManager.saveSession(session);
+      loaded.session = session;
+      return;
+    }
+
+    if (!loaded.auth) {
+      throw new AutoCliError("GITHUB_TOKEN_MISSING", "The saved GitHub connection is missing its token.");
+    }
+
     await this.connectionStore.saveApiKeyConnection({
       platform: this.platform,
       account: loaded.connection.account,
       provider: loaded.auth.provider ?? this.provider,
       token: loaded.auth.token,
-      user,
-      status: this.activeStatus(message),
+      user: loaded.connection.user,
+      status,
       metadata: loaded.connection.metadata,
     });
+  }
+
+  private async markConnectionExpired(loaded: GitHubLoadedConnection, error: unknown): Promise<void> {
+    const status = this.expiredStatus(error);
+    try {
+      await this.persistConnection(loaded, status);
+    } catch {
+      // Best-effort. Validation errors should still surface even if persistence fails.
+    }
+  }
+
+  private expiredStatus(error: unknown): SessionStatus {
+    return {
+      state: "expired",
+      message: error instanceof AutoCliError ? error.message : `${this.displayName} session validation failed.`,
+      lastValidatedAt: new Date().toISOString(),
+      ...(error instanceof AutoCliError ? { lastErrorCode: error.code } : {}),
+    };
+  }
+
+  private validationMessage(): string {
+    return this.authMode === "cookies" ? `${this.displayName} web session validated.` : `${this.displayName} token validated.`;
+  }
+
+  private buildMetadata(
+    user: SessionUser | undefined,
+    metadata: Record<string, unknown> = {},
+  ): Record<string, unknown> | undefined {
+    const result: Record<string, unknown> = {
+      ...metadata,
+    };
+
+    if (user?.username) {
+      result.login = user.username;
+    }
+
+    if (user?.profileUrl) {
+      result.profileUrl = user.profileUrl;
+    }
+
+    return Object.keys(result).length > 0 ? result : undefined;
   }
 
   private summarizeRepo(repo: GitHubRepo): Record<string, unknown> {
@@ -737,11 +945,15 @@ export class GitHubAdapter {
   }
 }
 
-export const githubAdapter = new GitHubAdapter();
+export const githubAdapter = new GitHubAdapter({
+  authMode: "cookies",
+});
+
 export const githubBotAdapter = new GitHubAdapter({
   platform: "githubbot",
   displayName: "GitHub Bot",
   provider: "githubbot",
+  authMode: "apiKey",
 });
 
 function decodeGitHubReadme(readme: GitHubReadme): string | undefined {

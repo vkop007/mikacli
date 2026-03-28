@@ -3,15 +3,6 @@ import { AutoCliError } from "../../../errors.js";
 const DEFAULT_GITLAB_API_BASE_URL = "https://gitlab.com/api/v4";
 const GITLAB_ID_REGEX = /([0-9]+|[a-z0-9_.-]+(?:\/[a-z0-9_.-]+)+)/i;
 
-export function normalizeGitLabToken(token: string): string {
-  const trimmed = token.trim();
-  if (trimmed.length === 0) {
-    throw new AutoCliError("GITLAB_TOKEN_INVALID", "GitLab token cannot be empty.");
-  }
-
-  return trimmed;
-}
-
 export function normalizeGitLabState(value: string | undefined, fallback = "opened"): string {
   const trimmed = value?.trim().toLowerCase();
   if (!trimmed) {
@@ -84,6 +75,10 @@ export function getGitLabRuntimeBaseUrl(metadata?: Record<string, unknown>): str
   return getGitLabStoredBaseUrl(metadata) ?? resolveGitLabApiBaseUrl();
 }
 
+export function getGitLabRuntimeOrigin(metadata?: Record<string, unknown>): string {
+  return getGitLabRuntimeBaseUrl(metadata).replace(/\/api\/v4$/u, "");
+}
+
 export function getGitLabProjectDisplayName(project: { path_with_namespace?: string; name?: string; web_url?: string; id?: number | string }): string {
   return project.path_with_namespace ?? project.name ?? project.web_url ?? String(project.id ?? "unknown project");
 }
@@ -111,4 +106,3 @@ function normalizeBaseUrl(value: string): string {
 
   return `${withProtocol}/api/v4`;
 }
-

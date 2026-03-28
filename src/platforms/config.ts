@@ -254,10 +254,10 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
   },
   github: {
     displayName: "GitHub",
-    origin: "https://api.github.com",
+    origin: "https://github.com",
     homeUrl: "https://github.com/",
     cookieDomain: "github.com",
-    authCookieNames: [],
+    authCookieNames: ["user_session", "_gh_sess", "logged_in"],
   },
   githubbot: {
     displayName: "GitHub Bot",
@@ -271,7 +271,7 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://gitlab.com",
     homeUrl: "https://gitlab.com/",
     cookieDomain: "gitlab.com",
-    authCookieNames: [],
+    authCookieNames: ["_gitlab_session", "remember_user_token"],
   },
   grok: {
     displayName: "Grok",
@@ -369,7 +369,7 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://api.linear.app",
     homeUrl: "https://linear.app/",
     cookieDomain: "linear.app",
-    authCookieNames: [],
+    authCookieNames: ["linear_session", "__Host-linear_session"],
   },
   notion: {
     displayName: "Notion",

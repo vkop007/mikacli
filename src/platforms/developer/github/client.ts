@@ -1,9 +1,24 @@
+import makeFetchCookie from "fetch-cookie";
+import { CookieJar } from "tough-cookie";
+
 import { AutoCliError } from "../../../errors.js";
 
 const GITHUB_API_BASE_URL = "https://api.github.com";
 const GITHUB_API_VERSION = "2022-11-28";
+const GITHUB_HOME_URL = "https://github.com/";
+const GITHUB_SETTINGS_PROFILE_URL = "https://github.com/settings/profile";
 
-type FetchLike = typeof fetch;
+type FetchLike = (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
+
+type GitHubClientAuth =
+  | {
+      kind: "apiKey";
+      token: string;
+    }
+  | {
+      kind: "cookies";
+      jar: CookieJar;
+    };
 
 export type GitHubViewer = {
   id: number;
@@ -136,15 +151,37 @@ type GitHubSearchResponse<T> = {
 };
 
 export class GitHubApiClient {
-  private readonly token: string;
+  private readonly auth: GitHubClientAuth;
   private readonly fetchImpl: FetchLike;
+  private csrfToken?: string;
+  private csrfTokenLoaded = false;
 
-  constructor(input: { token: string; fetchImpl?: FetchLike }) {
-    this.token = input.token;
-    this.fetchImpl = input.fetchImpl ?? fetch;
+  constructor(input: { token: string; fetchImpl?: FetchLike } | { jar: CookieJar; fetchImpl?: FetchLike }) {
+    const fetchImpl = input.fetchImpl ?? fetch;
+
+    if ("token" in input) {
+      this.auth = {
+        kind: "apiKey",
+        token: input.token,
+      };
+    } else {
+      this.auth = {
+        kind: "cookies",
+        jar: input.jar,
+      };
+    }
+
+    this.fetchImpl = fetchImpl;
+    if (this.auth.kind === "cookies") {
+      this.fetchImpl = makeFetchCookie(fetchImpl, this.auth.jar, true);
+    }
   }
 
   async getViewer(): Promise<GitHubViewer> {
+    if (this.auth.kind === "cookies") {
+      return this.getViewerFromWebSession();
+    }
+
     return this.request<GitHubViewer>("/user");
   }
 
@@ -314,6 +351,60 @@ export class GitHubApiClient {
     });
   }
 
+  private async getViewerFromWebSession(): Promise<GitHubViewer> {
+    const response = await this.fetchImpl(GITHUB_SETTINGS_PROFILE_URL, {
+      headers: {
+        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "user-agent": "AutoCLI",
+      },
+    });
+
+    if (response.url.includes("/login")) {
+      throw new AutoCliError("GITHUB_SESSION_INVALID", "GitHub rejected the saved web session.", {
+        details: {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+        },
+      });
+    }
+
+    const html = await response.text();
+    const parsedViewer = extractViewerFromSettingsHtml(html);
+    if (!parsedViewer.login) {
+      throw new AutoCliError("GITHUB_VIEWER_PARSE_FAILED", "GitHub settings loaded, but AutoCLI could not determine the signed-in account.", {
+        details: {
+          url: response.url,
+        },
+      });
+    }
+
+    try {
+      const publicViewer = await this.request<GitHubUser>(`/users/${encodeURIComponent(parsedViewer.login)}`);
+      return {
+        ...publicViewer,
+        id: parsedViewer.id ?? publicViewer.id,
+        login: parsedViewer.login,
+        name: parsedViewer.name ?? publicViewer.name,
+        html_url: parsedViewer.html_url ?? publicViewer.html_url,
+        avatar_url: parsedViewer.avatar_url ?? publicViewer.avatar_url,
+        email: parsedViewer.email ?? publicViewer.email,
+      };
+    } catch {
+      return {
+        id: parsedViewer.id ?? 0,
+        login: parsedViewer.login,
+        name: parsedViewer.name ?? null,
+        html_url: parsedViewer.html_url ?? `${GITHUB_HOME_URL}${parsedViewer.login}`,
+        avatar_url: parsedViewer.avatar_url ?? "",
+        email: parsedViewer.email ?? null,
+        public_repos: 0,
+        followers: 0,
+        following: 0,
+      };
+    }
+  }
+
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
     const url = new URL(`${GITHUB_API_BASE_URL}${path}`);
     return this.requestAbsolute<T>(url, init);
@@ -322,14 +413,7 @@ export class GitHubApiClient {
   private async requestAbsolute<T>(url: URL, init: RequestInit = {}): Promise<T> {
     const response = await this.fetchImpl(url, {
       ...init,
-      headers: {
-        accept: "application/vnd.github+json",
-        authorization: `Bearer ${this.token}`,
-        "x-github-api-version": GITHUB_API_VERSION,
-        "user-agent": "AutoCLI",
-        ...(init.body ? { "content-type": "application/json; charset=utf-8" } : {}),
-        ...(init.headers ?? {}),
-      },
+      headers: await this.buildHeaders(init, url),
     });
 
     const raw = await response.text();
@@ -351,48 +435,84 @@ export class GitHubApiClient {
 
   private async requestVoid(path: string, init: RequestInit = {}): Promise<void> {
     const url = new URL(`${GITHUB_API_BASE_URL}${path}`);
-    const response = await this.fetchImpl(url, {
-      ...init,
-      headers: {
-        accept: "application/vnd.github+json",
-        authorization: `Bearer ${this.token}`,
-        "x-github-api-version": GITHUB_API_VERSION,
-        "user-agent": "AutoCLI",
-        ...(init.headers ?? {}),
-      },
-    });
+    await this.requestAbsolute<unknown>(url, init);
+  }
 
-    if (response.status === 204) {
-      return;
+  private async buildHeaders(init: RequestInit, url: URL): Promise<Headers> {
+    const headers = new Headers(init.headers);
+    headers.set("accept", "application/vnd.github+json");
+    headers.set("x-github-api-version", GITHUB_API_VERSION);
+    headers.set("user-agent", "AutoCLI");
+
+    if (init.body) {
+      headers.set("content-type", "application/json; charset=utf-8");
     }
 
-    const raw = await response.text();
-    const parsed = raw.length > 0 ? tryParseJson(raw) : undefined;
-    if (!response.ok) {
-      throw new AutoCliError(this.mapErrorCode(response.status), this.buildErrorMessage(response.status, parsed), {
-        details: {
-          status: response.status,
-          statusText: response.statusText,
-          url: url.toString(),
-          body: parsed ?? raw,
+    if (this.auth.kind === "apiKey") {
+      headers.set("authorization", `Bearer ${this.auth.token}`);
+      return headers;
+    }
+
+    if (isMutatingMethod(init.method)) {
+      headers.set("origin", new URL(GITHUB_HOME_URL).origin);
+      headers.set("referer", GITHUB_HOME_URL);
+      headers.set("x-requested-with", "XMLHttpRequest");
+
+      const csrfToken = await this.getCsrfToken();
+      if (csrfToken) {
+        headers.set("x-csrf-token", csrfToken);
+      }
+    }
+
+    return headers;
+  }
+
+  private async getCsrfToken(): Promise<string | undefined> {
+    if (this.auth.kind !== "cookies") {
+      return undefined;
+    }
+
+    if (this.csrfTokenLoaded) {
+      return this.csrfToken;
+    }
+
+    this.csrfTokenLoaded = true;
+    try {
+      const response = await this.fetchImpl(GITHUB_SETTINGS_PROFILE_URL, {
+        headers: {
+          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         },
       });
+
+      if (response.url.includes("/login")) {
+        return undefined;
+      }
+
+      const html = await response.text();
+      this.csrfToken = extractCsrfToken(html);
+      return this.csrfToken;
+    } catch {
+      return undefined;
     }
   }
 
   private mapErrorCode(status: number): string {
     if (status === 401) {
-      return "GITHUB_TOKEN_INVALID";
+      return this.auth.kind === "cookies" ? "GITHUB_SESSION_INVALID" : "GITHUB_TOKEN_INVALID";
     }
+
     if (status === 403) {
       return "GITHUB_FORBIDDEN";
     }
+
     if (status === 404) {
       return "GITHUB_NOT_FOUND";
     }
+
     if (status === 422) {
       return "GITHUB_VALIDATION_FAILED";
     }
+
     return "GITHUB_REQUEST_FAILED";
   }
 
@@ -403,7 +523,9 @@ export class GitHubApiClient {
         : undefined;
 
     if (status === 401) {
-      return "GitHub rejected the supplied token.";
+      return this.auth.kind === "cookies"
+        ? "GitHub rejected the saved web session."
+        : "GitHub rejected the supplied token.";
     }
 
     if (message) {
@@ -425,3 +547,100 @@ function tryParseJson(raw: string): unknown {
     return raw;
   }
 }
+
+function isMutatingMethod(method?: string): boolean {
+  const normalized = (method ?? "GET").toUpperCase();
+  return normalized === "POST" || normalized === "PUT" || normalized === "PATCH" || normalized === "DELETE";
+}
+
+function extractCsrfToken(html: string): string | undefined {
+  const metaPatterns = [
+    /<meta[^>]+name="csrf-token"[^>]+content="([^"]+)"/iu,
+    /<meta[^>]+content="([^"]+)"[^>]+name="csrf-token"/iu,
+    /<input[^>]+name="authenticity_token"[^>]+value="([^"]+)"/iu,
+    /<input[^>]+value="([^"]+)"[^>]+name="authenticity_token"/iu,
+  ];
+
+  for (const pattern of metaPatterns) {
+    const match = pattern.exec(html);
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  return undefined;
+}
+
+type ParsedGitHubViewer = {
+  id?: number;
+  login?: string;
+  name?: string | null;
+  html_url?: string;
+  avatar_url?: string;
+  email?: string | null;
+};
+
+function extractViewerFromSettingsHtml(html: string): ParsedGitHubViewer {
+  const parsed: ParsedGitHubViewer = {};
+
+  const embeddedDataMatch = /<script[^>]+data-target="react-partial\.embeddedData"[^>]*>([\s\S]*?)<\/script>/iu.exec(html);
+  if (embeddedDataMatch?.[1]) {
+    try {
+      const payload = JSON.parse(embeddedDataMatch[1]) as {
+        props?: {
+          userMenu?: {
+            owner?: {
+              login?: string;
+              name?: string | null;
+              avatarUrl?: string;
+            };
+          };
+        };
+      };
+      const owner = payload.props?.userMenu?.owner;
+      if (owner?.login) {
+        parsed.login = owner.login;
+        parsed.name = owner.name ?? null;
+        parsed.avatar_url = owner.avatarUrl;
+        parsed.html_url = `${GITHUB_HOME_URL}${owner.login}`;
+      }
+    } catch {
+      // Ignore embedded JSON parse failures and continue with regex fallbacks.
+    }
+  }
+
+  const actorIdMatch = /<meta[^>]+name="octolytics-actor-id"[^>]+content="([0-9]+)"/iu.exec(html);
+  if (actorIdMatch?.[1]) {
+    parsed.id = Number(actorIdMatch[1]);
+  }
+
+  const actorLoginMatch = /<meta[^>]+name="octolytics-actor-login"[^>]+content="([^"]+)"/iu.exec(html);
+  if (actorLoginMatch?.[1]) {
+    parsed.login ??= actorLoginMatch[1];
+    parsed.html_url ??= `${GITHUB_HOME_URL}${actorLoginMatch[1]}`;
+  }
+
+  const nameMatch = /<input[^>]+id="user_profile_name"[^>]+value="([^"]*)"/iu.exec(html);
+  if (nameMatch?.[1] !== undefined) {
+    parsed.name = decodeHtmlEntities(nameMatch[1]) || parsed.name || null;
+  }
+
+  const avatarMatch = /<img[^>]+data-testid="github-avatar"[^>]+src="([^"]+)"/iu.exec(html)
+    ?? /<img[^>]+class="[^"]*avatar-user[^"]*"[^>]+src="([^"]+)"/iu.exec(html);
+  if (avatarMatch?.[1]) {
+    parsed.avatar_url = decodeHtmlEntities(avatarMatch[1]);
+  }
+
+  return parsed;
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+export { GitHubApiClient as GitHubWebSessionClient };

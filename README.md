@@ -57,7 +57,7 @@ autocli tools translate "hello world" --to hi
 | `music` | SoundCloud, Spotify, YouTube Music | 3 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
 | `social` | Bluesky, Facebook, Instagram, LinkedIn, Threads, TikTok, X, YouTube | 8 | none or cookies | Public profile/thread lookup plus cookie-backed posting and engagement where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
-| `developer` | GitHub, GitLab, Linear, Notion | 4 | mixed (`api token` + `cookies`) | Developer and workspace automation | `autocli developer <provider> ...` |
+| `developer` | GitHub, GitLab, Linear, Notion | 4 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Headers, IP, Markdown Fetch, Metadata, News, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 20 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
@@ -125,7 +125,7 @@ Typical first-run flows:
 ```bash
 autocli social x login --cookies ./x.cookies.json
 autocli llm chatgpt text "Summarize this changelog"
-autocli developer github login --token github_pat_xxx
+autocli developer github login --cookies ./github.cookies.json
 autocli bot telegrambot login --token 123456:ABCDEF --name alerts-bot
 autocli tools websearch search "bun commander zod"
 ```
@@ -303,9 +303,9 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 
 | Provider | Needs | Best for | Notes |
 | --- | --- | --- | --- |
-| GitHub | api token | repos, issues, pull requests, stars | High-value general developer automation. |
-| GitLab | api token | projects, issues, merge requests | Good for teams already on GitLab. |
-| Linear | api token | issue management and comments | Clean developer/project workflow integration. |
+| GitHub | cookies | repos, issues, pull requests, stars | Uses a saved GitHub web session for browserless developer automation. |
+| GitLab | cookies | projects, issues, merge requests | Uses a saved GitLab web session instead of personal access tokens. |
+| Linear | cookies | issue management and comments | Uses the saved Linear web session for GraphQL issue workflows. |
 | Notion | cookies | search, pages, databases, comments | Uses the saved Notion web session instead of an official integration token. |
 
 ### Bot
