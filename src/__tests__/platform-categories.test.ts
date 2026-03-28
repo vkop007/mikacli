@@ -121,10 +121,12 @@ describe("platform category routing", () => {
     const toolIds = getPlatformDefinitionsByCategory("tools").map((definition) => definition.id);
     expect(toolIds).toContain("translate");
     expect(toolIds).toContain("dns");
+    expect(toolIds).toContain("favicon");
     expect(toolIds).toContain("headers");
     expect(toolIds).toContain("whois");
     expect(toolIds).toContain("rss");
     expect(toolIds).toContain("metadata");
+    expect(toolIds).toContain("page-links");
     expect(toolIds).toContain("redirect");
     expect(toolIds).toContain("screenshot");
     expect(toolIds).toContain("sitemap");
