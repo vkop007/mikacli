@@ -9,11 +9,11 @@ The core idea is simple:
 - keep using category-based commands from the terminal
 - return clean `--json` output for scripts and agents
 
-For cookie-backed platforms, AutoCLI is designed to stay headless after setup. For token-backed platforms, AutoCLI stores the connection once and reuses it. For local editors and public utilities, there is no auth step at all.
+For cookie-backed and session-backed platforms, AutoCLI is designed to stay headless after setup. For token-backed platforms, AutoCLI stores the connection once and reuses it. For local editors and public utilities, there is no auth step at all.
 
 ## Why Use AutoCLI
 
-- One command surface for many provider types: cookies, API tokens, bot tokens, local tools, and no-auth public services.
+- One command surface for many provider types: cookies, saved user sessions, API tokens, bot tokens, local tools, and no-auth public services.
 - Category-first routing keeps the CLI scalable as providers grow: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli tools ...`.
 - Every provider is script-friendly and supports `--json`.
 - Sessions and tokens are stored locally, so follow-up commands are short and automation-friendly.
@@ -55,13 +55,13 @@ autocli tools translate "hello world" --to hi
 | `maps` | Geo, OpenStreetMap, OSRM | 3 | none | Geocoding, reverse lookup, routing, geometry helpers | `autocli maps <provider> ...` |
 | `movie` | AniList, IMDb, JustWatch, Kitsu, MyAnimeList, TVMaze | 6 | none or cookies | Public title lookup, anime tracking, streaming availability | `autocli movie <provider> ...` |
 | `music` | SoundCloud, Spotify, YouTube Music | 3 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
-| `social` | Bluesky, Facebook, Instagram, LinkedIn, Threads, TikTok, X, YouTube | 8 | none or cookies | Public profile/thread lookup plus cookie-backed posting and engagement where supported | `autocli social <provider> ...` |
+| `social` | Bluesky, Facebook, Instagram, LinkedIn, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 10 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | GitHub, GitLab, Linear, Notion | 4 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Headers, IP, Markdown Fetch, Metadata, News, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 20 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `72` providers across `11` active command groups.
+AutoCLI currently exposes `74` providers across `11` active command groups.
 
 ## Access Modes
 
@@ -70,6 +70,7 @@ AutoCLI currently exposes `72` providers across `11` active command groups.
 | `none` | Public or local functionality. No cookies, no token, no API key. |
 | `local tools` | Uses binaries already installed on the machine, like `ffmpeg`, `ffprobe`, `qpdf`, or `yt-dlp`. |
 | `cookies` | Import a browser session once with `login --cookies ...`, then reuse it headlessly. |
+| `session` | Do one interactive login once, save the resulting user session locally, then reuse it headlessly. |
 | `cookies + local token` | Cookie session plus a token the site keeps in localStorage or a similar client store. |
 | `api token` | A personal or service token saved once with `login --token ...`. |
 | `bot token` | A bot token saved once with `login --token ...`. |
@@ -126,6 +127,7 @@ Typical first-run flows:
 autocli social x login --cookies ./x.cookies.json
 autocli llm chatgpt text "Summarize this changelog"
 autocli developer github login --cookies ./github.cookies.json
+autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
 autocli bot telegrambot login --token 123456:ABCDEF --name alerts-bot
 autocli tools websearch search "bun commander zod"
 ```
@@ -159,6 +161,15 @@ autocli developer gitlab projects "autocli" --limit 10
 autocli developer linear issues --team ENG --limit 20
 autocli bot telegrambot send 123456789 "Build finished"
 autocli bot discordbot send 123456789012345678 "nightly deploy complete"
+```
+
+### Session-backed messaging
+
+```bash
+autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
+autocli social telegram send me "Hello from AutoCLI"
+autocli social whatsapp login
+autocli social whatsapp send 919876543210 "Ping from AutoCLI"
 ```
 
 ### Public utilities
@@ -198,7 +209,7 @@ Cookie sessions are stored under:
 ~/.autocli/sessions/<platform>/<account>.json
 ```
 
-Token and bot connections are stored under:
+Token, bot, and saved session connections are stored under:
 
 ```text
 ~/.autocli/connections/<platform>/<account>.json
@@ -285,8 +296,10 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Facebook | cookies | session import and future social automation | Protected write flows are still conservative; browser later may help for harder surfaces. |
 | Instagram | cookies | posting, downloads, stories, follows | One of the strongest cookie-backed social adapters in the repo. |
 | LinkedIn | cookies | posting and engagement | Web write flow works, but LinkedIn can drift and may need adapter refreshes over time. |
+| Telegram | session | QR, phone, or session-string login for account messaging | Uses MTProto with a saved user session, not browser cookies. |
 | Threads | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
 | TikTok | cookies | session handling and future posting flows | Signing for private web writes is still a known hard part; browser later may help. |
+| WhatsApp | session | QR or pairing-code login for account messaging | Uses a saved WhatsApp multi-device auth state with cached chats/messages for terminal workflows. |
 | X | cookies | posting, likes, profile/tweet lookup | Strong cookie-backed adapter with reliable agent-friendly output. |
 | YouTube | cookies | search, likes, comments, downloads | Upload/community posting are still separate future work. |
 

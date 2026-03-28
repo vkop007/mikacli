@@ -14,7 +14,7 @@ import { isPlatform } from "../../platforms/config.js";
 import { CookieManager } from "../../utils/cookie-manager.js";
 
 import type { Platform, PlatformSession, SessionStatus, SessionUser } from "../../types.js";
-import type { ApiKeyConnectionAuth, BotTokenConnectionAuth, ConnectionRecord } from "./auth-types.js";
+import type { ApiKeyConnectionAuth, BotTokenConnectionAuth, ConnectionRecord, SessionConnectionAuth } from "./auth-types.js";
 
 const ConnectionRecordSchema = {
   parse(input: unknown): ConnectionRecord {
@@ -189,6 +189,46 @@ export class ConnectionStore {
     });
   }
 
+  async saveSessionConnection(input: {
+    platform: Platform;
+    account: string;
+    provider?: string;
+    user?: SessionUser;
+    status?: SessionStatus;
+    metadata?: Record<string, unknown>;
+  }): Promise<string> {
+    const now = new Date().toISOString();
+    let createdAt = now;
+
+    try {
+      const existing = await this.loadStoredConnection(input.platform, input.account);
+      createdAt = existing.connection.createdAt;
+    } catch (error) {
+      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+        throw error;
+      }
+    }
+
+    return this.saveConnection({
+      version: 1,
+      platform: input.platform,
+      account: sanitizeAccountName(input.account),
+      createdAt,
+      updatedAt: now,
+      auth: {
+        kind: "session",
+        provider: input.provider,
+      },
+      status: input.status ?? {
+        state: "unknown",
+        message: "Session saved.",
+        lastValidatedAt: now,
+      },
+      user: input.user,
+      metadata: input.metadata,
+    });
+  }
+
   async loadBotTokenConnection(
     platform: Platform,
     account?: string,
@@ -224,6 +264,32 @@ export class ConnectionStore {
       throw new AutoCliError(
         "INVALID_CONNECTION_AUTH",
         `The saved ${platform} connection does not use an API token auth strategy.`,
+        {
+          details: {
+            platform,
+            account: loaded.connection.account,
+            authKind: loaded.connection.auth.kind,
+            connectionPath: loaded.path,
+          },
+        },
+      );
+    }
+
+    return {
+      ...loaded,
+      auth: loaded.connection.auth,
+    };
+  }
+
+  async loadSessionConnection(
+    platform: Platform,
+    account?: string,
+  ): Promise<{ connection: ConnectionRecord; path: string; auth: SessionConnectionAuth }> {
+    const loaded = await this.loadConnection(platform, account);
+    if (loaded.connection.auth.kind !== "session") {
+      throw new AutoCliError(
+        "INVALID_CONNECTION_AUTH",
+        `The saved ${platform} connection does not use a session auth strategy.`,
         {
           details: {
             platform,

@@ -56,6 +56,7 @@ export const PLATFORM_NAMES = [
   "spotify",
   "stocks",
   "zai",
+  "telegram",
   "telegrambot",
   "threads",
   "tiktok",
@@ -67,6 +68,7 @@ export const PLATFORM_NAMES = [
   "video",
   "weather",
   "websearch",
+  "whatsapp",
   "whois",
   "x",
   "youtube",
@@ -483,6 +485,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "z.ai",
     authCookieNames: ["token"],
   },
+  telegram: {
+    displayName: "Telegram",
+    origin: "https://web.telegram.org",
+    homeUrl: "https://web.telegram.org/",
+    cookieDomain: "telegram.org",
+    authCookieNames: [],
+  },
   telegrambot: {
     displayName: "Telegram Bot",
     origin: "https://api.telegram.org",
@@ -558,6 +567,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://html.duckduckgo.com",
     homeUrl: "https://duckduckgo.com/",
     cookieDomain: "duckduckgo.com",
+    authCookieNames: [],
+  },
+  whatsapp: {
+    displayName: "WhatsApp",
+    origin: "https://web.whatsapp.com",
+    homeUrl: "https://web.whatsapp.com/",
+    cookieDomain: "whatsapp.com",
     authCookieNames: [],
   },
   whois: {

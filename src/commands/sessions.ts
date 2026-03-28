@@ -34,7 +34,7 @@ export function createSessionsCommand(): Command {
     .description("Inspect and manage saved cookie sessions and token connections")
     .option("--platform <platform>", "Filter by platform id")
     .option("--status <state>", "Filter by state: active, expired, unknown")
-    .option("--auth <kind>", "Filter by auth kind: cookies, apiKey, botToken, oauth2, none")
+    .option("--auth <kind>", "Filter by auth kind: cookies, apiKey, botToken, session, oauth2, none")
     .addHelpText(
       "after",
       `
@@ -54,7 +54,7 @@ Examples:
     .description("List saved sessions and token connections")
     .option("--platform <platform>", "Filter by platform id")
     .option("--status <state>", "Filter by state: active, expired, unknown")
-    .option("--auth <kind>", "Filter by auth kind: cookies, apiKey, botToken, oauth2, none")
+    .option("--auth <kind>", "Filter by auth kind: cookies, apiKey, botToken, session, oauth2, none")
     .action(async function sessionsListCommandAction(this: Command) {
       await handleSessionsList(this);
     });
@@ -212,10 +212,26 @@ function filterSessionEntries(
 }
 
 async function removeSessionArtifacts(platform: Platform, account: string): Promise<Array<{ kind: "session" | "connection"; path: string }>> {
+  const store = new ConnectionStore();
+  let authDir: string | undefined;
+  try {
+    const loaded = await store.loadConnection(platform, account);
+    const candidate = loaded.connection.metadata?.authDir;
+    if (typeof candidate === "string" && candidate.trim().length > 0) {
+      authDir = candidate;
+    }
+  } catch {
+    authDir = undefined;
+  }
+
   const targets = [
     { kind: "session" as const, path: getSessionPath(platform, account) },
     { kind: "connection" as const, path: getConnectionPath(platform, account) },
   ];
+
+  if (authDir) {
+    targets.push({ kind: "connection" as const, path: authDir });
+  }
 
   const removed: Array<{ kind: "session" | "connection"; path: string }> = [];
   for (const target of targets) {
@@ -223,7 +239,7 @@ async function removeSessionArtifacts(platform: Platform, account: string): Prom
       continue;
     }
 
-    await rm(target.path, { force: true });
+    await rm(target.path, { force: true, recursive: true });
     removed.push(target);
   }
 
@@ -264,13 +280,13 @@ function requireStatus(value: string): "active" | "expired" | "unknown" {
 }
 
 function requireAuthKind(value: string): ConnectionRecord["auth"]["kind"] {
-  if (value === "cookies" || value === "apiKey" || value === "botToken" || value === "oauth2" || value === "none") {
+  if (value === "cookies" || value === "apiKey" || value === "botToken" || value === "session" || value === "oauth2" || value === "none") {
     return value;
   }
 
   throw new AutoCliError(
     "INVALID_AUTH_FILTER",
-    `Unknown auth kind "${value}". Use cookies, apiKey, botToken, oauth2, or none.`,
+    `Unknown auth kind "${value}". Use cookies, apiKey, botToken, session, oauth2, or none.`,
     {
       details: {
         auth: value,
