@@ -4,6 +4,7 @@ import { slackbotPlatformDefinition } from "./bot/slackbot/manifest.js";
 import { telegrambotPlatformDefinition } from "./bot/telegrambot/manifest.js";
 import { githubPlatformDefinition } from "./developer/github/manifest.js";
 import { gitlabPlatformDefinition } from "./developer/gitlab/manifest.js";
+import { jiraPlatformDefinition } from "./developer/jira/manifest.js";
 import { linearPlatformDefinition } from "./developer/linear/manifest.js";
 import { archiveEditorPlatformDefinition } from "./editor/archive/manifest.js";
 import { audioEditorPlatformDefinition } from "./editor/audio/manifest.js";
@@ -69,6 +70,7 @@ import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
 import { telegramPlatformDefinition } from "./social/telegram/manifest.js";
 import { threadsPlatformDefinition } from "./social/threads/manifest.js";
 import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
+import { trelloPlatformDefinition } from "./developer/trello/manifest.js";
 import { whatsappPlatformDefinition } from "./social/whatsapp/manifest.js";
 import { xPlatformDefinition } from "./social/x/manifest.js";
 import { youtubePlatformDefinition } from "./social/youtube/manifest.js";
@@ -116,6 +118,7 @@ const definitions: readonly PlatformDefinition[] = [
   headersPlatformDefinition,
   ipPlatformDefinition,
   instagramPlatformDefinition,
+  jiraPlatformDefinition,
   markdownFetchPlatformDefinition,
   metadataPlatformDefinition,
   newsPlatformDefinition,
@@ -139,6 +142,7 @@ const definitions: readonly PlatformDefinition[] = [
   threadsPlatformDefinition,
   tiktokPlatformDefinition,
   timePlatformDefinition,
+  trelloPlatformDefinition,
   translatePlatformDefinition,
   tvMazePlatformDefinition,
   uptimePlatformDefinition,

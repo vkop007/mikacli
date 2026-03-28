@@ -87,8 +87,10 @@ describe("platform category routing", () => {
     expect(getPlatformDefinitionsByCategory("developer").map((definition) => definition.id)).toEqual([
       "github",
       "gitlab",
+      "jira",
       "linear",
       "notion",
+      "trello",
     ]);
   });
 

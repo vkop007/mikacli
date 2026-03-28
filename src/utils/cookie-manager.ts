@@ -321,7 +321,7 @@ export class CookieManager {
     }
 
     const cookies = await jar.getCookies(platformOrigin(platform));
-    if (cookies.length === 0) {
+    if (cookies.length === 0 && !jarContainsPlatformDomainCookies(jar, platform)) {
       throw new AutoCliError("INVALID_COOKIE_FILE", "No usable cookies were found in the cookies.txt file.");
     }
 
@@ -433,6 +433,18 @@ function platformOrigin(platform: Platform): string {
 
 function defaultCookieDomain(platform: Platform): string {
   return getPlatformCookieDomain(platform);
+}
+
+function jarContainsPlatformDomainCookies(jar: CookieJar, platform: Platform): boolean {
+  const serialized = jar.toJSON();
+  if (!serialized || !Array.isArray(serialized.cookies)) {
+    return false;
+  }
+  const platformDomain = defaultCookieDomain(platform);
+  return serialized.cookies.some((cookie) => {
+    const domain = typeof cookie.domain === "string" ? normalizeCookieDomain(cookie.domain) : "";
+    return domain === platformDomain || domain.endsWith(`.${platformDomain}`) || domain.endsWith(platformDomain);
+  });
 }
 
 function looksLikeNetscapeCookies(content: string): boolean {

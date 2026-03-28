@@ -31,6 +31,7 @@ export const PLATFORM_NAMES = [
   "ip",
   "imdb",
   "instagram",
+  "jira",
   "justwatch",
   "kitsu",
   "markdown-fetch",
@@ -64,6 +65,7 @@ export const PLATFORM_NAMES = [
   "translate",
   "uptime",
   "subtitle",
+  "trello",
   "tvmaze",
   "video",
   "weather",
@@ -310,6 +312,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "instagram.com",
     authCookieNames: ["sessionid", "csrftoken", "ds_user_id"],
   },
+  jira: {
+    displayName: "Jira",
+    origin: "https://www.atlassian.com/software/jira",
+    homeUrl: "https://www.atlassian.com/software/jira",
+    cookieDomain: "atlassian.net",
+    authCookieNames: ["cloud.session.token", "tenant.session.token", "atlassian.xsrf.token"],
+  },
   justwatch: {
     displayName: "JustWatch",
     origin: "https://www.justwatch.com",
@@ -540,6 +549,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://ffmpeg.org/",
     cookieDomain: "ffmpeg.org",
     authCookieNames: [],
+  },
+  trello: {
+    displayName: "Trello",
+    origin: "https://trello.com",
+    homeUrl: "https://trello.com/",
+    cookieDomain: "trello.com",
+    authCookieNames: ["token", "dsc"],
   },
   tvmaze: {
     displayName: "TVMaze",
