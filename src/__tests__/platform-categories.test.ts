@@ -104,7 +104,7 @@ describe("platform category routing", () => {
 
   test("keeps youtube under social and out of music", () => {
     const socialIds = getPlatformDefinitionsByCategory("social").map((definition) => definition.id);
-    expect(socialIds).toEqual(["bluesky", "facebook", "instagram", "linkedin", "threads", "tiktok", "x", "youtube"]);
+    expect(socialIds).toEqual(["bluesky", "facebook", "instagram", "linkedin", "telegram", "threads", "tiktok", "whatsapp", "x", "youtube"]);
     expect(socialIds.some((definition) => definition === "youtube")).toBe(true);
     expect(getPlatformDefinitionsByCategory("music").some((definition) => definition.id === "youtube")).toBe(false);
   });

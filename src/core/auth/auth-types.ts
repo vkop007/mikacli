@@ -1,6 +1,6 @@
 import type { Platform, SessionSource, SessionStatus, SessionUser } from "../../types.js";
 
-export const AUTH_STRATEGY_KINDS = ["cookies", "oauth2", "apiKey", "botToken", "none"] as const;
+export const AUTH_STRATEGY_KINDS = ["cookies", "oauth2", "apiKey", "botToken", "session", "none"] as const;
 
 export type AuthStrategyKind = (typeof AUTH_STRATEGY_KINDS)[number];
 
@@ -27,6 +27,11 @@ export interface BotTokenConnectionAuth {
   token: string;
 }
 
+export interface SessionConnectionAuth {
+  kind: "session";
+  provider?: string;
+}
+
 export interface NoAuthConnectionAuth {
   kind: "none";
 }
@@ -36,6 +41,7 @@ export type ConnectionAuth =
   | OAuth2ConnectionAuth
   | ApiKeyConnectionAuth
   | BotTokenConnectionAuth
+  | SessionConnectionAuth
   | NoAuthConnectionAuth;
 
 export interface ConnectionRecord {

@@ -95,12 +95,13 @@ Rules:
 - Use the shared connection layer in `src/core/auth/connection-store.ts`.
 - Pick the correct auth strategy in `manifest.ts`:
   - `cookies` for imported browser sessions
+  - `session` for saved user sessions like Telegram MTProto or WhatsApp QR state
   - `botToken` for Telegram/Discord/Slack style bot adapters
   - `oauth2`, `apiKey`, or `none` for future API-first platforms
 
 Current examples:
 
-- All current platforms are capability-based.
+- Most providers are capability-based; use `buildCommand` directly when the login flow needs QR rendering, interactive prompts, or other custom session UX.
 - Local editor platforms: `src/platforms/editor/archive/`, `src/platforms/editor/audio/`, `src/platforms/editor/document/`, `src/platforms/editor/gif/`, `src/platforms/editor/image/`, `src/platforms/editor/pdf/`, `src/platforms/editor/subtitle/`, `src/platforms/editor/video/`
 - Developer platforms: `src/platforms/developer/github/`, `src/platforms/developer/gitlab/`, `src/platforms/developer/linear/`, `src/platforms/developer/notion/`
 - Bot platforms: `src/platforms/bot/discordbot/`, `src/platforms/bot/githubbot/`, `src/platforms/bot/slackbot/`, `src/platforms/bot/telegrambot/`
@@ -114,7 +115,7 @@ Current examples:
 - Music platforms: `src/platforms/music/soundcloud/`, `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
 - Shopping platforms: `src/platforms/shopping/amazon/`, `src/platforms/shopping/ebay/`, `src/platforms/shopping/etsy/`, `src/platforms/shopping/flipkart/`
 - Tool platforms: `src/platforms/tools/cheat/`, `src/platforms/tools/dns/`, `src/platforms/tools/headers/`, `src/platforms/tools/ip/`, `src/platforms/tools/markdown-fetch/`, `src/platforms/tools/metadata/`, `src/platforms/tools/news/`, `src/platforms/tools/qr/`, `src/platforms/tools/redirect/`, `src/platforms/tools/robots/`, `src/platforms/tools/rss/`, `src/platforms/tools/screenshot/`, `src/platforms/tools/sitemap/`, `src/platforms/tools/ssl/`, `src/platforms/tools/time/`, `src/platforms/tools/translate/`, `src/platforms/tools/uptime/`, `src/platforms/tools/weather/`, `src/platforms/tools/websearch/`, `src/platforms/tools/whois/`
-- Social platforms: `src/platforms/social/bluesky/`, `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/threads/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
+- Social platforms: `src/platforms/social/bluesky/`, `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/telegram/`, `src/platforms/social/threads/`, `src/platforms/social/tiktok/`, `src/platforms/social/whatsapp/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
 - Spotify specifically now uses an internal engine split:
   - `web` for standard Web API endpoints
   - `connect` for connect-state playback/device/queue control

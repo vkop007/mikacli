@@ -66,8 +66,10 @@ import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
 import { newsPlatformDefinition } from "./tools/news/manifest.js";
 import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
+import { telegramPlatformDefinition } from "./social/telegram/manifest.js";
 import { threadsPlatformDefinition } from "./social/threads/manifest.js";
 import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
+import { whatsappPlatformDefinition } from "./social/whatsapp/manifest.js";
 import { xPlatformDefinition } from "./social/x/manifest.js";
 import { youtubePlatformDefinition } from "./social/youtube/manifest.js";
 
@@ -132,6 +134,7 @@ const definitions: readonly PlatformDefinition[] = [
   soundCloudPlatformDefinition,
   spotifyPlatformDefinition,
   stocksPlatformDefinition,
+  telegramPlatformDefinition,
   telegrambotPlatformDefinition,
   threadsPlatformDefinition,
   tiktokPlatformDefinition,
@@ -143,6 +146,7 @@ const definitions: readonly PlatformDefinition[] = [
   videoEditorPlatformDefinition,
   weatherPlatformDefinition,
   webSearchPlatformDefinition,
+  whatsappPlatformDefinition,
   whoisPlatformDefinition,
   xPlatformDefinition,
   youtubePlatformDefinition,
