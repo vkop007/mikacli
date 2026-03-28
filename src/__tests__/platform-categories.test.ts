@@ -74,7 +74,12 @@ describe("platform category routing", () => {
 
   test("includes the shopping category and providers", () => {
     expect(getPlatformCategories()).toContain("shopping");
-    expect(getPlatformDefinitionsByCategory("shopping").map((definition) => definition.id)).toEqual(["amazon", "flipkart"]);
+    expect(getPlatformDefinitionsByCategory("shopping").map((definition) => definition.id)).toEqual([
+      "amazon",
+      "ebay",
+      "etsy",
+      "flipkart",
+    ]);
   });
 
   test("includes the developer category and providers", () => {

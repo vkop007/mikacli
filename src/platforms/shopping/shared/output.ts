@@ -72,8 +72,11 @@ export function printShoppingSearchResult(result: AdapterActionResult, json: boo
       typeof item.rating === "number" ? `${item.rating}/5` : undefined,
       typeof item.ratingCount === "number" ? `${item.ratingCount} ratings` : undefined,
       asString(item.availability),
+      asString(item.seller),
+      asString(item.soldText),
       item.sponsored ? "sponsored" : undefined,
     ].filter((value): value is string => typeof value === "string" && value.length > 0);
+    const description = asString(item.description) ?? asString(item.snippet);
 
     console.log(`${index + 1}. ${title}`);
     if (meta.length > 0) {
@@ -81,6 +84,9 @@ export function printShoppingSearchResult(result: AdapterActionResult, json: boo
     }
     if (url) {
       console.log(`   ${url}`);
+    }
+    if (description) {
+      console.log(`   ${description}`);
     }
   }
 }
@@ -113,6 +119,61 @@ export function printShoppingProductResult(result: AdapterActionResult, json: bo
   for (const feature of features.slice(0, 6)) {
     if (typeof feature === "string" && feature.length > 0) {
       console.log(`- ${feature}`);
+    }
+  }
+}
+
+export function printShoppingStoreResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+  const user = result.user ?? {};
+  const data = result.data ?? {};
+  const name = asString(user.displayName) ?? asString(user.username) ?? asString(data.title);
+
+  if (name) {
+    console.log(`name: ${name}`);
+  }
+  if (typeof user.id === "string" && user.id.length > 0) {
+    console.log(`id: ${user.id}`);
+  }
+  if (typeof data.location === "string" && data.location.length > 0) {
+    console.log(`location: ${data.location}`);
+  }
+  if (typeof data.memberSince === "string" && data.memberSince.length > 0) {
+    console.log(`member since: ${data.memberSince}`);
+  }
+  if (typeof data.positiveFeedbackText === "string" && data.positiveFeedbackText.length > 0) {
+    console.log(`feedback: ${data.positiveFeedbackText}`);
+  }
+  if (typeof data.itemsSoldText === "string" && data.itemsSoldText.length > 0) {
+    console.log(`items sold: ${data.itemsSoldText}`);
+  }
+  if (typeof data.followersText === "string" && data.followersText.length > 0) {
+    console.log(`followers: ${data.followersText}`);
+  }
+  if (typeof data.reviewCountText === "string" && data.reviewCountText.length > 0) {
+    console.log(`reviews: ${data.reviewCountText}`);
+  }
+  if (typeof data.description === "string" && data.description.length > 0) {
+    console.log(data.description);
+  }
+}
+
+export function printShoppingSuggestionsResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+  const suggestions = Array.isArray(result.data?.suggestions) ? result.data.suggestions : [];
+  for (const [index, suggestion] of suggestions.entries()) {
+    if (typeof suggestion === "string" && suggestion.trim().length > 0) {
+      console.log(`${index + 1}. ${suggestion.trim()}`);
     }
   }
 }

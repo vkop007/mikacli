@@ -18,6 +18,8 @@ import { pdfPlatformDefinition } from "./editor/pdf/manifest.js";
 import { subtitleEditorPlatformDefinition } from "./editor/subtitle/manifest.js";
 import { videoEditorPlatformDefinition } from "./editor/video/manifest.js";
 import { amazonPlatformDefinition } from "./shopping/amazon/manifest.js";
+import { ebayPlatformDefinition } from "./shopping/ebay/manifest.js";
+import { etsyPlatformDefinition } from "./shopping/etsy/manifest.js";
 import { flipkartPlatformDefinition } from "./shopping/flipkart/manifest.js";
 import { chatgptPlatformDefinition } from "./llm/chatgpt/manifest.js";
 import { claudePlatformDefinition } from "./llm/claude/manifest.js";
@@ -83,9 +85,11 @@ const definitions: readonly PlatformDefinition[] = [
   archiveEditorPlatformDefinition,
   audioEditorPlatformDefinition,
   documentEditorPlatformDefinition,
+  ebayPlatformDefinition,
   geoPlatformDefinition,
   gifEditorPlatformDefinition,
   imageEditorPlatformDefinition,
+  etsyPlatformDefinition,
   facebookPlatformDefinition,
   flipkartPlatformDefinition,
   geminiPlatformDefinition,

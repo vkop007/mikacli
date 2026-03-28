@@ -56,12 +56,12 @@ autocli tools translate "hello world" --to hi
 | `movie` | AniList, IMDb, JustWatch, Kitsu, MyAnimeList, TVMaze | 6 | none or cookies | Public title lookup, anime tracking, streaming availability | `autocli movie <provider> ...` |
 | `music` | SoundCloud, Spotify, YouTube Music | 3 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
 | `social` | Facebook, Instagram, LinkedIn, TikTok, X, YouTube | 6 | cookies | Posting, engagement, downloads, public profile and media lookup | `autocli social <provider> ...` |
-| `shopping` | Amazon, Flipkart | 2 | cookies | Search, products, account/cart/order surfaces | `autocli shopping <provider> ...` |
+| `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | GitHub, GitLab, Linear, Notion | 4 | API token | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Headers, IP, Markdown Fetch, Metadata, News, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 20 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `68` providers across `11` active command groups.
+AutoCLI currently exposes `70` providers across `11` active command groups.
 
 ## Access Modes
 
@@ -293,6 +293,8 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Provider | Needs | Best for | Notes |
 | --- | --- | --- | --- |
 | Amazon | cookies | account, cart, search, product lookup | Some order-history surfaces are more protected and may need browser later. |
+| eBay | none | public listings, item lookup, seller discovery | Uses public readable page extraction plus the public autocomplete endpoint. |
+| Etsy | none | public listing and shop discovery | Direct Etsy fetches are anti-bot protected, so this adapter uses public site-search discovery today. |
 | Flipkart | cookies | account, wishlist, cart, orders | Stronger browserless account coverage today than Amazon. |
 
 ### Developer
