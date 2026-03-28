@@ -57,11 +57,11 @@ autocli tools translate "hello world" --to hi
 | `music` | SoundCloud, Spotify, YouTube Music | 3 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
 | `social` | Bluesky, Facebook, Instagram, LinkedIn, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 10 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
-| `developer` | GitHub, GitLab, Linear, Notion | 4 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
+| `developer` | GitHub, GitLab, Jira, Linear, Notion, Trello | 6 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Headers, IP, Markdown Fetch, Metadata, News, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 20 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `74` providers across `11` active command groups.
+AutoCLI currently exposes `76` providers across `11` active command groups.
 
 ## Access Modes
 
@@ -158,7 +158,9 @@ autocli llm grok video "Minimal orange fox logo with subtle camera motion"
 ```bash
 autocli developer github me
 autocli developer gitlab projects "autocli" --limit 10
+autocli developer jira projects
 autocli developer linear issues --team ENG --limit 20
+autocli developer trello boards
 autocli bot telegrambot send 123456789 "Build finished"
 autocli bot discordbot send 123456789012345678 "nightly deploy complete"
 ```
@@ -318,8 +320,10 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | --- | --- | --- | --- |
 | GitHub | cookies | repos, issues, pull requests, stars | Uses a saved GitHub web session for browserless developer automation. |
 | GitLab | cookies | projects, issues, merge requests | Uses a saved GitLab web session instead of personal access tokens. |
+| Jira | cookies | projects, issues, JQL search, issue creation | Saves a site-scoped Jira web session and reuses it for browserless workspace automation. |
 | Linear | cookies | issue management and comments | Uses the saved Linear web session for GraphQL issue workflows. |
 | Notion | cookies | search, pages, databases, comments | Uses the saved Notion web session instead of an official integration token. |
+| Trello | cookies | boards, lists, cards, card creation | Uses a saved Trello web session for browserless board and card workflows. |
 
 ### Bot
 
