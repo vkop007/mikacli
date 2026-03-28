@@ -7,7 +7,7 @@ export function createNotionMeCapability(adapter: NotionAdapter) {
     id: "me",
     command: "me",
     aliases: ["whoami"],
-    description: "Load the authenticated Notion integration identity",
+    description: "Load the authenticated Notion web identity",
     spinnerText: "Loading Notion identity...",
     successMessage: "Notion identity loaded.",
     action: () => adapter.me(),
@@ -16,4 +16,3 @@ export function createNotionMeCapability(adapter: NotionAdapter) {
 }
 
 export const notionMeCapability = createNotionMeCapability(notionAdapter);
-

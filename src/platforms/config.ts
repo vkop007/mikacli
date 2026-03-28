@@ -373,10 +373,10 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
   },
   notion: {
     displayName: "Notion",
-    origin: "https://api.notion.com",
+    origin: "https://www.notion.so",
     homeUrl: "https://www.notion.so/",
     cookieDomain: "notion.so",
-    authCookieNames: [],
+    authCookieNames: ["token_v2", "notion_user_id"],
   },
   perplexity: {
     displayName: "Perplexity",

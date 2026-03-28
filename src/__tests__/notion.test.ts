@@ -1,6 +1,16 @@
 import { describe, expect, it } from "bun:test";
 
-import { extractDataSourceTitle, extractPageTitle, findTitlePropertyName, normalizeNotionId, plainTextFromRichText } from "../platforms/developer/notion/helpers.js";
+import {
+  extractDataSourceTitle,
+  extractNotionViewId,
+  extractPageTitle,
+  findCollectionTitlePropertyId,
+  findTitlePropertyName,
+  normalizeNotionId,
+  plainTextFromRichText,
+  plainTextFromSemanticString,
+  semanticStringFromPlainText,
+} from "../platforms/developer/notion/helpers.js";
 
 describe("notion helpers", () => {
   it("normalizes notion ids from compact uuids", () => {
@@ -49,5 +59,39 @@ describe("notion helpers", () => {
 
   it("joins rich text into plain text", () => {
     expect(plainTextFromRichText([{ plain_text: "Hello" }, { plain_text: " world" }])).toBe("Hello world");
+  });
+
+  it("handles semantic strings and collection title properties", () => {
+    expect(plainTextFromSemanticString([["Hello"], [" world"]])).toBe("Hello world");
+    expect(semanticStringFromPlainText("Launch")).toEqual([["Launch"]]);
+    expect(
+      findCollectionTitlePropertyId({
+        abc1: { name: "Status", type: "select" },
+        title: { name: "Name", type: "title" },
+      }),
+    ).toBe("title");
+  });
+
+  it("extracts page title from collection-style properties and view ids from urls", () => {
+    expect(
+      extractPageTitle(
+        {
+          properties: {
+            title: [["Database row"]],
+          },
+        },
+        { titlePropertyId: "title" },
+      ),
+    ).toBe("Database row");
+
+    expect(extractNotionViewId("https://www.notion.so/workspace/My-DB-0123456789abcdef0123456789abcdef?v=fedcba9876543210fedcba9876543210")).toBe(
+      "fedcba98-7654-3210-fedc-ba9876543210",
+    );
+
+    expect(
+      extractDataSourceTitle({
+        name: [["Projects"]],
+      }),
+    ).toBe("Projects");
   });
 });
