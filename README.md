@@ -53,15 +53,15 @@ autocli tools translate "hello world" --to hi
 | `editor` | Archive, Audio, Document, GIF, Image, PDF, Subtitle, Video | 8 | local tools | Media and file transformations from the terminal | `autocli editor <provider> ...` |
 | `finance` | Crypto, Currency/Forex, Stocks | 3 | none | Market, forex, and crypto lookups | `autocli finance <provider> ...` |
 | `maps` | Geo, OpenStreetMap, OSRM | 3 | none | Geocoding, reverse lookup, routing, geometry helpers | `autocli maps <provider> ...` |
-| `movie` | AniList, IMDb, JustWatch, Kitsu, MyAnimeList, TVMaze | 6 | none or cookies | Public title lookup, anime tracking, streaming availability | `autocli movie <provider> ...` |
-| `music` | SoundCloud, Spotify, YouTube Music | 3 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
-| `social` | Bluesky, Facebook, Instagram, LinkedIn, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 10 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
+| `movie` | AniList, IMDb, JustWatch, Kitsu, MyAnimeList, TMDb, TVMaze | 7 | none or cookies | Public title lookup, anime tracking, streaming availability | `autocli movie <provider> ...` |
+| `music` | Bandcamp, SoundCloud, Spotify, YouTube Music | 4 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
+| `social` | Bluesky, Facebook, Instagram, LinkedIn, Pinterest, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 11 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | GitHub, GitLab, Jira, Linear, Notion, Trello | 6 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, News, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 22 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `78` providers across `11` active command groups.
+AutoCLI currently exposes `81` providers across `11` active command groups.
 
 ## Access Modes
 
@@ -189,6 +189,8 @@ autocli tools rss https://hnrss.org/frontpage --limit 5
 ### Music discovery and download
 
 ```bash
+autocli music bandcamp search "radiohead"
+autocli music bandcamp album https://radiohead.bandcamp.com/album/in-rainbows
 autocli music soundcloud search "dandelions"
 autocli music soundcloud user aviciiofficial
 autocli music soundcloud playlist https://soundcloud.com/lofi-hip-hop-music/sets/lofi-lofi
@@ -282,12 +284,14 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | JustWatch | none | where-to-watch checks | Streaming availability lookup. |
 | Kitsu | none | anime and manga discovery | Alternative anime metadata source. |
 | MyAnimeList | none or cookies | public search plus your own saved list | Public lookups work without cookies; personal defaults can use cookies. |
+| TMDb | none | broad movie and TV title lookup | Uses TMDb's live public web catalog for search, title detail, popular titles, and recommendations. |
 | TVMaze | none | TV and episode-oriented title lookup | Strong TV-first public catalog with episode lists. |
 
 ### Music
 
 | Provider | Needs | Best for | Notes |
 | --- | --- | --- | --- |
+| Bandcamp | none | public artist, album, and track lookup | Uses Bandcamp search plus readable album, track, and artist pages. |
 | SoundCloud | none | public track, playlist, and user discovery | Uses SoundCloud's public web client flow and can download tracks when a public stream is exposed. |
 | Spotify | cookies | library, playback, queue, playlists | Strongest playback-control surface in the repo today. |
 | YouTube Music | cookies | search and local playback control | Read commands can fall back to public browsing in some flows. |
@@ -300,6 +304,7 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Facebook | cookies | session import and future social automation | Protected write flows are still conservative; browser later may help for harder surfaces. |
 | Instagram | cookies | posting, downloads, stories, follows | One of the strongest cookie-backed social adapters in the repo. |
 | LinkedIn | cookies | posting and engagement | Web write flow works, but LinkedIn can drift and may need adapter refreshes over time. |
+| Pinterest | none | public pin, profile, and board discovery | Good public-read discovery surface without cookies. |
 | Telegram | session | QR, phone, or session-string login for account messaging | Uses MTProto with a saved user session, not browser cookies. |
 | Threads | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
 | TikTok | cookies | session handling and future posting flows | Signing for private web writes is still a known hard part; browser later may help. |

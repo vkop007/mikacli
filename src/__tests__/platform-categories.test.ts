@@ -22,6 +22,7 @@ describe("platform category routing", () => {
   test("includes the new music category", () => {
     expect(getPlatformCategories()).toContain("music");
     expect(getPlatformDefinitionsByCategory("music").map((definition) => definition.id)).toEqual([
+      "bandcamp",
       "soundcloud",
       "spotify",
       "youtube-music",
@@ -68,6 +69,7 @@ describe("platform category routing", () => {
       "justwatch",
       "kitsu",
       "myanimelist",
+      "tmdb",
       "tvmaze",
     ]);
   });
@@ -106,7 +108,7 @@ describe("platform category routing", () => {
 
   test("keeps youtube under social and out of music", () => {
     const socialIds = getPlatformDefinitionsByCategory("social").map((definition) => definition.id);
-    expect(socialIds).toEqual(["bluesky", "facebook", "instagram", "linkedin", "telegram", "threads", "tiktok", "whatsapp", "x", "youtube"]);
+    expect(socialIds).toEqual(["bluesky", "facebook", "instagram", "linkedin", "pinterest", "telegram", "threads", "tiktok", "whatsapp", "x", "youtube"]);
     expect(socialIds.some((definition) => definition === "youtube")).toBe(true);
     expect(getPlatformDefinitionsByCategory("music").some((definition) => definition.id === "youtube")).toBe(false);
   });
@@ -114,7 +116,7 @@ describe("platform category routing", () => {
   test("builds category commands with nested provider commands", () => {
     const command = buildCategoryCommand("music", getPlatformDefinitionsByCategory("music"));
     expect(command.name()).toBe("music");
-    expect(command.commands.map((nested) => nested.name())).toEqual(["soundcloud", "spotify", "youtube-music"]);
+    expect(command.commands.map((nested) => nested.name())).toEqual(["bandcamp", "soundcloud", "spotify", "youtube-music"]);
   });
 
   test("includes the tools category and utility providers", () => {
