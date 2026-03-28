@@ -76,16 +76,24 @@ describe("platform category routing", () => {
     expect(getPlatformDefinitionsByCategory("shopping").map((definition) => definition.id)).toEqual(["amazon", "flipkart"]);
   });
 
-  test("exposes bot providers under api too", () => {
-    const apiIds = getPlatformDefinitionsByCategory("api").map((definition) => definition.id);
-    expect(apiIds).toContain("telegrambot");
-    expect(apiIds).toContain("discordbot");
-    expect(apiIds).toContain("slackbot");
-    expect(apiIds).toContain("githubbot");
+  test("includes the developer category and providers", () => {
+    expect(getPlatformCategories()).toContain("developer");
+    expect(getPlatformDefinitionsByCategory("developer").map((definition) => definition.id)).toEqual([
+      "github",
+      "gitlab",
+      "linear",
+      "notion",
+    ]);
   });
 
-  test("does not expose bot providers in a separate bots category", () => {
-    expect(getPlatformDefinitionsByCategory("bots")).toEqual([]);
+  test("includes the bot category and providers", () => {
+    expect(getPlatformCategories()).toContain("bot");
+    expect(getPlatformDefinitionsByCategory("bot").map((definition) => definition.id)).toEqual([
+      "discordbot",
+      "githubbot",
+      "slackbot",
+      "telegrambot",
+    ]);
   });
 
   test("keeps youtube under social and out of music", () => {
@@ -99,16 +107,16 @@ describe("platform category routing", () => {
     expect(command.commands.map((nested) => nested.name())).toEqual(["spotify", "youtube-music"]);
   });
 
-  test("includes the new no-key public utility providers", () => {
-    const publicIds = getPlatformDefinitionsByCategory("public").map((definition) => definition.id);
-    expect(publicIds).toContain("translate");
-    expect(publicIds).toContain("dns");
-    expect(publicIds).toContain("whois");
-    expect(publicIds).toContain("rss");
-    expect(publicIds).toContain("screenshot");
-    expect(publicIds).toContain("sitemap");
-    expect(publicIds).toContain("robots");
-    expect(publicIds).toContain("markdown-fetch");
-    expect(publicIds).toContain("uptime");
+  test("includes the tools category and utility providers", () => {
+    const toolIds = getPlatformDefinitionsByCategory("tools").map((definition) => definition.id);
+    expect(toolIds).toContain("translate");
+    expect(toolIds).toContain("dns");
+    expect(toolIds).toContain("whois");
+    expect(toolIds).toContain("rss");
+    expect(toolIds).toContain("screenshot");
+    expect(toolIds).toContain("sitemap");
+    expect(toolIds).toContain("robots");
+    expect(toolIds).toContain("markdown-fetch");
+    expect(toolIds).toContain("uptime");
   });
 });

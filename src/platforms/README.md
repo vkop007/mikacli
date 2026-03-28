@@ -43,16 +43,16 @@ src/platforms/
       adapter.ts
       manifest.ts
     shared/
-  api/
+  developer/
     <name>/
       adapter.ts
       manifest.ts
       capabilities/
-    bots/
-      <name>/
-        adapter.ts
-        manifest.ts
-        capabilities/
+  bot/
+    <name>/
+      adapter.ts
+      manifest.ts
+      capabilities/
   llm/
     <name>/
       adapter.ts
@@ -67,11 +67,12 @@ src/platforms/
       adapter.ts
       manifest.ts
       capabilities/
-  public/
+  tools/
     <name>/
       adapter.ts
       manifest.ts
       capabilities/
+    shared/
   social/
     <name>/
       adapter.ts
@@ -101,8 +102,8 @@ Current examples:
 
 - All current platforms are capability-based.
 - Local editor platforms: `src/platforms/editor/archive/`, `src/platforms/editor/audio/`, `src/platforms/editor/document/`, `src/platforms/editor/gif/`, `src/platforms/editor/image/`, `src/platforms/editor/pdf/`, `src/platforms/editor/subtitle/`, `src/platforms/editor/video/`
-- API-token platforms: `src/platforms/api/github/`, `src/platforms/api/gitlab/`, `src/platforms/api/linear/`, `src/platforms/api/notion/`
-- Bot-token API platforms: `src/platforms/api/bots/discordbot/`, `src/platforms/api/bots/githubbot/`, `src/platforms/api/bots/slackbot/`, `src/platforms/api/bots/telegrambot/`
+- Developer platforms: `src/platforms/developer/github/`, `src/platforms/developer/gitlab/`, `src/platforms/developer/linear/`, `src/platforms/developer/notion/`
+- Bot platforms: `src/platforms/bot/discordbot/`, `src/platforms/bot/githubbot/`, `src/platforms/bot/slackbot/`, `src/platforms/bot/telegrambot/`
 - Active browserless LLM platforms: `src/platforms/llm/chatgpt/`, `src/platforms/llm/claude/`, `src/platforms/llm/deepseek/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`, `src/platforms/llm/mistral/`, `src/platforms/llm/perplexity/`, `src/platforms/llm/qwen/`, `src/platforms/llm/zai/`
 - Finance platforms: `src/platforms/finance/crypto/`, `src/platforms/finance/currency/`, `src/platforms/finance/stocks/`
 - Maps platforms: `src/platforms/maps/geo/`, `src/platforms/maps/openstreetmap/`, `src/platforms/maps/osrm/`
@@ -112,7 +113,7 @@ Current examples:
 - Grok now uses the official `grok.com` web flow and returns a Grok-specific anti-bot error when xAI blocks browserless prompt writes.
 - Music platforms: `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
 - Shopping platforms: `src/platforms/shopping/amazon/`, `src/platforms/shopping/flipkart/`
-- Public utility platforms: `src/platforms/public/cheat/`, `src/platforms/public/ip/`, `src/platforms/public/news/`, `src/platforms/public/qr/`, `src/platforms/public/screenshot/`, `src/platforms/public/time/`, `src/platforms/public/uptime/`, `src/platforms/public/weather/`, `src/platforms/public/websearch/`
+- Tool platforms: `src/platforms/tools/cheat/`, `src/platforms/tools/ip/`, `src/platforms/tools/news/`, `src/platforms/tools/qr/`, `src/platforms/tools/screenshot/`, `src/platforms/tools/time/`, `src/platforms/tools/uptime/`, `src/platforms/tools/weather/`, `src/platforms/tools/websearch/`
 - Cookie-backed social platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
 - Spotify specifically now uses an internal engine split:
   - `web` for standard Web API endpoints

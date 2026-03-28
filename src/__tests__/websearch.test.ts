@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 
-import { extractSearchPageSummary, parseSearchResults } from "../platforms/public/websearch/client.js";
-import { absoluteSearchResultUrl, normalizeWebSearchEngine } from "../platforms/public/websearch/helpers.js";
+import { extractSearchPageSummary, parseSearchResults } from "../platforms/tools/websearch/client.js";
+import { absoluteSearchResultUrl, normalizeWebSearchEngine } from "../platforms/tools/websearch/helpers.js";
 
 describe("websearch helpers", () => {
   it("normalizes engines and defaults to duckduckgo", () => {

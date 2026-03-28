@@ -9,11 +9,11 @@ interface PlatformCategoryDefinition {
 }
 
 const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDefinition> = {
-  api: {
-    description: "API-token providers and developer integrations",
-  },
-  bots: {
+  bot: {
     description: "Bot-token providers like Telegram, Discord, and Slack",
+  },
+  developer: {
+    description: "Developer platforms like GitHub, GitLab, Linear, and Notion",
   },
   editor: {
     description: "Local media editors powered by tools like ffmpeg",
@@ -36,14 +36,14 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   music: {
     description: "Music platforms like Spotify and YouTube Music",
   },
-  public: {
-    description: "No-auth public utilities and lookup tools",
-  },
   shopping: {
     description: "Shopping platforms like Amazon and Flipkart",
   },
   social: {
     description: "Social platforms like Instagram, X, Facebook, and YouTube",
+  },
+  tools: {
+    description: "General-purpose tools and public utilities",
   },
 };
 

@@ -16,8 +16,9 @@ describe("root program routing", () => {
       "music",
       "social",
       "shopping",
-      "api",
-      "public",
+      "developer",
+      "bot",
+      "tools",
     ]);
   });
 
@@ -49,6 +50,8 @@ describe("root program routing", () => {
     expect(() => assertCategoryOnlyInvocation(["editor", "image", "info", "./photo.png"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["finance", "stocks", "AAPL"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["maps", "openstreetmap", "search", "Mumbai"])).not.toThrow();
-    expect(() => assertCategoryOnlyInvocation(["public", "translate", "hello"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["developer", "github", "me"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["bot", "telegrambot", "me"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["tools", "translate", "hello"])).not.toThrow();
   });
 });

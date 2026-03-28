@@ -12,10 +12,10 @@ export type PlatformCategory =
   | "music"
   | "social"
   | "shopping"
-  | "bots"
+  | "bot"
+  | "developer"
   | "forum"
-  | "api"
-  | "public";
+  | "tools";
 
 export interface PlatformCommandBuildOptions {
   examplePrefix?: string;

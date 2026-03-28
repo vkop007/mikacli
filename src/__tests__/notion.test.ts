@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { extractDataSourceTitle, extractPageTitle, findTitlePropertyName, normalizeNotionId, plainTextFromRichText } from "../platforms/api/notion/helpers.js";
+import { extractDataSourceTitle, extractPageTitle, findTitlePropertyName, normalizeNotionId, plainTextFromRichText } from "../platforms/developer/notion/helpers.js";
 
 describe("notion helpers", () => {
   it("normalizes notion ids from compact uuids", () => {

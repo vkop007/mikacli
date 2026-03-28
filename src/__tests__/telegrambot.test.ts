@@ -3,8 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import { TelegramBotApi } from "../platforms/api/bots/telegrambot/api.js";
-import { TelegramBotAdapter } from "../platforms/api/bots/telegrambot/adapter.js";
+import { TelegramBotApi } from "../platforms/bot/telegrambot/api.js";
+import { TelegramBotAdapter } from "../platforms/bot/telegrambot/adapter.js";
 
 const TEST_BOT = {
   id: 42,
@@ -64,7 +64,7 @@ describe("TelegramBotAdapter", () => {
     const saved: Array<Record<string, unknown>> = [];
     const adapter = new TelegramBotAdapter({
       connectionStore: {
-        saveBotTokenConnection: async (input) => {
+        saveBotTokenConnection: async (input: unknown) => {
           saved.push(input as Record<string, unknown>);
           return "/tmp/telegrambot.json";
         },
@@ -94,7 +94,7 @@ describe("TelegramBotAdapter", () => {
     const saved: Array<Record<string, unknown>> = [];
     const adapter = new TelegramBotAdapter({
       connectionStore: {
-        saveBotTokenConnection: async (input) => {
+        saveBotTokenConnection: async (input: unknown) => {
           saved.push(input as Record<string, unknown>);
           return "/tmp/telegrambot.json";
         },

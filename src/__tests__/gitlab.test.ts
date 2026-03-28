@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { encodeGitLabProjectTarget, getGitLabRuntimeBaseUrl, normalizeGitLabProjectTarget, normalizeGitLabState } from "../platforms/api/gitlab/helpers.js";
+import { encodeGitLabProjectTarget, getGitLabRuntimeBaseUrl, normalizeGitLabProjectTarget, normalizeGitLabState } from "../platforms/developer/gitlab/helpers.js";
 
 describe("gitlab helpers", () => {
   it("normalizes project targets from ids, paths, and urls", () => {

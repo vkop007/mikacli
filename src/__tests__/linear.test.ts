@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
-import { extractLinearIssueKey, normalizeLinearAccountName, normalizeLinearReference, normalizeLinearToken } from "../platforms/api/linear/helpers.js";
+import { extractLinearIssueKey, normalizeLinearAccountName, normalizeLinearReference, normalizeLinearToken } from "../platforms/developer/linear/helpers.js";
 
 describe("linear helpers", () => {
   it("normalizes api keys and strips bearer prefixes", () => {
