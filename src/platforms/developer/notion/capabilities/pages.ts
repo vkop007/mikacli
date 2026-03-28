@@ -18,7 +18,7 @@ export function createNotionCreatePageCapability(adapter: NotionAdapter) {
   return createAdapterActionCapability({
     id: "create-page",
     command: "create-page",
-    description: "Create a new Notion page under a page or data source the integration can edit",
+    description: "Create a new Notion page under a page or database the saved web session can edit",
     spinnerText: "Creating Notion page...",
     successMessage: "Notion page created.",
     options: [
@@ -78,4 +78,3 @@ export const notionPageCapability = createNotionPageCapability(notionAdapter);
 export const notionCreatePageCapability = createNotionCreatePageCapability(notionAdapter);
 export const notionUpdatePageCapability = createNotionUpdatePageCapability(notionAdapter);
 export const notionAppendCapability = createNotionAppendCapability(notionAdapter);
-

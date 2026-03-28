@@ -57,7 +57,7 @@ autocli tools translate "hello world" --to hi
 | `music` | SoundCloud, Spotify, YouTube Music | 3 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
 | `social` | Bluesky, Facebook, Instagram, LinkedIn, Threads, TikTok, X, YouTube | 8 | none or cookies | Public profile/thread lookup plus cookie-backed posting and engagement where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
-| `developer` | GitHub, GitLab, Linear, Notion | 4 | API token | Developer and workspace automation | `autocli developer <provider> ...` |
+| `developer` | GitHub, GitLab, Linear, Notion | 4 | mixed (`api token` + `cookies`) | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Headers, IP, Markdown Fetch, Metadata, News, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 20 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
@@ -306,7 +306,7 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | GitHub | api token | repos, issues, pull requests, stars | High-value general developer automation. |
 | GitLab | api token | projects, issues, merge requests | Good for teams already on GitLab. |
 | Linear | api token | issue management and comments | Clean developer/project workflow integration. |
-| Notion | api token | search, pages, databases, comments | Useful for docs and workspace automation. |
+| Notion | cookies | search, pages, databases, comments | Uses the saved Notion web session instead of an official integration token. |
 
 ### Bot
 
