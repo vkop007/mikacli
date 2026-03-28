@@ -1,15 +1,20 @@
 # AutoCLI
 
-AutoCLI is a Bun-first TypeScript CLI for terminal automation across LLMs, social platforms, shopping sites, bots, developer tools, editors, maps, news, finance, and public utilities.
+[![npm version](https://img.shields.io/npm/v/%40vkop007%2Fautocli)](https://www.npmjs.com/package/@vkop007/autocli)
+[![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
+[![providers](https://img.shields.io/badge/providers-94-blue)](#category-overview)
+[![categories](https://img.shields.io/badge/categories-13-6f42c1)](#category-overview)
 
-The core idea is simple:
+AutoCLI is a terminal automation toolkit for developers and AI agents. It brings LLMs, social platforms, developer tools, editors, data workflows, maps, news, finance, shopping, music, movies, bots, and public utilities together in one CLI.
 
-- connect once
-- save the session or token locally
-- keep using category-based commands from the terminal
-- return clean `--json` output for scripts and agents
+Built for real automation work:
 
-For cookie-backed and session-backed platforms, AutoCLI is designed to stay headless after setup. For token-backed platforms, AutoCLI stores the connection once and reuses it. For local editors and public utilities, there is no auth step at all.
+- one command surface across `94` providers
+- category-based commands that stay predictable as the tool grows
+- clean `--json` output for scripts, agents, and orchestration
+- support for cookies, saved sessions, bot tokens, local tools, and public services
+
+AutoCLI is designed to stay headless after setup. Import a browser session once, save a bot token once, or use public and local-tool providers with no auth at all.
 
 ## At a Glance
 
@@ -21,6 +26,30 @@ For cookie-backed and session-backed platforms, AutoCLI is designed to stay head
 | Categories | `13` |
 | npm install | `npm install -g @vkop007/autocli` |
 | Local setup | `bun install` |
+
+## Get Started
+
+Install globally from npm:
+
+```bash
+npm install -g @vkop007/autocli
+```
+
+Set up the repo locally with Bun:
+
+```bash
+bun install
+bun run build
+```
+
+Typical commands:
+
+```bash
+autocli status
+autocli llm chatgpt text "Write release notes for AutoCLI"
+autocli developer github me --json
+autocli tools page-links https://example.com --json
+```
 
 ## Why Use AutoCLI
 
@@ -554,3 +583,7 @@ bun test
 - Token-backed developer and bot providers are usually the most stable long-term.
 - Local editor and public utility providers are the least fragile because they do not depend on private web sessions.
 - The category model is intentionally strict so provider names do not collide as AutoCLI grows.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=vkop007/autocli&type=Date)](https://star-history.com/#vkop007/autocli&Date)
