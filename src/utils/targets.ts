@@ -393,6 +393,147 @@ export function parseYouTubePlaylistTarget(target: string): {
   });
 }
 
+export function parseBlueskyProfileTarget(target: string): {
+  actor: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+  if (!trimmed) {
+    throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky profile URL, @handle, handle, or DID.", {
+      details: { target },
+    });
+  }
+
+  if (trimmed.startsWith("did:")) {
+    return { actor: trimmed };
+  }
+
+  const urlMatch = trimmed.match(/bsky\.app\/profile\/([^/?#]+)/i);
+  if (urlMatch?.[1]) {
+    return {
+      actor: decodeURIComponent(urlMatch[1]),
+      url: trimmed,
+    };
+  }
+
+  const normalized = trimmed.startsWith("@") ? trimmed.slice(1) : trimmed;
+  if (/^[a-z0-9._:-]+$/i.test(normalized)) {
+    return {
+      actor: normalized,
+    };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky profile URL, @handle, handle, or DID.", {
+    details: { target },
+  });
+}
+
+export function parseBlueskyPostTarget(target: string): {
+  uri?: string;
+  handle?: string;
+  rkey?: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+  if (!trimmed) {
+    throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky post URL or at:// post URI.", {
+      details: { target },
+    });
+  }
+
+  if (/^at:\/\/did:[^/]+\/app\.bsky\.feed\.post\/[^/]+$/i.test(trimmed)) {
+    return {
+      uri: trimmed,
+    };
+  }
+
+  const urlMatch = trimmed.match(/bsky\.app\/profile\/([^/]+)\/post\/([^/?#]+)/i);
+  if (urlMatch?.[1] && urlMatch[2]) {
+    return {
+      handle: decodeURIComponent(urlMatch[1]),
+      rkey: decodeURIComponent(urlMatch[2]),
+      url: trimmed,
+    };
+  }
+
+  const compactMatch = trimmed.match(/^@?([a-z0-9._:-]+)\/([a-z0-9]+)$/i);
+  if (compactMatch?.[1] && compactMatch[2]) {
+    return {
+      handle: compactMatch[1],
+      rkey: compactMatch[2],
+    };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky post URL or at:// post URI.", {
+    details: { target },
+  });
+}
+
+export function parseThreadsProfileTarget(target: string): {
+  username: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+  if (!trimmed) {
+    throw new AutoCliError("INVALID_TARGET", "Expected a Threads profile URL, @username, or username.", {
+      details: { target },
+    });
+  }
+
+  const urlMatch = trimmed.match(/threads\.net\/@([^/?#]+)/i);
+  if (urlMatch?.[1]) {
+    return {
+      username: decodeURIComponent(urlMatch[1]),
+      url: trimmed,
+    };
+  }
+
+  const normalized = trimmed.startsWith("@") ? trimmed.slice(1) : trimmed;
+  if (/^[a-z0-9._]+$/i.test(normalized)) {
+    return {
+      username: normalized,
+    };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", "Expected a Threads profile URL, @username, or username.", {
+    details: { target },
+  });
+}
+
+export function parseThreadsPostTarget(target: string): {
+  username: string;
+  postId: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+  if (!trimmed) {
+    throw new AutoCliError("INVALID_TARGET", "Expected a Threads post URL or @username/postId target.", {
+      details: { target },
+    });
+  }
+
+  const urlMatch = trimmed.match(/threads\.net\/@([^/]+)\/post\/([A-Za-z0-9_-]+)/i);
+  if (urlMatch?.[1] && urlMatch[2]) {
+    return {
+      username: decodeURIComponent(urlMatch[1]),
+      postId: urlMatch[2],
+      url: trimmed,
+    };
+  }
+
+  const compactMatch = trimmed.match(/^@?([a-z0-9._]+)\/([A-Za-z0-9_-]+)$/i);
+  if (compactMatch?.[1] && compactMatch[2]) {
+    return {
+      username: compactMatch[1],
+      postId: compactMatch[2],
+    };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", "Expected a Threads post URL or @username/postId target.", {
+    details: { target },
+  });
+}
+
 export type YouTubeMusicBrowseTargetType = "album" | "artist" | "playlist";
 
 export function parseYouTubeMusicBrowseTarget(

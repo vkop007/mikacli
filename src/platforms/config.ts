@@ -3,6 +3,7 @@ export const PLATFORM_NAMES = [
   "osrm",
   "anilist",
   "amazon",
+  "bluesky",
   "cheat",
   "chatgpt",
   "claude",
@@ -56,6 +57,7 @@ export const PLATFORM_NAMES = [
   "stocks",
   "zai",
   "telegrambot",
+  "threads",
   "tiktok",
   "time",
   "translate",
@@ -109,6 +111,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://www.amazon.in/",
     cookieDomain: "amazon.in",
     authCookieNames: ["at-main", "sess-at-main", "x-main"],
+  },
+  bluesky: {
+    displayName: "Bluesky",
+    origin: "https://public.api.bsky.app",
+    homeUrl: "https://bsky.app/",
+    cookieDomain: "bsky.app",
+    authCookieNames: [],
   },
   cheat: {
     displayName: "Cheat",
@@ -479,6 +488,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://api.telegram.org",
     homeUrl: "https://core.telegram.org/bots/api",
     cookieDomain: "telegram.org",
+    authCookieNames: [],
+  },
+  threads: {
+    displayName: "Threads",
+    origin: "https://www.threads.net",
+    homeUrl: "https://www.threads.net/",
+    cookieDomain: "threads.net",
     authCookieNames: [],
   },
   tiktok: {

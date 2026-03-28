@@ -41,6 +41,7 @@ import { soundCloudPlatformDefinition } from "./music/soundcloud/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
 import { notionPlatformDefinition } from "./developer/notion/manifest.js";
+import { blueskyPlatformDefinition } from "./social/bluesky/manifest.js";
 import { cheatPlatformDefinition } from "./tools/cheat/manifest.js";
 import { dnsPlatformDefinition } from "./tools/dns/manifest.js";
 import { headersPlatformDefinition } from "./tools/headers/manifest.js";
@@ -65,6 +66,7 @@ import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
 import { newsPlatformDefinition } from "./tools/news/manifest.js";
 import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
+import { threadsPlatformDefinition } from "./social/threads/manifest.js";
 import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
 import { xPlatformDefinition } from "./social/x/manifest.js";
 import { youtubePlatformDefinition } from "./social/youtube/manifest.js";
@@ -74,6 +76,7 @@ import type { PlatformName } from "./config.js";
 
 const definitions: readonly PlatformDefinition[] = [
   amazonPlatformDefinition,
+  blueskyPlatformDefinition,
   cheatPlatformDefinition,
   chatgptPlatformDefinition,
   claudePlatformDefinition,
@@ -130,6 +133,7 @@ const definitions: readonly PlatformDefinition[] = [
   spotifyPlatformDefinition,
   stocksPlatformDefinition,
   telegrambotPlatformDefinition,
+  threadsPlatformDefinition,
   tiktokPlatformDefinition,
   timePlatformDefinition,
   translatePlatformDefinition,
