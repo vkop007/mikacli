@@ -22,6 +22,7 @@ describe("platform category routing", () => {
   test("includes the new music category", () => {
     expect(getPlatformCategories()).toContain("music");
     expect(getPlatformDefinitionsByCategory("music").map((definition) => definition.id)).toEqual([
+      "soundcloud",
       "spotify",
       "youtube-music",
     ]);
@@ -104,7 +105,7 @@ describe("platform category routing", () => {
   test("builds category commands with nested provider commands", () => {
     const command = buildCategoryCommand("music", getPlatformDefinitionsByCategory("music"));
     expect(command.name()).toBe("music");
-    expect(command.commands.map((nested) => nested.name())).toEqual(["spotify", "youtube-music"]);
+    expect(command.commands.map((nested) => nested.name())).toEqual(["soundcloud", "spotify", "youtube-music"]);
   });
 
   test("includes the tools category and utility providers", () => {

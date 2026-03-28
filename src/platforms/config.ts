@@ -49,6 +49,7 @@ export const PLATFORM_NAMES = [
   "sitemap",
   "slackbot",
   "ssl",
+  "soundcloud",
   "spotify",
   "stocks",
   "zai",
@@ -427,6 +428,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://developer.mozilla.org",
     homeUrl: "https://developer.mozilla.org/en-US/docs/Web/Security/Transport_Layer_Security",
     cookieDomain: "developer.mozilla.org",
+    authCookieNames: [],
+  },
+  soundcloud: {
+    displayName: "SoundCloud",
+    origin: "https://api-v2.soundcloud.com",
+    homeUrl: "https://soundcloud.com/",
+    cookieDomain: "soundcloud.com",
     authCookieNames: [],
   },
   spotify: {

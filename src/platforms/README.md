@@ -111,7 +111,7 @@ Current examples:
 - DeepSeek uses imported browser cookies plus the `userToken` from localStorage when the export does not already include it.
 - Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie. Use `--token` only when that cookie is missing.
 - Grok now uses the official `grok.com` web flow and returns a Grok-specific anti-bot error when xAI blocks browserless prompt writes.
-- Music platforms: `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
+- Music platforms: `src/platforms/music/soundcloud/`, `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
 - Shopping platforms: `src/platforms/shopping/amazon/`, `src/platforms/shopping/flipkart/`
 - Tool platforms: `src/platforms/tools/cheat/`, `src/platforms/tools/dns/`, `src/platforms/tools/headers/`, `src/platforms/tools/ip/`, `src/platforms/tools/markdown-fetch/`, `src/platforms/tools/metadata/`, `src/platforms/tools/news/`, `src/platforms/tools/qr/`, `src/platforms/tools/redirect/`, `src/platforms/tools/robots/`, `src/platforms/tools/rss/`, `src/platforms/tools/screenshot/`, `src/platforms/tools/sitemap/`, `src/platforms/tools/ssl/`, `src/platforms/tools/time/`, `src/platforms/tools/translate/`, `src/platforms/tools/uptime/`, `src/platforms/tools/weather/`, `src/platforms/tools/websearch/`, `src/platforms/tools/whois/`
 - Cookie-backed social platforms: `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/tiktok/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`

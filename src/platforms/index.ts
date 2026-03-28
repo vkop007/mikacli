@@ -35,6 +35,7 @@ import { myAnimeListPlatformDefinition } from "./movie/myanimelist/manifest.js";
 import { tvMazePlatformDefinition } from "./movie/tvmaze/manifest.js";
 import { openStreetMapPlatformDefinition } from "./maps/openstreetmap/manifest.js";
 import { osrmPlatformDefinition } from "./maps/osrm/manifest.js";
+import { soundCloudPlatformDefinition } from "./music/soundcloud/manifest.js";
 import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
 import { notionPlatformDefinition } from "./developer/notion/manifest.js";
@@ -121,6 +122,7 @@ const definitions: readonly PlatformDefinition[] = [
   sitemapPlatformDefinition,
   slackbotPlatformDefinition,
   sslPlatformDefinition,
+  soundCloudPlatformDefinition,
   spotifyPlatformDefinition,
   stocksPlatformDefinition,
   telegrambotPlatformDefinition,
