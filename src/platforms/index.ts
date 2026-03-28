@@ -19,6 +19,7 @@ import { pdfPlatformDefinition } from "./editor/pdf/manifest.js";
 import { subtitleEditorPlatformDefinition } from "./editor/subtitle/manifest.js";
 import { videoEditorPlatformDefinition } from "./editor/video/manifest.js";
 import { amazonPlatformDefinition } from "./shopping/amazon/manifest.js";
+import { bandcampPlatformDefinition } from "./music/bandcamp/manifest.js";
 import { ebayPlatformDefinition } from "./shopping/ebay/manifest.js";
 import { etsyPlatformDefinition } from "./shopping/etsy/manifest.js";
 import { flipkartPlatformDefinition } from "./shopping/flipkart/manifest.js";
@@ -35,6 +36,7 @@ import { imdbPlatformDefinition } from "./movie/imdb/manifest.js";
 import { justWatchPlatformDefinition } from "./movie/justwatch/manifest.js";
 import { kitsuPlatformDefinition } from "./movie/kitsu/manifest.js";
 import { myAnimeListPlatformDefinition } from "./movie/myanimelist/manifest.js";
+import { tmdbPlatformDefinition } from "./movie/tmdb/manifest.js";
 import { tvMazePlatformDefinition } from "./movie/tvmaze/manifest.js";
 import { openStreetMapPlatformDefinition } from "./maps/openstreetmap/manifest.js";
 import { osrmPlatformDefinition } from "./maps/osrm/manifest.js";
@@ -43,6 +45,7 @@ import { spotifyPlatformDefinition } from "./music/spotify/manifest.js";
 import { youtubeMusicPlatformDefinition } from "./music/youtube-music/manifest.js";
 import { notionPlatformDefinition } from "./developer/notion/manifest.js";
 import { blueskyPlatformDefinition } from "./social/bluesky/manifest.js";
+import { pinterestPlatformDefinition } from "./social/pinterest/manifest.js";
 import { cheatPlatformDefinition } from "./tools/cheat/manifest.js";
 import { dnsPlatformDefinition } from "./tools/dns/manifest.js";
 import { faviconPlatformDefinition } from "./tools/favicon/manifest.js";
@@ -82,6 +85,7 @@ import type { PlatformName } from "./config.js";
 
 const definitions: readonly PlatformDefinition[] = [
   amazonPlatformDefinition,
+  bandcampPlatformDefinition,
   blueskyPlatformDefinition,
   cheatPlatformDefinition,
   chatgptPlatformDefinition,
@@ -112,6 +116,7 @@ const definitions: readonly PlatformDefinition[] = [
   kitsuPlatformDefinition,
   mistralPlatformDefinition,
   myAnimeListPlatformDefinition,
+  tmdbPlatformDefinition,
   perplexityPlatformDefinition,
   qwenPlatformDefinition,
   zaiPlatformDefinition,
@@ -141,6 +146,7 @@ const definitions: readonly PlatformDefinition[] = [
   soundCloudPlatformDefinition,
   spotifyPlatformDefinition,
   stocksPlatformDefinition,
+  pinterestPlatformDefinition,
   telegramPlatformDefinition,
   telegrambotPlatformDefinition,
   threadsPlatformDefinition,
