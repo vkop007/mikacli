@@ -5,7 +5,7 @@ import type { PlatformDefinition } from "../../../core/runtime/platform-definiti
 
 export const newsPlatformDefinition: PlatformDefinition = {
   id: "news",
-  category: "tools",
+  category: "news",
   displayName: "News",
   description: "Browse no-auth news sources from RSS, Google News, GDELT, Hacker News, and Reddit",
   aliases: ["headlines"],

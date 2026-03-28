@@ -1,6 +1,6 @@
 # AutoCLI
 
-AutoCLI is a Bun-first TypeScript CLI for terminal automation across LLMs, social platforms, shopping sites, bots, developer tools, editors, maps, finance, and public utilities.
+AutoCLI is a Bun-first TypeScript CLI for terminal automation across LLMs, social platforms, shopping sites, bots, developer tools, editors, maps, news, finance, and public utilities.
 
 The core idea is simple:
 
@@ -14,7 +14,7 @@ For cookie-backed and session-backed platforms, AutoCLI is designed to stay head
 ## Why Use AutoCLI
 
 - One command surface for many provider types: cookies, saved user sessions, API tokens, bot tokens, local tools, and no-auth public services.
-- Category-first routing keeps the CLI scalable as providers grow: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli tools ...`.
+- Category-first routing keeps the CLI scalable as providers grow: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli news ...`, `autocli tools ...`.
 - Every provider is script-friendly and supports `--json`.
 - Sessions and tokens are stored locally, so follow-up commands are short and automation-friendly.
 - Editors, downloads, public utilities, and platform automation live in the same CLI instead of being split across many tools.
@@ -28,6 +28,7 @@ AutoCLI is category-only. Provider commands never live at the root.
 - `autocli finance ...`
 - `autocli maps ...`
 - `autocli movie ...`
+- `autocli news ...`
 - `autocli music ...`
 - `autocli social ...`
 - `autocli shopping ...`
@@ -43,6 +44,7 @@ autocli social x post "Shipping AutoCLI today"
 autocli developer confluence search "release process"
 autocli developer github me
 autocli bot telegrambot send 123456789 "Build finished"
+autocli news top "AI"
 autocli tools translate "hello world" --to hi
 autocli tools timezone "Mumbai"
 autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
@@ -58,14 +60,15 @@ autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
 | `data` | CSV, HTML, JSON, Markdown, Text, XML, YAML | 7 | none | Structured data cleanup, conversion, filtering, and extraction for agents | `autocli data <provider> ...` |
 | `maps` | Geo, OpenStreetMap, OSRM | 3 | none | Geocoding, reverse lookup, routing, geometry helpers | `autocli maps <provider> ...` |
 | `movie` | AniList, IMDb, JustWatch, Kitsu, Letterboxd, MyAnimeList, TMDb, TVMaze | 8 | none or cookies | Public title lookup, anime tracking, streaming availability, and community taste signals | `autocli movie <provider> ...` |
+| `news` | News | 1 | none | Public headline discovery, source search, and feed aggregation | `autocli news ...` |
 | `music` | Bandcamp, Deezer, SoundCloud, Spotify, YouTube Music | 5 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
 | `social` | Bluesky, Facebook, Instagram, LinkedIn, Mastodon, Pinterest, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 12 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, federated discovery, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | Confluence, GitHub, GitLab, Jira, Linear, Notion, Trello | 7 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
-| `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, News, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 24 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
+| `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 23 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `94` providers across `12` active command groups.
+AutoCLI currently exposes `94` providers across `13` active command groups.
 
 ## Access Modes
 
@@ -133,6 +136,7 @@ autocli llm chatgpt text "Summarize this changelog"
 autocli developer github login --cookies ./github.cookies.json
 autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
 autocli bot telegrambot login --token 123456:ABCDEF --name alerts-bot
+autocli news top "AI"
 autocli tools websearch search "bun commander zod"
 ```
 
@@ -182,6 +186,9 @@ autocli social whatsapp send 919876543210 "Ping from AutoCLI"
 ### Public utilities
 
 ```bash
+autocli news top "AI" --source google
+autocli news search "typescript cli"
+autocli news feed https://hnrss.org/frontpage --limit 5
 autocli tools translate "hello world" --to hi
 autocli tools websearch search "typescript cli bun"
 autocli tools screenshot https://example.com --output-dir ./shots
@@ -375,7 +382,6 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | IP | none | public IP and network details | Fast no-auth network lookup. |
 | Markdown Fetch | none | turn pages into markdown-like text | Useful for scraping readable content. |
 | Metadata | none | webpage title and social tags | Extracts title, description, canonical, favicon, Open Graph, and Twitter tags. |
-| News | none | headline and feed aggregation | Pulls from public no-key sources. |
 | oEmbed | none | embeddable media/page metadata from URLs | Uses page-discovered oEmbed endpoints first, then falls back to a public resolver. |
 | Page Links | none | internal/external link extraction from webpages | Useful for crawls, site audits, and agent discovery. |
 | QR | none | QR generation | Can save or print a public image URL. |
@@ -392,6 +398,12 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Weather | none | weather lookup | No account required. |
 | Web Search | none | multi-engine search | Supports summaries and engine selection. |
 | Whois | none | domain registration details | Useful for domain inspection. |
+
+### News
+
+| Provider | Needs | Best for | Notes |
+| --- | --- | --- | --- |
+| News | none | headline and feed aggregation | Pulls from public no-key sources like Google News, GDELT, Hacker News, Reddit, and raw RSS feeds. |
 
 ## Agent-Friendly Output
 

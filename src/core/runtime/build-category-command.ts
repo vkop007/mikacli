@@ -36,6 +36,9 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   movie: {
     description: "Movie and anime lookup tools with public and optional cookie-backed flows",
   },
+  news: {
+    description: "Public news discovery, search, and feed aggregation",
+  },
   music: {
     description: "Music platforms like Spotify and YouTube Music",
   },
@@ -51,6 +54,10 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
 };
 
 export function buildCategoryCommand(category: PlatformCategory, definitions: readonly PlatformDefinition[]): Command {
+  if (definitions.length === 1 && definitions[0]?.id === category) {
+    return buildPlatformCommand(definitions[0]);
+  }
+
   const metadata = PLATFORM_CATEGORY_DEFINITIONS[category];
   const command = new Command(category).description(metadata.description);
 

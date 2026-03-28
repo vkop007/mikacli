@@ -16,6 +16,7 @@ describe("root program routing", () => {
       "data",
       "maps",
       "movie",
+      "news",
       "music",
       "social",
       "shopping",
@@ -54,6 +55,7 @@ describe("root program routing", () => {
     expect(() => assertCategoryOnlyInvocation(["finance", "stocks", "AAPL"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["data", "json", "format", "./payload.json"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["maps", "openstreetmap", "search", "Mumbai"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["news", "top", "AI"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["developer", "github", "me"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["bot", "telegrambot", "me"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["tools", "translate", "hello"])).not.toThrow();

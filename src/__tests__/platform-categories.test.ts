@@ -89,6 +89,11 @@ describe("platform category routing", () => {
     ]);
   });
 
+  test("includes the news category and provider", () => {
+    expect(getPlatformCategories()).toContain("news");
+    expect(getPlatformDefinitionsByCategory("news").map((definition) => definition.id)).toEqual(["news"]);
+  });
+
   test("includes the shopping category and providers", () => {
     expect(getPlatformCategories()).toContain("shopping");
     expect(getPlatformDefinitionsByCategory("shopping").map((definition) => definition.id)).toEqual([
@@ -154,5 +159,6 @@ describe("platform category routing", () => {
     expect(toolIds).toContain("timezone");
     expect(toolIds).toContain("markdown-fetch");
     expect(toolIds).toContain("uptime");
+    expect(toolIds).not.toContain("news");
   });
 });

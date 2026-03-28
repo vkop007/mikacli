@@ -43,6 +43,11 @@ src/platforms/
       adapter.ts
       manifest.ts
     shared/
+  news/
+    <name>/
+      adapter.ts
+      manifest.ts
+      capabilities/
   developer/
     <name>/
       adapter.ts
@@ -110,12 +115,13 @@ Current examples:
 - Finance platforms: `src/platforms/finance/crypto/`, `src/platforms/finance/currency/`, `src/platforms/finance/stocks/`
 - Maps platforms: `src/platforms/maps/geo/`, `src/platforms/maps/openstreetmap/`, `src/platforms/maps/osrm/`
 - Movie platforms: `src/platforms/movie/anilist/`, `src/platforms/movie/imdb/`, `src/platforms/movie/justwatch/`, `src/platforms/movie/kitsu/`, `src/platforms/movie/letterboxd/`, `src/platforms/movie/myanimelist/`, `src/platforms/movie/tmdb/`, `src/platforms/movie/tvmaze/`
+- News platforms: `src/platforms/tools/news/`
 - DeepSeek uses imported browser cookies plus the `userToken` from localStorage when the export does not already include it.
 - Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie. Use `--token` only when that cookie is missing.
 - Grok now uses the official `grok.com` web flow and returns a Grok-specific anti-bot error when xAI blocks browserless prompt writes.
 - Music platforms: `src/platforms/music/bandcamp/`, `src/platforms/music/deezer/`, `src/platforms/music/soundcloud/`, `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
 - Shopping platforms: `src/platforms/shopping/amazon/`, `src/platforms/shopping/ebay/`, `src/platforms/shopping/etsy/`, `src/platforms/shopping/flipkart/`
-- Tool platforms: `src/platforms/tools/cheat/`, `src/platforms/tools/dns/`, `src/platforms/tools/favicon/`, `src/platforms/tools/headers/`, `src/platforms/tools/ip/`, `src/platforms/tools/markdown-fetch/`, `src/platforms/tools/metadata/`, `src/platforms/tools/news/`, `src/platforms/tools/oembed/`, `src/platforms/tools/page-links/`, `src/platforms/tools/qr/`, `src/platforms/tools/redirect/`, `src/platforms/tools/robots/`, `src/platforms/tools/rss/`, `src/platforms/tools/screenshot/`, `src/platforms/tools/sitemap/`, `src/platforms/tools/ssl/`, `src/platforms/tools/time/`, `src/platforms/tools/timezone/`, `src/platforms/tools/translate/`, `src/platforms/tools/uptime/`, `src/platforms/tools/weather/`, `src/platforms/tools/websearch/`, `src/platforms/tools/whois/`
+- Tool platforms: `src/platforms/tools/cheat/`, `src/platforms/tools/dns/`, `src/platforms/tools/favicon/`, `src/platforms/tools/headers/`, `src/platforms/tools/ip/`, `src/platforms/tools/markdown-fetch/`, `src/platforms/tools/metadata/`, `src/platforms/tools/oembed/`, `src/platforms/tools/page-links/`, `src/platforms/tools/qr/`, `src/platforms/tools/redirect/`, `src/platforms/tools/robots/`, `src/platforms/tools/rss/`, `src/platforms/tools/screenshot/`, `src/platforms/tools/sitemap/`, `src/platforms/tools/ssl/`, `src/platforms/tools/time/`, `src/platforms/tools/timezone/`, `src/platforms/tools/translate/`, `src/platforms/tools/uptime/`, `src/platforms/tools/weather/`, `src/platforms/tools/websearch/`, `src/platforms/tools/whois/`
 - Social platforms: `src/platforms/social/bluesky/`, `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/mastodon/`, `src/platforms/social/pinterest/`, `src/platforms/social/telegram/`, `src/platforms/social/threads/`, `src/platforms/social/tiktok/`, `src/platforms/social/whatsapp/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
 - Spotify specifically now uses an internal engine split:
   - `web` for standard Web API endpoints

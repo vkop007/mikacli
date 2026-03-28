@@ -10,6 +10,7 @@ export type PlatformCategory =
   | "data"
   | "maps"
   | "movie"
+  | "news"
   | "music"
   | "social"
   | "shopping"
