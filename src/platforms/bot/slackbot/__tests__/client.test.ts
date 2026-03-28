@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { createSlackbotCommand } from "../../../../commands/slackbot.js";
+import { createSlackbotCommand } from "../manifest.js";
 import { SlackbotClient } from "../client.js";
 
 function createFetchMock(
