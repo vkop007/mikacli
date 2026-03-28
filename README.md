@@ -44,6 +44,8 @@ autocli developer confluence search "release process"
 autocli developer github me
 autocli bot telegrambot send 123456789 "Build finished"
 autocli tools translate "hello world" --to hi
+autocli tools timezone "Mumbai"
+autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
 ## Category Overview
@@ -61,9 +63,9 @@ autocli tools translate "hello world" --to hi
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | Confluence, GitHub, GitLab, Jira, Linear, Notion, Trello | 7 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
-| `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, News, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 22 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
+| `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, News, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 24 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `89` providers across `12` active command groups.
+AutoCLI currently exposes `91` providers across `12` active command groups.
 
 ## Access Modes
 
@@ -185,6 +187,8 @@ autocli tools websearch search "typescript cli bun"
 autocli tools screenshot https://example.com --output-dir ./shots
 autocli tools favicon openai.com
 autocli tools page-links https://example.com --type external
+autocli tools timezone "Mumbai"
+autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
 autocli tools uptime https://example.com --json
 autocli tools rss https://hnrss.org/frontpage --limit 5
 ```
@@ -369,6 +373,7 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Markdown Fetch | none | turn pages into markdown-like text | Useful for scraping readable content. |
 | Metadata | none | webpage title and social tags | Extracts title, description, canonical, favicon, Open Graph, and Twitter tags. |
 | News | none | headline and feed aggregation | Pulls from public no-key sources. |
+| oEmbed | none | embeddable media/page metadata from URLs | Uses page-discovered oEmbed endpoints first, then falls back to a public resolver. |
 | Page Links | none | internal/external link extraction from webpages | Useful for crawls, site audits, and agent discovery. |
 | QR | none | QR generation | Can save or print a public image URL. |
 | Redirect | none | redirect-chain tracing | Shows each HTTP hop and final destination. |
@@ -378,6 +383,7 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Sitemap | none | sitemap discovery and listing | Good for SEO/crawl inspection. |
 | SSL | none | TLS certificate inspection | Shows certificate, issuer, SANs, protocol, and expiry. |
 | Time | none | timezone and current time lookup | Public time APIs. |
+| Timezone | none | resolve timezone from a place, coordinates, or IANA zone | Useful for scheduling, agent routing, and regional workflows. |
 | Translate | none | quick translation | Uses a public translation endpoint. |
 | Uptime | none | latency and HTTP health checks | Lightweight monitoring helper. |
 | Weather | none | weather lookup | No account required. |

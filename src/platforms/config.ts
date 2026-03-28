@@ -46,6 +46,7 @@ export const PLATFORM_NAMES = [
   "myanimelist",
   "mistral",
   "news",
+  "oembed",
   "page-links",
   "linkedin",
   "linear",
@@ -71,6 +72,7 @@ export const PLATFORM_NAMES = [
   "threads",
   "tiktok",
   "time",
+  "timezone",
   "translate",
   "uptime",
   "subtitle",
@@ -430,6 +432,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "news.google.com",
     authCookieNames: [],
   },
+  oembed: {
+    displayName: "oEmbed",
+    origin: "https://noembed.com",
+    homeUrl: "https://oembed.com/",
+    cookieDomain: "noembed.com",
+    authCookieNames: [],
+  },
   "page-links": {
     displayName: "Page Links",
     origin: "https://example.com",
@@ -603,6 +612,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://worldtimeapi.org",
     homeUrl: "https://worldtimeapi.org/",
     cookieDomain: "worldtimeapi.org",
+    authCookieNames: [],
+  },
+  timezone: {
+    displayName: "Timezone",
+    origin: "https://timeapi.io",
+    homeUrl: "https://timeapi.io/",
+    cookieDomain: "timeapi.io",
     authCookieNames: [],
   },
   translate: {

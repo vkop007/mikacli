@@ -143,11 +143,13 @@ describe("platform category routing", () => {
     expect(toolIds).toContain("rss");
     expect(toolIds).toContain("metadata");
     expect(toolIds).toContain("page-links");
+    expect(toolIds).toContain("oembed");
     expect(toolIds).toContain("redirect");
     expect(toolIds).toContain("screenshot");
     expect(toolIds).toContain("sitemap");
     expect(toolIds).toContain("robots");
     expect(toolIds).toContain("ssl");
+    expect(toolIds).toContain("timezone");
     expect(toolIds).toContain("markdown-fetch");
     expect(toolIds).toContain("uptime");
   });

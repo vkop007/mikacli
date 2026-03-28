@@ -61,6 +61,7 @@ import { headersPlatformDefinition } from "./tools/headers/manifest.js";
 import { ipPlatformDefinition } from "./tools/ip/manifest.js";
 import { markdownFetchPlatformDefinition } from "./tools/markdown-fetch/manifest.js";
 import { metadataPlatformDefinition } from "./tools/metadata/manifest.js";
+import { oEmbedPlatformDefinition } from "./tools/oembed/manifest.js";
 import { pageLinksPlatformDefinition } from "./tools/page-links/manifest.js";
 import { qrPlatformDefinition } from "./tools/qr/manifest.js";
 import { redirectPlatformDefinition } from "./tools/redirect/manifest.js";
@@ -70,6 +71,7 @@ import { rssPlatformDefinition } from "./tools/rss/manifest.js";
 import { sitemapPlatformDefinition } from "./tools/sitemap/manifest.js";
 import { sslPlatformDefinition } from "./tools/ssl/manifest.js";
 import { timePlatformDefinition } from "./tools/time/manifest.js";
+import { timezonePlatformDefinition } from "./tools/timezone/manifest.js";
 import { translatePlatformDefinition } from "./tools/translate/manifest.js";
 import { uptimePlatformDefinition } from "./tools/uptime/manifest.js";
 import { weatherPlatformDefinition } from "./tools/weather/manifest.js";
@@ -143,6 +145,7 @@ const definitions: readonly PlatformDefinition[] = [
   markdownFetchPlatformDefinition,
   metadataPlatformDefinition,
   newsPlatformDefinition,
+  oEmbedPlatformDefinition,
   pageLinksPlatformDefinition,
   linkedinPlatformDefinition,
   linearPlatformDefinition,
@@ -166,6 +169,7 @@ const definitions: readonly PlatformDefinition[] = [
   threadsPlatformDefinition,
   tiktokPlatformDefinition,
   timePlatformDefinition,
+  timezonePlatformDefinition,
   trelloPlatformDefinition,
   translatePlatformDefinition,
   tvMazePlatformDefinition,
