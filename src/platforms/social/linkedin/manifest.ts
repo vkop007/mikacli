@@ -7,7 +7,7 @@ export const linkedinPlatformDefinition: PlatformDefinition = {
   id: "linkedin",
   category: "social",
   displayName: "LinkedIn",
-  description: "Interact with LinkedIn using an imported browser session",
+  description: "Interact with LinkedIn using an imported browser session, with text posting strongest today",
   aliases: ["li"],
   authStrategies: ["cookies"],
   adapter: linkedinAdapter,

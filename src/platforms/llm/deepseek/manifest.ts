@@ -7,7 +7,7 @@ export const deepSeekPlatformDefinition: PlatformDefinition = {
   id: "deepseek",
   category: "llm",
   displayName: "DeepSeek",
-  description: "Interact with DeepSeek using imported browser cookies",
+  description: "Interact with DeepSeek chat using imported browser cookies and optional local userToken",
   authStrategies: ["cookies"],
   adapter: deepSeekAdapter,
   capabilities: createDeepSeekCapabilities(deepSeekAdapter),

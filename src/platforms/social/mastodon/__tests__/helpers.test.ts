@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test";
 
-import { buildMastodonProfileUrl, buildMastodonStatusUrl, parseMastodonSearchTarget } from "../helpers.js";
+import {
+  buildMastodonProfileUrl,
+  buildMastodonStatusUrl,
+  normalizeMastodonStatusTarget,
+  parseMastodonSearchTarget,
+} from "../helpers.js";
 
 describe("mastodon helpers", () => {
   test("parses mastodon profile urls", () => {
@@ -23,5 +28,12 @@ describe("mastodon helpers", () => {
   test("builds mastodon urls", () => {
     expect(buildMastodonProfileUrl("https://mastodon.social", "Gargron")).toBe("https://mastodon.social/@Gargron");
     expect(buildMastodonStatusUrl("https://mastodon.social", "Gargron", "111")).toBe("https://mastodon.social/@Gargron/111");
+  });
+
+  test("parses a bare numeric status id for thread targets", () => {
+    expect(normalizeMastodonStatusTarget("116306409081398966")).toEqual({
+      origin: "https://mastodon.social",
+      statusId: "116306409081398966",
+    });
   });
 });

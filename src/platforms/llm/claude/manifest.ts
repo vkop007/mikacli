@@ -7,7 +7,7 @@ export const claudePlatformDefinition: PlatformDefinition = {
   id: "claude",
   category: "llm",
   displayName: "Claude",
-  description: "Interact with Claude using imported browser cookies",
+  description: "Interact with Claude using imported browser cookies, with text flows strongest today",
   authStrategies: ["cookies"],
   adapter: claudeAdapter,
   capabilities: createCookieLlmCapabilities(claudeAdapter),

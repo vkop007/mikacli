@@ -115,7 +115,7 @@ Current examples:
 - Finance platforms: `src/platforms/finance/crypto/`, `src/platforms/finance/currency/`, `src/platforms/finance/stocks/`
 - Maps platforms: `src/platforms/maps/geo/`, `src/platforms/maps/openstreetmap/`, `src/platforms/maps/osrm/`
 - Movie platforms: `src/platforms/movie/anilist/`, `src/platforms/movie/imdb/`, `src/platforms/movie/justwatch/`, `src/platforms/movie/kitsu/`, `src/platforms/movie/letterboxd/`, `src/platforms/movie/myanimelist/`, `src/platforms/movie/tmdb/`, `src/platforms/movie/tvmaze/`
-- News platforms: `src/platforms/tools/news/`
+- News platforms: `src/platforms/news/news/`
 - DeepSeek uses imported browser cookies plus the `userToken` from localStorage when the export does not already include it.
 - Qwen usually works directly from imported browser cookies because the export often includes the `token` cookie. Use `--token` only when that cookie is missing.
 - Grok now uses the official `grok.com` web flow and returns a Grok-specific anti-bot error when xAI blocks browserless prompt writes.

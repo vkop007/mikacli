@@ -7,7 +7,7 @@ export const facebookPlatformDefinition: PlatformDefinition = {
   id: "facebook",
   category: "social",
   displayName: "Facebook",
-  description: "Interact with Facebook using an imported browser session",
+  description: "Interact with Facebook using an imported browser session, with validation and read flows strongest today",
   aliases: ["fb"],
   authStrategies: ["cookies"],
   adapter: facebookAdapter,

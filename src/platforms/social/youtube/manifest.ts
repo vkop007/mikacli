@@ -7,7 +7,7 @@ export const youtubePlatformDefinition: PlatformDefinition = {
   id: "youtube",
   category: "social",
   displayName: "YouTube",
-  description: "Interact with YouTube using an imported browser session",
+  description: "Interact with YouTube using an imported browser session for public lookup, engagement, and downloads",
   aliases: ["yt"],
   authStrategies: ["cookies"],
   adapter: youtubeAdapter,

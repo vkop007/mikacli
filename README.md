@@ -251,14 +251,14 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Provider | Needs | Best for | Notes |
 | --- | --- | --- | --- |
 | ChatGPT | cookies | text prompts and image prompting | Authenticated web flow is supported; richer media generation is still evolving. |
-| Claude | cookies | Claude web-session access | Session-backed scaffolding exists; prompt reliability depends on the current private web flow. |
-| DeepSeek | cookies + local token | browserless DeepSeek chat | Needs browser cookies and sometimes `userToken` from site storage. |
+| Claude | cookies | Claude web-session access | Text prompting is the clearest supported path today; richer media flows still depend on private web-flow drift. |
+| DeepSeek | cookies + local token | browserless DeepSeek chat | Text chat works; image and video prompting are not mapped yet. Needs browser cookies and sometimes `userToken` from site storage. |
 | Gemini | cookies | Google Gemini prompting and media flows | Works from imported browser sessions; download helpers are wired for media jobs. |
 | Grok | cookies | text, image, and async video generation | Best current fit for job-style image/video workflows. |
-| Mistral | cookies | browserless Mistral chat | Cookie-backed text flow is implemented. |
-| Perplexity | cookies | search-heavy prompting | Uses Perplexity’s live web flow for browserless text prompts. |
+| Mistral | cookies | browserless Mistral chat | Cookie-backed text flow is implemented; image/video support is still limited. |
+| Perplexity | cookies | search-heavy prompting | Uses Perplexity’s live web flow for browserless text prompts; image/video support is still limited. |
 | Qwen | cookies | cookie-backed Qwen chat | Usually works directly from exported browser cookies. |
-| Z.ai | cookies | cookie-backed chat workflows | Session-backed provider for text-oriented LLM usage. |
+| Z.ai | cookies | cookie-backed chat workflows | Session-backed provider for text-oriented usage today; media flows are still limited. |
 
 ### Editor
 
@@ -329,17 +329,26 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Provider | Needs | Best for | Notes |
 | --- | --- | --- | --- |
 | Bluesky | none | public profile, feed, and thread lookup | Uses Bluesky's public appview API, so it is cleaner and more stable than most social adapters. |
-| Facebook | cookies | session import and future social automation | Protected write flows are still conservative; browser later may help for harder surfaces. |
+| Facebook | cookies | session import and light account automation | Validation and safer read surfaces are strongest today; protected write flows are still conservative. |
 | Instagram | cookies | posting, downloads, stories, follows | One of the strongest cookie-backed social adapters in the repo. |
-| LinkedIn | cookies | posting and engagement | Web write flow works, but LinkedIn can drift and may need adapter refreshes over time. |
+| LinkedIn | cookies | posting and engagement | Text posting works best; richer media/write surfaces can drift and may need adapter refreshes over time. |
 | Mastodon | none | federated profile, posts, and thread lookup | Uses public instance APIs and respects the target instance when resolving accounts and statuses. |
 | Pinterest | none | public pin, profile, and board discovery | Good public-read discovery surface without cookies. |
 | Telegram | session | QR, phone, or session-string login for account messaging | Uses MTProto with a saved user session, not browser cookies. |
 | Threads | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
-| TikTok | cookies | session handling and future posting flows | Signing for private web writes is still a known hard part; browser later may help. |
+| TikTok | cookies | session handling and light public automation | Session validation and read flows are strongest today; signing for private web writes is still a known hard part. |
 | WhatsApp | session | QR or pairing-code login for account messaging | Uses a saved WhatsApp multi-device auth state with cached chats/messages for terminal workflows. |
 | X | cookies | posting, likes, profile/tweet lookup | Strong cookie-backed adapter with reliable agent-friendly output. |
 | YouTube | cookies | search, likes, comments, downloads | Upload/community posting are still separate future work. |
+
+### Partial Support Notes
+
+These providers are intentionally included, but their current browserless surface is narrower than their full website:
+
+- `Claude`, `DeepSeek`, `Mistral`, `Perplexity`, and `Z.ai` are strongest on text-oriented prompting today.
+- `Facebook` and `TikTok` are more reliable for session validation and lighter read flows than for protected web writes.
+- `LinkedIn` works best for text-first posting and engagement, but richer web flows can drift.
+- `YouTube` is strong for search, engagement, subscriptions, and downloads, while upload/community publishing is still separate future work.
 
 ### Shopping
 

@@ -7,7 +7,7 @@ export const perplexityPlatformDefinition: PlatformDefinition = {
   id: "perplexity",
   category: "llm",
   displayName: "Perplexity",
-  description: "Interact with Perplexity using imported browser cookies",
+  description: "Interact with Perplexity using imported browser cookies, with text/search flows strongest today",
   authStrategies: ["cookies"],
   adapter: perplexityAdapter,
   capabilities: createCookieLlmCapabilities(perplexityAdapter),

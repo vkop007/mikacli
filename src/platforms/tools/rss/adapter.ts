@@ -1,8 +1,8 @@
 import { AutoCliError } from "../../../errors.js";
-import { fetchNewsPageSummary, parseNewsFeedDocument } from "../news/helpers.js";
+import { fetchNewsPageSummary, parseNewsFeedDocument } from "../../news/news/helpers.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
-import type { NewsItem } from "../news/helpers.js";
+import type { NewsItem } from "../../news/news/helpers.js";
 
 type RssFetchInput = {
   feedUrl: string;

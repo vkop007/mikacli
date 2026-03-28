@@ -1,5 +1,5 @@
 import { AutoCliError } from "../../../errors.js";
-import { extractNewsPageSummary, stripHtml } from "../news/helpers.js";
+import { extractNewsPageSummary, stripHtml } from "../../news/news/helpers.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 

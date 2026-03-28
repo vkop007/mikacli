@@ -83,7 +83,7 @@ import { whoisPlatformDefinition } from "./tools/whois/manifest.js";
 import { zaiPlatformDefinition } from "./llm/zai/manifest.js";
 import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
-import { newsPlatformDefinition } from "./tools/news/manifest.js";
+import { newsPlatformDefinition } from "./news/news/manifest.js";
 import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
 import { telegramPlatformDefinition } from "./social/telegram/manifest.js";
 import { threadsPlatformDefinition } from "./social/threads/manifest.js";

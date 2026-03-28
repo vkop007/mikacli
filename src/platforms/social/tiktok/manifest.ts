@@ -7,7 +7,7 @@ export const tiktokPlatformDefinition: PlatformDefinition = {
   id: "tiktok",
   category: "social",
   displayName: "TikTok",
-  description: "Interact with TikTok using an imported browser session",
+  description: "Interact with TikTok using an imported browser session, with session/read flows strongest today",
   aliases: ["tt"],
   authStrategies: ["cookies"],
   adapter: tiktokAdapter,

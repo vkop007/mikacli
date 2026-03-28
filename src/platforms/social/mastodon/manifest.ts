@@ -17,9 +17,9 @@ export const mastodonPlatformDefinition: PlatformDefinition = {
     threadDescription: "Load a public Mastodon thread by URL or status ID",
   }),
   examples: [
-    'autocli mastodon search "open source"',
-    "autocli mastodon profile mastodon.social/@Gargron",
-    "autocli mastodon posts mastodon.social/@Gargron --limit 5",
-    "autocli mastodon thread https://mastodon.social/@Gargron/111111111111111111",
+    'autocli social mastodon search "open source"',
+    "autocli social mastodon profile mastodon.social/@Gargron",
+    "autocli social mastodon posts mastodon.social/@Gargron --limit 5",
+    "autocli social mastodon thread 116306409081398966",
   ],
 };

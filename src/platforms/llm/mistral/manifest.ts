@@ -7,7 +7,7 @@ export const mistralPlatformDefinition: PlatformDefinition = {
   id: "mistral",
   category: "llm",
   displayName: "Mistral",
-  description: "Interact with Mistral Le Chat using the browserless web flow, with optional saved cookies",
+  description: "Interact with Mistral Le Chat using the browserless web flow, with text support strongest today",
   authStrategies: ["cookies"],
   adapter: mistralAdapter,
   capabilities: createCookieLlmCapabilities(mistralAdapter),

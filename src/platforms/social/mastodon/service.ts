@@ -6,6 +6,7 @@ import {
   formatCompactNumber,
   normalizeMastodonInstanceUrl,
   parseMastodonSearchTarget,
+  normalizeMastodonStatusTarget,
   trimPreview,
 } from "./helpers.js";
 
@@ -177,18 +178,17 @@ export class MastodonService {
   }
 
   async threadInfo(input: { target: string; limit?: number }): Promise<AdapterActionResult> {
-    const resolved = parseMastodonSearchTarget(input.target);
+    const resolved = normalizeMastodonStatusTarget(input.target);
     const limit = normalizeSocialLimit(input.limit, 5, 25);
-    const statusId = await this.resolveStatusId(resolved);
-    const status = await this.fetchJson<MastodonStatus>(`/api/v1/statuses/${encodeURIComponent(statusId)}`, {}, resolved.baseUrl);
-    const context = await this.fetchJson<MastodonThreadContext>(`/api/v1/statuses/${encodeURIComponent(statusId)}/context`, {}, resolved.baseUrl);
-    const thread = mapStatus(status, resolved.baseUrl);
+    const status = await this.fetchJson<MastodonStatus>(`/api/v1/statuses/${encodeURIComponent(resolved.statusId)}`, {}, resolved.origin);
+    const context = await this.fetchJson<MastodonThreadContext>(`/api/v1/statuses/${encodeURIComponent(resolved.statusId)}/context`, {}, resolved.origin);
+    const thread = mapStatus(status, resolved.origin);
     if (!thread) {
       throw new AutoCliError("MASTODON_THREAD_INVALID", "Mastodon returned an unreadable thread.");
     }
 
     const replies = (context.descendants ?? [])
-      .map((entry) => mapStatus(entry, resolved.baseUrl))
+      .map((entry) => mapStatus(entry, resolved.origin))
       .filter((value): value is Record<string, unknown> => Boolean(value))
       .slice(0, limit);
 
@@ -197,9 +197,13 @@ export class MastodonService {
       platform: this.platform,
       account: "public",
       action: "thread",
-      message: `Loaded Mastodon thread ${String(thread.id ?? statusId)}.`,
-      id: String(thread.id ?? statusId),
-      url: String(thread.url ?? status.url ?? buildMastodonStatusUrl(resolved.baseUrl, String(status.account?.username ?? thread.username ?? ""), String(thread.id ?? statusId))),
+      message: `Loaded Mastodon thread ${String(thread.id ?? resolved.statusId)}.`,
+      id: String(thread.id ?? resolved.statusId),
+      url: String(
+        thread.url ??
+          status.url ??
+          buildMastodonStatusUrl(resolved.origin, String(status.account?.username ?? thread.username ?? ""), String(thread.id ?? resolved.statusId)),
+      ),
       data: {
         thread,
         replies,
@@ -250,29 +254,6 @@ export class MastodonService {
       },
     });
   }
-
-  private async resolveStatusId(input: ReturnType<typeof parseMastodonSearchTarget>): Promise<string> {
-    if (input.statusId) {
-      return input.statusId;
-    }
-
-    if (input.url) {
-      const url = new URL(input.url);
-      const pathMatch = url.pathname.match(/^\/@[^/]+\/(\d+)\/?$/u);
-      const statusesMatch = url.pathname.match(/^\/users\/[^/]+\/statuses\/(\d+)\/?$/u);
-      const id = pathMatch?.[1] ?? statusesMatch?.[1];
-      if (id) {
-        return id;
-      }
-    }
-
-    throw new AutoCliError("MASTODON_THREAD_TARGET_INVALID", "Expected a Mastodon post URL or numeric status ID.", {
-      details: {
-        target: input.url ?? input.handle ?? input.baseUrl,
-      },
-    });
-  }
-
   private async fetchJson<T>(path: string, query: Record<string, string> = {}, baseUrl = "https://mastodon.social"): Promise<T> {
     const url = new URL(path, normalizeMastodonInstanceUrl(baseUrl));
     for (const [key, value] of Object.entries(query)) {
@@ -371,7 +352,7 @@ function mapStatus(status: MastodonStatus, baseUrl = "https://mastodon.social"):
       formatMetric("boosts", status.reblogs_count),
       formatMetric("likes", status.favourites_count),
     ].filter((value): value is string => Boolean(value)),
-    url: buildMastodonStatusUrl(origin, username, status.id),
+    url: status.url ?? buildMastodonStatusUrl(origin, username, status.id),
   };
 }
 

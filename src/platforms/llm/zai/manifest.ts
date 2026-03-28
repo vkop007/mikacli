@@ -7,7 +7,7 @@ export const zaiPlatformDefinition: PlatformDefinition = {
   id: "zai",
   category: "llm",
   displayName: "Z.ai",
-  description: "Interact with Z.ai using imported browser cookies",
+  description: "Interact with Z.ai using imported browser cookies, with text flows strongest today",
   authStrategies: ["cookies"],
   adapter: zaiAdapter,
   capabilities: createCookieLlmCapabilities(zaiAdapter),
