@@ -7,6 +7,7 @@ export type PlatformCategory =
   | "llm"
   | "editor"
   | "finance"
+  | "data"
   | "maps"
   | "movie"
   | "music"

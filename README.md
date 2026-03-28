@@ -52,6 +52,7 @@ autocli tools translate "hello world" --to hi
 | `llm` | ChatGPT, Claude, DeepSeek, Gemini, Grok, Mistral, Perplexity, Qwen, Z.ai | 9 | cookies | Browserless prompting, image flows, generation jobs | `autocli llm <provider> ...` |
 | `editor` | Archive, Audio, Document, GIF, Image, PDF, Subtitle, Video | 8 | local tools | Media and file transformations from the terminal | `autocli editor <provider> ...` |
 | `finance` | Crypto, Currency/Forex, Stocks | 3 | none | Market, forex, and crypto lookups | `autocli finance <provider> ...` |
+| `data` | CSV, HTML, JSON, Markdown, Text, XML, YAML | 7 | none | Structured data cleanup, conversion, filtering, and extraction for agents | `autocli data <provider> ...` |
 | `maps` | Geo, OpenStreetMap, OSRM | 3 | none | Geocoding, reverse lookup, routing, geometry helpers | `autocli maps <provider> ...` |
 | `movie` | AniList, IMDb, JustWatch, Kitsu, MyAnimeList, TMDb, TVMaze | 7 | none or cookies | Public title lookup, anime tracking, streaming availability | `autocli movie <provider> ...` |
 | `music` | Bandcamp, SoundCloud, Spotify, YouTube Music | 4 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
@@ -61,7 +62,7 @@ autocli tools translate "hello world" --to hi
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, News, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 22 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `81` providers across `11` active command groups.
+AutoCLI currently exposes `88` providers across `12` active command groups.
 
 ## Access Modes
 
@@ -266,6 +267,18 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | Crypto | none | crypto spot price lookup | No key required. |
 | Currency | none | currency conversion and forex math | Also exposed naturally as forex conversion. |
 | Stocks | none | stock quote lookups | Public market data surface. |
+
+### Data
+
+| Provider | Needs | Best for | Notes |
+| --- | --- | --- | --- |
+| CSV | none | inspect, filter, and convert CSV | Good for tabular exports and spreadsheet-style data. |
+| HTML | none | extract plain text or convert HTML to Markdown | Useful after scraping or page capture workflows. |
+| JSON | none | format, query, and merge JSON | Best glue layer for agent workflows across providers. |
+| Markdown | none | convert Markdown to HTML or text | Good for docs, release notes, and prompt shaping. |
+| Text | none | stats, replace, and dedupe lines | Useful for cleanup and normalization between steps. |
+| XML | none | format XML and convert it to JSON | Useful for feeds, sitemaps, and older structured formats. |
+| YAML | none | format YAML and convert it to JSON | Good for configs, manifests, and infra files. |
 
 ### Maps
 

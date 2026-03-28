@@ -52,6 +52,19 @@ describe("platform category routing", () => {
     ]);
   });
 
+  test("includes the data category and providers", () => {
+    expect(getPlatformCategories()).toContain("data");
+    expect(getPlatformDefinitionsByCategory("data").map((definition) => definition.id)).toEqual([
+      "csv",
+      "html",
+      "json",
+      "markdown",
+      "text",
+      "xml",
+      "yaml",
+    ]);
+  });
+
   test("includes the maps category and providers", () => {
     expect(getPlatformCategories()).toContain("maps");
     expect(getPlatformDefinitionsByCategory("maps").map((definition) => definition.id)).toEqual([

@@ -21,6 +21,9 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   finance: {
     description: "Public market, crypto, and forex lookup tools",
   },
+  data: {
+    description: "Structured data cleanup, conversion, querying, and extraction tools",
+  },
   forum: {
     description: "Forum-style communities and discussion platforms",
   },

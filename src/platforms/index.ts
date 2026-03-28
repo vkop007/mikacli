@@ -2,6 +2,13 @@ import { discordBotPlatformDefinition } from "./bot/discordbot/manifest.js";
 import { githubbotPlatformDefinition } from "./bot/githubbot/manifest.js";
 import { slackbotPlatformDefinition } from "./bot/slackbot/manifest.js";
 import { telegrambotPlatformDefinition } from "./bot/telegrambot/manifest.js";
+import { csvPlatformDefinition } from "./data/csv/manifest.js";
+import { htmlPlatformDefinition } from "./data/html/manifest.js";
+import { jsonPlatformDefinition } from "./data/json/manifest.js";
+import { markdownPlatformDefinition } from "./data/markdown/manifest.js";
+import { textPlatformDefinition } from "./data/text/manifest.js";
+import { xmlPlatformDefinition } from "./data/xml/manifest.js";
+import { yamlPlatformDefinition } from "./data/yaml/manifest.js";
 import { githubPlatformDefinition } from "./developer/github/manifest.js";
 import { gitlabPlatformDefinition } from "./developer/gitlab/manifest.js";
 import { jiraPlatformDefinition } from "./developer/jira/manifest.js";
@@ -97,11 +104,13 @@ const definitions: readonly PlatformDefinition[] = [
   discordBotPlatformDefinition,
   archiveEditorPlatformDefinition,
   audioEditorPlatformDefinition,
+  csvPlatformDefinition,
   documentEditorPlatformDefinition,
   ebayPlatformDefinition,
   faviconPlatformDefinition,
   geoPlatformDefinition,
   gifEditorPlatformDefinition,
+  htmlPlatformDefinition,
   imageEditorPlatformDefinition,
   etsyPlatformDefinition,
   facebookPlatformDefinition,
@@ -114,6 +123,8 @@ const definitions: readonly PlatformDefinition[] = [
   imdbPlatformDefinition,
   justWatchPlatformDefinition,
   kitsuPlatformDefinition,
+  jsonPlatformDefinition,
+  markdownPlatformDefinition,
   mistralPlatformDefinition,
   myAnimeListPlatformDefinition,
   tmdbPlatformDefinition,
@@ -146,6 +157,7 @@ const definitions: readonly PlatformDefinition[] = [
   soundCloudPlatformDefinition,
   spotifyPlatformDefinition,
   stocksPlatformDefinition,
+  textPlatformDefinition,
   pinterestPlatformDefinition,
   telegramPlatformDefinition,
   telegrambotPlatformDefinition,
@@ -163,6 +175,8 @@ const definitions: readonly PlatformDefinition[] = [
   whatsappPlatformDefinition,
   whoisPlatformDefinition,
   xPlatformDefinition,
+  xmlPlatformDefinition,
+  yamlPlatformDefinition,
   youtubePlatformDefinition,
   youtubeMusicPlatformDefinition,
 ];
@@ -183,7 +197,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "maps", "movie", "music", "social", "shopping", "developer", "bot", "tools", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "data", "maps", "movie", "music", "social", "shopping", "developer", "bot", "tools", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];
