@@ -34,6 +34,7 @@ import { flipkartPlatformDefinition } from "./shopping/flipkart/manifest.js";
 import { chatgptPlatformDefinition } from "./llm/chatgpt/manifest.js";
 import { claudePlatformDefinition } from "./llm/claude/manifest.js";
 import { deepSeekPlatformDefinition } from "./llm/deepseek/manifest.js";
+import { deezerPlatformDefinition } from "./music/deezer/manifest.js";
 import { geminiPlatformDefinition } from "./llm/gemini/manifest.js";
 import { grokPlatformDefinition } from "./llm/grok/manifest.js";
 import { mistralPlatformDefinition } from "./llm/mistral/manifest.js";
@@ -43,6 +44,7 @@ import { aniListPlatformDefinition } from "./movie/anilist/manifest.js";
 import { imdbPlatformDefinition } from "./movie/imdb/manifest.js";
 import { justWatchPlatformDefinition } from "./movie/justwatch/manifest.js";
 import { kitsuPlatformDefinition } from "./movie/kitsu/manifest.js";
+import { letterboxdPlatformDefinition } from "./movie/letterboxd/manifest.js";
 import { myAnimeListPlatformDefinition } from "./movie/myanimelist/manifest.js";
 import { tmdbPlatformDefinition } from "./movie/tmdb/manifest.js";
 import { tvMazePlatformDefinition } from "./movie/tvmaze/manifest.js";
@@ -60,6 +62,7 @@ import { faviconPlatformDefinition } from "./tools/favicon/manifest.js";
 import { headersPlatformDefinition } from "./tools/headers/manifest.js";
 import { ipPlatformDefinition } from "./tools/ip/manifest.js";
 import { markdownFetchPlatformDefinition } from "./tools/markdown-fetch/manifest.js";
+import { mastodonPlatformDefinition } from "./social/mastodon/manifest.js";
 import { metadataPlatformDefinition } from "./tools/metadata/manifest.js";
 import { oEmbedPlatformDefinition } from "./tools/oembed/manifest.js";
 import { pageLinksPlatformDefinition } from "./tools/page-links/manifest.js";
@@ -104,6 +107,7 @@ const definitions: readonly PlatformDefinition[] = [
   cryptoPlatformDefinition,
   currencyPlatformDefinition,
   deepSeekPlatformDefinition,
+  deezerPlatformDefinition,
   dnsPlatformDefinition,
   discordBotPlatformDefinition,
   archiveEditorPlatformDefinition,
@@ -127,6 +131,7 @@ const definitions: readonly PlatformDefinition[] = [
   imdbPlatformDefinition,
   justWatchPlatformDefinition,
   kitsuPlatformDefinition,
+  letterboxdPlatformDefinition,
   jsonPlatformDefinition,
   markdownPlatformDefinition,
   mistralPlatformDefinition,
@@ -148,6 +153,7 @@ const definitions: readonly PlatformDefinition[] = [
   oEmbedPlatformDefinition,
   pageLinksPlatformDefinition,
   linkedinPlatformDefinition,
+  mastodonPlatformDefinition,
   linearPlatformDefinition,
   notionPlatformDefinition,
   pdfPlatformDefinition,
