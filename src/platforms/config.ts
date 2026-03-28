@@ -16,6 +16,7 @@ export const PLATFORM_NAMES = [
   "audio",
   "document",
   "ebay",
+  "favicon",
   "geo",
   "gif",
   "image",
@@ -39,6 +40,7 @@ export const PLATFORM_NAMES = [
   "myanimelist",
   "mistral",
   "news",
+  "page-links",
   "linkedin",
   "linear",
   "notion",
@@ -207,6 +209,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "ebay.com",
     authCookieNames: [],
   },
+  favicon: {
+    displayName: "Favicon",
+    origin: "https://example.com",
+    homeUrl: "https://developer.mozilla.org/en-US/docs/Glossary/Favicon",
+    cookieDomain: "example.com",
+    authCookieNames: [],
+  },
   geo: {
     displayName: "Geo",
     origin: "https://github.com/google/open-location-code",
@@ -366,6 +375,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://news.google.com",
     homeUrl: "https://news.google.com/",
     cookieDomain: "news.google.com",
+    authCookieNames: [],
+  },
+  "page-links": {
+    displayName: "Page Links",
+    origin: "https://example.com",
+    homeUrl: "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a",
+    cookieDomain: "example.com",
     authCookieNames: [],
   },
   linkedin: {

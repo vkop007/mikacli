@@ -45,10 +45,12 @@ import { notionPlatformDefinition } from "./developer/notion/manifest.js";
 import { blueskyPlatformDefinition } from "./social/bluesky/manifest.js";
 import { cheatPlatformDefinition } from "./tools/cheat/manifest.js";
 import { dnsPlatformDefinition } from "./tools/dns/manifest.js";
+import { faviconPlatformDefinition } from "./tools/favicon/manifest.js";
 import { headersPlatformDefinition } from "./tools/headers/manifest.js";
 import { ipPlatformDefinition } from "./tools/ip/manifest.js";
 import { markdownFetchPlatformDefinition } from "./tools/markdown-fetch/manifest.js";
 import { metadataPlatformDefinition } from "./tools/metadata/manifest.js";
+import { pageLinksPlatformDefinition } from "./tools/page-links/manifest.js";
 import { qrPlatformDefinition } from "./tools/qr/manifest.js";
 import { redirectPlatformDefinition } from "./tools/redirect/manifest.js";
 import { screenshotPlatformDefinition } from "./tools/screenshot/manifest.js";
@@ -93,6 +95,7 @@ const definitions: readonly PlatformDefinition[] = [
   audioEditorPlatformDefinition,
   documentEditorPlatformDefinition,
   ebayPlatformDefinition,
+  faviconPlatformDefinition,
   geoPlatformDefinition,
   gifEditorPlatformDefinition,
   imageEditorPlatformDefinition,
@@ -122,6 +125,7 @@ const definitions: readonly PlatformDefinition[] = [
   markdownFetchPlatformDefinition,
   metadataPlatformDefinition,
   newsPlatformDefinition,
+  pageLinksPlatformDefinition,
   linkedinPlatformDefinition,
   linearPlatformDefinition,
   notionPlatformDefinition,

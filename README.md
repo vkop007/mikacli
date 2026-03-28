@@ -59,9 +59,9 @@ autocli tools translate "hello world" --to hi
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | GitHub, GitLab, Jira, Linear, Notion, Trello | 6 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
-| `tools` | Cheat, DNS, Headers, IP, Markdown Fetch, Metadata, News, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 20 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
+| `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, News, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Translate, Uptime, Weather, Web Search, Whois | 22 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `76` providers across `11` active command groups.
+AutoCLI currently exposes `78` providers across `11` active command groups.
 
 ## Access Modes
 
@@ -180,6 +180,8 @@ autocli social whatsapp send 919876543210 "Ping from AutoCLI"
 autocli tools translate "hello world" --to hi
 autocli tools websearch search "typescript cli bun"
 autocli tools screenshot https://example.com --output-dir ./shots
+autocli tools favicon openai.com
+autocli tools page-links https://example.com --type external
 autocli tools uptime https://example.com --json
 autocli tools rss https://hnrss.org/frontpage --limit 5
 ```
@@ -340,11 +342,13 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | --- | --- | --- | --- |
 | Cheat | none | shell and language cheat sheets | Fast terminal help. |
 | DNS | none | DNS record lookups | Good for quick ops checks. |
+| Favicon | none | site icon discovery and verification | Resolves declared icon tags, falls back to `/favicon.ico`, and verifies candidates. |
 | Headers | none | inspect raw HTTP response headers | Useful for cache, CDN, and server debugging. |
 | IP | none | public IP and network details | Fast no-auth network lookup. |
 | Markdown Fetch | none | turn pages into markdown-like text | Useful for scraping readable content. |
 | Metadata | none | webpage title and social tags | Extracts title, description, canonical, favicon, Open Graph, and Twitter tags. |
 | News | none | headline and feed aggregation | Pulls from public no-key sources. |
+| Page Links | none | internal/external link extraction from webpages | Useful for crawls, site audits, and agent discovery. |
 | QR | none | QR generation | Can save or print a public image URL. |
 | Redirect | none | redirect-chain tracing | Shows each HTTP hop and final destination. |
 | Robots | none | `robots.txt` inspection | Useful for site crawling checks. |
