@@ -259,27 +259,7 @@ export class CookieManager {
       );
     }
 
-    const jar = new CookieJar();
-    for (const rawCookie of rawCookies) {
-      const parsedCookie = BrowserCookieSchema.safeParse(rawCookie);
-      if (!parsedCookie.success) {
-        throw new AutoCliError(
-          "INVALID_COOKIE_JSON",
-          "Cookie JSON contains an unsupported cookie object.",
-          {
-            details: {
-              issues: parsedCookie.error.issues,
-            },
-            cause: parsedCookie.error,
-          },
-        );
-      }
-
-      const cookie = parsedCookie.data;
-      await setCookieOnJar(jar, createCookieFromLooseObject(platform, cookie));
-    }
-
-    return jar;
+    return createCookieJarFromBrowserCookies(rawCookies, defaultCookieDomain(platform));
   }
 
   async parseCookieString(platform: Platform, input: string): Promise<CookieJar> {
@@ -472,6 +452,31 @@ export function serializeCookieJar(jar: CookieJar): SerializedCookieJar {
   return serialized;
 }
 
+export async function createCookieJarFromBrowserCookies(cookies: unknown[], fallbackDomain: string): Promise<CookieJar> {
+  const jar = new CookieJar();
+
+  for (const rawCookie of cookies) {
+    const parsedCookie = BrowserCookieSchema.safeParse(rawCookie);
+    if (!parsedCookie.success) {
+      throw new AutoCliError(
+        "INVALID_COOKIE_JSON",
+        "Cookie JSON contains an unsupported cookie object.",
+        {
+          details: {
+            issues: parsedCookie.error.issues,
+          },
+          cause: parsedCookie.error,
+        },
+      );
+    }
+
+    const cookie = parsedCookie.data;
+    await setCookieOnJar(jar, createCookieFromLooseObject(cookie, fallbackDomain));
+  }
+
+  return jar;
+}
+
 function platformOrigin(platform: Platform): string {
   return getPlatformHomeUrl(platform);
 }
@@ -529,11 +534,11 @@ async function setCookieOnJar(jar: CookieJar, cookie: Cookie): Promise<void> {
 }
 
 function createCookieFromLooseObject(
-  platform: Platform,
   cookie: z.infer<typeof BrowserCookieSchema>,
+  fallbackDomain: string,
 ): Cookie {
   const expiresRaw = cookie.expirationDate ?? cookie.expires;
-  const rawDomain = cookie.domain ?? defaultCookieDomain(platform);
+  const rawDomain = cookie.domain ?? fallbackDomain;
   const normalizedDomain = normalizeCookieDomain(rawDomain);
   const hostOnly = cookie.hostOnly ?? !rawDomain.startsWith(".");
   return new Cookie({

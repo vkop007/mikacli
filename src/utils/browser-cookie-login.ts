@@ -21,12 +21,49 @@ import {
   getPlatformHomeUrl,
 } from "../platforms/config.js";
 import type { Platform } from "../types.js";
+import type {
+  Browser as PlaywrightBrowser,
+  BrowserContext as PlaywrightBrowserContext,
+  Page as PlaywrightPage,
+  Request as PlaywrightRequest,
+  Response as PlaywrightResponse,
+} from "playwright-core";
 
 export interface BrowserLoginCapture {
   cookies: unknown[];
   finalUrl: string;
   localStorage: Record<string, string>;
   sessionStorage: Record<string, string>;
+}
+
+export interface BrowserTargetInspection {
+  browserProfilePath: string;
+  finalUrl: string;
+  cookies: unknown[];
+  localStorage: Record<string, string>;
+  sessionStorage: Record<string, string>;
+  launchedFresh: boolean;
+}
+
+export interface CapturedBrowserRequest {
+  id: number;
+  method: string;
+  url: string;
+  resourceType: string;
+  requestHeaders: Record<string, string>;
+  responseHeaders?: Record<string, string>;
+  status?: number;
+  statusText?: string;
+  postData?: string;
+  failureText?: string;
+}
+
+export interface BrowserNetworkCapture {
+  browserProfilePath: string;
+  finalUrl: string;
+  requests: CapturedBrowserRequest[];
+  timedOut: boolean;
+  launchedFresh: boolean;
 }
 
 type ManagedBrowserState = {
@@ -46,25 +83,12 @@ type ManagedBrowserHandle = {
 const execFileAsync = promisify(execFile);
 
 type ConnectedBrowser = {
-  browser: {
-    contexts(): Array<BrowserContextLike>;
-    close(): Promise<void>;
-  };
-  context: BrowserContextLike;
+  browser: PlaywrightBrowser;
+  context: PlaywrightBrowserContext;
 };
 
-type BrowserContextLike = {
-  pages(): BrowserPageLike[];
-  newPage(): Promise<BrowserPageLike>;
-  cookies(): Promise<unknown[]>;
-};
-
-type BrowserPageLike = {
-  url(): string;
-  goto(url: string, options?: unknown): Promise<unknown>;
-  waitForTimeout(ms: number): Promise<void>;
-  evaluate<T>(fn: () => T): Promise<T>;
-};
+type BrowserContextLike = PlaywrightBrowserContext;
+type BrowserPageLike = PlaywrightPage;
 
 const WEAK_BROWSER_AUTH_COOKIE_NAMES = new Set([
   "_gh_sess",
@@ -111,7 +135,7 @@ export async function captureBrowserLogin(
   let connected: ConnectedBrowser | null = null;
   try {
     connected = await connectToManagedBrowser(managed.state.cdpUrl);
-    const page = await openOrReusePage(connected.context, startUrl);
+    const page = await openOrReusePage(connected.context, startUrl, Math.min(timeoutMs, 15_000));
 
     announceBrowserLogin("Complete the sign-in flow in the opened browser window. AutoCLI will save the extracted session automatically once login is detected.");
 
@@ -197,6 +221,93 @@ export async function openSharedBrowserProfile(
     startUrl,
     timedOut: !finished,
   };
+}
+
+export async function inspectSharedBrowserTarget(input: {
+  targetUrl: string;
+  timeoutSeconds?: number;
+}): Promise<BrowserTargetInspection> {
+  const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+  const managed = await requireManagedBrowser({
+    announceLabel: `Attaching to the shared AutoCLI browser profile for inspection: ${input.targetUrl}`,
+  });
+
+  let connected: ConnectedBrowser | null = null;
+  try {
+    connected = await connectToManagedBrowser(managed.state.cdpUrl);
+    const page = await openOrReusePage(connected.context, input.targetUrl, Math.min(timeoutMs, 10_000));
+    await page.waitForTimeout(Math.min(timeoutMs, 1_000));
+
+    const cookies = await connected.context.cookies();
+    const storage = await readStorage(page);
+    return {
+      browserProfilePath: managed.state.browserProfilePath,
+      finalUrl: page.url(),
+      cookies,
+      localStorage: storage.localStorage,
+      sessionStorage: storage.sessionStorage,
+      launchedFresh: managed.launchedFresh,
+    };
+  } finally {
+    if (connected) {
+      await connected.browser.close().catch(() => {});
+    }
+    if (managed.launchedFresh) {
+      await closeManagedBrowser(managed.state).catch(() => {});
+    }
+  }
+}
+
+export async function captureSharedBrowserNetwork(input: {
+  targetUrl: string;
+  timeoutSeconds?: number;
+  filterDomain?: string;
+  filterText?: string;
+  limit?: number;
+}): Promise<BrowserNetworkCapture> {
+  const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+  const limit = Math.max(1, Math.min(200, input.limit ?? 25));
+  const managed = await requireManagedBrowser({
+    announceLabel: `Attaching to the shared AutoCLI browser profile for capture: ${input.targetUrl}`,
+  });
+
+  let connected: ConnectedBrowser | null = null;
+  try {
+    connected = await connectToManagedBrowser(managed.state.cdpUrl);
+    const page = await getOrCreatePage(connected.context, input.targetUrl);
+    const requests = attachNetworkCapture(page, {
+      filterDomain: input.filterDomain,
+      filterText: input.filterText,
+    });
+
+    announceBrowserLogin("Interact in the opened browser window. AutoCLI is capturing network requests now.");
+    await navigatePage(page, input.targetUrl, Math.min(timeoutMs, 10_000));
+
+    const deadline = Date.now() + timeoutMs;
+    let timedOut = true;
+    while (Date.now() < deadline) {
+      if (!(await isManagedBrowserReachable(managed.state))) {
+        timedOut = false;
+        break;
+      }
+      await page.waitForTimeout(500);
+    }
+
+    return {
+      browserProfilePath: managed.state.browserProfilePath,
+      finalUrl: page.url(),
+      requests: requests.slice(-limit),
+      timedOut,
+      launchedFresh: managed.launchedFresh,
+    };
+  } finally {
+    if (connected) {
+      await connected.browser.close().catch(() => {});
+    }
+    if (managed.launchedFresh) {
+      await closeManagedBrowser(managed.state).catch(() => {});
+    }
+  }
 }
 
 export function hasDetectedAuthenticatedState(
@@ -293,17 +404,69 @@ async function ensureManagedBrowser(input: {
 
 async function connectToManagedBrowser(cdpUrl: string): Promise<ConnectedBrowser> {
   const { chromium } = await import("playwright-core");
-  const browser = await chromium.connectOverCDP(cdpUrl);
-  const context = browser.contexts()[0];
-  if (!context) {
-    await browser.close().catch(() => {});
-    throw new AutoCliError("BROWSER_LOGIN_FAILED", "Managed browser started, but no reusable browser context was available.");
+
+  const deadline = Date.now() + 15_000;
+  let lastError: unknown = null;
+
+  while (Date.now() < deadline) {
+    try {
+      const browser = await chromium.connectOverCDP(cdpUrl, {
+        timeout: 3_000,
+      });
+      const context = browser.contexts()[0];
+      if (!context) {
+        await browser.close().catch(() => {});
+        throw new AutoCliError("BROWSER_LOGIN_FAILED", "Managed browser started, but no reusable browser context was available.");
+      }
+
+      return { browser, context };
+    } catch (error) {
+      lastError = error;
+      await sleep(500);
+    }
   }
 
-  return { browser, context };
+  throw new AutoCliError("BROWSER_LOGIN_FAILED", "Managed browser started, but AutoCLI could not attach over CDP in time.", {
+    cause: lastError,
+    details: {
+      cdpUrl,
+    },
+  });
 }
 
-async function openOrReusePage(context: BrowserContextLike, startUrl: string): Promise<BrowserPageLike> {
+async function requireManagedBrowser(input: {
+  announceLabel: string;
+  profile?: string;
+}): Promise<ManagedBrowserHandle> {
+  const profile = input.profile ?? DEFAULT_BROWSER_PROFILE;
+  const existing = await readManagedBrowserState(profile);
+  if (!existing || !(await isManagedBrowserReachable(existing))) {
+    throw new AutoCliError(
+      "BROWSER_NOT_RUNNING",
+      "No shared AutoCLI browser profile is running. Start it first with `autocli login --browser` and keep that browser window open.",
+      {
+        details: {
+          profile,
+          browserProfilePath: getBrowserProfileDir(profile),
+        },
+      },
+    );
+  }
+
+  announceBrowserLogin(input.announceLabel);
+  return {
+    state: existing,
+    launchedFresh: false,
+  };
+}
+
+async function openOrReusePage(context: BrowserContextLike, startUrl: string, timeoutMs = 15_000): Promise<BrowserPageLike> {
+  const page = await getOrCreatePage(context, startUrl);
+  await navigatePage(page, startUrl, timeoutMs);
+  return page;
+}
+
+async function getOrCreatePage(context: BrowserContextLike, startUrl: string): Promise<BrowserPageLike> {
   const existing = context.pages().find((page) => {
     try {
       const url = page.url();
@@ -313,9 +476,18 @@ async function openOrReusePage(context: BrowserContextLike, startUrl: string): P
     }
   });
 
-  const page = existing ?? (await context.newPage());
-  await page.goto(startUrl, { waitUntil: "domcontentloaded" });
-  return page;
+  return existing ?? context.newPage();
+}
+
+async function navigatePage(page: BrowserPageLike, url: string, timeoutMs = 15_000): Promise<void> {
+  try {
+    await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: timeoutMs,
+    });
+  } catch {
+    // Best-effort navigation only. The user can still keep interacting with the browser.
+  }
 }
 
 async function waitForManagedBrowserReady(state: ManagedBrowserState): Promise<void> {
@@ -542,6 +714,81 @@ async function readStorage(page: BrowserPageLike): Promise<{ localStorage: Recor
       sessionStorage: {},
     };
   }
+}
+
+function attachNetworkCapture(
+  page: PlaywrightPage,
+  input: {
+    filterDomain?: string;
+    filterText?: string;
+  },
+): CapturedBrowserRequest[] {
+  const requests: CapturedBrowserRequest[] = [];
+  const requestMap = new Map<PlaywrightRequest, CapturedBrowserRequest>();
+
+  const matchesRequest = (url: string): boolean => {
+    if (input.filterDomain) {
+      try {
+        const hostname = new URL(url).hostname.replace(/^\./u, "");
+        const normalizedDomain = input.filterDomain.replace(/^\./u, "");
+        if (hostname !== normalizedDomain && !hostname.endsWith(`.${normalizedDomain}`)) {
+          return false;
+        }
+      } catch {
+        return false;
+      }
+    }
+
+    if (input.filterText) {
+      return url.includes(input.filterText);
+    }
+
+    return true;
+  };
+
+  page.on("request", (request) => {
+    if (!matchesRequest(request.url())) {
+      return;
+    }
+
+    const entry: CapturedBrowserRequest = {
+      id: requests.length + 1,
+      method: request.method(),
+      url: request.url(),
+      resourceType: request.resourceType(),
+      requestHeaders: request.headers(),
+    };
+
+    const postData = request.postData();
+    if (typeof postData === "string" && postData.length > 0) {
+      entry.postData = postData.slice(0, 2_000);
+    }
+
+    requests.push(entry);
+    requestMap.set(request, entry);
+  });
+
+  page.on("response", async (response: PlaywrightResponse) => {
+    const entry = requestMap.get(response.request());
+    if (!entry) {
+      return;
+    }
+
+    entry.status = response.status();
+    entry.statusText = response.statusText();
+    entry.responseHeaders = await response.allHeaders().catch(() => ({}));
+  });
+
+  page.on("requestfailed", (request: PlaywrightRequest) => {
+    const entry = requestMap.get(request);
+    if (!entry) {
+      return;
+    }
+
+    entry.failureText = request.failure()?.errorText;
+  });
+
+  return requests;
 }
 
 function isStrongBrowserAuthCookie(cookie: unknown, pattern: string): boolean {

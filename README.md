@@ -2,14 +2,14 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vkop007%2Fautocli)](https://www.npmjs.com/package/@vkop007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-94-blue)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-95-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-13-6f42c1)](#category-overview)
 
 AutoCLI is a terminal automation toolkit for developers and AI agents. It brings LLMs, social platforms, developer tools, editors, data workflows, maps, news, finance, shopping, music, movies, bots, and public utilities together in one CLI.
 
 Built for real automation work:
 
-- one command surface across `94` providers
+- one command surface across `95` providers
 - category-based commands that stay predictable as the tool grows
 - clean `--json` output for scripts, agents, and orchestration
 - support for cookies, saved sessions, bot tokens, local tools, and public services
@@ -24,7 +24,7 @@ You can also bootstrap a shared AutoCLI browser profile once with `autocli login
 | --- | --- |
 | Package | `@vkop007/autocli` |
 | CLI command | `autocli` |
-| Providers | `94` |
+| Providers | `95` |
 | Categories | `13` |
 | npm install | `npm install -g @vkop007/autocli` |
 | Local setup | `bun install` |
@@ -52,6 +52,7 @@ autocli status
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli developer github me --json
 autocli tools page-links https://example.com --json
+autocli tools http github inspect --json
 ```
 
 ## Why Use AutoCLI
@@ -91,6 +92,7 @@ autocli news top "AI"
 autocli tools translate "hello world" --to hi
 autocli tools timezone "Mumbai"
 autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
+autocli tools http github request GET /settings/profile
 ```
 
 ## Category Overview
@@ -109,9 +111,9 @@ autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | Confluence, GitHub, GitLab, Jira, Linear, Notion, Trello | 7 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
-| `tools` | Cheat, DNS, Favicon, Headers, IP, Markdown Fetch, Metadata, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 23 | none | Public utilities with zero account setup | `autocli tools <provider> ...` |
+| `tools` | Cheat, DNS, Favicon, Headers, HTTP Toolkit, IP, Markdown Fetch, Metadata, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 24 | none or cookies | Public utilities, session-aware request inspection, and zero-setup helpers | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `94` providers across `13` active command groups.
+AutoCLI currently exposes `95` providers across `13` active command groups.
 
 ## Access Modes
 
@@ -197,6 +199,7 @@ autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
 autocli bot telegrambot login --token 123456:ABCDEF --name alerts-bot
 autocli news top "AI"
 autocli tools websearch search "bun commander zod"
+autocli tools http github inspect
 ```
 
 ## Best Example Workflows
@@ -266,6 +269,9 @@ autocli tools favicon openai.com
 autocli tools page-links https://example.com --type external
 autocli tools timezone "Mumbai"
 autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
+autocli login --browser
+autocli tools http github.com capture --browser-timeout 60
+autocli tools http github.com capture --summary --group-by endpoint --browser-timeout 60
 autocli tools uptime https://example.com --json
 autocli tools rss https://hnrss.org/frontpage --limit 5
 ```
@@ -458,6 +464,7 @@ These providers are intentionally included, but their current browserless surfac
 | DNS | none | DNS record lookups | Good for quick ops checks. |
 | Favicon | none | site icon discovery and verification | Resolves declared icon tags, falls back to `/favicon.ico`, and verifies candidates. |
 | Headers | none | inspect raw HTTP response headers | Useful for cache, CDN, and server debugging. |
+| HTTP Toolkit | none or cookies | inspect saved sessions, attach to the shared browser, and replay authenticated requests | Best for session-aware debugging on sites where plain `curl` is not enough. |
 | IP | none | public IP and network details | Fast no-auth network lookup. |
 | Markdown Fetch | none | turn pages into markdown-like text | Useful for scraping readable content. |
 | Metadata | none | webpage title and social tags | Extracts title, description, canonical, favicon, Open Graph, and Twitter tags. |

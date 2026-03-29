@@ -60,6 +60,7 @@ import { cheatPlatformDefinition } from "./tools/cheat/manifest.js";
 import { dnsPlatformDefinition } from "./tools/dns/manifest.js";
 import { faviconPlatformDefinition } from "./tools/favicon/manifest.js";
 import { headersPlatformDefinition } from "./tools/headers/manifest.js";
+import { httpPlatformDefinition } from "./tools/http/manifest.js";
 import { ipPlatformDefinition } from "./tools/ip/manifest.js";
 import { markdownFetchPlatformDefinition } from "./tools/markdown-fetch/manifest.js";
 import { mastodonPlatformDefinition } from "./social/mastodon/manifest.js";
@@ -143,6 +144,7 @@ const definitions: readonly PlatformDefinition[] = [
   githubPlatformDefinition,
   githubbotPlatformDefinition,
   gitlabPlatformDefinition,
+  httpPlatformDefinition,
   headersPlatformDefinition,
   ipPlatformDefinition,
   instagramPlatformDefinition,

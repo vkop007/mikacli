@@ -146,6 +146,7 @@ describe("platform category routing", () => {
     expect(toolIds).toContain("dns");
     expect(toolIds).toContain("favicon");
     expect(toolIds).toContain("headers");
+    expect(toolIds).toContain("http");
     expect(toolIds).toContain("whois");
     expect(toolIds).toContain("rss");
     expect(toolIds).toContain("metadata");

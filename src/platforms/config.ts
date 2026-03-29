@@ -33,6 +33,7 @@ export const PLATFORM_NAMES = [
   "githubbot",
   "gitlab",
   "grok",
+  "http",
   "headers",
   "html",
   "ip",
@@ -348,6 +349,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://grok.com/",
     cookieDomain: "grok.com",
     authCookieNames: ["sso", "sso-rw", "x-userid"],
+  },
+  http: {
+    displayName: "HTTP Toolkit",
+    origin: "https://developer.mozilla.org",
+    homeUrl: "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+    cookieDomain: "developer.mozilla.org",
+    authCookieNames: [],
   },
   headers: {
     displayName: "Headers",
