@@ -5,18 +5,52 @@
 [![providers](https://img.shields.io/badge/providers-104-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-14-6f42c1)](#category-overview)
 
-AutoCLI is a terminal automation toolkit for developers and AI agents. It brings LLMs, social platforms, developer tools, devops platforms, editors, data workflows, maps, news, finance, shopping, music, movies, bots, and public utilities together in one CLI.
+AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
 
-Built for real automation work:
+The core idea is simple:
 
-- one command surface across `104` providers
-- category-based commands that stay predictable as the tool grows
-- clean `--json` output for scripts, agents, and orchestration
-- support for cookies, saved sessions, bot tokens, local tools, and public services
+- sign in once
+- save the session or token locally
+- keep using the provider headlessly from the terminal
+- return clean `--json` output for scripts, agents, and orchestration
 
-AutoCLI is designed to stay headless after setup. Import cookies, open a browser once and let AutoCLI capture the session for you, save a bot token once, or use public and local-tool providers with no auth at all.
+What makes AutoCLI especially useful is that it does not stop at API tokens. It works across cookies, saved browser sessions, user sessions, bot tokens, local tools, and public services, so the same CLI can drive GitHub, ChatGPT, Jira, Reddit, ffmpeg, DNS lookups, and more without switching tools.
 
-You can also bootstrap a shared AutoCLI browser profile once with `autocli login --browser`, then let later provider logins reuse that saved browser state for Google sign-in, passkeys, and other web-based identity flows.
+## Why It Matters
+
+- One command surface across `104` providers.
+- Shared browser login means less manual cookie exporting for cookie-backed platforms.
+- Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
+- Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
+- Every provider is designed to be script-friendly, with strong `--json` support.
+
+## Auto Browser Login
+
+AutoCLI can keep a shared browser profile under its own control, let you sign in once, then reuse that browser state for later provider logins.
+
+That means you can:
+
+- log into Google or another identity provider once
+- use `Continue with Google`, passkeys, or normal web sign-in flows
+- let later provider logins reuse that same saved browser profile
+- avoid re-exporting cookies every time for many cookie-backed providers
+
+Typical flow:
+
+```bash
+autocli login --browser
+autocli developer github login --browser
+autocli social x login --browser
+autocli llm qwen login --browser
+```
+
+After the provider session is saved, normal commands stay headless:
+
+```bash
+autocli developer github me --json
+autocli social x post "Shipping from AutoCLI"
+autocli llm qwen text "Summarize this changelog"
+```
 
 ## At a Glance
 
@@ -44,12 +78,18 @@ bun install
 bun run build
 ```
 
-Typical commands:
+Bootstrap the shared browser once if you want browser-assisted logins:
 
 ```bash
 autocli login --browser
+```
+
+Typical commands:
+
+```bash
 autocli status
 autocli llm chatgpt text "Write release notes for AutoCLI"
+autocli developer github login --browser
 autocli developer github me --json
 autocli devops cloudflare zones --json
 autocli devops render services --json
@@ -59,11 +99,11 @@ autocli tools http github inspect --json
 
 ## Why Use AutoCLI
 
-- One command surface for many provider types: cookies, saved user sessions, API tokens, bot tokens, local tools, and no-auth public services.
-- Category-first routing keeps the CLI scalable as providers grow: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli news ...`, `autocli tools ...`.
-- Every provider is script-friendly and supports `--json`.
-- Sessions and tokens are stored locally, so follow-up commands are short and automation-friendly.
-- Editors, downloads, public utilities, and platform automation live in the same CLI instead of being split across many tools.
+- Sign into real web apps once, then reuse the saved session from the terminal.
+- Use the same CLI for LLMs, socials, developer tools, devops platforms, editors, and public utilities.
+- Keep auth local to your machine instead of scattering cookies and tokens across one-off scripts.
+- Give agents and scripts a stable command model with consistent JSON output.
+- Reach protected web surfaces that are awkward to automate with plain APIs alone.
 
 ## Command Model
 
