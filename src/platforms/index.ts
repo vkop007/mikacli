@@ -10,10 +10,14 @@ import { textPlatformDefinition } from "./data/text/manifest.js";
 import { xmlPlatformDefinition } from "./data/xml/manifest.js";
 import { yamlPlatformDefinition } from "./data/yaml/manifest.js";
 import { confluencePlatformDefinition } from "./developer/confluence/manifest.js";
+import { cloudflarePlatformDefinition } from "./devops/cloudflare/manifest.js";
+import { digitalOceanPlatformDefinition } from "./devops/digitalocean/manifest.js";
 import { githubPlatformDefinition } from "./developer/github/manifest.js";
 import { gitlabPlatformDefinition } from "./developer/gitlab/manifest.js";
+import { flyPlatformDefinition } from "./devops/fly/manifest.js";
 import { jiraPlatformDefinition } from "./developer/jira/manifest.js";
 import { linearPlatformDefinition } from "./developer/linear/manifest.js";
+import { supabasePlatformDefinition } from "./devops/supabase/manifest.js";
 import { archiveEditorPlatformDefinition } from "./editor/archive/manifest.js";
 import { audioEditorPlatformDefinition } from "./editor/audio/manifest.js";
 import { documentEditorPlatformDefinition } from "./editor/document/manifest.js";
@@ -86,11 +90,15 @@ import { zaiPlatformDefinition } from "./llm/zai/manifest.js";
 import { facebookPlatformDefinition } from "./social/facebook/manifest.js";
 import { instagramPlatformDefinition } from "./social/instagram/manifest.js";
 import { newsPlatformDefinition } from "./news/news/manifest.js";
+import { netlifyPlatformDefinition } from "./devops/netlify/manifest.js";
 import { linkedinPlatformDefinition } from "./social/linkedin/manifest.js";
+import { railwayPlatformDefinition } from "./devops/railway/manifest.js";
+import { renderPlatformDefinition } from "./devops/render/manifest.js";
 import { telegramPlatformDefinition } from "./social/telegram/manifest.js";
 import { threadsPlatformDefinition } from "./social/threads/manifest.js";
 import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
 import { trelloPlatformDefinition } from "./developer/trello/manifest.js";
+import { vercelPlatformDefinition } from "./devops/vercel/manifest.js";
 import { whatsappPlatformDefinition } from "./social/whatsapp/manifest.js";
 import { xPlatformDefinition } from "./social/x/manifest.js";
 import { youtubePlatformDefinition } from "./social/youtube/manifest.js";
@@ -105,11 +113,13 @@ const definitions: readonly PlatformDefinition[] = [
   cheatPlatformDefinition,
   chatgptPlatformDefinition,
   claudePlatformDefinition,
+  cloudflarePlatformDefinition,
   confluencePlatformDefinition,
   cryptoPlatformDefinition,
   currencyPlatformDefinition,
   deepSeekPlatformDefinition,
   deezerPlatformDefinition,
+  digitalOceanPlatformDefinition,
   dnsPlatformDefinition,
   discordBotPlatformDefinition,
   archiveEditorPlatformDefinition,
@@ -125,6 +135,7 @@ const definitions: readonly PlatformDefinition[] = [
   etsyPlatformDefinition,
   facebookPlatformDefinition,
   flipkartPlatformDefinition,
+  flyPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
   openStreetMapPlatformDefinition,
@@ -139,8 +150,11 @@ const definitions: readonly PlatformDefinition[] = [
   mistralPlatformDefinition,
   myAnimeListPlatformDefinition,
   tmdbPlatformDefinition,
+  netlifyPlatformDefinition,
   perplexityPlatformDefinition,
   qwenPlatformDefinition,
+  railwayPlatformDefinition,
+  renderPlatformDefinition,
   zaiPlatformDefinition,
   githubPlatformDefinition,
   githubbotPlatformDefinition,
@@ -185,7 +199,9 @@ const definitions: readonly PlatformDefinition[] = [
   tvMazePlatformDefinition,
   uptimePlatformDefinition,
   subtitleEditorPlatformDefinition,
+  supabasePlatformDefinition,
   videoEditorPlatformDefinition,
+  vercelPlatformDefinition,
   weatherPlatformDefinition,
   webSearchPlatformDefinition,
   whatsappPlatformDefinition,
@@ -213,7 +229,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "data", "maps", "movie", "news", "music", "social", "shopping", "developer", "bot", "tools", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "data", "maps", "movie", "news", "music", "social", "shopping", "developer", "devops", "bot", "tools", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];

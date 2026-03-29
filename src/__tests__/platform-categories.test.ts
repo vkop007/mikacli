@@ -117,6 +117,20 @@ describe("platform category routing", () => {
     ]);
   });
 
+  test("includes the devops category and providers", () => {
+    expect(getPlatformCategories()).toContain("devops");
+    expect(getPlatformDefinitionsByCategory("devops").map((definition) => definition.id)).toEqual([
+      "cloudflare",
+      "digitalocean",
+      "fly",
+      "netlify",
+      "railway",
+      "render",
+      "supabase",
+      "vercel",
+    ]);
+  });
+
   test("includes the bot category and providers", () => {
     expect(getPlatformCategories()).toContain("bot");
     expect(getPlatformDefinitionsByCategory("bot").map((definition) => definition.id)).toEqual([
