@@ -23,6 +23,7 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
 - Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
 - Every provider is designed to be script-friendly, with strong `--json` support.
+- Provider capability metadata helps agents see auth type, stability, browser support, and read/write boundaries before they guess.
 
 ## Auto Browser Login
 
@@ -91,6 +92,7 @@ autocli status
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli developer github login --browser
 autocli developer github me --json
+autocli developer github capabilities --json
 autocli devops cloudflare zones --json
 autocli devops render services --json
 autocli tools page-links https://example.com --json

@@ -13,6 +13,7 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 - Prefer `--json` for agent work unless the user explicitly wants human-readable output.
 - If auth state is unclear, start with `autocli status --json` or `autocli doctor --json`.
 - Check saved sessions with `autocli sessions --json` before asking for a fresh cookie export or token.
+- Use `autocli <category> <provider> capabilities --json` when you need to confirm auth type, stability, browser support, or read/write boundaries before planning a task.
 - For cookie-backed providers, prefer `autocli login --browser` and then `<provider> login --browser` when manual cookie export would be awkward.
 - Use `autocli tools http <provider-or-domain> inspect|request|capture` when a saved web session exists but the exact provider command is missing or unclear.
 - For risky actions, read or list first, then mutate second.
@@ -23,13 +24,14 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 
 1. Map the task to a category. If unsure, read [references/category-map.md](references/category-map.md).
 2. Confirm whether the provider is public, cookie-backed, session-backed, API-token-based, bot-token-based, or local-tool-based.
-3. If the provider needs auth and no saved session exists, run `login` first.
-4. For cookie-backed providers, choose the cleanest auth path:
+3. If the provider is unfamiliar or risky, run `capabilities --json` before acting.
+4. If the provider needs auth and no saved session exists, run `login` first.
+5. For cookie-backed providers, choose the cleanest auth path:
    - `login --browser` when the user can sign in interactively
    - `login --cookies ...` when they already have an export
-5. Prefer discovery commands like `search`, `me`, `profile`, `status`, `page`, `title`, `posts`, `spaces`, `projects`, `services`, or `apps` before write commands.
-6. When you need to pass results to another command, use `--json` and route through `autocli data ...` if transformation is needed.
-7. If the provider is authenticated but the exact action is not modeled yet, try `autocli tools http ...` before reaching for custom curl or browser automation.
+6. Prefer discovery commands like `search`, `me`, `profile`, `status`, `page`, `title`, `posts`, `spaces`, `projects`, `services`, or `apps` before write commands.
+7. When you need to pass results to another command, use `--json` and route through `autocli data ...` if transformation is needed.
+8. If the provider is authenticated but the exact action is not modeled yet, try `autocli tools http ...` before reaching for custom curl or browser automation.
 
 ## Global Commands
 
@@ -38,10 +40,12 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 - `autocli doctor --json`
 - `autocli sessions --json`
 - `autocli sessions show <platform> <account> --json`
+- `autocli <category> <provider> capabilities --json`
 
 ## High-Value Patterns
 
 - Use `login --browser` once to bootstrap the shared AutoCLI browser profile, then reuse it for later cookie-backed logins.
+- Use `capabilities --json` to let the agent verify support level before it attempts mutations or browser fallbacks.
 - Use `tools` and `data` as glue around other providers.
 - Use `tools http` to inspect saved web sessions, replay authenticated requests, and capture logged-in traffic from the shared browser.
 - Use `editor` for local transformations before upload or posting.
@@ -52,6 +56,7 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 
 ```bash
 autocli login --browser
+autocli developer github capabilities --json
 autocli developer github login --browser
 autocli developer github me --json
 autocli social reddit search "bun cli" --json

@@ -8,6 +8,7 @@ Use this file when you need to choose the right AutoCLI surface quickly.
 - `status`: summary of CLI and connection health
 - `doctor`: environment checks, saved sessions, and missing binaries
 - `sessions`: inspect or remove saved connections
+- `<category> <provider> capabilities`: machine-readable provider support metadata
 
 ## Categories
 
@@ -44,6 +45,7 @@ Use this file when you need to choose the right AutoCLI surface quickly.
 
 - Use `--json` unless the user clearly wants formatted terminal output.
 - Prefer read-only commands before mutations.
+- Use `capabilities --json` before risky or unfamiliar provider actions so the agent can see auth type, stability, browser support, and read/write boundaries.
 - Use `doctor` and `sessions` before assuming auth is broken.
 - If the user can sign in interactively, prefer `autocli login --browser` and then the provider's `login --browser`.
 - If a provider is authenticated but missing a modeled action, try `autocli tools http <provider-or-domain> inspect` before inventing custom automation.
