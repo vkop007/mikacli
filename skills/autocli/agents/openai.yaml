@@ -1,7 +1,7 @@
 interface:
   display_name: "AutoCLI"
-  short_description: "Use AutoCLI providers correctly"
-  default_prompt: "Use $autocli to choose the right AutoCLI category and provider, prefer --json for agent work, and recover cleanly from auth or session issues."
+  short_description: "Use AutoCLI providers, browser login, and session-aware tools correctly"
+  default_prompt: "Use $autocli to choose the right AutoCLI category and provider, prefer --json for agent work, use shared browser login or saved sessions safely, and fall back to tools http when a logged-in web action is not fully modeled yet."
 
 policy:
   allow_implicit_invocation: true
