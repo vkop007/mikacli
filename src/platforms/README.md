@@ -53,6 +53,11 @@ src/platforms/
       adapter.ts
       manifest.ts
       capabilities/
+  devops/
+    <name>/
+      adapter.ts
+      manifest.ts
+      capabilities/
   bot/
     <name>/
       adapter.ts
@@ -110,6 +115,7 @@ Current examples:
 - Data platforms: `src/platforms/data/csv/`, `src/platforms/data/html/`, `src/platforms/data/json/`, `src/platforms/data/markdown/`, `src/platforms/data/text/`, `src/platforms/data/xml/`, `src/platforms/data/yaml/`
 - Local editor platforms: `src/platforms/editor/archive/`, `src/platforms/editor/audio/`, `src/platforms/editor/document/`, `src/platforms/editor/gif/`, `src/platforms/editor/image/`, `src/platforms/editor/pdf/`, `src/platforms/editor/subtitle/`, `src/platforms/editor/video/`
 - Developer platforms: `src/platforms/developer/confluence/`, `src/platforms/developer/github/`, `src/platforms/developer/gitlab/`, `src/platforms/developer/jira/`, `src/platforms/developer/linear/`, `src/platforms/developer/notion/`, `src/platforms/developer/trello/`
+- Devops platforms: `src/platforms/devops/cloudflare/`, `src/platforms/devops/digitalocean/`, `src/platforms/devops/fly/`, `src/platforms/devops/netlify/`, `src/platforms/devops/railway/`, `src/platforms/devops/render/`, `src/platforms/devops/supabase/`, `src/platforms/devops/vercel/`
 - Bot platforms: `src/platforms/bot/discordbot/`, `src/platforms/bot/githubbot/`, `src/platforms/bot/slackbot/`, `src/platforms/bot/telegrambot/`
 - Active browserless LLM platforms: `src/platforms/llm/chatgpt/`, `src/platforms/llm/claude/`, `src/platforms/llm/deepseek/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`, `src/platforms/llm/mistral/`, `src/platforms/llm/perplexity/`, `src/platforms/llm/qwen/`, `src/platforms/llm/zai/`
 - Finance platforms: `src/platforms/finance/crypto/`, `src/platforms/finance/currency/`, `src/platforms/finance/stocks/`
@@ -122,7 +128,7 @@ Current examples:
 - Music platforms: `src/platforms/music/bandcamp/`, `src/platforms/music/deezer/`, `src/platforms/music/soundcloud/`, `src/platforms/music/spotify/`, `src/platforms/music/youtube-music/`
 - Shopping platforms: `src/platforms/shopping/amazon/`, `src/platforms/shopping/ebay/`, `src/platforms/shopping/etsy/`, `src/platforms/shopping/flipkart/`
 - Tool platforms: `src/platforms/tools/cheat/`, `src/platforms/tools/dns/`, `src/platforms/tools/favicon/`, `src/platforms/tools/headers/`, `src/platforms/tools/http/`, `src/platforms/tools/ip/`, `src/platforms/tools/markdown-fetch/`, `src/platforms/tools/metadata/`, `src/platforms/tools/oembed/`, `src/platforms/tools/page-links/`, `src/platforms/tools/qr/`, `src/platforms/tools/redirect/`, `src/platforms/tools/robots/`, `src/platforms/tools/rss/`, `src/platforms/tools/screenshot/`, `src/platforms/tools/sitemap/`, `src/platforms/tools/ssl/`, `src/platforms/tools/time/`, `src/platforms/tools/timezone/`, `src/platforms/tools/translate/`, `src/platforms/tools/uptime/`, `src/platforms/tools/weather/`, `src/platforms/tools/websearch/`, `src/platforms/tools/whois/`
-- Social platforms: `src/platforms/social/bluesky/`, `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/mastodon/`, `src/platforms/social/pinterest/`, `src/platforms/social/telegram/`, `src/platforms/social/threads/`, `src/platforms/social/tiktok/`, `src/platforms/social/whatsapp/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
+- Social platforms: `src/platforms/social/bluesky/`, `src/platforms/social/facebook/`, `src/platforms/social/instagram/`, `src/platforms/social/linkedin/`, `src/platforms/social/mastodon/`, `src/platforms/social/pinterest/`, `src/platforms/social/reddit/`, `src/platforms/social/telegram/`, `src/platforms/social/threads/`, `src/platforms/social/tiktok/`, `src/platforms/social/whatsapp/`, `src/platforms/social/x/`, `src/platforms/social/youtube/`
 - Spotify specifically now uses an internal engine split:
   - `web` for standard Web API endpoints
   - `connect` for connect-state playback/device/queue control

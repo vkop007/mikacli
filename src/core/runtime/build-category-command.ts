@@ -15,6 +15,9 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   developer: {
     description: "Developer platforms like GitHub, GitLab, Linear, and Notion",
   },
+  devops: {
+    description: "Infrastructure and deployment platforms like Cloudflare, Render, Railway, Vercel, and Supabase",
+  },
   editor: {
     description: "Local media editors powered by tools like ffmpeg",
   },

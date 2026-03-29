@@ -2,14 +2,14 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vkop007%2Fautocli)](https://www.npmjs.com/package/@vkop007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-95-blue)](#category-overview)
-[![categories](https://img.shields.io/badge/categories-13-6f42c1)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-104-blue)](#category-overview)
+[![categories](https://img.shields.io/badge/categories-14-6f42c1)](#category-overview)
 
-AutoCLI is a terminal automation toolkit for developers and AI agents. It brings LLMs, social platforms, developer tools, editors, data workflows, maps, news, finance, shopping, music, movies, bots, and public utilities together in one CLI.
+AutoCLI is a terminal automation toolkit for developers and AI agents. It brings LLMs, social platforms, developer tools, devops platforms, editors, data workflows, maps, news, finance, shopping, music, movies, bots, and public utilities together in one CLI.
 
 Built for real automation work:
 
-- one command surface across `95` providers
+- one command surface across `104` providers
 - category-based commands that stay predictable as the tool grows
 - clean `--json` output for scripts, agents, and orchestration
 - support for cookies, saved sessions, bot tokens, local tools, and public services
@@ -24,8 +24,8 @@ You can also bootstrap a shared AutoCLI browser profile once with `autocli login
 | --- | --- |
 | Package | `@vkop007/autocli` |
 | CLI command | `autocli` |
-| Providers | `95` |
-| Categories | `13` |
+| Providers | `104` |
+| Categories | `14` |
 | npm install | `npm install -g @vkop007/autocli` |
 | Local setup | `bun install` |
 
@@ -51,6 +51,8 @@ autocli login --browser
 autocli status
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli developer github me --json
+autocli devops cloudflare zones --json
+autocli devops render services --json
 autocli tools page-links https://example.com --json
 autocli tools http github inspect --json
 ```
@@ -77,6 +79,7 @@ AutoCLI is category-only. Provider commands never live at the root.
 - `autocli social ...`
 - `autocli shopping ...`
 - `autocli developer ...`
+- `autocli devops ...`
 - `autocli bot ...`
 - `autocli tools ...`
 
@@ -87,6 +90,7 @@ autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli social x post "Shipping AutoCLI today"
 autocli developer confluence search "release process"
 autocli developer github me
+autocli devops vercel projects
 autocli bot telegrambot send 123456789 "Build finished"
 autocli news top "AI"
 autocli tools translate "hello world" --to hi
@@ -107,13 +111,14 @@ autocli tools http github request GET /settings/profile
 | `movie` | AniList, IMDb, JustWatch, Kitsu, Letterboxd, MyAnimeList, TMDb, TVMaze | 8 | none or cookies | Public title lookup, anime tracking, streaming availability, and community taste signals | `autocli movie <provider> ...` |
 | `news` | News | 1 | none | Public headline discovery, source search, and feed aggregation | `autocli news ...` |
 | `music` | Bandcamp, Deezer, SoundCloud, Spotify, YouTube Music | 5 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
-| `social` | Bluesky, Facebook, Instagram, LinkedIn, Mastodon, Pinterest, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 12 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, federated discovery, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
+| `social` | Bluesky, Facebook, Instagram, LinkedIn, Mastodon, Pinterest, Reddit, Telegram, Threads, TikTok, WhatsApp, X, YouTube | 13 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, Reddit discovery and write automation, federated discovery, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | Confluence, GitHub, GitLab, Jira, Linear, Notion, Trello | 7 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
+| `devops` | Cloudflare, DigitalOcean, Fly.io, Netlify, Railway, Render, Supabase, Vercel | 8 | api token | Infrastructure, deployment, DNS, platform, and backend automation | `autocli devops <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Favicon, Headers, HTTP Toolkit, IP, Markdown Fetch, Metadata, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 24 | none or cookies | Public utilities, session-aware request inspection, and zero-setup helpers | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `95` providers across `13` active command groups.
+AutoCLI currently exposes `104` providers across `14` active command groups.
 
 ## Access Modes
 
@@ -195,6 +200,7 @@ autocli social x login --cookies ./x.cookies.json
 autocli developer github login --browser
 autocli llm chatgpt text "Summarize this changelog"
 autocli developer github login --cookies ./github.cookies.json
+autocli devops cloudflare login --token $CLOUDFLARE_API_TOKEN
 autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
 autocli bot telegrambot login --token 123456:ABCDEF --name alerts-bot
 autocli news top "AI"
@@ -243,6 +249,10 @@ autocli developer gitlab projects "autocli" --limit 10
 autocli developer jira projects
 autocli developer linear issues --team ENG --limit 20
 autocli developer trello boards
+autocli devops netlify sites
+autocli devops railway projects
+autocli devops fly apps --org personal
+autocli devops digitalocean apps
 autocli bot telegrambot send 123456789 "Build finished"
 autocli bot discordbot send 123456789012345678 "nightly deploy complete"
 ```
@@ -252,6 +262,8 @@ autocli bot discordbot send 123456789012345678 "nightly deploy complete"
 ```bash
 autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
 autocli social telegram send me "Hello from AutoCLI"
+autocli social reddit search "bun cli"
+autocli social reddit post programming "Launching AutoCLI" "Now with Reddit support."
 autocli social whatsapp login
 autocli social whatsapp send 919876543210 "Ping from AutoCLI"
 ```
@@ -410,6 +422,7 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 | LinkedIn | cookies | posting and engagement | Text posting works best; richer media/write surfaces can drift and may need adapter refreshes over time. |
 | Mastodon | none | federated profile, posts, and thread lookup | Uses public instance APIs and respects the target instance when resolving accounts and statuses. |
 | Pinterest | none | public pin, profile, and board discovery | Good public-read discovery surface without cookies. |
+| Reddit | none or cookies | public post/thread discovery plus session-backed posting, comments, votes, and saves | Public reads use Reddit's JSON endpoints; writes can use a saved session or the shared browser profile with `--browser`. |
 | Telegram | session | QR, phone, or session-string login for account messaging | Uses MTProto with a saved user session, not browser cookies. |
 | Threads | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
 | TikTok | cookies | session handling and light public automation | Session validation and read flows are strongest today; signing for private web writes is still a known hard part. |

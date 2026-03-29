@@ -117,6 +117,20 @@ describe("platform category routing", () => {
     ]);
   });
 
+  test("includes the devops category and providers", () => {
+    expect(getPlatformCategories()).toContain("devops");
+    expect(getPlatformDefinitionsByCategory("devops").map((definition) => definition.id)).toEqual([
+      "cloudflare",
+      "digitalocean",
+      "fly",
+      "netlify",
+      "railway",
+      "render",
+      "supabase",
+      "vercel",
+    ]);
+  });
+
   test("includes the bot category and providers", () => {
     expect(getPlatformCategories()).toContain("bot");
     expect(getPlatformDefinitionsByCategory("bot").map((definition) => definition.id)).toEqual([
@@ -129,7 +143,7 @@ describe("platform category routing", () => {
 
   test("keeps youtube under social and out of music", () => {
     const socialIds = getPlatformDefinitionsByCategory("social").map((definition) => definition.id);
-    expect(socialIds).toEqual(["bluesky", "facebook", "instagram", "linkedin", "mastodon", "pinterest", "telegram", "threads", "tiktok", "whatsapp", "x", "youtube"]);
+    expect(socialIds).toEqual(["bluesky", "facebook", "instagram", "linkedin", "mastodon", "pinterest", "reddit", "telegram", "threads", "tiktok", "whatsapp", "x", "youtube"]);
     expect(socialIds.some((definition) => definition === "youtube")).toBe(true);
     expect(getPlatformDefinitionsByCategory("music").some((definition) => definition.id === "youtube")).toBe(false);
   });

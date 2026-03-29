@@ -22,6 +22,7 @@ describe("root program routing", () => {
       "social",
       "shopping",
       "developer",
+      "devops",
       "bot",
       "tools",
     ]);
@@ -59,6 +60,7 @@ describe("root program routing", () => {
     expect(() => assertCategoryOnlyInvocation(["maps", "openstreetmap", "search", "Mumbai"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["news", "top", "AI"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["developer", "github", "me"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["devops", "cloudflare", "zones"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["bot", "telegrambot", "me"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["tools", "translate", "hello"])).not.toThrow();
   });

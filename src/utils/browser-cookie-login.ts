@@ -66,6 +66,13 @@ export interface BrowserNetworkCapture {
   launchedFresh: boolean;
 }
 
+export interface SharedBrowserActionInput<T> {
+  targetUrl: string;
+  timeoutSeconds?: number;
+  announceLabel?: string;
+  action: (page: PlaywrightPage) => Promise<T>;
+}
+
 type ManagedBrowserState = {
   pid: number;
   port: number;
@@ -300,6 +307,28 @@ export async function captureSharedBrowserNetwork(input: {
       timedOut,
       launchedFresh: managed.launchedFresh,
     };
+  } finally {
+    if (connected) {
+      await connected.browser.close().catch(() => {});
+    }
+    if (managed.launchedFresh) {
+      await closeManagedBrowser(managed.state).catch(() => {});
+    }
+  }
+}
+
+export async function runSharedBrowserAction<T>(input: SharedBrowserActionInput<T>): Promise<T> {
+  const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+  const managed = await ensureManagedBrowser({
+    browserUrl: input.targetUrl,
+    announceLabel: input.announceLabel ?? `Opening shared AutoCLI browser profile: ${input.targetUrl}`,
+  });
+
+  let connected: ConnectedBrowser | null = null;
+  try {
+    connected = await connectToManagedBrowser(managed.state.cdpUrl);
+    const page = await openOrReusePage(connected.context, input.targetUrl, Math.min(timeoutMs, 10_000));
+    return await input.action(page);
   } finally {
     if (connected) {
       await connected.browser.close().catch(() => {});
