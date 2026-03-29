@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { constants } from "node:fs";
-import { access, readFile, writeFile } from "node:fs/promises";
+import { access, readFile, unlink, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -36,6 +36,11 @@ type ManagedBrowserState = {
   browserProfilePath: string;
   executablePath: string;
   startedAt: string;
+};
+
+type ManagedBrowserHandle = {
+  state: ManagedBrowserState;
+  launchedFresh: boolean;
 };
 
 const execFileAsync = promisify(execFile);
@@ -105,7 +110,7 @@ export async function captureBrowserLogin(
 
   let connected: ConnectedBrowser | null = null;
   try {
-    connected = await connectToManagedBrowser(managed.cdpUrl);
+    connected = await connectToManagedBrowser(managed.state.cdpUrl);
     const page = await openOrReusePage(connected.context, startUrl);
 
     announceBrowserLogin("Complete the sign-in flow in the opened browser window. AutoCLI will save the extracted session automatically once login is detected.");
@@ -134,7 +139,7 @@ export async function captureBrowserLogin(
           platform,
           startUrl,
           timeoutSeconds: Math.round(timeoutMs / 1000),
-          browserProfilePath: managed.browserProfilePath,
+          browserProfilePath: managed.state.browserProfilePath,
         },
       },
     );
@@ -151,14 +156,17 @@ export async function captureBrowserLogin(
         details: {
           platform,
           startUrl,
-          browserProfilePath: managed.browserProfilePath,
-          cdpUrl: managed.cdpUrl,
+          browserProfilePath: managed.state.browserProfilePath,
+          cdpUrl: managed.state.cdpUrl,
         },
       },
     );
   } finally {
     if (connected) {
       await connected.browser.close().catch(() => {});
+    }
+    if (managed.launchedFresh) {
+      await closeManagedBrowser(managed.state).catch(() => {});
     }
   }
 }
@@ -183,9 +191,9 @@ export async function openSharedBrowserProfile(
 
   announceBrowserLogin("Sign into Google or any other identity provider you want AutoCLI to reuse later. Close the browser window when you are done.");
 
-  const finished = await waitForManagedBrowserCloseOrTimeout(managed, timeoutMs);
+  const finished = await waitForManagedBrowserCloseOrTimeout(managed.state, timeoutMs);
   return {
-    browserProfilePath: managed.browserProfilePath,
+    browserProfilePath: managed.state.browserProfilePath,
     startUrl,
     timedOut: !finished,
   };
@@ -231,7 +239,7 @@ async function ensureManagedBrowser(input: {
   browserUrl: string;
   announceLabel: string;
   profile?: string;
-}): Promise<ManagedBrowserState> {
+}): Promise<ManagedBrowserHandle> {
   const profile = input.profile ?? DEFAULT_BROWSER_PROFILE;
   await ensureBrowserDirectory(profile);
   const browserProfilePath = getBrowserProfileDir(profile);
@@ -239,7 +247,10 @@ async function ensureManagedBrowser(input: {
   const existing = await readManagedBrowserState(profile);
   if (existing && await isManagedBrowserReachable(existing)) {
     announceBrowserLogin(input.announceLabel);
-    return existing;
+    return {
+      state: existing,
+      launchedFresh: false,
+    };
   }
 
   await cleanupStaleAutomatedBrowserProcesses(browserProfilePath);
@@ -274,7 +285,10 @@ async function ensureManagedBrowser(input: {
   await waitForManagedBrowserReady(state);
   await writeManagedBrowserState(profile, state);
   announceBrowserLogin(input.announceLabel);
-  return state;
+  return {
+    state,
+    launchedFresh: true,
+  };
 }
 
 async function connectToManagedBrowser(cdpUrl: string): Promise<ConnectedBrowser> {
@@ -380,6 +394,23 @@ async function readManagedBrowserState(profile: string): Promise<ManagedBrowserS
 async function writeManagedBrowserState(profile: string, state: ManagedBrowserState): Promise<void> {
   const statePath = getBrowserStatePath(profile);
   await writeFile(statePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
+}
+
+async function closeManagedBrowser(state: ManagedBrowserState): Promise<void> {
+  if (isProcessAlive(state.pid)) {
+    try {
+      process.kill(state.pid, "SIGTERM");
+      await sleep(500);
+      if (isProcessAlive(state.pid)) {
+        process.kill(state.pid, "SIGKILL");
+      }
+    } catch {
+      // Best effort only.
+    }
+  }
+
+  const statePath = getBrowserStatePath();
+  await unlink(statePath).catch(() => {});
 }
 
 async function cleanupStaleAutomatedBrowserProcesses(browserProfilePath: string): Promise<void> {
