@@ -5,6 +5,7 @@ import { printActionResult, resolveCommandContext, runCommandAction } from "../.
 import { printJson } from "../../utils/output.js";
 import type { AdapterActionResult } from "../../types.js";
 import type { PlatformCapability } from "./platform-definition.js";
+import { normalizeLoginActionResult } from "./login-result.js";
 
 type CommandOption = {
   flags: string;
@@ -33,7 +34,7 @@ type CapabilitySpec = {
 export function createAdapterActionCapability(spec: CapabilitySpec): PlatformCapability {
   return {
     id: spec.id,
-    register(command: Command) {
+    register(command: Command, definition) {
       const subcommand = command.command(spec.command).description(spec.description);
 
       for (const alias of spec.aliases ?? []) {
@@ -69,12 +70,13 @@ export function createAdapterActionCapability(spec: CapabilitySpec): PlatformCap
           successMessage: spec.successMessage,
           action: () => spec.action({ args, options }),
           onSuccess: (result) => {
+            const normalizedResult = spec.id === "login" ? normalizeLoginActionResult(result, definition) : result;
             if (spec.onSuccess) {
-              spec.onSuccess(result, ctx.json);
+              spec.onSuccess(normalizedResult, ctx.json);
               return;
             }
 
-            printActionResult(result, ctx.json);
+            printActionResult(normalizedResult, ctx.json);
           },
         });
       });

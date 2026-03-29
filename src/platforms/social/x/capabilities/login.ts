@@ -1,5 +1,6 @@
 import type { Command } from "commander";
 
+import { normalizeLoginActionResult } from "../../../../core/runtime/login-result.js";
 import { Logger } from "../../../../logger.js";
 import { createCookieLoginOptions, resolveCookieLoginInput } from "../../../shared/cookie-login.js";
 import { printActionResult, resolveCommandContext, runCommandAction } from "../../../../utils/cli.js";
@@ -10,7 +11,7 @@ import type { PlatformCapability } from "../../../../core/runtime/platform-defin
 
 export const xLoginCapability: PlatformCapability = {
   id: "login",
-  register(command: Command) {
+  register(command: Command, definition) {
     const loginCommand = command.command("login").description("Import cookies and save the X session for future headless use");
 
     for (const option of createCookieLoginOptions()) {
@@ -30,7 +31,7 @@ export const xLoginCapability: PlatformCapability = {
           successMessage: "X session imported.",
           action: () => xAdapter.login(resolveCookieLoginInput(options as Record<string, unknown>)),
           onSuccess: (result) => {
-            printActionResult(result, ctx.json);
+            printActionResult(normalizeLoginActionResult(result, definition), ctx.json);
           },
         });
       });

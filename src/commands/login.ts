@@ -42,6 +42,11 @@ Examples:
         browserProfilePath: result.browserProfilePath,
         startUrl: result.startUrl,
         timedOut: result.timedOut,
+        nextSteps: [
+          "autocli developer github login --browser",
+          "autocli social reddit login --browser",
+          "autocli llm chatgpt login --browser",
+        ],
         message: result.timedOut
           ? `Shared AutoCLI browser profile stayed open for the full timeout. Profile remains saved at ${getBrowserProfileDir()}.`
           : `Shared AutoCLI browser profile is ready for reuse at ${result.browserProfilePath}.`,
@@ -55,5 +60,6 @@ Examples:
       console.log(payload.message);
       console.log(`profile: ${payload.browserProfilePath}`);
       console.log(`url: ${payload.startUrl}`);
+      console.log(`next: ${payload.nextSteps[0]}`);
     });
 }

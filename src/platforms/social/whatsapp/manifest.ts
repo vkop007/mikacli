@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
+import { normalizeLoginActionResult } from "../../../core/runtime/login-result.js";
 import { Logger } from "../../../logger.js";
 import { printActionResult, resolveCommandContext } from "../../../utils/cli.js";
 import { printJson } from "../../../utils/output.js";
@@ -37,7 +38,7 @@ function buildWhatsAppCommand(options: PlatformCommandBuildOptions = {}): Comman
           phone: input.phone,
           json: ctx.json,
         });
-        printWhatsAppAction(result, ctx.json);
+        printWhatsAppAction(normalizeLoginActionResult(result, whatsappPlatformDefinition), ctx.json);
         scheduleWhatsAppCliExit();
       } catch (error) {
         logger.error(error instanceof Error ? error.message : "WhatsApp login failed.");

@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
+import { normalizeLoginActionResult } from "../../../core/runtime/login-result.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext } from "../../../utils/cli.js";
 import { printActionResult } from "../../../utils/cli.js";
@@ -50,7 +51,7 @@ function buildTelegramCommand(options: PlatformCommandBuildOptions = {}): Comman
           qr: Boolean(input.qr),
           json: ctx.json,
         });
-        printTelegramAction(result, ctx.json);
+        printTelegramAction(normalizeLoginActionResult(result, telegramPlatformDefinition), ctx.json);
       } catch (error) {
         logger.error(error instanceof Error ? error.message : "Telegram login failed.");
         throw error;
