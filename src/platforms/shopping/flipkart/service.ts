@@ -100,7 +100,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     };
   }
 
-  async cart(input: { account?: string }): Promise<AdapterActionResult> {
+  async cart(input: { account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
     const { session } = await this.ensureActiveSession(input.account);
     const context = await this.loadFlipkartSessionContext(session);
     const items = extractFlipkartCartItems(context.state);
@@ -123,7 +123,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     };
   }
 
-  async orderDetail(input: { target: string; account?: string }): Promise<AdapterActionResult> {
+  async orderDetail(input: { target: string; account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
     const orderId = input.target.trim();
     if (!orderId) {
       throw new AutoCliError("FLIPKART_ORDER_REQUIRED", "Flipkart order ID cannot be empty.");
@@ -196,7 +196,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     };
   }
 
-  async orders(input: { limit?: number; account?: string }): Promise<AdapterActionResult> {
+  async orders(input: { limit?: number; account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
     const { session } = await this.ensureActiveSession(input.account);
     const context = await this.loadFlipkartSessionContext(session);
     const limit = clamp(input.limit ?? 5, 1, 25);

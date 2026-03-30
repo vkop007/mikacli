@@ -70,6 +70,27 @@ export interface SharedBrowserActionInput<T> {
   targetUrl: string;
   timeoutSeconds?: number;
   announceLabel?: string;
+  initialCookies?: unknown[];
+  action: (page: PlaywrightPage) => Promise<T>;
+}
+
+export interface BackgroundBrowserActionInput<T> {
+  targetUrl: string;
+  timeoutSeconds?: number;
+  initialCookies?: unknown[];
+  headless?: boolean;
+  userAgent?: string;
+  locale?: string;
+  action: (page: PlaywrightPage) => Promise<T>;
+}
+
+export interface BackgroundBrowserProfileActionInput<T> {
+  targetUrl: string;
+  timeoutSeconds?: number;
+  headless?: boolean;
+  profile?: string;
+  userAgent?: string;
+  locale?: string;
   action: (page: PlaywrightPage) => Promise<T>;
 }
 
@@ -327,6 +348,11 @@ export async function runSharedBrowserAction<T>(input: SharedBrowserActionInput<
   let connected: ConnectedBrowser | null = null;
   try {
     connected = await connectToManagedBrowser(managed.state.cdpUrl);
+    if (Array.isArray(input.initialCookies) && input.initialCookies.length > 0) {
+      await applyBrowserContextCookies(connected.context, input.initialCookies, {
+        targetUrl: input.targetUrl,
+      });
+    }
     const page = await openOrReusePage(connected.context, input.targetUrl, Math.min(timeoutMs, 10_000));
     return await input.action(page);
   } finally {
@@ -336,6 +362,73 @@ export async function runSharedBrowserAction<T>(input: SharedBrowserActionInput<
     if (managed.launchedFresh) {
       await closeManagedBrowser(managed.state).catch(() => {});
     }
+  }
+}
+
+export async function runBackgroundBrowserAction<T>(input: BackgroundBrowserActionInput<T>): Promise<T> {
+  const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+  const executablePath = await resolveBrowserExecutable();
+  const { chromium } = await import("playwright-core");
+  const browser = await chromium.launch({
+    executablePath,
+    headless: input.headless ?? true,
+  });
+
+  try {
+    const context = await browser.newContext({
+      ...(input.userAgent ? { userAgent: input.userAgent } : {}),
+      ...(input.locale ? { locale: input.locale } : {}),
+    });
+
+    if (Array.isArray(input.initialCookies) && input.initialCookies.length > 0) {
+      await applyBrowserContextCookies(context, input.initialCookies, {
+        targetUrl: input.targetUrl,
+      });
+    }
+
+    const page = await context.newPage();
+    await navigatePage(page, input.targetUrl, Math.min(timeoutMs, 15_000));
+    return await input.action(page);
+  } finally {
+    await browser.close().catch(() => {});
+  }
+}
+
+export async function runBackgroundBrowserProfileAction<T>(input: BackgroundBrowserProfileActionInput<T>): Promise<T> {
+  const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+  const profile = input.profile ?? DEFAULT_BROWSER_PROFILE;
+  await ensureBrowserDirectory(profile);
+
+  const existing = await readManagedBrowserState(profile);
+  if (existing && await isManagedBrowserReachable(existing)) {
+    throw new AutoCliError(
+      "BROWSER_PROFILE_IN_USE",
+      "The shared AutoCLI browser profile is currently open. Close it before running this invisible browser action.",
+      {
+        details: {
+          profile,
+          browserProfilePath: getBrowserProfileDir(profile),
+        },
+      },
+    );
+  }
+
+  const executablePath = await resolveBrowserExecutable();
+  const { chromium } = await import("playwright-core");
+  const context = await chromium.launchPersistentContext(getBrowserProfileDir(profile), {
+    executablePath,
+    headless: input.headless ?? true,
+    ...(input.userAgent ? { userAgent: input.userAgent } : {}),
+    ...(input.locale ? { locale: input.locale } : {}),
+    args: ["--no-first-run", "--no-default-browser-check"],
+  });
+
+  try {
+    const page = context.pages()[0] ?? await context.newPage();
+    await navigatePage(page, input.targetUrl, Math.min(timeoutMs, 15_000));
+    return await input.action(page);
+  } finally {
+    await context.close().catch(() => {});
   }
 }
 
@@ -852,6 +945,149 @@ function matchesCookiePattern(name: string, pattern: string): boolean {
 
 function hasTruthyStorageValue(value: string | undefined): boolean {
   return typeof value === "string" && value.trim().length > 0 && !FALSEY_AUTH_COOKIE_VALUES.has(value.trim().toLowerCase());
+}
+
+async function applyBrowserContextCookies(
+  context: PlaywrightBrowserContext,
+  cookies: unknown[],
+  input: {
+    targetUrl?: string;
+  } = {},
+): Promise<void> {
+  const normalized = cookies
+    .map((cookie) => normalizePlaywrightCookie(cookie, input))
+    .filter((cookie): cookie is NonNullable<typeof cookie> => Boolean(cookie));
+
+  if (normalized.length === 0) {
+    return;
+  }
+
+  await context.addCookies(normalized);
+}
+
+export function normalizePlaywrightCookie(
+  cookie: unknown,
+  input: {
+    targetUrl?: string;
+  } = {},
+):
+  | {
+      name: string;
+      value: string;
+      domain: string;
+      path: string;
+      secure?: boolean;
+      httpOnly?: boolean;
+      sameSite?: "Strict" | "Lax" | "None";
+      expires?: number;
+    }
+  | null {
+  if (!cookie || typeof cookie !== "object") {
+    return null;
+  }
+
+  const value = cookie as Record<string, unknown>;
+  const name = typeof value.name === "string"
+    ? value.name
+    : typeof value.key === "string"
+      ? value.key
+      : undefined;
+  const cookieValue = typeof value.value === "string" ? value.value : undefined;
+  const rawDomain = typeof value.domain === "string" && value.domain.length > 0 ? value.domain : undefined;
+  const domain = normalizePlaywrightCookieDomain(rawDomain, input.targetUrl);
+  if (!name || cookieValue === undefined || !domain) {
+    return null;
+  }
+
+  const pathValue = typeof value.path === "string" && value.path.length > 0 ? value.path : "/";
+  const secure = typeof value.secure === "boolean" ? value.secure : undefined;
+  const httpOnly = typeof value.httpOnly === "boolean" ? value.httpOnly : undefined;
+  const sameSite = normalizePlaywrightSameSite(value.sameSite);
+  const expires = normalizePlaywrightCookieExpiry(value.expires);
+
+  return {
+    name,
+    value: cookieValue,
+    domain,
+    path: pathValue,
+    ...(typeof secure === "boolean" ? { secure } : {}),
+    ...(typeof httpOnly === "boolean" ? { httpOnly } : {}),
+    ...(sameSite ? { sameSite } : {}),
+    ...(typeof expires === "number" ? { expires } : {}),
+  };
+}
+
+function normalizePlaywrightCookieDomain(domain: string | undefined, targetUrl?: string): string | undefined {
+  if (!domain) {
+    return undefined;
+  }
+
+  if (domain.startsWith(".")) {
+    return domain;
+  }
+
+  if (!targetUrl) {
+    return domain;
+  }
+
+  let targetHost = "";
+  try {
+    targetHost = new URL(targetUrl).hostname.toLowerCase();
+  } catch {
+    return domain;
+  }
+
+  const cookieHost = domain.toLowerCase();
+  if (targetHost === cookieHost) {
+    return domain;
+  }
+
+  if (targetHost.endsWith(`.${cookieHost}`)) {
+    return `.${domain}`;
+  }
+
+  return domain;
+}
+
+function normalizePlaywrightSameSite(value: unknown): "Strict" | "Lax" | "None" | undefined {
+  if (typeof value !== "string" || value.length === 0) {
+    return undefined;
+  }
+
+  switch (value.toLowerCase()) {
+    case "strict":
+      return "Strict";
+    case "lax":
+      return "Lax";
+    case "none":
+      return "None";
+    default:
+      return undefined;
+  }
+}
+
+function normalizePlaywrightCookieExpiry(value: unknown): number | undefined {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return value;
+  }
+
+  if (typeof value === "string" && value.length > 0) {
+    const asNumber = Number(value);
+    if (Number.isFinite(asNumber) && asNumber > 0) {
+      return asNumber;
+    }
+
+    const parsed = new Date(value);
+    if (!Number.isNaN(parsed.getTime())) {
+      return Math.floor(parsed.getTime() / 1000);
+    }
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return Math.floor(value.getTime() / 1000);
+  }
+
+  return undefined;
 }
 
 function announceBrowserLogin(message: string): void {

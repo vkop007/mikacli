@@ -30,7 +30,7 @@ export abstract class BaseShoppingAdapter extends BasePlatformAdapter {
 
   abstract search(input: { query: string; limit?: number; account?: string }): Promise<AdapterActionResult>;
   abstract productInfo(input: { target: string; account?: string }): Promise<AdapterActionResult>;
-  abstract orders(input: { limit?: number; account?: string }): Promise<AdapterActionResult>;
+  abstract orders(input: { limit?: number; account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult>;
 
   async login(input: LoginInput): Promise<AdapterActionResult> {
     const imported = await this.cookieManager.importCookies(this.platform, input);

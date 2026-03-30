@@ -283,7 +283,9 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
   amazon: {
     mutation: "partial",
     browserLogin: "supported",
+    browserFallback: "supported",
     stability: "partial",
+    notes: ["`add-to-cart`, `remove-from-cart`, `update-cart`, `orders`, `order`, and `cart` support browser-backed execution when the saved session alone is not enough."],
   },
   flipkart: {
     mutation: "partial",

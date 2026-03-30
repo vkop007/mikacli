@@ -526,7 +526,7 @@ These providers are intentionally included, but their current browserless surfac
 
 | Provider | Stability | Needs | Best for | Notes |
 | --- | --- | --- | --- | --- |
-| Amazon | `partial` | cookies | account, cart, search, product lookup | Some order-history surfaces are more protected and may need browser later. |
+| Amazon | `partial` | cookies | account, cart, add-to-cart, remove-from-cart, update-cart, search, product lookup | `add-to-cart`, `remove-from-cart`, `update-cart`, `cart`, `orders`, and `order` support browser-backed execution when the saved session alone is not enough. |
 | eBay | `stable` | none | public listings, item lookup, seller discovery | Uses public readable page extraction plus the public autocomplete endpoint. |
 | Etsy | `partial` | none | public listing and shop discovery | Direct Etsy fetches are anti-bot protected, so this adapter uses public site-search discovery today. |
 | Flipkart | `stable` | cookies | account, wishlist, cart, orders | Stronger browserless account coverage today than Amazon. |

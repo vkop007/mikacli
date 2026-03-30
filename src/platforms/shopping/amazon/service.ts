@@ -1,4 +1,5 @@
 import { AutoCliError } from "../../../errors.js";
+import { runBackgroundBrowserAction, runBackgroundBrowserProfileAction, runSharedBrowserAction } from "../../../utils/browser-cookie-login.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { parseAmazonProductTarget } from "../../../utils/targets.js";
 import { getPlatformHomeUrl, getPlatformOrigin } from "../../config.js";
@@ -6,6 +7,7 @@ import { BaseShoppingAdapter, type ShoppingSessionProbe } from "../shared/base-s
 import { clamp, collapseWhitespace, parsePriceText, toAbsoluteUrl } from "../shared/helpers.js";
 
 import type { AdapterActionResult, PlatformSession } from "../../../types.js";
+import type { Page as PlaywrightPage } from "playwright-core";
 
 const AMAZON_ORIGIN = getPlatformOrigin("amazon");
 const AMAZON_HOME = getPlatformHomeUrl("amazon");
@@ -56,6 +58,12 @@ interface AmazonOrdersPageSummary {
   empty: boolean;
 }
 
+type AmazonBrowserActionInput = {
+  account?: string;
+  browser?: boolean;
+  browserTimeoutSeconds?: number;
+};
+
 export class AmazonAdapter extends BaseShoppingAdapter {
   readonly platform = "amazon" as const;
   readonly productTargetLabel = "ASIN";
@@ -100,7 +108,11 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     };
   }
 
-  async cart(input: { account?: string }): Promise<AdapterActionResult> {
+  async cart(input: { account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    if (input.browser) {
+      return this.browserCart(input);
+    }
+
     const { session } = await this.ensureActiveSession(input.account);
     const client = await this.createAmazonClient(session);
     const cartUrl = this.getAmazonCartUrl(session);
@@ -120,10 +132,197 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     };
   }
 
-  async orderDetail(input: { target: string; account?: string }): Promise<AdapterActionResult> {
+  async addToCart(input: { target: string; quantity?: number; account?: string; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const parsed = parseAmazonProductTarget(input.target);
+    const quantity = clamp(input.quantity ?? 1, 1, 10);
+    const { session, path } = await this.ensureActiveSession(input.account);
+    const origin = this.getAmazonOrigin(session);
+    const productUrl = `${origin}/dp/${parsed.asin}`;
+
+    const added = await this.runAmazonBrowserAction(session, productUrl, input.browserTimeoutSeconds, async (page, source) => {
+      const beforeCart = await this.loadAmazonCartFromPage(page, session);
+      const previousQuantity = getAmazonCartQuantity(beforeCart, parsed.asin);
+
+      await this.tryAmazonDirectAddToCart(page, session, parsed.asin, quantity);
+      let afterCart = await this.loadAmazonCartFromPage(page, session);
+      let item = findAmazonCartItem(afterCart, parsed.asin);
+
+      if (!this.didAmazonCartQuantityIncrease(previousQuantity, item, quantity)) {
+        await this.addAmazonProductToCartViaPage(page, session, parsed.asin, quantity);
+        afterCart = await this.loadAmazonCartFromPage(page, session);
+        item = findAmazonCartItem(afterCart, parsed.asin);
+      }
+
+      if (!item) {
+        throw new AutoCliError(
+          "AMAZON_ADD_TO_CART_NOT_CONFIRMED",
+          `Amazon loaded the cart, but AutoCLI could not confirm that ${parsed.asin} was added.`,
+          {
+            details: {
+              asin: parsed.asin,
+              quantity,
+              previousQuantity,
+            },
+          },
+        );
+      }
+
+      return {
+        cart: afterCart,
+        item,
+        previousQuantity,
+        finalUrl: page.url(),
+        source,
+      };
+    });
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "add-to-cart",
+      id: parsed.asin,
+      url: asString(added.item.url) ?? productUrl,
+      message: `Added Amazon product ${parsed.asin} to the cart for ${session.account}.`,
+      user: session.user,
+      sessionPath: path,
+      data: {
+        asin: parsed.asin,
+        quantityRequested: quantity,
+        previousQuantity: added.previousQuantity,
+        cartCount: added.cart.count,
+        subtotalText: added.cart.subtotalText,
+        item: added.item,
+        cart: added.cart,
+        browser: {
+          finalUrl: added.finalUrl,
+          source: added.source,
+        },
+      },
+    };
+  }
+
+  async removeFromCart(input: { target: string; account?: string; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const parsed = parseAmazonProductTarget(input.target);
+    const { session, path } = await this.ensureActiveSession(input.account);
+    const origin = this.getAmazonOrigin(session);
+    const productUrl = `${origin}/dp/${parsed.asin}`;
+
+    const removed = await this.runAmazonBrowserAction(session, this.getAmazonCartUrl(session), input.browserTimeoutSeconds, async (page, source) => {
+      const beforeCart = await this.loadAmazonCartFromPage(page, session);
+      const item = findAmazonCartItem(beforeCart, parsed.asin);
+      if (!item) {
+        throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${parsed.asin}.`, {
+          details: {
+            asin: parsed.asin,
+          },
+        });
+      }
+
+      const previousQuantity = getAmazonCartQuantity(beforeCart, parsed.asin);
+      const title = asString(item.title);
+      await this.removeAmazonCartItem(page, session, parsed.asin);
+      const afterCart = await this.loadAmazonCartFromPage(page, session);
+
+      if (findAmazonCartItem(afterCart, parsed.asin)) {
+        throw new AutoCliError(
+          "AMAZON_REMOVE_FROM_CART_NOT_CONFIRMED",
+          `Amazon still shows ${parsed.asin} in the cart after the remove action.`,
+          {
+            details: {
+              asin: parsed.asin,
+            },
+          },
+        );
+      }
+
+      return {
+        cart: afterCart,
+        title,
+        previousQuantity,
+        finalUrl: page.url(),
+        source,
+      };
+    });
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "remove-from-cart",
+      id: parsed.asin,
+      url: productUrl,
+      message: `Removed Amazon product ${parsed.asin} from the cart for ${session.account}.`,
+      user: session.user,
+      sessionPath: path,
+      data: {
+        asin: parsed.asin,
+        title: removed.title,
+        previousQuantity: removed.previousQuantity,
+        cartCount: removed.cart.count,
+        subtotalText: removed.cart.subtotalText,
+        cart: removed.cart,
+        browser: {
+          finalUrl: removed.finalUrl,
+          source: removed.source,
+        },
+      },
+    };
+  }
+
+  async updateCart(input: { target: string; quantity: number; account?: string; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const parsed = parseAmazonProductTarget(input.target);
+    const quantity = clamp(input.quantity, 1, 10);
+    const { session, path } = await this.ensureActiveSession(input.account);
+    const origin = this.getAmazonOrigin(session);
+    const productUrl = `${origin}/dp/${parsed.asin}`;
+
+    const updated = await this.runAmazonBrowserAction(session, this.getAmazonCartUrl(session), input.browserTimeoutSeconds, async (page, source) => {
+      const result = await this.updateAmazonCartQuantity(page, session, parsed.asin, quantity);
+
+      return {
+        cart: result.cart,
+        item: result.item,
+        previousQuantity: result.previousQuantity,
+        finalUrl: page.url(),
+        source,
+      };
+    });
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "update-cart",
+      id: parsed.asin,
+      url: asString(updated.item.url) ?? productUrl,
+      message: `Updated Amazon product ${parsed.asin} to quantity ${quantity} for ${session.account}.`,
+      user: session.user,
+      sessionPath: path,
+      data: {
+        asin: parsed.asin,
+        quantityRequested: quantity,
+        previousQuantity: updated.previousQuantity,
+        cartCount: updated.cart.count,
+        subtotalText: updated.cart.subtotalText,
+        item: updated.item,
+        cart: updated.cart,
+        browser: {
+          finalUrl: updated.finalUrl,
+          source: updated.source,
+        },
+      },
+    };
+  }
+
+  async orderDetail(input: { target: string; account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
     const orderId = input.target.trim();
     if (!orderId) {
       throw new AutoCliError("AMAZON_ORDER_REQUIRED", "Amazon order ID cannot be empty.");
+    }
+
+    if (input.browser) {
+      return this.browserOrderDetail(input);
     }
 
     const { session } = await this.ensureActiveSession(input.account);
@@ -208,7 +407,11 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     };
   }
 
-  async orders(input: { limit?: number; account?: string }): Promise<AdapterActionResult> {
+  async orders(input: { limit?: number; account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    if (input.browser) {
+      return this.browserOrders(input);
+    }
+
     const { session } = await this.ensureActiveSession(input.account);
     const client = await this.createAmazonClient(session);
     const response = await this.fetchAmazonOrdersResponse(client, session);
@@ -450,6 +653,17 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     return `${this.getAmazonOrigin(session)}/your-orders/orders`;
   }
 
+  private getAmazonProductUrl(session: PlatformSession, asin: string): string {
+    return `${this.getAmazonOrigin(session)}/dp/${asin}`;
+  }
+
+  private getAmazonAddToCartUrl(session: PlatformSession, asin: string, quantity: number): string {
+    const url = new URL("/gp/aws/cart/add.html", this.getAmazonOrigin(session));
+    url.searchParams.set("ASIN.1", asin);
+    url.searchParams.set("Quantity.1", String(quantity));
+    return url.toString();
+  }
+
   private async isAmazonStillSignedInOutsideOrders(client: SessionHttpClient, session: PlatformSession): Promise<boolean> {
     const candidates = [this.getAmazonAccountUrl(session), this.getAmazonCartUrl(session), this.getAmazonWishlistUrl(session)];
 
@@ -557,6 +771,515 @@ export class AmazonAdapter extends BaseShoppingAdapter {
         orderId,
       },
     });
+  }
+
+  private async browserOrders(input: { limit?: number; account?: string; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const { session, path } = await this.ensureActiveSession(input.account);
+    const page = await this.fetchAmazonBrowserPage(session, this.getAmazonModernOrdersUrl(session), input.browserTimeoutSeconds);
+    const pageSummary = extractAmazonOrdersPageSummary(page.html);
+    const orders = extractAmazonOrders(page.html).slice(0, clamp(input.limit ?? 5, 1, 25));
+
+    if (orders.length === 0 && !pageSummary.empty) {
+      throw new AutoCliError(
+        "AMAZON_ORDERS_LAYOUT_CHANGED",
+        "Amazon loaded the orders page in the browser, but AutoCLI could not extract the order cards from the current layout.",
+      );
+    }
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "orders",
+      message:
+        orders.length > 0
+          ? `Loaded ${orders.length} Amazon orders for ${session.account} through a browser-backed session.`
+          : `No Amazon orders were visible for ${session.account}${pageSummary.timeFilterLabel ? ` in ${pageSummary.timeFilterLabel}` : ""}.`,
+      user: session.user,
+      sessionPath: path,
+      data: {
+        orders,
+        count: orders.length,
+        visibleCount: pageSummary.visibleCount,
+        timeFilter: pageSummary.timeFilterValue
+          ? {
+              value: pageSummary.timeFilterValue,
+              label: pageSummary.timeFilterLabel,
+            }
+          : undefined,
+        availableTimeFilters: pageSummary.availableTimeFilters,
+        browser: {
+          finalUrl: page.finalUrl,
+          source: page.source,
+        },
+      },
+    };
+  }
+
+  private async browserCart(input: { account?: string; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const { session, path } = await this.ensureActiveSession(input.account);
+    const page = await this.fetchAmazonBrowserPage(session, this.getAmazonCartUrl(session), input.browserTimeoutSeconds);
+    const cart = extractAmazonCart(page.html, this.getAmazonOrigin(session));
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "cart",
+      message:
+        cart.items.length > 0
+          ? `Loaded ${cart.items.length} Amazon cart item${cart.items.length === 1 ? "" : "s"} for ${session.account} through a browser-backed session.`
+          : `The Amazon cart is empty for ${session.account}.`,
+      user: session.user,
+      sessionPath: path,
+      data: {
+        ...cart,
+        browser: {
+          finalUrl: page.finalUrl,
+          source: page.source,
+        },
+      },
+    };
+  }
+
+  private async browserOrderDetail(input: { target: string; account?: string; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const orderId = input.target.trim();
+    const { session, path } = await this.ensureActiveSession(input.account);
+    const browserPage = await this.fetchAmazonBrowserPage(session, this.getAmazonModernOrdersUrl(session), input.browserTimeoutSeconds);
+    let order = extractAmazonOrders(browserPage.html).find((entry) => asString(entry.orderId) === orderId);
+    let finalUrl = browserPage.finalUrl;
+    let browserSource = browserPage.source;
+
+    if (!order) {
+      const detailPage = await this.fetchAmazonBrowserOrderDetailPage(session, orderId, input.browserTimeoutSeconds).catch(() => undefined);
+      if (detailPage) {
+        order = extractAmazonOrderDetail(detailPage.html, orderId, this.getAmazonOrigin(session));
+        finalUrl = detailPage.finalUrl;
+        browserSource = detailPage.source;
+      }
+    }
+
+    if (!order) {
+      throw new AutoCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not find order ${orderId}.`, {
+        details: {
+          orderId,
+        },
+      });
+    }
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "order",
+      message: `Loaded Amazon order ${orderId} through a browser-backed session.`,
+      id: orderId,
+      url: asString(order.url) ?? finalUrl,
+      user: session.user,
+      sessionPath: path,
+      data: {
+        ...order,
+        itemDetails: Array.isArray(order.items)
+          ? (order.items as unknown[]).map((item) => (typeof item === "string" ? { title: item } : item))
+          : [],
+        browser: {
+          finalUrl,
+          source: browserSource,
+        },
+      },
+    };
+  }
+
+  private async fetchAmazonBrowserPage(
+    session: PlatformSession,
+    url: string,
+    timeoutSeconds?: number,
+  ): Promise<{ html: string; finalUrl: string; source: "headless" | "profile" | "shared" }> {
+    return this.runAmazonBrowserAction(session, url, timeoutSeconds, async (page, source) => {
+      await page.waitForTimeout(2_000);
+      const html = await page.content();
+      const finalUrl = page.url();
+      this.assertAmazonBrowserPageState(html, finalUrl);
+      return {
+        html,
+        finalUrl,
+        source,
+      };
+    });
+  }
+
+  private async fetchAmazonBrowserOrderDetailPage(
+    session: PlatformSession,
+    orderId: string,
+    timeoutSeconds?: number,
+  ): Promise<{ html: string; finalUrl: string; source: "headless" | "profile" | "shared" }> {
+    const candidates = [
+      `${this.getAmazonOrigin(session)}/gp/your-account/order-details?orderID=${encodeURIComponent(orderId)}`,
+      `${this.getAmazonOrigin(session)}/your-orders/order-details?orderID=${encodeURIComponent(orderId)}`,
+    ];
+
+    let lastError: unknown;
+    for (const url of candidates) {
+      try {
+        const result = await this.fetchAmazonBrowserPage(session, url, timeoutSeconds);
+        if (looksLikeAmazonOrderDetailUnavailable(result.html)) {
+          continue;
+        }
+        return result;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError instanceof Error
+      ? lastError
+      : new AutoCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not load order details for ${orderId}.`, {
+          details: {
+            orderId,
+          },
+        });
+  }
+
+  private assertAmazonBrowserPageState(html: string, finalUrl: string): void {
+    if (finalUrl.includes("/errors/validateCaptcha") || html.includes("Type the characters you see in this image")) {
+      throw new AutoCliError(
+        "AMAZON_ANTI_BOT_BLOCKED",
+        "Amazon blocked the browser action with a validation or anti-bot page. A fresher browser session may be required.",
+      );
+    }
+
+    if (isAmazonLoggedOutUrl(finalUrl)) {
+      throw new AutoCliError(
+        "SESSION_EXPIRED",
+        "Amazon redirected the browser session to sign-in or claim verification. Re-import cookies.txt or log into Amazon once with `autocli login --browser --url https://www.amazon.com/` so the shared browser profile can be reused.",
+      );
+    }
+  }
+
+  private shouldRetryAmazonBrowserWithProfile(error: unknown): boolean {
+    if (!(error instanceof AutoCliError)) {
+      return false;
+    }
+
+    return error.code === "SESSION_EXPIRED" || error.code === "AMAZON_ANTI_BOT_BLOCKED";
+  }
+
+  private async runAmazonBrowserAction<T>(
+    session: PlatformSession,
+    targetUrl: string,
+    timeoutSeconds: number | undefined,
+    action: (page: PlaywrightPage, source: "headless" | "profile" | "shared") => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await runBackgroundBrowserAction({
+        targetUrl,
+        timeoutSeconds: timeoutSeconds ?? 60,
+        initialCookies: session.cookieJar.cookies,
+        headless: true,
+        userAgent: AMAZON_USER_AGENT,
+        locale: "en-US",
+        action: (page) => action(page, "headless"),
+      });
+    } catch (error) {
+      if (!this.shouldRetryAmazonBrowserWithProfile(error)) {
+        throw error;
+      }
+    }
+
+    try {
+      return await runBackgroundBrowserProfileAction({
+        targetUrl,
+        timeoutSeconds: timeoutSeconds ?? 60,
+        headless: true,
+        userAgent: AMAZON_USER_AGENT,
+        locale: "en-US",
+        action: (page) => action(page, "profile"),
+      });
+    } catch (error) {
+      if (!(error instanceof AutoCliError) || error.code !== "BROWSER_PROFILE_IN_USE") {
+        throw error;
+      }
+    }
+
+    return runSharedBrowserAction({
+      targetUrl,
+      timeoutSeconds: timeoutSeconds ?? 60,
+      announceLabel: `Reusing the shared AutoCLI browser profile for Amazon: ${targetUrl}`,
+      initialCookies: session.cookieJar.cookies,
+      action: (page) => action(page, "shared"),
+    });
+  }
+
+  private async loadAmazonCartFromPage(page: PlaywrightPage, session: PlatformSession): Promise<AmazonCartData> {
+    await page.goto(this.getAmazonCartUrl(session), {
+      waitUntil: "domcontentloaded",
+      timeout: 15_000,
+    }).catch(() => {});
+    await page.waitForTimeout(1_500);
+    const html = await page.content();
+    this.assertAmazonBrowserPageState(html, page.url());
+    return extractAmazonCart(html, this.getAmazonOrigin(session));
+  }
+
+  private async tryAmazonDirectAddToCart(page: PlaywrightPage, session: PlatformSession, asin: string, quantity: number): Promise<void> {
+    await page.goto(this.getAmazonAddToCartUrl(session, asin, quantity), {
+      waitUntil: "domcontentloaded",
+      timeout: 15_000,
+    }).catch(() => {});
+    await page.waitForTimeout(2_000);
+    this.assertAmazonBrowserPageState(await page.content(), page.url());
+  }
+
+  private async addAmazonProductToCartViaPage(page: PlaywrightPage, session: PlatformSession, asin: string, quantity: number): Promise<void> {
+    await page.goto(this.getAmazonProductUrl(session, asin), {
+      waitUntil: "domcontentloaded",
+      timeout: 15_000,
+    }).catch(() => {});
+    await page.waitForTimeout(1_500);
+    this.assertAmazonBrowserPageState(await page.content(), page.url());
+
+    if (quantity > 1) {
+      await this.selectAmazonQuantity(page, quantity);
+    }
+
+    const selectors = [
+      "#add-to-cart-button",
+      "input[name='submit.add-to-cart']",
+      "#submit\\.add-to-cart",
+      "#add-to-cart-button-ubb",
+      "[data-feature-id='add-to-cart-button'] input",
+    ];
+
+    for (const selector of selectors) {
+      const locator = page.locator(selector).first();
+      const count = await locator.count().catch(() => 0);
+      if (count < 1) {
+        continue;
+      }
+
+      await locator.scrollIntoViewIfNeeded().catch(() => {});
+      await locator.click({
+        timeout: 10_000,
+      }).catch(() => {});
+      await page.waitForTimeout(2_500);
+      this.assertAmazonBrowserPageState(await page.content(), page.url());
+      return;
+    }
+
+    throw new AutoCliError(
+      "AMAZON_ADD_TO_CART_UNAVAILABLE",
+      `Amazon did not show a usable add-to-cart control for ${asin}.`,
+      {
+        details: {
+          asin,
+          url: page.url(),
+        },
+      },
+    );
+  }
+
+  private async selectAmazonQuantity(page: PlaywrightPage, quantity: number): Promise<void> {
+    const selectors = ["#quantity", "select[name='quantity']"];
+    for (const selector of selectors) {
+      const locator = page.locator(selector).first();
+      const count = await locator.count().catch(() => 0);
+      if (count < 1) {
+        continue;
+      }
+
+      const desired = String(quantity);
+      const byValue = await locator.selectOption(desired).catch(() => []);
+      if (byValue.length > 0) {
+        await page.waitForTimeout(500);
+        return;
+      }
+
+      const byLabel = await locator.selectOption({ label: desired }).catch(() => []);
+      if (byLabel.length > 0) {
+        await page.waitForTimeout(500);
+        return;
+      }
+    }
+  }
+
+  private async removeAmazonCartItem(page: PlaywrightPage, session: PlatformSession, asin: string): Promise<void> {
+    await this.loadAmazonCartFromPage(page, session);
+    const row = this.getAmazonCartRow(page, asin);
+    const rowCount = await row.count().catch(() => 0);
+    if (rowCount < 1) {
+      throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${asin}.`, {
+        details: {
+          asin,
+        },
+      });
+    }
+
+    const selectors = [
+      "input[data-feature-id='item-delete-button']",
+      "input[data-action='delete-active']",
+      "input[name^='submit.delete-active.']",
+      "[data-feature-id='item-delete-button'] input",
+    ];
+
+    for (const selector of selectors) {
+      const locator = row.locator(selector).first();
+      const count = await locator.count().catch(() => 0);
+      if (count < 1) {
+        continue;
+      }
+
+      await locator.scrollIntoViewIfNeeded().catch(() => {});
+      await locator.click({
+        timeout: 10_000,
+      }).catch(() => {});
+      await page.waitForTimeout(2_500);
+      return;
+    }
+
+    throw new AutoCliError(
+      "AMAZON_REMOVE_FROM_CART_UNAVAILABLE",
+      `Amazon did not show a usable remove control for ${asin}.`,
+      {
+        details: {
+          asin,
+          url: page.url(),
+        },
+      },
+    );
+  }
+
+  private async updateAmazonCartQuantity(
+    page: PlaywrightPage,
+    session: PlatformSession,
+    asin: string,
+    targetQuantity: number,
+  ): Promise<{ cart: AmazonCartData; item: Record<string, unknown>; previousQuantity: number }> {
+    let cart = await this.loadAmazonCartFromPage(page, session);
+    let item = findAmazonCartItem(cart, asin);
+    if (!item) {
+      throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${asin}.`, {
+        details: {
+          asin,
+        },
+      });
+    }
+
+    const previousQuantity = getAmazonCartQuantity(cart, asin);
+    let currentQuantity = previousQuantity;
+    if (currentQuantity < 1) {
+      throw new AutoCliError("AMAZON_CART_QUANTITY_UNAVAILABLE", `Amazon did not expose a usable cart quantity for ${asin}.`, {
+        details: {
+          asin,
+        },
+      });
+    }
+
+    if (currentQuantity === targetQuantity) {
+      return { cart, item, previousQuantity };
+    }
+
+    for (let step = 0; step < 12 && currentQuantity !== targetQuantity; step += 1) {
+      const row = this.getAmazonCartRow(page, asin);
+      const rowCount = await row.count().catch(() => 0);
+      if (rowCount < 1) {
+        throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart no longer shows ${asin} while updating quantity.`, {
+          details: {
+            asin,
+          },
+        });
+      }
+
+      const direction = targetQuantity > currentQuantity ? "increment" : "decrement";
+      const stepper = row.locator(`button[data-a-selector='${direction}']`).first();
+      const stepperCount = await stepper.count().catch(() => 0);
+      if (stepperCount < 1) {
+        throw new AutoCliError(
+          "AMAZON_UPDATE_CART_UNAVAILABLE",
+          `Amazon did not show a usable ${direction} control for ${asin}.`,
+          {
+            details: {
+              asin,
+              targetQuantity,
+              currentQuantity,
+              url: page.url(),
+            },
+          },
+        );
+      }
+
+      await stepper.scrollIntoViewIfNeeded().catch(() => {});
+      await stepper.click({
+        timeout: 10_000,
+      }).catch(() => {});
+      await page.waitForTimeout(2_250);
+
+      cart = await this.loadAmazonCartFromPage(page, session);
+      item = findAmazonCartItem(cart, asin);
+      if (!item) {
+        throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart no longer shows ${asin} after updating quantity.`, {
+          details: {
+            asin,
+            targetQuantity,
+          },
+        });
+      }
+
+      currentQuantity = getAmazonCartQuantity(cart, asin);
+      if (currentQuantity < 1) {
+        throw new AutoCliError(
+          "AMAZON_CART_QUANTITY_UNAVAILABLE",
+          `Amazon did not expose the updated quantity for ${asin}.`,
+          {
+            details: {
+              asin,
+              targetQuantity,
+            },
+          },
+        );
+      }
+    }
+
+    if (currentQuantity !== targetQuantity) {
+      throw new AutoCliError(
+        "AMAZON_UPDATE_CART_NOT_CONFIRMED",
+        `Amazon still shows quantity ${currentQuantity} for ${asin} after trying to update it to ${targetQuantity}.`,
+        {
+          details: {
+            asin,
+            currentQuantity,
+            targetQuantity,
+          },
+        },
+      );
+    }
+
+    return {
+      cart,
+      item,
+      previousQuantity,
+    };
+  }
+
+  private getAmazonCartRow(page: PlaywrightPage, asin: string) {
+    return page.locator(`[data-asin="${asin}"].sc-list-item`).first();
+  }
+
+  private didAmazonCartQuantityIncrease(previousQuantity: number, item: Record<string, unknown> | undefined, requestedQuantity: number): boolean {
+    if (!item) {
+      return false;
+    }
+
+    const rawQuantity = item.quantity;
+    const nextQuantity = typeof rawQuantity === "number" && Number.isFinite(rawQuantity) ? rawQuantity : undefined;
+    if (typeof nextQuantity !== "number") {
+      return true;
+    }
+
+    if (previousQuantity <= 0) {
+      return nextQuantity >= Math.max(1, requestedQuantity);
+    }
+
+    return nextQuantity >= previousQuantity + Math.max(1, requestedQuantity);
   }
 }
 
@@ -900,7 +1623,7 @@ function extractAmazonCartItems(html: string, origin: string): Array<Record<stri
       imageUrl: extractMatch(block, /<img[^>]+src="([^"]+)"/i),
       priceText: collapseWhitespace(extractMatch(block, /class="[^"]*sc-price[^"]*"[^>]*>(.*?)<\/span>/i)),
       availability: collapseWhitespace(extractMatch(block, /class="[^"]*sc-availability[^"]*"[^>]*>(.*?)<\/span>/i)),
-      quantity: parseInteger(collapseWhitespace(extractMatch(block, /value="([0-9]+)"[^>]*data-a-selector="value"/i))),
+      quantity: extractAmazonCartItemQuantity(block),
     });
   }
 
@@ -926,6 +1649,40 @@ function extractAmazonWishlistEntries(html: string, origin: string): Array<Recor
   }
 
   return results;
+}
+
+function findAmazonCartItem(cart: AmazonCartData, asin: string): Record<string, unknown> | undefined {
+  return cart.items.find((item) => item && typeof item === "object" && asString((item as Record<string, unknown>).asin) === asin);
+}
+
+function getAmazonCartQuantity(cart: AmazonCartData, asin: string): number {
+  const item = findAmazonCartItem(cart, asin);
+  if (!item) {
+    return 0;
+  }
+
+  const quantity = item.quantity;
+  return typeof quantity === "number" && Number.isFinite(quantity) ? quantity : 0;
+}
+
+function extractAmazonCartItemQuantity(block: string): number | undefined {
+  const candidates = [
+    collapseWhitespace(extractMatch(block, /\bdata-quantity="([0-9]+)"/i)),
+    collapseWhitespace(extractMatch(block, /\bdata-saved-item-quantity="([0-9]+)"/i)),
+    collapseWhitespace(extractMatch(block, /\bdata-a-selector="inner-value"[^>]*>\s*([0-9]+)\s*</i)),
+    collapseWhitespace(extractMatch(block, /\bname="quantityBox"[^>]*value="([0-9]+)"/i)),
+    collapseWhitespace(extractMatch(block, /\bvalue="([0-9]+)"[^>]*data-a-selector="value"/i)),
+    collapseWhitespace(extractMatch(block, /\baria-label="(?:Delete|Reduce quantity to|Increase quantity to|Quantity:? )\s*([0-9]+)"/i)),
+  ];
+
+  for (const candidate of candidates) {
+    const parsed = parseInteger(candidate);
+    if (typeof parsed === "number" && Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return undefined;
 }
 
 function extractAmazonNavGreeting(html: string): string | undefined {

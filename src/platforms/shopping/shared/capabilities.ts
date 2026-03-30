@@ -1,22 +1,30 @@
 import { createAdapterActionCapability } from "../../../core/runtime/capability-helpers.js";
-import { createCookieLoginOptions, resolveCookieLoginInput } from "../../shared/cookie-login.js";
+import { createCookieLoginOptions, parseBrowserTimeoutSeconds, resolveCookieLoginInput } from "../../shared/cookie-login.js";
 import {
   printShoppingAccountResult,
+  printShoppingAddToCartResult,
   printShoppingCartResult,
   printShoppingOrderDetailResult,
   printShoppingOrdersResult,
   printShoppingProductResult,
+  printShoppingRemoveFromCartResult,
   printShoppingSearchResult,
   printShoppingStatusResult,
+  printShoppingUpdateCartResult,
   printShoppingWishlistResult,
 } from "./output.js";
-import { parseShoppingLimitOption } from "./options.js";
+import { parseShoppingLimitOption, parseShoppingQuantityOption } from "./options.js";
 
 import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCapability } from "../../../core/runtime/platform-definition.js";
 import type { BaseShoppingAdapter } from "./base-shopping-adapter.js";
 
 export function createShoppingCapabilities(adapter: BaseShoppingAdapter): readonly PlatformCapability[] {
+  const browserActionOptions = [
+    { flags: "--browser", description: "Run this action in an invisible browser session instead of browserless requests" },
+    { flags: "--browser-timeout <seconds>", description: "Maximum seconds to allow the browser action to complete", parser: parseBrowserTimeoutSeconds },
+  ] as const;
+
   const capabilities: PlatformCapability[] = [
     createAdapterActionCapability({
       id: "login",
@@ -83,11 +91,14 @@ export function createShoppingCapabilities(adapter: BaseShoppingAdapter): readon
           description: "Maximum number of orders to return (1-25, default: 5)",
           parser: parseShoppingLimitOption,
         },
+        ...browserActionOptions,
       ],
       action: ({ options }) =>
         adapter.orders({
           account: options.account as string | undefined,
           limit: options.limit as number | undefined,
+          browser: Boolean(options.browser),
+          browserTimeoutSeconds: options.browserTimeout as number | undefined,
         }),
       onSuccess: printShoppingOrdersResult,
     }),
@@ -149,12 +160,90 @@ export function createShoppingCapabilities(adapter: BaseShoppingAdapter): readon
         description: `Load the saved ${adapter.displayName} cart`,
         spinnerText: `Loading ${adapter.displayName} cart...`,
         successMessage: `${adapter.displayName} cart loaded.`,
-        options: [{ flags: "--account <name>", description: "Optional saved session name to use" }],
+        options: [{ flags: "--account <name>", description: "Optional saved session name to use" }, ...browserActionOptions],
         action: ({ options }) =>
           extendedAdapter.cart!({
             account: options.account as string | undefined,
+            browser: Boolean(options.browser),
+            browserTimeoutSeconds: options.browserTimeout as number | undefined,
           }),
         onSuccess: printShoppingCartResult,
+      }),
+    );
+  }
+
+  if (typeof extendedAdapter.addToCart === "function") {
+    capabilities.push(
+      createAdapterActionCapability({
+        id: "add-to-cart",
+        command: "add-to-cart <target>",
+        aliases: ["add", "cart-add"],
+        description: `Add an exact ${adapter.displayName} product to the saved cart using a browser-backed session`,
+        spinnerText: `Adding ${adapter.displayName} product to cart...`,
+        successMessage: `${adapter.displayName} cart updated.`,
+        options: [
+          { flags: "--account <name>", description: "Optional saved session name to use" },
+          { flags: "--qty <number>", description: "Quantity to add (1-10, default: 1)", parser: parseShoppingQuantityOption },
+          { flags: "--browser-timeout <seconds>", description: "Maximum seconds to allow the browser action to complete", parser: parseBrowserTimeoutSeconds },
+        ],
+        action: ({ args, options }) =>
+          extendedAdapter.addToCart!({
+            account: options.account as string | undefined,
+            target: String(args[0] ?? ""),
+            quantity: options.qty as number | undefined,
+            browserTimeoutSeconds: options.browserTimeout as number | undefined,
+          }),
+        onSuccess: printShoppingAddToCartResult,
+      }),
+    );
+  }
+
+  if (typeof extendedAdapter.removeFromCart === "function") {
+    capabilities.push(
+      createAdapterActionCapability({
+        id: "remove-from-cart",
+        command: "remove-from-cart <target>",
+        aliases: ["remove", "cart-remove"],
+        description: `Remove an exact ${adapter.displayName} product from the saved cart using a browser-backed session`,
+        spinnerText: `Removing ${adapter.displayName} product from cart...`,
+        successMessage: `${adapter.displayName} cart updated.`,
+        options: [
+          { flags: "--account <name>", description: "Optional saved session name to use" },
+          { flags: "--browser-timeout <seconds>", description: "Maximum seconds to allow the browser action to complete", parser: parseBrowserTimeoutSeconds },
+        ],
+        action: ({ args, options }) =>
+          extendedAdapter.removeFromCart!({
+            account: options.account as string | undefined,
+            target: String(args[0] ?? ""),
+            browserTimeoutSeconds: options.browserTimeout as number | undefined,
+          }),
+        onSuccess: printShoppingRemoveFromCartResult,
+      }),
+    );
+  }
+
+  if (typeof extendedAdapter.updateCart === "function") {
+    capabilities.push(
+      createAdapterActionCapability({
+        id: "update-cart",
+        command: "update-cart <target>",
+        aliases: ["cart-update", "set-qty"],
+        description: `Update the saved ${adapter.displayName} cart quantity for an exact product using a browser-backed session`,
+        spinnerText: `Updating ${adapter.displayName} cart quantity...`,
+        successMessage: `${adapter.displayName} cart updated.`,
+        options: [
+          { flags: "--account <name>", description: "Optional saved session name to use" },
+          { flags: "--qty <number>", description: "Target quantity to keep in cart (1-10)", parser: parseShoppingQuantityOption, required: true },
+          { flags: "--browser-timeout <seconds>", description: "Maximum seconds to allow the browser action to complete", parser: parseBrowserTimeoutSeconds },
+        ],
+        action: ({ args, options }) =>
+          extendedAdapter.updateCart!({
+            account: options.account as string | undefined,
+            target: String(args[0] ?? ""),
+            quantity: options.qty as number,
+            browserTimeoutSeconds: options.browserTimeout as number | undefined,
+          }),
+        onSuccess: printShoppingUpdateCartResult,
       }),
     );
   }
@@ -168,11 +257,13 @@ export function createShoppingCapabilities(adapter: BaseShoppingAdapter): readon
         description: `Load exact ${adapter.displayName} order details by order ID`,
         spinnerText: `Loading ${adapter.displayName} order details...`,
         successMessage: `${adapter.displayName} order details loaded.`,
-        options: [{ flags: "--account <name>", description: "Optional saved session name to use" }],
+        options: [{ flags: "--account <name>", description: "Optional saved session name to use" }, ...browserActionOptions],
         action: ({ args, options }) =>
           extendedAdapter.orderDetail!({
             account: options.account as string | undefined,
             target: String(args[0] ?? ""),
+            browser: Boolean(options.browser),
+            browserTimeoutSeconds: options.browserTimeout as number | undefined,
           }),
         onSuccess: printShoppingOrderDetailResult,
       }),
@@ -185,6 +276,9 @@ export function createShoppingCapabilities(adapter: BaseShoppingAdapter): readon
 interface ShoppingRichAdapter {
   accountSummary(input: { account?: string }): Promise<AdapterActionResult>;
   wishlist(input: { account?: string; limit?: number }): Promise<AdapterActionResult>;
-  cart(input: { account?: string }): Promise<AdapterActionResult>;
-  orderDetail(input: { account?: string; target: string }): Promise<AdapterActionResult>;
+  cart(input: { account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult>;
+  addToCart(input: { account?: string; target: string; quantity?: number; browserTimeoutSeconds?: number }): Promise<AdapterActionResult>;
+  removeFromCart(input: { account?: string; target: string; browserTimeoutSeconds?: number }): Promise<AdapterActionResult>;
+  updateCart(input: { account?: string; target: string; quantity: number; browserTimeoutSeconds?: number }): Promise<AdapterActionResult>;
+  orderDetail(input: { account?: string; target: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult>;
 }

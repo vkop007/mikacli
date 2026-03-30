@@ -290,6 +290,92 @@ export function printShoppingCartResult(result: AdapterActionResult, json: boole
   }
 }
 
+export function printShoppingAddToCartResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+  const data = result.data ?? {};
+  const item = data.item && typeof data.item === "object" ? (data.item as Record<string, unknown>) : undefined;
+  const title = item ? asString(item.title) : undefined;
+  const meta = [
+    typeof data.quantityRequested === "number" ? `requested qty ${data.quantityRequested}` : undefined,
+    typeof data.previousQuantity === "number" ? `previous qty ${data.previousQuantity}` : undefined,
+    item && typeof item.quantity === "number" ? `cart qty ${item.quantity}` : undefined,
+    item ? asString(item.priceText) : undefined,
+    item ? asString(item.availability) : undefined,
+  ].filter((value): value is string => typeof value === "string" && value.length > 0);
+
+  if (title) {
+    console.log(`item: ${title}`);
+  }
+  if (meta.length > 0) {
+    console.log(meta.join(" • "));
+  }
+  if (typeof data.cartCount === "number") {
+    console.log(`cart items: ${data.cartCount}`);
+  }
+  if (typeof data.subtotalText === "string" && data.subtotalText.length > 0) {
+    console.log(`subtotal: ${data.subtotalText}`);
+  }
+}
+
+export function printShoppingRemoveFromCartResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+  const data = result.data ?? {};
+  if (typeof data.title === "string" && data.title.length > 0) {
+    console.log(`item: ${data.title}`);
+  }
+  if (typeof data.previousQuantity === "number") {
+    console.log(`previous qty: ${data.previousQuantity}`);
+  }
+  if (typeof data.cartCount === "number") {
+    console.log(`cart items: ${data.cartCount}`);
+  }
+  if (typeof data.subtotalText === "string" && data.subtotalText.length > 0) {
+    console.log(`subtotal: ${data.subtotalText}`);
+  }
+}
+
+export function printShoppingUpdateCartResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+  const data = result.data ?? {};
+  const item = data.item && typeof data.item === "object" ? (data.item as Record<string, unknown>) : undefined;
+  const title = item ? asString(item.title) : asString(data.title);
+  const meta = [
+    typeof data.previousQuantity === "number" ? `previous qty ${data.previousQuantity}` : undefined,
+    typeof data.quantityRequested === "number" ? `requested qty ${data.quantityRequested}` : undefined,
+    item && typeof item.quantity === "number" ? `cart qty ${item.quantity}` : undefined,
+    item ? asString(item.priceText) : undefined,
+    item ? asString(item.availability) : undefined,
+  ].filter((value): value is string => typeof value === "string" && value.length > 0);
+
+  if (title) {
+    console.log(`item: ${title}`);
+  }
+  if (meta.length > 0) {
+    console.log(meta.join(" • "));
+  }
+  if (typeof data.cartCount === "number") {
+    console.log(`cart items: ${data.cartCount}`);
+  }
+  if (typeof data.subtotalText === "string" && data.subtotalText.length > 0) {
+    console.log(`subtotal: ${data.subtotalText}`);
+  }
+}
+
 export function printShoppingOrderDetailResult(result: AdapterActionResult, json: boolean): void {
   if (json) {
     printJson(result);

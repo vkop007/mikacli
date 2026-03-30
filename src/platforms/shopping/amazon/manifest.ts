@@ -12,9 +12,13 @@ export const amazonPlatformDefinition: PlatformDefinition = {
   adapter: amazonAdapter,
   capabilities: createShoppingCapabilities(amazonAdapter),
   examples: [
-    "autocli amazon login --cookies ./amazon.cookies.json",
-    'autocli amazon search "wireless mouse" --limit 5',
-    "autocli amazon product B0B296NTFV",
-    "autocli amazon orders --limit 5",
+    "autocli shopping amazon login --cookies ./amazon.cookies.json",
+    'autocli shopping amazon search "wireless mouse" --limit 5',
+    "autocli shopping amazon product B0B296NTFV",
+    "autocli shopping amazon add-to-cart B0B296NTFV --qty 1",
+    "autocli shopping amazon update-cart B0B296NTFV --qty 2",
+    "autocli shopping amazon remove-from-cart B0B296NTFV",
+    "autocli shopping amazon cart --browser",
+    "autocli shopping amazon orders --browser --limit 5",
   ],
 };
