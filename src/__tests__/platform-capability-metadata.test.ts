@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
 
 import { buildPlatformCommand } from "../core/runtime/build-platform-command.js";
-import { resolvePlatformCapabilityMetadata } from "../core/runtime/platform-capability-metadata.js";
+import { buildQuickStartHelpText } from "../core/runtime/example-help.js";
+import {
+  buildCapabilityMetadataHelpText,
+  buildStabilityGuideHelpText,
+  resolvePlatformCapabilityMetadata,
+} from "../core/runtime/platform-capability-metadata.js";
 import { getPlatformDefinition } from "../platforms/index.js";
 
 describe("platform capability metadata", () => {
@@ -35,5 +40,19 @@ describe("platform capability metadata", () => {
 
     expect(githubCommand.commands.map((command) => command.name())).toContain("capabilities");
     expect(httpCommand.commands.map((command) => command.name())).toContain("capabilities");
+  });
+
+  test("adds shared quick-start and stability help text", () => {
+    const githubHelp = buildQuickStartHelpText(getPlatformDefinition("github")!, { examplePrefix: "developer" });
+    const newsSupportHelp = buildCapabilityMetadataHelpText(getPlatformDefinition("news")!);
+    const stabilityGuide = buildStabilityGuideHelpText();
+
+    expect(githubHelp).toContain("Quick Start:");
+    expect(githubHelp).toContain("autocli developer github login --browser");
+    expect(newsSupportHelp).toContain("Support Profile:");
+    expect(stabilityGuide).toContain("Stability Guide:");
+
+    expect(newsSupportHelp).toContain("autocli news capabilities --json");
+    expect(githubHelp).not.toContain("autocli news login");
   });
 });

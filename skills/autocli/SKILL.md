@@ -14,6 +14,7 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 - If auth state is unclear, start with `autocli status --json` or `autocli doctor --json`.
 - Check saved sessions with `autocli sessions --json` before asking for a fresh cookie export or token.
 - Use `autocli <category> <provider> capabilities --json` when you need to confirm auth type, stability, browser support, or read/write boundaries before planning a task.
+- Prefer providers whose `capabilities --json` report `stability: stable` when you have multiple valid options.
 - For cookie-backed providers, prefer `autocli login --browser` and then `<provider> login --browser` when manual cookie export would be awkward.
 - Use `autocli tools http <provider-or-domain> inspect|request|capture` when a saved web session exists but the exact provider command is missing or unclear.
 - For risky actions, read or list first, then mutate second.
@@ -33,6 +34,13 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 7. When you need to pass results to another command, use `--json` and route through `autocli data ...` if transformation is needed.
 8. If the provider is authenticated but the exact action is not modeled yet, try `autocli tools http ...` before reaching for custom curl or browser automation.
 
+## Result Conventions
+
+- Many list-style commands expose a stable `data.items` alias even if the native provider key is `repos`, `projects`, `posts`, or something else.
+- Many singular reads expose a stable `data.entity` alias even if the native provider key is `profile`, `page`, `movie`, or `project`.
+- `data.meta.count` and `data.meta.listKey` give a quick summary for list results.
+- `data.guidance.recommendedNextCommand` and `data.guidance.nextCommands` are safe follow-up hints the agent should prefer over guessing.
+
 ## Global Commands
 
 - `autocli login --browser`
@@ -46,6 +54,7 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 
 - Use `login --browser` once to bootstrap the shared AutoCLI browser profile, then reuse it for later cookie-backed logins.
 - Use `capabilities --json` to let the agent verify support level before it attempts mutations or browser fallbacks.
+- Treat provider help as machine guidance too: `--help` now includes a generated `Quick Start`, `Support Profile`, and `Stability Guide`.
 - Use `tools` and `data` as glue around other providers.
 - Use `tools http` to inspect saved web sessions, replay authenticated requests, and capture logged-in traffic from the shared browser.
 - Use `editor` for local transformations before upload or posting.

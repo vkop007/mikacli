@@ -1,7 +1,11 @@
 import { Command } from "commander";
 
-import { buildExamplesHelpText } from "./example-help.js";
-import { buildCapabilityMetadataHelpText, registerCapabilityMetadataCommand } from "./platform-capability-metadata.js";
+import { buildExamplesHelpText, buildQuickStartHelpText } from "./example-help.js";
+import {
+  buildCapabilityMetadataHelpText,
+  buildStabilityGuideHelpText,
+  registerCapabilityMetadataCommand,
+} from "./platform-capability-metadata.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "./platform-definition.js";
 
@@ -18,7 +22,9 @@ export function buildPlatformCommand(
   }
 
   registerCapabilityMetadataCommand(command, definition);
+  command.addHelpText("afterAll", buildQuickStartHelpText(definition, options));
   command.addHelpText("afterAll", buildCapabilityMetadataHelpText(definition));
+  command.addHelpText("afterAll", buildStabilityGuideHelpText());
 
   if (definition.examples && definition.examples.length > 0) {
     command.addHelpText("afterAll", buildExamplesHelpText(definition.examples, options));

@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
-import { normalizeLoginActionResult } from "../../../core/runtime/login-result.js";
+import { normalizeActionResult } from "../../../core/runtime/login-result.js";
 import { Logger } from "../../../logger.js";
 import { printActionResult, resolveCommandContext } from "../../../utils/cli.js";
 import { printJson } from "../../../utils/output.js";
@@ -11,12 +11,12 @@ import type { AdapterActionResult, AdapterStatusResult } from "../../../types.js
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli whatsapp login",
-  "autocli whatsapp login --phone +911234567890",
-  "autocli whatsapp me",
-  "autocli whatsapp chats --limit 10",
-  "autocli whatsapp history 919876543210 --limit 20",
-  'autocli whatsapp send 919876543210 "Hello from AutoCLI"',
+  "autocli social whatsapp login",
+  "autocli social whatsapp login --phone +911234567890",
+  "autocli social whatsapp me",
+  "autocli social whatsapp chats --limit 10",
+  "autocli social whatsapp history 919876543210 --limit 20",
+  'autocli social whatsapp send 919876543210 "Hello from AutoCLI"',
 ] as const;
 
 function buildWhatsAppCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -38,7 +38,7 @@ function buildWhatsAppCommand(options: PlatformCommandBuildOptions = {}): Comman
           phone: input.phone,
           json: ctx.json,
         });
-        printWhatsAppAction(normalizeLoginActionResult(result, whatsappPlatformDefinition), ctx.json);
+        printWhatsAppAction(normalizeActionResult(result, whatsappPlatformDefinition, "login"), ctx.json);
         scheduleWhatsAppCliExit();
       } catch (error) {
         logger.error(error instanceof Error ? error.message : "WhatsApp login failed.");
@@ -134,7 +134,7 @@ async function runWhatsAppAction(
   const spinner = logger.spinner(loadingText);
 
   try {
-    const result = await action();
+    const result = normalizeActionResult(await action(), whatsappPlatformDefinition);
     spinner?.succeed(successText);
     printWhatsAppAction(result, ctx.json);
     scheduleWhatsAppCliExit();

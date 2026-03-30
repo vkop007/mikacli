@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
-import { normalizeLoginActionResult } from "../../../core/runtime/login-result.js";
+import { normalizeActionResult } from "../../../core/runtime/login-result.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext } from "../../../utils/cli.js";
 import { printActionResult } from "../../../utils/cli.js";
@@ -12,12 +12,12 @@ import type { AdapterActionResult, AdapterStatusResult } from "../../../types.js
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli telegram login --api-id 123456 --api-hash abcdef123456 --qr",
-  "autocli telegram login --api-id 123456 --api-hash abcdef123456 --phone +911234567890",
-  "autocli telegram me",
-  "autocli telegram chats --limit 10",
-  'autocli telegram history me --limit 20',
-  'autocli telegram send me "Hello from AutoCLI"',
+  "autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr",
+  "autocli social telegram login --api-id 123456 --api-hash abcdef123456 --phone +911234567890",
+  "autocli social telegram me",
+  "autocli social telegram chats --limit 10",
+  'autocli social telegram history me --limit 20',
+  'autocli social telegram send me "Hello from AutoCLI"',
 ] as const;
 
 function buildTelegramCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -51,7 +51,7 @@ function buildTelegramCommand(options: PlatformCommandBuildOptions = {}): Comman
           qr: Boolean(input.qr),
           json: ctx.json,
         });
-        printTelegramAction(normalizeLoginActionResult(result, telegramPlatformDefinition), ctx.json);
+        printTelegramAction(normalizeActionResult(result, telegramPlatformDefinition, "login"), ctx.json);
       } catch (error) {
         logger.error(error instanceof Error ? error.message : "Telegram login failed.");
         throw error;
@@ -144,7 +144,7 @@ async function runTelegramAction(
   const spinner = logger.spinner(loadingText);
 
   try {
-    const result = await action();
+    const result = normalizeActionResult(await action(), telegramPlatformDefinition);
     spinner?.succeed(successText);
     printTelegramAction(result, ctx.json);
   } catch (error) {

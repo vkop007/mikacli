@@ -33,6 +33,7 @@ type DoctorReport = {
     expired: number;
     unknown: number;
   };
+  recommendations: string[];
   checks: DoctorCheck[];
 };
 
@@ -173,6 +174,7 @@ Examples:
           ok: true,
           health: report.health,
           summary: report.summary,
+          recommendations: report.recommendations,
           checks: report.checks,
         });
       } else {
@@ -185,6 +187,14 @@ Examples:
             message: check.message,
           })),
         );
+
+        if (report.recommendations.length > 0) {
+          console.log("");
+          console.log("next:");
+          for (const recommendation of report.recommendations) {
+            console.log(`- ${recommendation}`);
+          }
+        }
       }
 
       if (report.health === "fail" || (options.strict && report.health === "warn")) {
@@ -206,8 +216,40 @@ export async function collectDoctorReport(connectionStore = new ConnectionStore(
   return {
     health: summary.fail > 0 ? "fail" : summary.warn > 0 ? "warn" : "pass",
     summary,
+    recommendations: buildDoctorRecommendations(checks, summary),
     checks,
   };
+}
+
+export function buildDoctorRecommendations(
+  checks: readonly DoctorCheck[],
+  summary: DoctorReport["summary"],
+): string[] {
+  const recommendations: string[] = [];
+  const failedDirectories = checks.filter((check) => check.category === "filesystem" && check.status === "fail");
+  const warnedBinaries = checks.filter((check) => check.category === "binary" && check.status === "warn");
+
+  if (failedDirectories.length > 0) {
+    recommendations.push("Fix the failing AutoCLI directories first so sessions, browser state, and jobs can be saved correctly.");
+  }
+
+  if (summary.records === 0) {
+    recommendations.push("Run `autocli login --browser` or a provider-specific `login` command to save your first reusable account.");
+  }
+
+  if (summary.expired > 0) {
+    recommendations.push("Inspect expired records with `autocli sessions --status expired` and refresh them with the provider's `login` command.");
+  }
+
+  if (warnedBinaries.length > 0) {
+    recommendations.push("Install the missing local binaries if you want the related editor/document commands to work fully.");
+  }
+
+  if (summary.unknown > 0 && summary.records > 0) {
+    recommendations.push("Use `autocli sessions` to review saved records that still have unknown validation state.");
+  }
+
+  return recommendations;
 }
 
 export function summarizeDoctorChecks(checks: DoctorCheck[]): DoctorReport["summary"] {

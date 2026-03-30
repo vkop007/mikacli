@@ -24,6 +24,7 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 - Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
 - Every provider is designed to be script-friendly, with strong `--json` support.
 - Provider capability metadata helps agents see auth type, stability, browser support, and read/write boundaries before they guess.
+- Shared result normalization adds stable JSON aliases like `data.items`, `data.entity`, and `data.guidance`.
 
 ## Auto Browser Login
 
@@ -99,6 +100,12 @@ autocli tools page-links https://example.com --json
 autocli tools http github inspect --json
 ```
 
+Every provider help page now includes:
+
+- a generated `Quick Start` block
+- a `Support Profile` with auth, discovery, mutation, browser, and async support
+- a `Stability Guide` so agents can tell whether a provider is `stable`, `partial`, or `experimental`
+
 ## Why Use AutoCLI
 
 - Sign into real web apps once, then reuse the saved session from the terminal.
@@ -139,6 +146,38 @@ autocli tools translate "hello world" --to hi
 autocli tools timezone "Mumbai"
 autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
 autocli tools http github request GET /settings/profile
+```
+
+## Agent JSON Conventions
+
+AutoCLI keeps provider-specific fields, but it also adds a few stable JSON aliases so agents can plan and transform results more reliably:
+
+- `data.items` for list-style results, even when the provider also returns keys like `repos`, `projects`, `posts`, or `recommendations`
+- `data.entity` for singular objects, even when the provider also returns keys like `profile`, `page`, `movie`, or `project`
+- `data.meta.count` and `data.meta.listKey` for quick list summaries
+- `data.guidance.recommendedNextCommand` and `data.guidance.nextCommands` for safer follow-up planning
+
+Example:
+
+```bash
+autocli social reddit search "bun cli" --json
+autocli movie tmdb title 27205 --json
+autocli developer github capabilities --json
+```
+
+## Stability Levels
+
+- `stable`: ready for routine automation and the default choice when you have options
+- `partial`: core flows work well, but some protected or edge routes may still need care
+- `experimental`: useful, but still changing quickly and best used with extra verification
+- `unknown`: not classified yet, so inspect with `capabilities --json` before leaning on it
+
+To inspect a provider before acting:
+
+```bash
+autocli developer github capabilities --json
+autocli social reddit capabilities --json
+autocli devops railway capabilities --json
 ```
 
 ## Category Overview
