@@ -128,7 +128,10 @@ function buildFirstActionQuickStart(
   examples: readonly string[],
   options: PlatformCommandBuildOptions,
 ): string | undefined {
-  const firstExample = examples[0];
+  const firstExample = examples.find((example) => {
+    const normalized = prefixCliExample(example, options.examplePrefix).trim();
+    return !/\slogin(?:\s|$)/u.test(normalized);
+  }) ?? examples[0];
   if (firstExample) {
     return prefixCliExample(firstExample, options.examplePrefix);
   }
