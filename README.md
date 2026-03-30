@@ -415,101 +415,103 @@ After the first `login`, later commands normally omit `--account` or `--bot` and
 
 ## Provider Matrix
 
+The `Stability` column below matches the runtime metadata behind `autocli <category> <provider> capabilities --json`.
+
 ### LLM
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| ChatGPT | cookies | text prompts and image prompting | Authenticated web flow is supported; richer media generation is still evolving. |
-| Claude | cookies | Claude web-session access | Text prompting is the clearest supported path today; richer media flows still depend on private web-flow drift. |
-| DeepSeek | cookies + local token | browserless DeepSeek chat | Text chat works; image and video prompting are not mapped yet. Needs browser cookies and sometimes `userToken` from site storage. |
-| Gemini | cookies | Google Gemini prompting and media flows | Works from imported browser sessions; download helpers are wired for media jobs. |
-| Grok | cookies | text, image, and async video generation | Best current fit for job-style image/video workflows. |
-| Mistral | cookies | browserless Mistral chat | Cookie-backed text flow is implemented; image/video support is still limited. |
-| Perplexity | cookies | search-heavy prompting | Uses Perplexity’s live web flow for browserless text prompts; image/video support is still limited. |
-| Qwen | cookies | cookie-backed Qwen chat | Usually works directly from exported browser cookies. |
-| Z.ai | cookies | cookie-backed chat workflows | Session-backed provider for text-oriented usage today; media flows are still limited. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| ChatGPT | `stable` | cookies | text prompts and image prompting | Authenticated web flow is supported; richer media generation is still evolving. |
+| Claude | `partial` | cookies | Claude web-session access | Text prompting is the clearest supported path today; richer media flows still depend on private web-flow drift. |
+| DeepSeek | `partial` | cookies + local token | browserless DeepSeek chat | Text chat works; image and video prompting are not mapped yet. Needs browser cookies and sometimes `userToken` from site storage. |
+| Gemini | `stable` | cookies | Google Gemini prompting and media flows | Works from imported browser sessions; download helpers are wired for media jobs. |
+| Grok | `partial` | cookies | text, image, and async video generation | Best current fit for job-style image/video workflows. |
+| Mistral | `partial` | cookies | browserless Mistral chat | Cookie-backed text flow is implemented; image/video support is still limited. |
+| Perplexity | `partial` | cookies | search-heavy prompting | Uses Perplexity’s live web flow for browserless text prompts; image/video support is still limited. |
+| Qwen | `partial` | cookies | cookie-backed Qwen chat | Usually works directly from exported browser cookies. |
+| Z.ai | `partial` | cookies | cookie-backed chat workflows | Session-backed provider for text-oriented usage today; media flows are still limited. |
 
 ### Editor
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Archive Editor | local tools | create, inspect, and extract archives | Good for zip/tar/gzip workflows. |
-| Audio Editor | local tools | trim, convert, normalize, denoise, report | Built around `ffmpeg` and related local tooling. |
-| Document Editor | local tools | document conversion, OCR, and text extraction | Useful for format conversion, OCR, and markdown export. |
-| GIF Editor | local tools | GIF create, optimize, and video conversion | Great for social clips and quick previews. |
-| Image Editor | local tools | image transformation pipelines | Includes upscale, background remove, watermark, compress, metadata strip, and more. |
-| PDF Editor | local tools | merge, split, watermark, reorder, secure | Also supports `to-images`, with better multi-page output when `pdftoppm` is installed. |
-| Subtitle Editor | local tools | shift, clean, merge, burn subtitles | Pairs well with YouTube and video publishing flows. |
-| Video Editor | local tools | split, stabilize, scene detect, overlay, transcode | Strong `ffmpeg`-driven video workflow surface. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Archive Editor | `stable` | local tools | create, inspect, and extract archives | Good for zip/tar/gzip workflows. |
+| Audio Editor | `stable` | local tools | trim, convert, normalize, denoise, report | Built around `ffmpeg` and related local tooling. |
+| Document Editor | `stable` | local tools | document conversion, OCR, and text extraction | Useful for format conversion, OCR, and markdown export. |
+| GIF Editor | `stable` | local tools | GIF create, optimize, and video conversion | Great for social clips and quick previews. |
+| Image Editor | `stable` | local tools | image transformation pipelines | Includes upscale, background remove, watermark, compress, metadata strip, and more. |
+| PDF Editor | `stable` | local tools | merge, split, watermark, reorder, secure | Also supports `to-images`, with better multi-page output when `pdftoppm` is installed. |
+| Subtitle Editor | `stable` | local tools | shift, clean, merge, burn subtitles | Pairs well with YouTube and video publishing flows. |
+| Video Editor | `stable` | local tools | split, stabilize, scene detect, overlay, transcode | Strong `ffmpeg`-driven video workflow surface. |
 
 ### Finance
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Crypto | none | crypto spot price lookup | No key required. |
-| Currency | none | currency conversion and forex math | Also exposed naturally as forex conversion. |
-| Stocks | none | stock quote lookups | Public market data surface. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Crypto | `stable` | none | crypto spot price lookup | No key required. |
+| Currency | `stable` | none | currency conversion and forex math | Also exposed naturally as forex conversion. |
+| Stocks | `stable` | none | stock quote lookups | Public market data surface. |
 
 ### Data
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| CSV | none | inspect, filter, and convert CSV | Good for tabular exports and spreadsheet-style data. |
-| HTML | none | extract plain text or convert HTML to Markdown | Useful after scraping or page capture workflows. |
-| JSON | none | format, query, and merge JSON | Best glue layer for agent workflows across providers. |
-| Markdown | none | convert Markdown to HTML or text | Good for docs, release notes, and prompt shaping. |
-| Text | none | stats, replace, and dedupe lines | Useful for cleanup and normalization between steps. |
-| XML | none | format XML and convert it to JSON | Useful for feeds, sitemaps, and older structured formats. |
-| YAML | none | format YAML and convert it to JSON | Good for configs, manifests, and infra files. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| CSV | `stable` | none | inspect, filter, and convert CSV | Good for tabular exports and spreadsheet-style data. |
+| HTML | `stable` | none | extract plain text or convert HTML to Markdown | Useful after scraping or page capture workflows. |
+| JSON | `stable` | none | format, query, and merge JSON | Best glue layer for agent workflows across providers. |
+| Markdown | `stable` | none | convert Markdown to HTML or text | Good for docs, release notes, and prompt shaping. |
+| Text | `stable` | none | stats, replace, and dedupe lines | Useful for cleanup and normalization between steps. |
+| XML | `stable` | none | format XML and convert it to JSON | Useful for feeds, sitemaps, and older structured formats. |
+| YAML | `stable` | none | format YAML and convert it to JSON | Good for configs, manifests, and infra files. |
 
 ### Maps
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Geo | none | distance, midpoint, plus codes, elevation | Pure local/public helpers plus public elevation lookup. |
-| OpenStreetMap | none | search, reverse geocode, nearby lookup | Uses public OSM and Overpass services. |
-| OSRM | none | route, trip, table, nearest, match | Public routing and trip calculations. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Geo | `stable` | none | distance, midpoint, plus codes, elevation | Pure local/public helpers plus public elevation lookup. |
+| OpenStreetMap | `stable` | none | search, reverse geocode, nearby lookup | Uses public OSM and Overpass services. |
+| OSRM | `stable` | none | route, trip, table, nearest, match | Public routing and trip calculations. |
 
 ### Movie
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| AniList | none | anime title lookup, trending, recommendations | Public anime metadata plus trending and recs. |
-| IMDb | none | movie and show lookup | Public search/title surface. |
-| JustWatch | none | where-to-watch checks | Streaming availability lookup. |
-| Kitsu | none | anime and manga discovery | Alternative anime metadata source. |
-| Letterboxd | none | film pages, diary feeds, and community taste | Public film pages plus profile and diary/RSS reading. |
-| MyAnimeList | none or cookies | public search plus your own saved list | Public lookups work without cookies; personal defaults can use cookies. |
-| TMDb | none | broad movie and TV title lookup | Uses TMDb's live public web catalog for search, title detail, popular titles, and recommendations. |
-| TVMaze | none | TV and episode-oriented title lookup | Strong TV-first public catalog with episode lists. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| AniList | `stable` | none | anime title lookup, trending, recommendations | Public anime metadata plus trending and recs. |
+| IMDb | `stable` | none | movie and show lookup | Public search/title surface. |
+| JustWatch | `stable` | none | where-to-watch checks | Streaming availability lookup. |
+| Kitsu | `stable` | none | anime and manga discovery | Alternative anime metadata source. |
+| Letterboxd | `stable` | none | film pages, diary feeds, and community taste | Public film pages plus profile and diary/RSS reading. |
+| MyAnimeList | `stable` | none or cookies | public search plus your own saved list | Public lookups work without cookies; personal defaults can use cookies. |
+| TMDb | `stable` | none | broad movie and TV title lookup | Uses TMDb's live public web catalog for search, title detail, popular titles, and recommendations. |
+| TVMaze | `stable` | none | TV and episode-oriented title lookup | Strong TV-first public catalog with episode lists. |
 
 ### Music
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Bandcamp | none | public artist, album, and track lookup | Uses Bandcamp search plus readable album, track, and artist pages. |
-| Deezer | none | public track, album, artist, and playlist lookup | Uses Deezer's public entity API and a public search fallback where regional search is weak. |
-| SoundCloud | none | public track, playlist, and user discovery | Uses SoundCloud's public web client flow and can download tracks when a public stream is exposed. |
-| Spotify | cookies | library, playback, queue, playlists | Strongest playback-control surface in the repo today. |
-| YouTube Music | cookies | search and local playback control | Read commands can fall back to public browsing in some flows. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Bandcamp | `stable` | none | public artist, album, and track lookup | Uses Bandcamp search plus readable album, track, and artist pages. |
+| Deezer | `stable` | none | public track, album, artist, and playlist lookup | Uses Deezer's public entity API and a public search fallback where regional search is weak. |
+| SoundCloud | `stable` | none | public track, playlist, and user discovery | Uses SoundCloud's public web client flow and can download tracks when a public stream is exposed. |
+| Spotify | `stable` | cookies | library, playback, queue, playlists | Strongest playback-control surface in the repo today. |
+| YouTube Music | `partial` | cookies | search and local playback control | Read commands can fall back to public browsing in some flows. |
 
 ### Social
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Bluesky | none | public profile, feed, and thread lookup | Uses Bluesky's public appview API, so it is cleaner and more stable than most social adapters. |
-| Facebook | cookies | session import and light account automation | Validation and safer read surfaces are strongest today; protected write flows are still conservative. |
-| Instagram | cookies | posting, downloads, stories, follows | One of the strongest cookie-backed social adapters in the repo. |
-| LinkedIn | cookies | posting and engagement | Text posting works best; richer media/write surfaces can drift and may need adapter refreshes over time. |
-| Mastodon | none | federated profile, posts, and thread lookup | Uses public instance APIs and respects the target instance when resolving accounts and statuses. |
-| Pinterest | none | public pin, profile, and board discovery | Good public-read discovery surface without cookies. |
-| Reddit | none or cookies | public post/thread discovery plus session-backed posting, comments, votes, and saves | Public reads use Reddit's JSON endpoints; writes can use a saved session or the shared browser profile with `--browser`. |
-| Telegram | session | QR, phone, or session-string login for account messaging | Uses MTProto with a saved user session, not browser cookies. |
-| Threads | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
-| TikTok | cookies | session handling and light public automation | Session validation and read flows are strongest today; signing for private web writes is still a known hard part. |
-| WhatsApp | session | QR or pairing-code login for account messaging | Uses a saved WhatsApp multi-device auth state with cached chats/messages for terminal workflows. |
-| X | cookies | posting, likes, profile/tweet lookup | Strong cookie-backed adapter with reliable agent-friendly output. |
-| YouTube | cookies | search, likes, comments, downloads | Upload/community posting are still separate future work. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Bluesky | `stable` | none | public profile, feed, and thread lookup | Uses Bluesky's public appview API, so it is cleaner and more stable than most social adapters. |
+| Facebook | `partial` | cookies | session import and light account automation | Validation and safer read surfaces are strongest today; protected write flows are still conservative. |
+| Instagram | `partial` | cookies | posting, downloads, stories, follows | One of the strongest cookie-backed social adapters in the repo. |
+| LinkedIn | `partial` | cookies | posting and engagement | Text posting works best; richer media/write surfaces can drift and may need adapter refreshes over time. |
+| Mastodon | `stable` | none | federated profile, posts, and thread lookup | Uses public instance APIs and respects the target instance when resolving accounts and statuses. |
+| Pinterest | `stable` | none | public pin, profile, and board discovery | Good public-read discovery surface without cookies. |
+| Reddit | `partial` | none or cookies | public post/thread discovery plus session-backed posting, comments, votes, and saves | Public reads use Reddit's JSON endpoints; writes can use a saved session or the shared browser profile with `--browser`. |
+| Telegram | `partial` | session | QR, phone, or session-string login for account messaging | Uses MTProto with a saved user session, not browser cookies. |
+| Threads | `partial` | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
+| TikTok | `partial` | cookies | session handling and light public automation | Session validation and read flows are strongest today; signing for private web writes is still a known hard part. |
+| WhatsApp | `partial` | session | QR or pairing-code login for account messaging | Uses a saved WhatsApp multi-device auth state with cached chats/messages for terminal workflows. |
+| X | `partial` | cookies | posting, likes, profile/tweet lookup | Strong cookie-backed adapter with reliable agent-friendly output. |
+| YouTube | `partial` | cookies | search, likes, comments, downloads | Upload/community posting are still separate future work. |
 
 ### Partial Support Notes
 
@@ -522,68 +524,81 @@ These providers are intentionally included, but their current browserless surfac
 
 ### Shopping
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Amazon | cookies | account, cart, search, product lookup | Some order-history surfaces are more protected and may need browser later. |
-| eBay | none | public listings, item lookup, seller discovery | Uses public readable page extraction plus the public autocomplete endpoint. |
-| Etsy | none | public listing and shop discovery | Direct Etsy fetches are anti-bot protected, so this adapter uses public site-search discovery today. |
-| Flipkart | cookies | account, wishlist, cart, orders | Stronger browserless account coverage today than Amazon. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Amazon | `partial` | cookies | account, cart, search, product lookup | Some order-history surfaces are more protected and may need browser later. |
+| eBay | `stable` | none | public listings, item lookup, seller discovery | Uses public readable page extraction plus the public autocomplete endpoint. |
+| Etsy | `partial` | none | public listing and shop discovery | Direct Etsy fetches are anti-bot protected, so this adapter uses public site-search discovery today. |
+| Flipkart | `stable` | cookies | account, wishlist, cart, orders | Stronger browserless account coverage today than Amazon. |
 
 ### Developer
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Confluence | cookies | spaces, pages, search, comments, page creation | Uses an Atlassian web session to search and edit workspace documentation from the terminal. |
-| GitHub | cookies | repos, issues, pull requests, stars | Uses a saved GitHub web session for browserless developer automation. |
-| GitLab | cookies | projects, issues, merge requests | Uses a saved GitLab web session instead of personal access tokens. |
-| Jira | cookies | projects, issues, JQL search, issue creation | Saves a site-scoped Jira web session and reuses it for browserless workspace automation. |
-| Linear | cookies | issue management and comments | Uses the saved Linear web session for GraphQL issue workflows. |
-| Notion | cookies | search, pages, databases, comments | Uses the saved Notion web session instead of an official integration token. |
-| Trello | cookies | boards, lists, cards, card creation | Uses a saved Trello web session for browserless board and card workflows. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Confluence | `stable` | cookies | spaces, pages, search, comments, page creation | Uses an Atlassian web session to search and edit workspace documentation from the terminal. |
+| GitHub | `stable` | cookies | repos, issues, pull requests, stars | Uses a saved GitHub web session for browserless developer automation. |
+| GitLab | `stable` | cookies | projects, issues, merge requests | Uses a saved GitLab web session instead of personal access tokens. |
+| Jira | `stable` | cookies | projects, issues, JQL search, issue creation | Saves a site-scoped Jira web session and reuses it for browserless workspace automation. |
+| Linear | `partial` | cookies | issue management and comments | Uses the saved Linear web session for GraphQL issue workflows. |
+| Notion | `partial` | cookies | search, pages, databases, comments | Uses the saved Notion web session instead of an official integration token. |
+| Trello | `stable` | cookies | boards, lists, cards, card creation | Uses a saved Trello web session for browserless board and card workflows. |
+
+### DevOps
+
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Cloudflare | `stable` | api token | zones, DNS, and account-level infrastructure automation | Strong official API surface for DNS and zone operations. |
+| DigitalOcean | `stable` | api token | App Platform, deployments, and domains | Uses the official App Platform and account APIs. |
+| Fly.io | `partial` | api token | apps, machines, volumes, and certificates | Some tokens may need an explicit `--org` slug for the cleanest results. |
+| Netlify | `stable` | api token | sites, deploys, DNS, and team account automation | Good fit for deployment and static hosting workflows. |
+| Railway | `partial` | api token | projects, services, and environment-oriented platform workflows | Uses Railway’s GraphQL surface, so deeper actions may still expand over time. |
+| Render | `stable` | api token | services, projects, and env-group automation | Strong official REST API for deployment and service inspection. |
+| Supabase | `stable` | api token | organizations, projects, and functions | Good backend/platform automation surface. |
+| Vercel | `stable` | api token | teams, projects, and deployments | Strong deployment-centric API coverage. |
 
 ### Bot
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Discord Bot | bot token | guild/channel messaging automation | Good for notifications and chat ops. |
-| GitHub Bot | api token | GitHub app or bot-token actions | Same GitHub surface, but bot-style auth. |
-| Slack Bot | bot token | channel history, send, edit, file upload | Strong for workspace notification flows. |
-| Telegram Bot | bot token | send, edit, media, updates | Good default bot adapter for lightweight notifications. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Discord Bot | `stable` | bot token | guild/channel messaging automation | Good for notifications and chat ops. |
+| GitHub Bot | `stable` | api token | GitHub app or bot-token actions | Same GitHub surface, but bot-style auth. |
+| Slack Bot | `stable` | bot token | channel history, send, edit, file upload | Strong for workspace notification flows. |
+| Telegram Bot | `stable` | bot token | send, edit, media, updates | Good default bot adapter for lightweight notifications. |
 
 ### Tools
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| Cheat | none | shell and language cheat sheets | Fast terminal help. |
-| DNS | none | DNS record lookups | Good for quick ops checks. |
-| Favicon | none | site icon discovery and verification | Resolves declared icon tags, falls back to `/favicon.ico`, and verifies candidates. |
-| Headers | none | inspect raw HTTP response headers | Useful for cache, CDN, and server debugging. |
-| HTTP Toolkit | none or cookies | inspect saved sessions, attach to the shared browser, and replay authenticated requests | Best for session-aware debugging on sites where plain `curl` is not enough. |
-| IP | none | public IP and network details | Fast no-auth network lookup. |
-| Markdown Fetch | none | turn pages into markdown-like text | Useful for scraping readable content. |
-| Metadata | none | webpage title and social tags | Extracts title, description, canonical, favicon, Open Graph, and Twitter tags. |
-| oEmbed | none | embeddable media/page metadata from URLs | Uses page-discovered oEmbed endpoints first, then falls back to a public resolver. |
-| Page Links | none | internal/external link extraction from webpages | Useful for crawls, site audits, and agent discovery. |
-| QR | none | QR generation | Can save or print a public image URL. |
-| Redirect | none | redirect-chain tracing | Shows each HTTP hop and final destination. |
-| Robots | none | `robots.txt` inspection | Useful for site crawling checks. |
-| RSS | none | feed inspection | Reads RSS/Atom without setup. |
-| Screenshot | none | URL-to-image captures | Public no-key render service. |
-| Sitemap | none | sitemap discovery and listing | Good for SEO/crawl inspection. |
-| SSL | none | TLS certificate inspection | Shows certificate, issuer, SANs, protocol, and expiry. |
-| Time | none | timezone and current time lookup | Public time APIs. |
-| Timezone | none | resolve timezone from a place, coordinates, or IANA zone | Useful for scheduling, agent routing, and regional workflows. |
-| Translate | none | quick translation | Uses a public translation endpoint. |
-| Uptime | none | latency and HTTP health checks | Lightweight monitoring helper. |
-| Weather | none | weather lookup | No account required. |
-| Web Search | none | multi-engine search | Supports summaries and engine selection. |
-| Whois | none | domain registration details | Useful for domain inspection. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| Cheat | `stable` | none | shell and language cheat sheets | Fast terminal help. |
+| DNS | `stable` | none | DNS record lookups | Good for quick ops checks. |
+| Favicon | `stable` | none | site icon discovery and verification | Resolves declared icon tags, falls back to `/favicon.ico`, and verifies candidates. |
+| Headers | `stable` | none | inspect raw HTTP response headers | Useful for cache, CDN, and server debugging. |
+| HTTP Toolkit | `stable` | none or cookies | inspect saved sessions, attach to the shared browser, and replay authenticated requests | Best for session-aware debugging on sites where plain `curl` is not enough. |
+| IP | `stable` | none | public IP and network details | Fast no-auth network lookup. |
+| Markdown Fetch | `stable` | none | turn pages into markdown-like text | Useful for scraping readable content. |
+| Metadata | `stable` | none | webpage title and social tags | Extracts title, description, canonical, favicon, Open Graph, and Twitter tags. |
+| oEmbed | `stable` | none | embeddable media/page metadata from URLs | Uses page-discovered oEmbed endpoints first, then falls back to a public resolver. |
+| Page Links | `stable` | none | internal/external link extraction from webpages | Useful for crawls, site audits, and agent discovery. |
+| QR | `stable` | none | QR generation | Can save or print a public image URL. |
+| Redirect | `stable` | none | redirect-chain tracing | Shows each HTTP hop and final destination. |
+| Robots | `stable` | none | `robots.txt` inspection | Useful for site crawling checks. |
+| RSS | `stable` | none | feed inspection | Reads RSS/Atom without setup. |
+| Screenshot | `stable` | none | URL-to-image captures | Public no-key render service. |
+| Sitemap | `stable` | none | sitemap discovery and listing | Good for SEO/crawl inspection. |
+| SSL | `stable` | none | TLS certificate inspection | Shows certificate, issuer, SANs, protocol, and expiry. |
+| Time | `stable` | none | timezone and current time lookup | Public time APIs. |
+| Timezone | `stable` | none | resolve timezone from a place, coordinates, or IANA zone | Useful for scheduling, agent routing, and regional workflows. |
+| Translate | `stable` | none | quick translation | Uses a public translation endpoint. |
+| Uptime | `stable` | none | latency and HTTP health checks | Lightweight monitoring helper. |
+| Weather | `stable` | none | weather lookup | No account required. |
+| Web Search | `stable` | none | multi-engine search | Supports summaries and engine selection. |
+| Whois | `stable` | none | domain registration details | Useful for domain inspection. |
 
 ### News
 
-| Provider | Needs | Best for | Notes |
-| --- | --- | --- | --- |
-| News | none | headline and feed aggregation | Pulls from public no-key sources like Google News, GDELT, Hacker News, Reddit, and raw RSS feeds. |
+| Provider | Stability | Needs | Best for | Notes |
+| --- | --- | --- | --- | --- |
+| News | `stable` | none | headline and feed aggregation | Pulls from public no-key sources like Google News, GDELT, Hacker News, Reddit, and raw RSS feeds. |
 
 ## Agent-Friendly Output
 
