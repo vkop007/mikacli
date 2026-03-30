@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
+import { normalizeActionResult } from "../../../core/runtime/login-result.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { AutoCliError } from "../../../errors.js";
@@ -12,9 +13,13 @@ import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../c
 
 const EXAMPLES = [
   "autocli tools http github inspect",
+  "autocli tools http github cookies",
+  "autocli tools http github storage",
   "autocli tools http github.com capture --browser-timeout 60",
   "autocli tools http github.com capture --summary --group-by endpoint --browser-timeout 60",
   "autocli tools http github request GET /settings/profile",
+  "autocli tools http github download /settings/profile --output ./tmp/github-profile.html",
+  "autocli tools http github graphql '{ viewer { login } }' --path /api/graphql",
   "autocli tools http officialgxdyt.atlassian.net request GET /rest/api/3/myself --platform jira",
   "autocli tools http github request POST /session --json-body '{\"ok\":true}' --browser",
 ] as const;
@@ -37,12 +42,21 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
     .option("--header <header>", "Request header in 'Name: value' form", collectOptionValues, [])
     .option("--body <text>", "Raw request body for request")
     .option("--json-body <json>", "JSON request body for request")
+    .option("--output <path>", "Output file path for download")
+    .option("--query <text>", "GraphQL query text")
+    .option("--variables <json>", "GraphQL variables JSON")
+    .option("--operation-name <name>", "GraphQL operation name")
+    .option("--path <path>", "Relative path or full URL for graphql/download request targets")
     .addHelpText("after", [
       "",
       "Operations:",
       "  inspect   Show saved session and optional shared-browser details for the target",
+      "  cookies   Show matched cookies for the saved session or shared browser profile",
+      "  storage   Show matched localStorage and sessionStorage keys from the shared browser profile",
       "  capture   Attach to the shared browser profile and record matching network requests",
       "  request   Perform an authenticated request: request <METHOD> <path-or-url>",
+      "  download  Download an authenticated response to a file: download <path-or-url> --output <path>",
+      "  graphql   Send a GraphQL POST request using the saved session or shared browser cookies",
     ].join("\n"))
     .addHelpText("afterAll", buildExamplesHelpText(EXAMPLES, options));
 
@@ -63,6 +77,11 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
       header: string[];
       body?: string;
       jsonBody?: string;
+      output?: string;
+      query?: string;
+      variables?: string;
+      operationName?: string;
+      path?: string;
     },
     cmd: Command,
   ) => {
@@ -74,6 +93,21 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
             account: input.account,
             platform: input.platform,
             browser: input.browser,
+            browserTimeoutSeconds: input.browserTimeout,
+          });
+        case "cookies":
+          return sessionHttpAdapter.cookies({
+            target,
+            account: input.account,
+            platform: input.platform,
+            browser: input.browser,
+            browserTimeoutSeconds: input.browserTimeout,
+          });
+        case "storage":
+          return sessionHttpAdapter.storage({
+            target,
+            account: input.account,
+            platform: input.platform,
             browserTimeoutSeconds: input.browserTimeout,
           });
         case "capture":
@@ -107,8 +141,49 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
             jsonBody: input.jsonBody,
           });
         }
+        case "download": {
+          const [pathOrUrl] = args;
+          if (!pathOrUrl) {
+            throw new AutoCliError("TOOLS_HTTP_DOWNLOAD_ARGUMENTS_REQUIRED", "Use: autocli tools http <target> download <path-or-url> --output <path>.");
+          }
+          if (!input.output) {
+            throw new AutoCliError("TOOLS_HTTP_DOWNLOAD_OUTPUT_REQUIRED", "Use --output <path> to save the downloaded response.");
+          }
+
+          return sessionHttpAdapter.download({
+            target,
+            pathOrUrl,
+            outputPath: input.output,
+            account: input.account,
+            platform: input.platform,
+            browser: input.browser,
+            browserTimeoutSeconds: input.browserTimeout,
+            timeoutMs: input.timeout,
+            headers: input.header,
+          });
+        }
+        case "graphql": {
+          const query = input.query ?? args.join(" ").trim();
+          if (!query) {
+            throw new AutoCliError("TOOLS_HTTP_GRAPHQL_QUERY_REQUIRED", "Use: autocli tools http <target> graphql '<query>' [--variables '{...}'].");
+          }
+
+          return sessionHttpAdapter.graphql({
+            target,
+            query,
+            pathOrUrl: input.path,
+            variables: input.variables,
+            operationName: input.operationName,
+            account: input.account,
+            platform: input.platform,
+            browser: input.browser,
+            browserTimeoutSeconds: input.browserTimeout,
+            timeoutMs: input.timeout,
+            headers: input.header,
+          });
+        }
         default:
-          throw new AutoCliError("TOOLS_HTTP_OPERATION_INVALID", `Unknown tools http operation "${operation}". Use inspect, capture, or request.`);
+          throw new AutoCliError("TOOLS_HTTP_OPERATION_INVALID", `Unknown tools http operation "${operation}". Use inspect, cookies, storage, capture, request, download, or graphql.`);
       }
     });
   });
@@ -125,16 +200,24 @@ async function runHttpAction(cmd: Command, operation: string, action: () => Prom
     spinner,
     successMessage: getSuccessMessage(operation),
     action,
-    onSuccess: (result) => printSessionHttpResult(result, ctx.json),
+    onSuccess: (result) => printSessionHttpResult(normalizeActionResult(result, httpPlatformDefinition, operation), ctx.json),
   });
 }
 
 function getSpinnerText(operation: string): string {
   switch (operation.trim().toLowerCase()) {
+    case "cookies":
+      return "Inspecting matched cookies...";
+    case "storage":
+      return "Inspecting shared browser storage...";
     case "capture":
       return "Capturing authenticated browser requests...";
     case "request":
       return "Performing authenticated request...";
+    case "download":
+      return "Downloading authenticated response...";
+    case "graphql":
+      return "Performing authenticated GraphQL request...";
     default:
       return "Inspecting HTTP target...";
   }
@@ -142,10 +225,18 @@ function getSpinnerText(operation: string): string {
 
 function getSuccessMessage(operation: string): string {
   switch (operation.trim().toLowerCase()) {
+    case "cookies":
+      return "HTTP cookies inspected.";
+    case "storage":
+      return "HTTP browser storage inspected.";
     case "capture":
       return "HTTP capture completed.";
     case "request":
       return "Authenticated HTTP request completed.";
+    case "download":
+      return "Authenticated download completed.";
+    case "graphql":
+      return "Authenticated GraphQL request completed.";
     default:
       return "HTTP target inspected.";
   }

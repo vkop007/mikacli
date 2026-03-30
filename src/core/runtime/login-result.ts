@@ -1,6 +1,8 @@
 import type { AuthStrategyKind } from "../auth/auth-types.js";
 import type { PlatformDefinition } from "./platform-definition.js";
+import { resolvePlatformCapabilityMetadata } from "./platform-capability-metadata.js";
 import type { AdapterActionResult, Platform, SessionState } from "../../types.js";
+import type { PlatformStability } from "./platform-definition.js";
 
 export type LoginValidationState = "verified" | "partial" | "deferred";
 
@@ -12,6 +14,12 @@ export interface LoginActionMetadata {
   reused: boolean;
   recommendedNextCommand?: string;
   nextCommands?: string[];
+}
+
+export interface ActionGuidanceMetadata {
+  recommendedNextCommand?: string;
+  nextCommands?: string[];
+  stability?: PlatformStability;
 }
 
 const AUTH_PRIORITY: ReadonlyArray<Exclude<AuthStrategyKind, "none">> = ["cookies", "session", "apiKey", "botToken", "oauth2"];
@@ -36,10 +44,63 @@ const CAPABILITY_PRIORITY = [
   "status",
 ] as const;
 
-const CUSTOM_NEXT_CAPABILITIES: Partial<Record<Platform, readonly string[]>> = {
-  telegram: ["me", "status", "chats"],
-  whatsapp: ["me", "status", "chats"],
+const CUSTOM_CAPABILITY_IDS: Partial<Record<Platform, readonly string[]>> = {
+  telegram: ["login", "status", "me", "chats", "history", "send"],
+  whatsapp: ["login", "status", "me", "chats", "history", "send"],
+  http: ["inspect", "capture", "request", "cookies", "storage", "download", "graphql"],
 };
+
+const ACTION_FOLLOW_UPS: Partial<Record<string, readonly string[]>> = {
+  login: ["me", "account", "profile", "status"],
+  status: ["me", "account", "profile", "projects", "repos", "posts"],
+  me: ["projects", "repos", "spaces", "boards", "teams", "posts", "status"],
+  account: ["projects", "repos", "spaces", "boards", "teams", "status"],
+  profile: ["posts", "thread", "me", "status"],
+  posts: ["thread", "profile", "status"],
+  search: ["title", "profile", "track", "album", "product", "page", "thread", "posts"],
+  top: ["search", "title", "feed"],
+  title: ["recommendations", "episodes", "availability", "thread"],
+  inspect: ["cookies", "storage", "capture", "request"],
+  capture: ["inspect", "cookies", "storage", "request"],
+  request: ["inspect", "cookies", "storage", "capture"],
+  graphql: ["inspect", "storage", "request"],
+  cookies: ["inspect", "request"],
+  storage: ["inspect", "request"],
+  download: ["inspect", "request"],
+};
+
+const META_EXCLUDED_KEYS = new Set(["guidance", "login", "meta", "candidates", "requests", "cookies", "localStorage", "sessionStorage"]);
+
+export function normalizeActionResult(
+  result: AdapterActionResult,
+  definition?: Pick<PlatformDefinition, "id" | "category" | "commandCategories" | "authStrategies" | "capabilities">,
+  actionId?: string,
+): AdapterActionResult {
+  const normalizedLogin = result.action === "login" ? normalizeLoginActionResult(result, definition) : result;
+  if (!definition) {
+    return normalizedLogin;
+  }
+
+  const existingGuidance = readActionGuidance(normalizedLogin.data?.guidance);
+  const inferredNextCommands = inferActionNextCommands(definition, actionId ?? normalizedLogin.action, normalizedLogin.data);
+  const nextCommands = uniqueStrings([...(existingGuidance?.nextCommands ?? []), ...inferredNextCommands]);
+  const capabilityMetadata = resolvePlatformCapabilityMetadata(definition as PlatformDefinition);
+  const meta = inferResultMeta(normalizedLogin.data);
+
+  return {
+    ...normalizedLogin,
+    data: {
+      ...(normalizedLogin.data ?? {}),
+      guidance: {
+        ...(existingGuidance ?? {}),
+        stability: existingGuidance?.stability ?? capabilityMetadata.stability,
+        ...(nextCommands.length > 0 ? { nextCommands } : {}),
+        ...((existingGuidance?.recommendedNextCommand ?? nextCommands[0]) ? { recommendedNextCommand: existingGuidance?.recommendedNextCommand ?? nextCommands[0] } : {}),
+      } satisfies ActionGuidanceMetadata,
+      ...(meta ? { meta: { ...(toRecord(normalizedLogin.data?.meta) ?? {}), ...meta } } : {}),
+    },
+  };
+}
 
 export function normalizeLoginActionResult(
   result: AdapterActionResult,
@@ -148,7 +209,7 @@ function inferNextCommands(
     return [];
   }
 
-  const capabilityIds = definition.capabilities?.map((capability) => capability.id) ?? CUSTOM_NEXT_CAPABILITIES[definition.id] ?? [];
+  const capabilityIds = getCapabilityIds(definition);
   const prefix = buildCommandPrefix(definition);
 
   const preferred = CAPABILITY_PRIORITY.find((id) => capabilityIds.includes(id));
@@ -161,8 +222,37 @@ function inferNextCommands(
   return commands;
 }
 
-function buildCommandPrefix(definition: Pick<PlatformDefinition, "id" | "category" | "commandCategories">): string {
+function inferActionNextCommands(
+  definition: Pick<PlatformDefinition, "id" | "category" | "commandCategories" | "capabilities">,
+  action: string,
+  data?: Record<string, unknown>,
+): string[] {
+  const capabilityIds = getCapabilityIds(definition);
+  const prefix = buildCommandPrefix(definition, data);
+  const suggestions = ACTION_FOLLOW_UPS[action] ?? [];
+  const chosen = suggestions.find((id) => capabilityIds.includes(id));
+
+  return uniqueStrings([
+    chosen ? `${prefix} ${chosen} --json` : "",
+    action !== "capabilities" ? `${prefix} capabilities --json` : "",
+  ]);
+}
+
+function getCapabilityIds(
+  definition: Pick<PlatformDefinition, "id" | "capabilities">,
+): string[] {
+  return definition.capabilities?.map((capability) => capability.id) ?? [...(CUSTOM_CAPABILITY_IDS[definition.id] ?? [])];
+}
+
+function buildCommandPrefix(
+  definition: Pick<PlatformDefinition, "id" | "category" | "commandCategories">,
+  data?: Record<string, unknown>,
+): string {
   const category = definition.commandCategories?.[0] ?? definition.category;
+  if (definition.id === "http") {
+    const target = typeof data?.target === "string" && data.target.trim().length > 0 ? data.target.trim() : "<target>";
+    return `autocli ${category} ${definition.id} ${target}`;
+  }
   return `autocli ${category} ${definition.id}`;
 }
 
@@ -199,6 +289,54 @@ function readLoginMetadata(value: unknown): LoginActionMetadata | undefined {
       : {}),
     ...(Array.isArray(login.nextCommands) ? { nextCommands: login.nextCommands.filter((item): item is string => typeof item === "string" && item.length > 0) } : {}),
   };
+}
+
+function readActionGuidance(value: unknown): ActionGuidanceMetadata | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const guidance = value as Partial<ActionGuidanceMetadata>;
+  const nextCommands = Array.isArray(guidance.nextCommands)
+    ? guidance.nextCommands.filter((item): item is string => typeof item === "string" && item.length > 0)
+    : undefined;
+
+  return {
+    ...(typeof guidance.recommendedNextCommand === "string" && guidance.recommendedNextCommand.length > 0
+      ? { recommendedNextCommand: guidance.recommendedNextCommand }
+      : {}),
+    ...(nextCommands && nextCommands.length > 0 ? { nextCommands } : {}),
+    ...(guidance.stability === "stable" || guidance.stability === "partial" || guidance.stability === "experimental" || guidance.stability === "unknown"
+      ? { stability: guidance.stability }
+      : {}),
+  };
+}
+
+function inferResultMeta(data: Record<string, unknown> | undefined): Record<string, unknown> | undefined {
+  if (!data) {
+    return undefined;
+  }
+
+  for (const [key, value] of Object.entries(data)) {
+    if (META_EXCLUDED_KEYS.has(key) || !Array.isArray(value)) {
+      continue;
+    }
+
+    return {
+      listKey: key,
+      count: value.length,
+    };
+  }
+
+  return undefined;
+}
+
+function toRecord(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return undefined;
+  }
+
+  return value as Record<string, unknown>;
 }
 
 function uniqueStrings(values: readonly string[]): string[] {

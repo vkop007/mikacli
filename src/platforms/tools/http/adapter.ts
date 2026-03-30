@@ -1,3 +1,6 @@
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+
 import makeFetchCookie from "fetch-cookie";
 import { CookieJar } from "tough-cookie";
 
@@ -50,6 +53,47 @@ export type SessionHttpRequestInput = {
   headers?: string[];
 };
 
+export type SessionHttpCookiesInput = {
+  target: string;
+  account?: string;
+  platform?: string;
+  browser?: boolean;
+  browserTimeoutSeconds?: number;
+};
+
+export type SessionHttpStorageInput = {
+  target: string;
+  account?: string;
+  platform?: string;
+  browserTimeoutSeconds?: number;
+};
+
+export type SessionHttpDownloadInput = {
+  target: string;
+  pathOrUrl: string;
+  outputPath: string;
+  account?: string;
+  platform?: string;
+  browser?: boolean;
+  browserTimeoutSeconds?: number;
+  timeoutMs?: number;
+  headers?: string[];
+};
+
+export type SessionHttpGraphqlInput = {
+  target: string;
+  query: string;
+  pathOrUrl?: string;
+  variables?: string;
+  operationName?: string;
+  account?: string;
+  platform?: string;
+  browser?: boolean;
+  browserTimeoutSeconds?: number;
+  timeoutMs?: number;
+  headers?: string[];
+};
+
 type ResolvedTarget = {
   rawTarget: string;
   hostname: string;
@@ -87,6 +131,19 @@ type RequestResponsePayload = {
   headers: Record<string, string>;
   body: unknown;
   bodyText?: string;
+};
+
+type DownloadResponsePayload = {
+  requestUrl: string;
+  status: number;
+  statusText: string;
+  redirected: boolean;
+  finalUrl: string;
+  method: string;
+  contentType: string | null;
+  headers: Record<string, string>;
+  bytes: number;
+  buffer: Buffer;
 };
 
 const SESSION_CAPABLE_PLATFORMS = PLATFORM_NAMES.filter((platform) => {
@@ -204,6 +261,106 @@ export class SessionHttpAdapter {
     };
   }
 
+  async cookies(input: SessionHttpCookiesInput): Promise<AdapterActionResult> {
+    const resolved = await this.resolveTarget({
+      rawTarget: input.target,
+      platformOverride: input.platform,
+      account: input.account,
+      requireResolvablePlatform: !input.browser,
+    });
+
+    if (input.browser) {
+      const inspection = await inspectSharedBrowserTarget({
+        targetUrl: resolved.startUrl,
+        timeoutSeconds: input.browserTimeoutSeconds ?? DEFAULT_CAPTURE_TIMEOUT_SECONDS,
+      });
+      const cookies = sanitizeInspectableCookies(filterBrowserCookies(inspection.cookies, resolved.hostname));
+
+      return {
+        ok: true,
+        platform: this.platform,
+        account: resolved.session?.session.account ?? "browser",
+        action: "cookies",
+        message: `Found ${cookies.length} matched browser cookie${cookies.length === 1 ? "" : "s"} for ${resolved.hostname}.`,
+        url: inspection.finalUrl,
+        sessionPath: resolved.session?.path,
+        user: resolved.session?.session.user,
+        data: {
+          target: resolved.rawTarget,
+          hostname: resolved.hostname,
+          resolvedPlatform: resolved.platform,
+          source: "browser",
+          browserProfilePath: inspection.browserProfilePath,
+          cookies,
+          totalCookies: cookies.length,
+        },
+      };
+    }
+
+    if (!resolved.session) {
+      throw new AutoCliError(
+        "TOOLS_HTTP_SESSION_REQUIRED",
+        `No saved session was found for ${resolved.displayName}. Log in first or retry with --browser to borrow cookies from the shared browser profile.`,
+      );
+    }
+
+    const cookies = sanitizeInspectableCookies(listSessionCookies(resolved.session.jar, resolved.cookieDomain));
+    return {
+      ok: true,
+      platform: this.platform,
+      account: resolved.session.session.account,
+      action: "cookies",
+      message: `Found ${cookies.length} matched saved-session cookie${cookies.length === 1 ? "" : "s"} for ${resolved.displayName}.`,
+      url: resolved.startUrl,
+      sessionPath: resolved.session.path,
+      user: resolved.session.session.user,
+      data: {
+        target: resolved.rawTarget,
+        hostname: resolved.hostname,
+        resolvedPlatform: resolved.platform,
+        source: "session",
+        cookies,
+        totalCookies: cookies.length,
+      },
+    };
+  }
+
+  async storage(input: SessionHttpStorageInput): Promise<AdapterActionResult> {
+    const resolved = await this.resolveTarget({
+      rawTarget: input.target,
+      platformOverride: input.platform,
+      account: input.account,
+    });
+
+    const inspection = await inspectSharedBrowserTarget({
+      targetUrl: resolved.startUrl,
+      timeoutSeconds: input.browserTimeoutSeconds ?? DEFAULT_CAPTURE_TIMEOUT_SECONDS,
+    });
+    const localStorage = summarizeStorageEntries(inspection.localStorage);
+    const sessionStorage = summarizeStorageEntries(inspection.sessionStorage);
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: resolved.session?.session.account ?? "browser",
+      action: "storage",
+      message: `Inspected browser storage for ${resolved.hostname}.`,
+      url: inspection.finalUrl,
+      sessionPath: resolved.session?.path,
+      user: resolved.session?.session.user,
+      data: {
+        target: resolved.rawTarget,
+        hostname: resolved.hostname,
+        resolvedPlatform: resolved.platform,
+        browserProfilePath: inspection.browserProfilePath,
+        localStorage,
+        sessionStorage,
+        localStorageCount: localStorage.length,
+        sessionStorageCount: sessionStorage.length,
+      },
+    };
+  }
+
   async request(input: SessionHttpRequestInput): Promise<AdapterActionResult> {
     const resolved = await this.resolveTarget({
       rawTarget: input.target,
@@ -256,6 +413,124 @@ export class SessionHttpAdapter {
         headers: payload.headers,
         body: payload.body,
         bodyText: payload.bodyText,
+        usedBrowserCookies: sessionJar.usedBrowserCookies,
+      },
+    };
+  }
+
+  async download(input: SessionHttpDownloadInput): Promise<AdapterActionResult> {
+    const resolved = await this.resolveTarget({
+      rawTarget: input.target,
+      platformOverride: input.platform,
+      account: input.account,
+      requireResolvablePlatform: !input.browser,
+    });
+    const requestUrl = buildRequestUrl(input.pathOrUrl, resolved.baseUrl);
+    const sessionJar = await this.resolveRequestJar({
+      resolved,
+      requestUrl,
+      useBrowserCookies: Boolean(input.browser),
+      browserTimeoutSeconds: input.browserTimeoutSeconds,
+    });
+
+    const payload = await this.executeSessionDownload({
+      jar: sessionJar.jar,
+      baseUrl: resolved.baseUrl,
+      requestUrl,
+      method: "GET",
+      timeoutMs: clampNumber(input.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS, 1_000, 120_000),
+      headers: input.headers ?? [],
+    });
+    const outputPath = resolveDownloadOutputPath(input.outputPath);
+    await mkdir(path.dirname(outputPath), { recursive: true });
+    await writeFile(outputPath, payload.buffer);
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: resolved.session?.session.account ?? (input.browser ? "browser" : "default"),
+      action: "download",
+      message: `Downloaded ${payload.status} ${payload.statusText || "response"} to ${outputPath}.`,
+      url: payload.finalUrl,
+      sessionPath: resolved.session?.path,
+      user: resolved.session?.session.user,
+      data: {
+        target: resolved.rawTarget,
+        hostname: resolved.hostname,
+        resolvedPlatform: resolved.platform,
+        requestUrl: payload.requestUrl,
+        method: payload.method,
+        status: payload.status,
+        statusText: payload.statusText,
+        redirected: payload.redirected,
+        finalUrl: payload.finalUrl,
+        contentType: payload.contentType,
+        headers: payload.headers,
+        bytes: payload.bytes,
+        outputPath,
+        usedBrowserCookies: sessionJar.usedBrowserCookies,
+      },
+    };
+  }
+
+  async graphql(input: SessionHttpGraphqlInput): Promise<AdapterActionResult> {
+    const resolved = await this.resolveTarget({
+      rawTarget: input.target,
+      platformOverride: input.platform,
+      account: input.account,
+      requireResolvablePlatform: !input.browser,
+    });
+    const requestUrl = buildRequestUrl(input.pathOrUrl?.trim() || "/graphql", resolved.baseUrl);
+    const sessionJar = await this.resolveRequestJar({
+      resolved,
+      requestUrl,
+      useBrowserCookies: Boolean(input.browser),
+      browserTimeoutSeconds: input.browserTimeoutSeconds,
+    });
+    const variables = parseGraphqlVariables(input.variables);
+    const queryPayload = JSON.stringify({
+      query: input.query,
+      ...(variables !== undefined ? { variables } : {}),
+      ...(input.operationName ? { operationName: input.operationName } : {}),
+    });
+
+    const payload = await this.executeSessionRequest({
+      jar: sessionJar.jar,
+      baseUrl: resolved.baseUrl,
+      requestUrl,
+      method: "POST",
+      timeoutMs: clampNumber(input.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS, 1_000, 120_000),
+      headers: input.headers ?? [],
+      body: {
+        body: queryPayload,
+        contentType: "application/json",
+      },
+    });
+
+    return {
+      ok: true,
+      platform: this.platform,
+      account: resolved.session?.session.account ?? (input.browser ? "browser" : "default"),
+      action: "graphql",
+      message: `Received ${payload.status} ${payload.statusText || "response"} from ${payload.finalUrl}.`,
+      url: payload.finalUrl,
+      sessionPath: resolved.session?.path,
+      user: resolved.session?.session.user,
+      data: {
+        target: resolved.rawTarget,
+        hostname: resolved.hostname,
+        resolvedPlatform: resolved.platform,
+        requestUrl: payload.requestUrl,
+        method: payload.method,
+        status: payload.status,
+        statusText: payload.statusText,
+        redirected: payload.redirected,
+        finalUrl: payload.finalUrl,
+        contentType: payload.contentType,
+        headers: payload.headers,
+        body: payload.body,
+        bodyText: payload.bodyText,
+        operationName: input.operationName,
         usedBrowserCookies: sessionJar.usedBrowserCookies,
       },
     };
@@ -538,6 +813,59 @@ export class SessionHttpAdapter {
       bodyText: typeof body === "string" ? body : text,
     };
   }
+
+  private async executeSessionDownload(input: {
+    jar: CookieJar;
+    baseUrl: string;
+    requestUrl: string;
+    method: string;
+    timeoutMs: number;
+    headers: string[];
+  }): Promise<DownloadResponsePayload> {
+    const cookieFetch = makeFetchCookie(fetch, input.jar, true);
+    const headers = await buildRequestHeaders({
+      jar: input.jar,
+      requestUrl: input.requestUrl,
+      baseUrl: input.baseUrl,
+      headerInputs: input.headers,
+    });
+
+    const response = await cookieFetch(input.requestUrl, {
+      method: input.method,
+      headers,
+      redirect: "follow",
+      signal: AbortSignal.timeout(input.timeoutMs),
+    }).catch((error) => {
+      throw new AutoCliError("TOOLS_HTTP_REQUEST_FAILED", "Failed to perform the authenticated download request.", {
+        cause: error,
+        details: {
+          requestUrl: input.requestUrl,
+          method: input.method,
+        },
+      });
+    });
+
+    const contentType = response.headers.get("content-type");
+    const responseHeaders: Record<string, string> = {};
+    for (const [key, value] of response.headers.entries()) {
+      responseHeaders[key] = value;
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    return {
+      requestUrl: input.requestUrl,
+      status: response.status,
+      statusText: response.statusText,
+      redirected: response.redirected,
+      finalUrl: response.url || input.requestUrl,
+      method: input.method,
+      contentType,
+      headers: responseHeaders,
+      bytes: buffer.byteLength,
+      buffer,
+    };
+  }
 }
 
 export const sessionHttpAdapter = new SessionHttpAdapter();
@@ -765,6 +1093,150 @@ function matchesCookiePattern(name: string, pattern: string): boolean {
   }
 
   return name === pattern;
+}
+
+function matchesCookieDomain(domain: string, hostname: string): boolean {
+  const normalizedDomain = domain.replace(/^\./u, "");
+  const normalizedHost = hostname.replace(/^\./u, "");
+  return (
+    normalizedDomain === normalizedHost ||
+    normalizedDomain.endsWith(`.${normalizedHost}`) ||
+    normalizedHost.endsWith(`.${normalizedDomain}`)
+  );
+}
+
+function listSessionCookies(jar: CookieJar, cookieDomain: string): unknown[] {
+  const serialized = jar.toJSON() ?? { cookies: [] };
+  const cookies = Array.isArray(serialized.cookies) ? serialized.cookies : [];
+  return cookies.filter((cookie) => {
+    if (!cookie || typeof cookie !== "object") {
+      return false;
+    }
+
+    const domain = "domain" in cookie && typeof cookie.domain === "string" ? cookie.domain : "";
+    return matchesCookieDomain(domain, cookieDomain);
+  });
+}
+
+function filterBrowserCookies(cookies: unknown[], hostname: string): unknown[] {
+  return cookies.filter((cookie) => {
+    if (!cookie || typeof cookie !== "object") {
+      return false;
+    }
+
+    const domain = "domain" in cookie && typeof cookie.domain === "string" ? cookie.domain : "";
+    return matchesCookieDomain(domain, hostname);
+  });
+}
+
+function sanitizeInspectableCookies(cookies: unknown[]): Array<Record<string, unknown>> {
+  const sanitized: Array<Record<string, unknown>> = [];
+  for (const rawCookie of cookies) {
+    const cookie = sanitizeInspectableCookie(rawCookie);
+    if (cookie) {
+      sanitized.push(cookie);
+    }
+  }
+
+  return sanitized.sort((left, right) => {
+    const leftName = typeof left.name === "string" ? left.name : "";
+    const rightName = typeof right.name === "string" ? right.name : "";
+    if (leftName !== rightName) {
+      return leftName.localeCompare(rightName);
+    }
+    const leftDomain = typeof left.domain === "string" ? left.domain : "";
+    const rightDomain = typeof right.domain === "string" ? right.domain : "";
+    return leftDomain.localeCompare(rightDomain);
+  });
+}
+
+function sanitizeInspectableCookie(rawCookie: unknown): Record<string, unknown> | null {
+  if (!rawCookie || typeof rawCookie !== "object") {
+    return null;
+  }
+
+  const cookie = rawCookie as Record<string, unknown>;
+  const name = typeof cookie.name === "string"
+    ? cookie.name
+    : typeof cookie.key === "string"
+      ? cookie.key
+      : undefined;
+  if (!name) {
+    return null;
+  }
+
+  const value = typeof cookie.value === "string" ? cookie.value : "";
+  const domain = typeof cookie.domain === "string" ? cookie.domain : undefined;
+  const pathValue = typeof cookie.path === "string" ? cookie.path : undefined;
+  const expires = readCookieExpiry(cookie.expires);
+  const sameSite = typeof cookie.sameSite === "string" ? cookie.sameSite : undefined;
+  const session = typeof cookie.session === "boolean" ? cookie.session : undefined;
+  const secure = typeof cookie.secure === "boolean" ? cookie.secure : undefined;
+  const httpOnly = typeof cookie.httpOnly === "boolean" ? cookie.httpOnly : undefined;
+
+  return {
+    name,
+    ...(domain ? { domain } : {}),
+    ...(pathValue ? { path: pathValue } : {}),
+    valueLength: value.length,
+    ...(typeof secure === "boolean" ? { secure } : {}),
+    ...(typeof httpOnly === "boolean" ? { httpOnly } : {}),
+    ...(sameSite ? { sameSite } : {}),
+    ...(expires ? { expires } : {}),
+    ...(typeof session === "boolean" ? { session } : {}),
+  };
+}
+
+function readCookieExpiry(value: unknown): string | undefined {
+  if (typeof value === "string" && value.length > 0) {
+    return value;
+  }
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    if (value <= 0) {
+      return undefined;
+    }
+    return new Date(value * 1000).toISOString();
+  }
+
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString();
+  }
+
+  return undefined;
+}
+
+function summarizeStorageEntries(storage: Record<string, string>): Array<Record<string, unknown>> {
+  return Object.entries(storage)
+    .map(([key, value]) => ({
+      key,
+      valueLength: value.length,
+      jsonLike: /^[\[{]/u.test(value.trim()),
+    }))
+    .sort((left, right) => String(left.key).localeCompare(String(right.key)));
+}
+
+function resolveDownloadOutputPath(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    throw new AutoCliError("TOOLS_HTTP_DOWNLOAD_OUTPUT_REQUIRED", "Use --output <path> to save the downloaded response.");
+  }
+
+  return path.resolve(trimmed);
+}
+
+function parseGraphqlVariables(value: string | undefined): unknown {
+  if (!value || !value.trim()) {
+    return undefined;
+  }
+
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    throw new AutoCliError("TOOLS_HTTP_GRAPHQL_VARIABLES_INVALID", "The value passed to --variables is not valid JSON.", {
+      cause: error,
+    });
+  }
 }
 
 function decodeURIComponentSafe(value: string): string {

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { listSessionEntries, loadSessionEntry } from "../commands/sessions.js";
+import { buildSessionRecommendations, listSessionEntries, loadSessionEntry, summarizeSessionEntries } from "../commands/sessions.js";
 
 describe("sessions command helpers", () => {
   test("maps saved connections into session entries", async () => {
@@ -84,5 +84,59 @@ describe("sessions command helpers", () => {
     expect(entry.source).toBe("cookie_json");
     expect(entry.status).toBe("expired");
     expect(entry.path).toBe("/tmp/x-default.json");
+  });
+
+  test("summarizes saved records and suggests next steps", () => {
+    const summary = summarizeSessionEntries([
+      {
+        platform: "github",
+        displayName: "GitHub",
+        account: "work",
+        auth: "cookies",
+        status: "active",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-02T00:00:00.000Z",
+        path: "/tmp/github.json",
+      },
+      {
+        platform: "x",
+        displayName: "X",
+        account: "default",
+        auth: "cookies",
+        status: "expired",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-02T00:00:00.000Z",
+        path: "/tmp/x.json",
+      },
+      {
+        platform: "telegram",
+        displayName: "Telegram",
+        account: "default",
+        auth: "session",
+        status: "unknown",
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-02T00:00:00.000Z",
+        path: "/tmp/telegram.json",
+      },
+    ]);
+
+    expect(summary).toEqual({
+      total: 3,
+      active: 1,
+      expired: 1,
+      unknown: 1,
+      byAuth: {
+        cookies: 2,
+        apiKey: 0,
+        botToken: 0,
+        session: 1,
+        oauth2: 0,
+        none: 0,
+      },
+    });
+    expect(buildSessionRecommendations(summary)).toEqual([
+      "Review expired records with `autocli sessions --status expired` and refresh them with the provider's `login` command.",
+      "Use `autocli doctor` if some sessions have unknown health and need a quick validation overview.",
+    ]);
   });
 });

@@ -36,24 +36,33 @@ export function printActionResult(result: AdapterActionResult, json: boolean): v
     console.log(`session: ${result.sessionPath}`);
   }
 
+  const meta = readResultMeta(result);
+  if (meta && meta.count >= 0 && meta.listKey) {
+    console.log(`${meta.listKey}: ${meta.count}`);
+  }
+
   const login = readLoginMetadata(result);
-  if (!login) {
-    return;
+  if (login) {
+    console.log(`auth: ${formatAuthType(login.authType)}`);
+    console.log(`validation: ${login.validation}`);
+
+    if (login.source) {
+      console.log(`source: ${formatLoginSource(login.source)}`);
+    }
+
+    if (login.reused) {
+      console.log("reused: yes");
+    }
   }
 
-  console.log(`auth: ${formatAuthType(login.authType)}`);
-  console.log(`validation: ${login.validation}`);
-
-  if (login.source) {
-    console.log(`source: ${formatLoginSource(login.source)}`);
+  const guidance = readGuidanceMetadata(result);
+  if (guidance?.stability && guidance.stability !== "stable" && guidance.stability !== "unknown") {
+    console.log(`support: ${guidance.stability}`);
   }
 
-  if (login.reused) {
-    console.log("reused: yes");
-  }
-
-  if (login.recommendedNextCommand) {
-    console.log(`next: ${login.recommendedNextCommand}`);
+  const nextCommand = login?.recommendedNextCommand ?? guidance?.recommendedNextCommand;
+  if (nextCommand) {
+    console.log(`next: ${nextCommand}`);
   }
 }
 
@@ -125,6 +134,52 @@ function readLoginMetadata(result: AdapterActionResult): {
     ...(typeof login.recommendedNextCommand === "string" && login.recommendedNextCommand.length > 0
       ? { recommendedNextCommand: login.recommendedNextCommand }
       : {}),
+  };
+}
+
+function readGuidanceMetadata(result: AdapterActionResult): {
+  recommendedNextCommand?: string;
+  stability?: string;
+} | null {
+  const value = result.data?.guidance;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const guidance = value as {
+    recommendedNextCommand?: unknown;
+    stability?: unknown;
+  };
+
+  return {
+    ...(typeof guidance.recommendedNextCommand === "string" && guidance.recommendedNextCommand.length > 0
+      ? { recommendedNextCommand: guidance.recommendedNextCommand }
+      : {}),
+    ...(typeof guidance.stability === "string" && guidance.stability.length > 0 ? { stability: guidance.stability } : {}),
+  };
+}
+
+function readResultMeta(result: AdapterActionResult): {
+  listKey?: string;
+  count: number;
+} | null {
+  const value = result.data?.meta;
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const meta = value as {
+    listKey?: unknown;
+    count?: unknown;
+  };
+
+  if (typeof meta.count !== "number" || !Number.isFinite(meta.count)) {
+    return null;
+  }
+
+  return {
+    count: meta.count,
+    ...(typeof meta.listKey === "string" && meta.listKey.length > 0 ? { listKey: meta.listKey } : {}),
   };
 }
 

@@ -29,6 +29,14 @@ type SessionEntry = {
   metadata?: Record<string, unknown>;
 };
 
+type SessionSummary = {
+  total: number;
+  active: number;
+  expired: number;
+  unknown: number;
+  byAuth: Record<ConnectionRecord["auth"]["kind"], number>;
+};
+
 export function createSessionsCommand(): Command {
   const command = new Command("sessions")
     .description("Inspect and manage saved cookie sessions and token connections")
@@ -130,13 +138,20 @@ async function handleSessionsList(command: Command): Promise<void> {
   });
 
   if (ctx.json) {
+    const summary = summarizeSessionEntries(filtered);
     printJson({
       ok: true,
+      summary,
+      recommendations: buildSessionRecommendations(summary),
       sessions: filtered,
     });
     return;
   }
 
+  const summary = summarizeSessionEntries(filtered);
+  console.log(
+    `Saved records: ${summary.total}. ${summary.active} active, ${summary.expired} expired, ${summary.unknown} unknown.`,
+  );
   printSessionsTable(
     filtered.map((entry) => ({
       platform: entry.platform,
@@ -147,6 +162,15 @@ async function handleSessionsList(command: Command): Promise<void> {
       path: entry.path,
     })),
   );
+
+  const recommendations = buildSessionRecommendations(summary);
+  if (recommendations.length > 0) {
+    console.log("");
+    console.log("next:");
+    for (const recommendation of recommendations) {
+      console.log(`- ${recommendation}`);
+    }
+  }
 }
 
 export async function listSessionEntries(connectionStore = new ConnectionStore()): Promise<SessionEntry[]> {
@@ -157,6 +181,50 @@ export async function listSessionEntries(connectionStore = new ConnectionStore()
 export async function loadSessionEntry(platform: Platform, account?: string, connectionStore = new ConnectionStore()): Promise<SessionEntry> {
   const loaded = await connectionStore.loadConnection(platform, account);
   return toSessionEntry(loaded.connection, loaded.path);
+}
+
+export function summarizeSessionEntries(entries: readonly SessionEntry[]): SessionSummary {
+  const byAuth: SessionSummary["byAuth"] = {
+    cookies: 0,
+    apiKey: 0,
+    botToken: 0,
+    session: 0,
+    oauth2: 0,
+    none: 0,
+  };
+
+  const summary: SessionSummary = {
+    total: entries.length,
+    active: 0,
+    expired: 0,
+    unknown: 0,
+    byAuth,
+  };
+
+  for (const entry of entries) {
+    summary[entry.status] += 1;
+    summary.byAuth[entry.auth] += 1;
+  }
+
+  return summary;
+}
+
+export function buildSessionRecommendations(summary: SessionSummary): string[] {
+  const recommendations: string[] = [];
+  if (summary.total === 0) {
+    recommendations.push("Run `autocli login --browser` or a provider-specific `login` command to save your first reusable session.");
+    return recommendations;
+  }
+
+  if (summary.expired > 0) {
+    recommendations.push("Review expired records with `autocli sessions --status expired` and refresh them with the provider's `login` command.");
+  }
+
+  if (summary.unknown > 0) {
+    recommendations.push("Use `autocli doctor` if some sessions have unknown health and need a quick validation overview.");
+  }
+
+  return recommendations;
 }
 
 function toSessionEntry(connection: ConnectionRecord, path: string): SessionEntry {
