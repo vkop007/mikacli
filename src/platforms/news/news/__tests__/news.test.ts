@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { Command } from "commander";
 
 import { buildPlatformCommand } from "../../../../core/runtime/build-platform-command.js";
 import { newsPlatformDefinition } from "../manifest.js";
@@ -94,6 +95,12 @@ describe("news provider", () => {
   test("builds a command with news capabilities", () => {
     const command = buildPlatformCommand(newsPlatformDefinition);
     expect(command.name()).toBe("news");
-    expect(command.commands).toHaveLength(4);
+    expect(command.commands.map((subcommand: Command) => subcommand.name())).toEqual([
+      "sources",
+      "top",
+      "search",
+      "feed",
+      "capabilities",
+    ]);
   });
 });

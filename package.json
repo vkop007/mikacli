@@ -1,5 +1,5 @@
 {
-  "name": "@vkop007/autocli",
+  "name": "@vk007/autocli",
   "version": "0.1.0",
   "description": "Terminal automation toolkit for developers and AI agents across LLMs, social platforms, developer tools, editors, data tools, and public utilities.",
   "type": "module",

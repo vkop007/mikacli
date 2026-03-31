@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { Command } from "commander";
 
 import { buildPlatformCommand } from "../../../../core/runtime/build-platform-command.js";
 import { qrPlatformDefinition } from "../manifest.js";
@@ -24,6 +25,6 @@ describe("public qr provider", () => {
   test("builds a command with the qr capability", () => {
     const command = buildPlatformCommand(qrPlatformDefinition);
     expect(command.name()).toBe("qr");
-    expect(command.commands).toHaveLength(0);
+    expect(command.commands.map((subcommand: Command) => subcommand.name())).toEqual(["capabilities"]);
   });
 });

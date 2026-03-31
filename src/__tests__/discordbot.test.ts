@@ -66,6 +66,7 @@ describe("discordbot helpers", () => {
       "send-file",
       "edit",
       "delete",
+      "capabilities",
     ]);
   });
 });

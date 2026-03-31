@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { Command } from "commander";
 
 import { buildPlatformCommand } from "../../../../core/runtime/build-platform-command.js";
 import { cheatPlatformDefinition } from "../manifest.js";
@@ -21,6 +22,6 @@ describe("public cheat provider", () => {
   test("builds a command with the cheat capability", () => {
     const command = buildPlatformCommand(cheatPlatformDefinition);
     expect(command.name()).toBe("cheat");
-    expect(command.commands).toHaveLength(0);
+    expect(command.commands.map((subcommand: Command) => subcommand.name())).toEqual(["capabilities"]);
   });
 });

@@ -1,6 +1,6 @@
 # AutoCLI
 
-[![npm version](https://img.shields.io/npm/v/%40vkop007%2Fautocli)](https://www.npmjs.com/package/@vkop007/autocli)
+[![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
 [![providers](https://img.shields.io/badge/providers-104-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-14-6f42c1)](#category-overview)
@@ -58,19 +58,21 @@ autocli llm qwen text "Summarize this changelog"
 
 | Item | Value |
 | --- | --- |
-| Package | `@vkop007/autocli` |
+| Package | `@vk007/autocli` |
 | CLI command | `autocli` |
 | Providers | `104` |
 | Categories | `14` |
-| npm install | `npm install -g @vkop007/autocli` |
+| npm install | `npm install -g @vk007/autocli` |
+| bun install | `bun install -g @vk007/autocli` |
 | Local setup | `bun install` |
 
 ## Get Started
 
-Install globally from npm:
+Install globally with npm or Bun:
 
 ```bash
-npm install -g @vkop007/autocli
+npm install -g @vk007/autocli
+bun install -g @vk007/autocli
 ```
 
 Set up the repo locally with Bun:
@@ -216,10 +218,11 @@ AutoCLI currently exposes `104` providers across `14` active command groups.
 
 ## Installation
 
-Install from npm:
+Install globally with npm or Bun:
 
 ```bash
-npm install -g @vkop007/autocli
+npm install -g @vk007/autocli
+bun install -g @vk007/autocli
 ```
 
 Set up the repo locally with Bun:
