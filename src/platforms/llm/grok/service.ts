@@ -957,13 +957,16 @@ export class GrokService {
         await this.ensureBrowserAuthenticated(page);
         const streamPromise = this.captureBrowserConversationStream(
           page,
-          Math.min((input.timeoutSeconds ?? (input.mode === "video" ? 180 : 120)) * 1000, 90_000),
+          Math.min((input.timeoutSeconds ?? (input.mode === "video" ? 180 : 120)) * 1000, 150_000),
         ).catch(() => undefined);
         const assetUrls = await this.submitImaginePromptInBrowser(page, input.prompt, input.mode, input.timeoutSeconds);
         return {
           assetUrls,
           pageUrl: page.url(),
-          stream: await waitForOptionalBrowserStream(streamPromise, input.mode === "video" ? 12_000 : 6_000),
+          stream: await waitForOptionalBrowserStream(
+            streamPromise,
+            input.timeoutSeconds ? input.timeoutSeconds * 1000 : (input.mode === "video" ? 120_000 : 150_000),
+          ),
           cookies: await page.context().cookies(),
         };
       },
@@ -1061,7 +1064,9 @@ export class GrokService {
               return src.includes("/generated/") || src.includes(".mp4") ? src : "";
             }
             const isGeneratedImage = alt === "Generated image" || src.startsWith("data:image/") || src.includes("/generated/");
-            return isGeneratedImage ? src : "";
+            if (!isGeneratedImage) return "";
+            if (src.startsWith("data:image/") && src.length < 500_000) return "";
+            return src;
           },
         ).filter(Boolean);
         return matches.length > 0;
@@ -1076,6 +1081,7 @@ export class GrokService {
     );
 
     await page.waitForTimeout(mode === "video" ? 3_000 : 1_500);
+
     const latestAssetUrls = await collectImagineAssetUrls(page, mode);
     return selectRecentImagineAssetUrls(
       latestAssetUrls.filter((url) => !existingAssetUrls.includes(url)),
@@ -1989,6 +1995,10 @@ async function collectImagineAssetUrls(page: PlaywrightPage, mode: "image" | "vi
         const alt = node.getAttribute("alt") || "";
         const isGeneratedImage = alt === "Generated image" || src.startsWith("data:image/") || src.includes("/generated/");
         if (!isGeneratedImage || alt === "pfp" || alt === "Most recent favorite") {
+          return "";
+        }
+        
+        if (src.startsWith("data:image/") && src.length < 500_000) {
           return "";
         }
 
