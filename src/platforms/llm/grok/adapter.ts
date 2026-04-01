@@ -60,6 +60,8 @@ export class GrokAdapter extends CookieLlmAdapter {
     account?: string;
     prompt: string;
     model?: string;
+    browser?: boolean;
+    browserTimeoutSeconds?: number;
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
@@ -78,6 +80,8 @@ export class GrokAdapter extends CookieLlmAdapter {
     account?: string;
     prompt: string;
     model?: string;
+    browser?: boolean;
+    browserTimeoutSeconds?: number;
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
@@ -91,6 +95,8 @@ export class GrokAdapter extends CookieLlmAdapter {
       const result = await this.service.executeImage(client, {
         prompt,
         model: input.model?.trim() || "grok-3",
+        browser: Boolean(input.browser),
+        browserTimeoutSeconds: input.browserTimeoutSeconds,
       });
 
       await this.persistActiveSession(session, client.jar, result.model);
@@ -136,6 +142,8 @@ export class GrokAdapter extends CookieLlmAdapter {
     account?: string;
     prompt: string;
     model?: string;
+    browser?: boolean;
+    browserTimeoutSeconds?: number;
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
@@ -149,6 +157,8 @@ export class GrokAdapter extends CookieLlmAdapter {
       const result = await this.service.executeVideo(client, {
         prompt,
         model: input.model?.trim() || "grok-3",
+        browser: Boolean(input.browser),
+        browserTimeoutSeconds: input.browserTimeoutSeconds,
       });
 
       await this.persistActiveSession(session, client.jar, result.model);
@@ -441,6 +451,8 @@ export class GrokAdapter extends CookieLlmAdapter {
       account?: string;
       prompt: string;
       model?: string;
+      browser?: boolean;
+      browserTimeoutSeconds?: number;
     },
   ): Promise<AdapterActionResult> {
     const client = await this.createClient(session);
@@ -449,6 +461,8 @@ export class GrokAdapter extends CookieLlmAdapter {
       const result = await this.service.executeText(client, {
         prompt: input.prompt,
         model: input.model,
+        browser: Boolean(input.browser),
+        browserTimeoutSeconds: input.browserTimeoutSeconds,
       });
 
       await this.persistExistingSession(session, {
@@ -479,6 +493,7 @@ export class GrokAdapter extends CookieLlmAdapter {
           responseId: result.responseId,
           outputText: result.outputText,
           followUpSuggestions: result.followUpSuggestions,
+          source: input.browser ? "browser" : undefined,
         },
       };
     } catch (error) {

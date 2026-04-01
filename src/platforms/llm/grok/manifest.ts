@@ -12,10 +12,11 @@ export const grokPlatformDefinition: PlatformDefinition = {
   adapter: grokAdapter,
   capabilities: createGrokCapabilities(grokAdapter),
   examples: [
-    "autocli grok login --cookies ./grok.cookies.json",
-    'autocli grok text "Summarize this sprint"',
-    'autocli grok image "Minimal orange fox logo on white background"',
-    "autocli grok image-download <job-id>",
-    'autocli grok video "Cyberpunk city flythrough"',
+    "autocli llm grok login --cookies ./grok.cookies.json",
+    'autocli llm grok text "Summarize this sprint"',
+    'autocli llm grok text "Summarize this sprint" --browser',
+    'autocli llm grok image "Minimal orange fox logo on white background" --browser',
+    "autocli llm grok image-download <job-id>",
+    'autocli llm grok video "Cyberpunk city flythrough" --browser',
   ],
 };

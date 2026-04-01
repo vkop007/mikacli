@@ -41,12 +41,16 @@ export function createGrokCapabilities(adapter: GrokAdapter): readonly PlatformC
     options: [
       { flags: "--account <name>", description: "Optional saved session name to use" },
       { flags: "--model <name>", description: "Optional provider model or mode hint" },
+      { flags: "--browser", description: "Force Grok to run the prompt through the real web app in a browser context" },
+      { flags: "--browser-timeout <seconds>", description: "Maximum seconds to allow the browser-backed Grok flow to complete", parser: parsePositiveSeconds },
     ],
     action: ({ args, options }) =>
       adapter.text({
         account: options.account as string | undefined,
         model: options.model as string | undefined,
         prompt: args.map(String).join(" ").trim(),
+        browser: Boolean(options.browser),
+        browserTimeoutSeconds: options.browserTimeout as number | undefined,
       }),
     onSuccess: printCookieLlmTextResult,
   });
@@ -60,13 +64,17 @@ export function createGrokCapabilities(adapter: GrokAdapter): readonly PlatformC
     options: [
       { flags: "--account <name>", description: "Optional saved session name to use" },
       { flags: "--model <name>", description: "Optional provider model or mode hint" },
+      { flags: "--browser", description: "Force Grok to run image generation through the real web app in a browser context" },
+      { flags: "--browser-timeout <seconds>", description: "Maximum seconds to allow the browser-backed Grok flow to complete", parser: parsePositiveSeconds },
     ],
     action: ({ args, options }) =>
       adapter.generateImage({
         account: options.account as string | undefined,
         model: options.model as string | undefined,
         prompt: args.map(String).join(" ").trim(),
-    }),
+        browser: Boolean(options.browser),
+        browserTimeoutSeconds: options.browserTimeout as number | undefined,
+      }),
     onSuccess: printCookieLlmMediaResult,
   });
 
@@ -98,12 +106,16 @@ export function createGrokCapabilities(adapter: GrokAdapter): readonly PlatformC
     options: [
       { flags: "--account <name>", description: "Optional saved session name to use" },
       { flags: "--model <name>", description: "Optional provider model or mode hint" },
+      { flags: "--browser", description: "Force Grok to run video generation through the real web app in a browser context" },
+      { flags: "--browser-timeout <seconds>", description: "Maximum seconds to allow the browser-backed Grok flow to complete", parser: parsePositiveSeconds },
     ],
     action: ({ args, options }) =>
       adapter.generateVideo({
         account: options.account as string | undefined,
         model: options.model as string | undefined,
         prompt: args.map(String).join(" ").trim(),
+        browser: Boolean(options.browser),
+        browserTimeoutSeconds: options.browserTimeout as number | undefined,
       }),
     onSuccess: printCookieLlmMediaResult,
   });

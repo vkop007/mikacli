@@ -130,8 +130,10 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
   },
   grok: {
     browserLogin: "supported",
+    browserFallback: "supported",
     stability: "partial",
     asyncJobs: "supported",
+    notes: ["AutoCLI can fall back to an in-browser Grok request path when the browserless endpoint is blocked."],
   },
   mistral: {
     browserLogin: "supported",

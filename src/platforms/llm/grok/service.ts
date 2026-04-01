@@ -8,11 +8,15 @@ import { ModuleClient, SessionClient } from "tlsclientwrapper";
 
 import { ensureParentDirectory, getCachePath } from "../../../config.js";
 import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { runBrowserActionPlan } from "../../../utils/browser-cookie-login.js";
+import { normalizeWhitespace } from "../../data/shared/text.js";
 
 import type { SessionHttpClient } from "../../../utils/http-client.js";
 import type { SessionStatus, SessionUser } from "../../../types.js";
+import type { Page as PlaywrightPage } from "playwright-core";
 
 const GROK_HOME_URL = "https://grok.com/";
+const GROK_IMAGINE_URL = "https://grok.com/imagine";
 const GROK_CREATE_CONVERSATION_URL = "https://grok.com/rest/app-chat/conversations/new";
 const GROK_MEDIA_POST_URL = "https://grok.com/rest/media/post/get";
 const GROK_DEFAULT_MODEL = "grok-3";
@@ -23,7 +27,7 @@ const GROK_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36";
 const GROK_ACCEPT_LANGUAGE = "en-US,en;q=0.9";
 const GROK_TLS_CLIENT_IDENTIFIER = "chrome_146";
-const GROK_BROWSER_STATSIG_IDS = [
+const GROK_CREATE_STATSIG_IDS = [
   "d+QJ/pTCbTLFjicYQpdy3LuCpY4dNMm2vOB94F21e7fKEIGnvaC60d/v8N+z8uLj4obNAnIN3hObDZJtfNWdlPS423btdA",
   "wDhAC5tgENpWVsYXN0kQnXXQ+Xtq38rZRVppk9Uy1xhmWpIdU7q6y4f6HEU3wXpLl9N0tcWvwAioklw42J27RNEuP5ssww",
 ] as const;
@@ -273,8 +277,14 @@ export class GrokService {
     input: {
       prompt: string;
       model?: string;
+      browser?: boolean;
+      browserTimeoutSeconds?: number;
     },
   ): Promise<GrokTextExecutionResult> {
+    if (input.browser) {
+      return this.executeTextInBrowser(client, input);
+    }
+
     try {
       const parsed = await withGrokTlsSession(client.jar, async (session) =>
         parseGrokConversationStream(
@@ -300,7 +310,11 @@ export class GrokService {
         followUpSuggestions: parsed.followUpSuggestions,
       };
     } catch (error) {
-      throw mapGrokError(error, "Failed to complete the Grok prompt.");
+      const mapped = mapGrokError(error, "Failed to complete the Grok prompt.");
+      if (mapped.code === "GROK_ANTI_BOT_BLOCKED") {
+        return this.executeTextInBrowser(client, input);
+      }
+      throw mapped;
     }
   }
 
@@ -309,8 +323,14 @@ export class GrokService {
     input: {
       prompt: string;
       model?: string;
+      browser?: boolean;
+      browserTimeoutSeconds?: number;
     },
   ): Promise<GrokImageExecutionResult> {
+    if (input.browser) {
+      return this.executeImageInBrowser(client, input);
+    }
+
     try {
       return await withGrokTlsSession(client.jar, async (session) => {
         const parsed = parseGrokConversationStream(
@@ -355,7 +375,11 @@ export class GrokService {
         };
       });
     } catch (error) {
-      throw mapGrokError(error, "Failed to generate the Grok image.");
+      const mapped = mapGrokError(error, "Failed to generate the Grok image.");
+      if (mapped.code === "GROK_ANTI_BOT_BLOCKED") {
+        return this.executeImageInBrowser(client, input);
+      }
+      throw mapped;
     }
   }
 
@@ -405,8 +429,14 @@ export class GrokService {
     input: {
       prompt: string;
       model?: string;
+      browser?: boolean;
+      browserTimeoutSeconds?: number;
     },
   ): Promise<GrokVideoExecutionResult> {
+    if (input.browser) {
+      return this.executeVideoInBrowser(client, input);
+    }
+
     try {
       return await withGrokTlsSession(client.jar, async (session) => {
         const imageParsed = parseGrokConversationStream(
@@ -482,7 +512,11 @@ export class GrokService {
         };
       });
     } catch (error) {
-      throw mapGrokError(error, "Failed to generate the Grok video.");
+      const mapped = mapGrokError(error, "Failed to generate the Grok video.");
+      if (mapped.code === "GROK_ANTI_BOT_BLOCKED") {
+        return this.executeVideoInBrowser(client, input);
+      }
+      throw mapped;
     }
   }
 
@@ -701,6 +735,403 @@ export class GrokService {
     }
 
     return response.data;
+  }
+
+  private async executeTextInBrowser(
+    client: SessionHttpClient,
+    input: {
+      prompt: string;
+      model?: string;
+      browser?: boolean;
+      browserTimeoutSeconds?: number;
+    },
+  ): Promise<GrokTextExecutionResult> {
+    const parsed = await this.executeConversationInBrowser(client, {
+      prompt: input.prompt,
+      timeoutSeconds: input.browserTimeoutSeconds,
+    });
+
+    if (!parsed.outputText) {
+      throw new AutoCliError("GROK_EMPTY_RESPONSE", "Grok returned an empty response.", {
+        details: {
+          conversationId: parsed.conversationId,
+          responseId: parsed.responseId,
+          model: parsed.model ?? resolveGrokModel(input.model),
+        },
+      });
+    }
+
+    return {
+      outputText: parsed.outputText,
+      conversationId: parsed.conversationId,
+      responseId: parsed.responseId,
+      model: parsed.model ?? resolveGrokModel(input.model),
+      followUpSuggestions: parsed.followUpSuggestions,
+    };
+  }
+
+  private async executeImageInBrowser(
+    client: SessionHttpClient,
+    input: {
+      prompt: string;
+      model?: string;
+      browser?: boolean;
+      browserTimeoutSeconds?: number;
+    },
+  ): Promise<GrokImageExecutionResult> {
+    return await withGrokTlsSession(client.jar, async (session) => {
+      const generated = await this.executeImagineInBrowser(client, {
+        prompt: input.prompt,
+        mode: "image",
+        timeoutSeconds: input.browserTimeoutSeconds,
+      });
+      const outputUrls = resolveBrowserImagineImageUrls(generated);
+      if (outputUrls.length === 0) {
+        throw new AutoCliError("GROK_IMAGE_GENERATION_FAILED", "Grok did not return any generated images.", {
+          details: {
+            outputText: generated.parsed?.outputText,
+            prompt: input.prompt,
+          },
+        });
+      }
+
+      const downloads = await Promise.all(
+        outputUrls.map(async (assetUrl, index) => {
+          const outputPath = isDataUri(assetUrl)
+            ? await writeGrokBrowserAsset(assetUrl, "images", {
+                prefix: `${generated.parsed?.conversationId ?? "grok-image"}-${String(index + 1)}`,
+              })
+            : await downloadGrokAsset(session, client.jar, assetUrl, "images", {
+                prefix: `${generated.parsed?.conversationId ?? "grok-image"}-${String(index + 1)}`,
+              });
+          return {
+            outputPath,
+            outputUrl: assetUrl,
+          };
+        }),
+      );
+      const exposedOutputUrls = downloads
+        .map((download) => download.outputUrl)
+        .filter((outputUrl) => !isDataUri(outputUrl));
+
+      return {
+        outputText:
+          generated.parsed?.outputText && !generated.parsed.outputText.includes("<grok:render")
+            ? generated.parsed.outputText
+            : `Generated ${downloads.length} Grok image${downloads.length === 1 ? "" : "s"}.`,
+        conversationId: generated.conversationId ?? generated.parsed?.conversationId,
+        responseId: generated.parsed?.responseId,
+        model: generated.parsed?.model ?? resolveGrokModel(input.model),
+        followUpSuggestions: generated.parsed?.followUpSuggestions ?? [],
+        outputPaths: downloads.map((download) => download.outputPath),
+        outputUrls: exposedOutputUrls,
+        imageUuid: generated.parsed?.imageAssets[0]?.imageUuid,
+      };
+    });
+  }
+
+  private async executeVideoInBrowser(
+    client: SessionHttpClient,
+    input: {
+      prompt: string;
+      model?: string;
+      browser?: boolean;
+      browserTimeoutSeconds?: number;
+    },
+  ): Promise<GrokVideoExecutionResult> {
+    return await withGrokTlsSession(client.jar, async (session) => {
+      const generated = await this.executeImagineInBrowser(client, {
+        prompt: input.prompt,
+        mode: "video",
+        timeoutSeconds: input.browserTimeoutSeconds ? Math.max(input.browserTimeoutSeconds, 180) : 180,
+      });
+
+      const latestVideoUpdate = selectLatestGrokVideoUpdate(generated.parsed?.videoUpdates ?? []);
+      const outputUrl = resolveBrowserImagineVideoUrl(generated, latestVideoUpdate);
+      const outputPaths = outputUrl
+        ? [
+            await downloadGrokAsset(session, client.jar, outputUrl, "videos", {
+              prefix: `${generated.parsed?.conversationId ?? "grok-video"}-video`,
+            }),
+          ]
+        : [];
+      const status: GrokVideoExecutionResult["status"] = outputUrl ? "completed" : "processing";
+
+      return {
+        outputText:
+          status === "completed"
+            ? "Generated a Grok video."
+            : "Grok accepted the video generation job, but the final asset URL is still pending.",
+        conversationId: generated.conversationId ?? generated.parsed?.conversationId,
+        responseId: generated.parsed?.responseId,
+        model: generated.parsed?.model ?? latestVideoUpdate?.modelName ?? resolveGrokModel(input.model),
+        followUpSuggestions: generated.parsed?.followUpSuggestions ?? [],
+        status,
+        outputUrl,
+        outputUrls: outputUrl ? [outputUrl] : [],
+        outputPaths,
+        videoId: latestVideoUpdate?.videoId,
+        progress: latestVideoUpdate?.progress,
+      };
+    });
+  }
+
+  private async executeConversationInBrowser(
+    client: SessionHttpClient,
+    input: {
+      prompt: string;
+      timeoutSeconds?: number;
+    },
+  ): Promise<ParsedGrokConversationStream> {
+    const initialCookies = (await client.jar.getCookies(GROK_HOME_URL)).map((cookie) => cookie.toJSON());
+    const result = await runBrowserActionPlan<{
+      stream: string;
+      cookies: unknown[];
+    }>({
+      targetUrl: GROK_HOME_URL,
+      timeoutSeconds: input.timeoutSeconds ?? 180,
+      initialCookies,
+      headless: true,
+      userAgent: GROK_USER_AGENT,
+      locale: "en-US",
+      steps: [
+        {
+          source: "headless",
+          shouldContinueOnError: (error) => shouldRetryGrokBrowserAction(error),
+        },
+        {
+          source: "shared",
+          announceLabel: `Opening shared AutoCLI browser profile for Grok: ${GROK_HOME_URL}`,
+        },
+      ],
+      action: async (page) => {
+        await this.ensureBrowserAuthenticated(page);
+        const stream = await this.submitChatPromptInBrowser(page, input.prompt, input.timeoutSeconds);
+        return {
+          stream,
+          cookies: await page.context().cookies(),
+        };
+      },
+    });
+
+    await syncBrowserCookiesToJar(client.jar, result.cookies);
+    return parseGrokConversationStream(result.stream);
+  }
+
+  private async executeImagineInBrowser(
+    client: SessionHttpClient,
+    input: {
+      prompt: string;
+      mode: "image" | "video";
+      timeoutSeconds?: number;
+    },
+  ): Promise<{
+    assetUrls: string[];
+    conversationId?: string;
+    parsed?: ParsedGrokConversationStream;
+  }> {
+    const initialCookies = (await client.jar.getCookies(GROK_HOME_URL)).map((cookie) => cookie.toJSON());
+    const result = await runBrowserActionPlan<{
+      assetUrls: string[];
+      pageUrl: string;
+      stream?: string;
+      cookies: unknown[];
+    }>({
+      targetUrl: GROK_IMAGINE_URL,
+      timeoutSeconds: input.timeoutSeconds ?? (input.mode === "video" ? 180 : 120),
+      initialCookies,
+      headless: true,
+      userAgent: GROK_USER_AGENT,
+      locale: "en-US",
+      steps: [
+        {
+          source: "headless",
+          shouldContinueOnError: (error) => shouldRetryGrokBrowserAction(error),
+        },
+        {
+          source: "shared",
+          announceLabel: `Opening shared AutoCLI browser profile for Grok Imagine: ${GROK_IMAGINE_URL}`,
+        },
+      ],
+      action: async (page) => {
+        await this.ensureBrowserAuthenticated(page);
+        const streamPromise = this.captureBrowserConversationStream(
+          page,
+          Math.min((input.timeoutSeconds ?? (input.mode === "video" ? 180 : 120)) * 1000, 150_000),
+        ).catch(() => undefined);
+        const assetUrls = await this.submitImaginePromptInBrowser(page, input.prompt, input.mode, input.timeoutSeconds);
+        return {
+          assetUrls,
+          pageUrl: page.url(),
+          stream: await waitForOptionalBrowserStream(
+            streamPromise,
+            input.timeoutSeconds ? input.timeoutSeconds * 1000 : (input.mode === "video" ? 120_000 : 150_000),
+          ),
+          cookies: await page.context().cookies(),
+        };
+      },
+    });
+
+    await syncBrowserCookiesToJar(client.jar, result.cookies);
+    const parsed = result.stream ? parseGrokConversationStream(result.stream) : undefined;
+    const derivedConversationId = extractGrokImaginePostId(result.pageUrl);
+    return {
+      assetUrls: result.assetUrls,
+      conversationId: derivedConversationId ?? parsed?.conversationId,
+      parsed,
+    };
+  }
+
+  private async ensureBrowserAuthenticated(page: PlaywrightPage): Promise<void> {
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(1_000);
+
+    const url = page.url().toLowerCase();
+    if (url.includes("/login") || url.includes("/sign-in")) {
+      throw new AutoCliError("GROK_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into Grok. Run `autocli llm grok login --browser` first.");
+    }
+
+    const bodyText = normalizeWhitespace(await page.locator("body").innerText().catch(() => ""));
+    if (!bodyText) {
+      return;
+    }
+
+    const blockedPatterns = [
+      /sign in/i,
+      /log in/i,
+      /access denied/i,
+      /something went wrong/i,
+      /try again later/i,
+      /unusual activity/i,
+    ];
+
+    for (const pattern of blockedPatterns) {
+      const match = bodyText.match(pattern);
+      if (match) {
+        if (/sign in|log in/i.test(match[0])) {
+          throw new AutoCliError("GROK_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into Grok. Run `autocli llm grok login --browser` first.");
+        }
+
+        throw new AutoCliError("GROK_BROWSER_ACTION_FAILED", match[0], {
+          details: {
+            url: page.url(),
+          },
+        });
+      }
+    }
+  }
+
+  private async submitChatPromptInBrowser(page: PlaywrightPage, prompt: string, timeoutSeconds?: number): Promise<string> {
+    const responsePromise = this.captureBrowserConversationStream(page, Math.min((timeoutSeconds ?? 180) * 1000, 90_000));
+    await this.fillAndSubmitBrowserComposer(page, prompt, Math.min((timeoutSeconds ?? 180) * 1000, 20_000));
+    return responsePromise;
+  }
+
+  private async submitImaginePromptInBrowser(
+    page: PlaywrightPage,
+    prompt: string,
+    mode: "image" | "video",
+    timeoutSeconds?: number,
+  ): Promise<string[]> {
+    if (mode === "video") {
+      const videoMode = page.getByRole("radio", { name: "Video", exact: true }).last();
+      await videoMode.waitFor({
+        state: "visible",
+        timeout: 15_000,
+      });
+      await videoMode.click();
+      await page.waitForTimeout(1_000);
+    }
+
+    const existingAssetUrls = await collectImagineAssetUrls(page, mode);
+    await this.fillAndSubmitBrowserComposer(page, prompt, Math.min((timeoutSeconds ?? (mode === "video" ? 180 : 120)) * 1000, 20_000));
+
+    const timeoutMs = Math.max(30_000, (timeoutSeconds ?? (mode === "video" ? 180 : 120)) * 1000);
+    await page.waitForFunction(
+      ({ currentMode, previousUrls }) => {
+        const matches = Array.from(
+          document.querySelectorAll(currentMode === "video" ? "video, source" : "img"),
+          (node) => {
+            if (!(node instanceof HTMLElement)) {
+              return "";
+            }
+            const src = node.getAttribute("src") || ("currentSrc" in node ? String((node as HTMLMediaElement).currentSrc || "") : "");
+            const alt = node.getAttribute("alt") || "";
+            if (!src || previousUrls.includes(src)) {
+              return "";
+            }
+            if (currentMode === "video") {
+              return src.includes("/generated/") || src.includes(".mp4") ? src : "";
+            }
+            const isGeneratedImage = alt === "Generated image" || src.startsWith("data:image/") || src.includes("/generated/");
+            if (!isGeneratedImage) return "";
+            if (src.startsWith("data:image/") && src.length < 500_000) return "";
+            return src;
+          },
+        ).filter(Boolean);
+        return matches.length > 0;
+      },
+      {
+        currentMode: mode,
+        previousUrls: existingAssetUrls,
+      },
+      {
+        timeout: timeoutMs,
+      },
+    );
+
+    await page.waitForTimeout(mode === "video" ? 3_000 : 1_500);
+
+    const latestAssetUrls = await collectImagineAssetUrls(page, mode);
+    return selectRecentImagineAssetUrls(
+      latestAssetUrls.filter((url) => !existingAssetUrls.includes(url)),
+      mode,
+    );
+  }
+
+  private async fillAndSubmitBrowserComposer(page: PlaywrightPage, prompt: string, timeoutMs: number): Promise<void> {
+    const editor = page.locator("[contenteditable=\"true\"]").first();
+    await editor.waitFor({
+      state: "visible",
+      timeout: timeoutMs,
+    });
+    await editor.click();
+    await page.keyboard.press(process.platform === "darwin" ? "Meta+A" : "Control+A").catch(() => {});
+    await page.keyboard.press("Backspace").catch(() => {});
+    await page.keyboard.type(prompt, {
+      delay: 12,
+    });
+    const submit = page.locator("button[aria-label=\"Submit\"]").last();
+    await submit.waitFor({
+      state: "visible",
+      timeout: timeoutMs,
+    });
+    await page.waitForFunction(
+      () => {
+        const submitButton = Array.from(document.querySelectorAll("button[aria-label=\"Submit\"]")).at(-1);
+        return submitButton instanceof HTMLButtonElement && !submitButton.disabled;
+      },
+      {
+        timeout: timeoutMs,
+      },
+    );
+    await submit.click({
+      force: true,
+    });
+  }
+
+  private async captureBrowserConversationStream(page: PlaywrightPage, timeoutMs: number): Promise<string> {
+    const response = await page.waitForResponse(
+      (candidate) => candidate.url().includes("/rest/app-chat/conversations/new"),
+      {
+        timeout: timeoutMs,
+      },
+    );
+    const body = await response.text();
+    if (response.status() !== 200) {
+      throw createGrokRequestError(response.status(), body);
+    }
+    return body;
   }
 }
 
@@ -1101,6 +1532,68 @@ function buildGrokCreateHeaders(statsigId: string): Record<string, string> {
   };
 }
 
+function shouldRetryGrokBrowserAction(error: unknown): boolean {
+  if (!isAutoCliError(error)) {
+    return false;
+  }
+
+  return (
+    error.code === "GROK_ANTI_BOT_BLOCKED" ||
+    error.code === "GROK_BROWSER_ACTION_FAILED" ||
+    error.code === "GROK_BROWSER_NOT_LOGGED_IN"
+  );
+}
+
+async function syncBrowserCookiesToJar(jar: CookieJar, cookies: unknown[]): Promise<void> {
+  const browserCookies = Array.isArray(cookies) ? cookies : [];
+
+  for (const rawCookie of browserCookies) {
+    if (!rawCookie || typeof rawCookie !== "object") {
+      continue;
+    }
+
+    const value = rawCookie as Record<string, unknown>;
+    const cookie = Cookie.fromJSON({
+      key: typeof value.name === "string" ? value.name : "",
+      value: typeof value.value === "string" ? value.value : "",
+      domain: typeof value.domain === "string" ? value.domain : "",
+      path: typeof value.path === "string" ? value.path : "/",
+      secure: typeof value.secure === "boolean" ? value.secure : undefined,
+      httpOnly: typeof value.httpOnly === "boolean" ? value.httpOnly : undefined,
+      sameSite: typeof value.sameSite === "string" ? value.sameSite.toLowerCase() : undefined,
+      expires:
+        typeof value.expires === "number" && Number.isFinite(value.expires) && value.expires > 0
+          ? new Date(value.expires * 1000).toISOString()
+          : "Infinity",
+    });
+
+    if (!cookie) {
+      continue;
+    }
+
+    const protocol = cookie.secure ? "https" : "http";
+    const cookieDomain = typeof cookie.domain === "string" ? cookie.domain : "";
+    const domain = cookieDomain.startsWith(".") ? cookieDomain.slice(1) : cookieDomain;
+    if (!domain) {
+      continue;
+    }
+
+    await jar.setCookie(cookie, `${protocol}://${domain}${cookie.path || "/"}`, {
+      ignoreError: true,
+    });
+  }
+}
+
+async function waitForOptionalBrowserStream(
+  streamPromise: Promise<string | undefined>,
+  timeoutMs: number,
+): Promise<string | undefined> {
+  return Promise.race([
+    streamPromise,
+    delay(timeoutMs).then(() => undefined),
+  ]);
+}
+
 async function withGrokTlsSession<T>(jar: CookieJar, action: (session: SessionClient) => Promise<T>): Promise<T> {
   const moduleClient = new ModuleClient();
   await moduleClient.open();
@@ -1142,7 +1635,7 @@ async function postGrokCreateConversation(
 ): Promise<string> {
   let lastError: AutoCliError | undefined;
 
-  for (const statsigId of GROK_BROWSER_STATSIG_IDS) {
+  for (const statsigId of GROK_CREATE_STATSIG_IDS) {
     const response = await session.post(GROK_CREATE_CONVERSATION_URL, body, {
       headers: buildGrokCreateHeaders(statsigId),
       headerOrder: [...GROK_CREATE_HEADER_ORDER],
@@ -1389,6 +1882,20 @@ async function downloadGrokAsset(
   return outputPath;
 }
 
+async function writeGrokBrowserAsset(
+  source: string,
+  kind: "images" | "videos",
+  input: {
+    prefix: string;
+    outputDir?: string;
+  },
+): Promise<string> {
+  const outputPath = buildGrokBrowserAssetOutputPath(kind, input.prefix, source, input.outputDir);
+  await ensureParentDirectory(outputPath);
+  await writeFile(outputPath, decodeTlsBinaryBody(source));
+  return outputPath;
+}
+
 function buildGrokAssetOutputPath(
   kind: "images" | "videos",
   prefix: string,
@@ -1397,6 +1904,24 @@ function buildGrokAssetOutputPath(
 ): string {
   const url = new URL(assetUrl);
   const extension = extname(url.pathname) || (kind === "videos" ? ".mp4" : ".jpg");
+  const fileName = `${sanitizeFileFragment(prefix)}-${randomUUID()}${extension}`;
+  if (outputDir) {
+    return join(outputDir, fileName);
+  }
+  return getCachePath("grok", "generated", kind, fileName);
+}
+
+function buildGrokBrowserAssetOutputPath(
+  kind: "images" | "videos",
+  prefix: string,
+  source: string,
+  outputDir?: string,
+): string {
+  if (!isDataUri(source)) {
+    return buildGrokAssetOutputPath(kind, prefix, source, outputDir);
+  }
+
+  const extension = resolveDataUriExtension(source, kind);
   const fileName = `${sanitizeFileFragment(prefix)}-${randomUUID()}${extension}`;
   if (outputDir) {
     return join(outputDir, fileName);
@@ -1419,12 +1944,117 @@ function decodeTlsBinaryBody(body: string): Buffer {
   return Buffer.from(body, "base64");
 }
 
+function isDataUri(value: string): boolean {
+  return value.startsWith("data:");
+}
+
+function resolveDataUriExtension(source: string, kind: "images" | "videos"): string {
+  const mimeMatch = source.match(/^data:([^;,]+)/u);
+  const mime = mimeMatch?.[1]?.toLowerCase() ?? "";
+  if (mime.endsWith("png")) {
+    return ".png";
+  }
+  if (mime.endsWith("webp")) {
+    return ".webp";
+  }
+  if (mime.endsWith("gif")) {
+    return ".gif";
+  }
+  if (mime.endsWith("mp4")) {
+    return ".mp4";
+  }
+  return kind === "videos" ? ".mp4" : ".jpg";
+}
+
 function resolveGrokAssetUrl(assetPathOrUrl: string): string {
   if (/^https?:\/\//u.test(assetPathOrUrl)) {
     return assetPathOrUrl;
   }
 
   return new URL(assetPathOrUrl.replace(/^\/+/u, ""), GROK_ASSET_BASE_URL).toString();
+}
+
+async function collectImagineAssetUrls(page: PlaywrightPage, mode: "image" | "video"): Promise<string[]> {
+  return page.evaluate((currentMode) => {
+    const elements = Array.from(document.querySelectorAll(currentMode === "video" ? "video, source" : "img"));
+    const urls = elements
+      .map((node) => {
+        if (!(node instanceof HTMLElement)) {
+          return "";
+        }
+
+        const src = node.getAttribute("src") || ("currentSrc" in node ? String((node as HTMLMediaElement).currentSrc || "") : "");
+        if (!src) {
+          return "";
+        }
+
+        if (currentMode === "video") {
+          return src.includes("/generated/") || src.includes(".mp4") ? src : "";
+        }
+
+        const alt = node.getAttribute("alt") || "";
+        const isGeneratedImage = alt === "Generated image" || src.startsWith("data:image/") || src.includes("/generated/");
+        if (!isGeneratedImage || alt === "pfp" || alt === "Most recent favorite") {
+          return "";
+        }
+        
+        if (src.startsWith("data:image/") && src.length < 500_000) {
+          return "";
+        }
+
+        return src;
+      })
+      .filter((value): value is string => Boolean(value));
+
+    return Array.from(new Set(urls));
+  }, mode);
+}
+
+function selectRecentImagineAssetUrls(assetUrls: readonly string[], mode: "image" | "video"): string[] {
+  const unique = dedupeValues(assetUrls);
+  if (mode === "video") {
+    return unique.slice(-1);
+  }
+
+  const remote = unique.filter((url) => !isDataUri(url));
+  const candidates = remote.length > 0 ? remote : unique;
+  return candidates.slice(-4);
+}
+
+function resolveBrowserImagineImageUrls(input: {
+  assetUrls: readonly string[];
+  parsed?: ParsedGrokConversationStream;
+}): string[] {
+  const parsedOutputUrls = (input.parsed?.imageAssets ?? []).map((asset) => resolveGrokAssetUrl(asset.assetPath));
+  if (parsedOutputUrls.length > 0) {
+    return dedupeValues(parsedOutputUrls);
+  }
+
+  return selectRecentImagineAssetUrls(input.assetUrls, "image");
+}
+
+function resolveBrowserImagineVideoUrl(
+  input: {
+    assetUrls: readonly string[];
+    parsed?: ParsedGrokConversationStream;
+  },
+  latestVideoUpdate?: ParsedGrokVideoUpdate,
+): string | undefined {
+  if (latestVideoUpdate?.videoUrl) {
+    return resolveGrokAssetUrl(latestVideoUpdate.videoUrl);
+  }
+
+  return selectRecentImagineAssetUrls(input.assetUrls, "video")[0];
+}
+
+function extractGrokImaginePostId(url: string): string | undefined {
+  try {
+    const parsed = new URL(url);
+    const match = parsed.pathname.match(/\/imagine\/post\/([^/]+)$/u);
+    return match?.[1];
+  } catch {
+    return undefined;
+  }
 }
 
 function parseGrokGeneratedImageAsset(jsonData?: string): ParsedGrokGeneratedImageAsset | undefined {
