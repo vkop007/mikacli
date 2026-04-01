@@ -831,7 +831,7 @@ export class GrokService {
             pageUrl: page.url(),
             stream: await waitForOptionalBrowserStream(
               streamPromise,
-              input.timeoutSeconds ? input.timeoutSeconds * 1000 : (input.mode === "video" ? 120_000 : 150_000),
+              input.timeoutSeconds ? input.timeoutSeconds * 1000 : (input.mode === "video" ? 12_000 : 6_000),
             ),
             cookies: await page.context().cookies(),
           };
@@ -956,7 +956,7 @@ export class GrokService {
       },
     );
 
-    await page.waitForTimeout(mode === "video" ? 3_000 : 1_500);
+    await page.waitForTimeout(mode === "video" ? 3_000 : 3_500);
 
     const latestAssetUrls = await collectImagineAssetUrls(page, mode);
     return selectRecentImagineAssetUrls(
@@ -1464,10 +1464,20 @@ async function waitForOptionalBrowserStream(
   streamPromise: Promise<string | undefined>,
   timeoutMs: number,
 ): Promise<string | undefined> {
-  return Promise.race([
-    streamPromise,
-    delay(timeoutMs).then(() => undefined),
-  ]);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => resolve(undefined), timeoutMs);
+
+    streamPromise.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    );
+  });
 }
 
 async function withGrokTlsSession<T>(jar: CookieJar, action: (session: SessionClient) => Promise<T>): Promise<T> {
@@ -1959,8 +1969,16 @@ function selectRecentImagineAssetUrls(assetUrls: readonly string[], mode: "image
   const remoteFinal = unique.filter((url) => !isDataUri(url) && !isPreviewImagineAssetUrl(url));
   const inline = unique.filter((url) => isDataUri(url));
   const remotePreview = unique.filter((url) => !isDataUri(url) && isPreviewImagineAssetUrl(url));
-  const candidates = inline.length > 0 ? inline : remoteFinal.length > 0 ? remoteFinal : remotePreview;
-  return candidates.slice(-4);
+  if (inline.length > 0) {
+    const bestInline = [...inline].sort((left, right) => left.length - right.length).at(-1);
+    return bestInline ? [bestInline] : [];
+  }
+
+  if (remoteFinal.length > 0) {
+    return remoteFinal.slice(-1);
+  }
+
+  return remotePreview.slice(-1);
 }
 
 function isBrowserGeneratedAssetUrl(url: string, mode: "image" | "video"): boolean {
@@ -1973,6 +1991,10 @@ function isBrowserGeneratedAssetUrl(url: string, mode: "image" | "video"): boole
     const path = parsed.pathname.toLowerCase();
     if (mode === "video") {
       return path.endsWith(".mp4") || path.endsWith(".mov") || path.endsWith(".webm") || path.includes("generated_video");
+    }
+
+    if (path.includes("preview_image")) {
+      return false;
     }
 
     return (
