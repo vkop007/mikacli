@@ -75,6 +75,13 @@ npm install -g @vk007/autocli
 bun install -g @vk007/autocli
 ```
 
+Validate the install right away:
+
+```bash
+autocli --version
+autocli doctor
+```
+
 Set up the repo locally with Bun:
 
 ```bash
@@ -218,12 +225,26 @@ AutoCLI currently exposes `104` providers across `14` active command groups.
 
 ## Installation
 
-Install globally with npm or Bun:
+### Recommended Global Install
+
+Use the published package as the primary supported install path:
 
 ```bash
 npm install -g @vk007/autocli
 bun install -g @vk007/autocli
 ```
+
+After install, verify the command and your local environment:
+
+```bash
+autocli --version
+autocli doctor
+autocli status
+```
+
+`autocli doctor` checks the shared browser setup plus optional local tools such as `ffmpeg`, `yt-dlp`, `qpdf`, `poppler`, `7z`, and macOS-native helpers when relevant.
+
+### Local Development Setup
 
 Set up the repo locally with Bun:
 
@@ -237,11 +258,17 @@ Build the Node-targeted bundle:
 bun run build
 ```
 
-Build a standalone Bun binary:
+### Experimental Standalone Binary
+
+You can also compile a standalone Bun binary:
 
 ```bash
 bun run build:bin
 ```
+
+This path is still experimental. The supported production install remains the npm or Bun global package above, because some runtime-heavy providers can behave differently in the compiled Bun binary.
+
+### Local Development Linking
 
 Link `autocli` globally for local development:
 
