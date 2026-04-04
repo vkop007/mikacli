@@ -1,5 +1,9 @@
 import { sanitizeAccountName } from "../../../config.js";
 import { AutoCliError } from "../../../errors.js";
+import {
+  runFirstClassBrowserAction,
+  withBrowserActionMetadata,
+} from "../../../core/runtime/browser-action-runtime.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { htmlToText, normalizeWhitespace } from "../../data/shared/text.js";
 import { BasePlatformAdapter } from "../../shared/base-platform-adapter.js";
@@ -13,7 +17,6 @@ import {
   normalizeRedditThreadTarget,
   normalizeRedditUsernameTarget,
 } from "./helpers.js";
-import { runBrowserActionPlan } from "../../../utils/browser-cookie-login.js";
 
 import type { Page as PlaywrightPage } from "playwright-core";
 import type { SessionHttpClient } from "../../../utils/http-client.js";
@@ -604,15 +607,19 @@ export class RedditAdapter extends BasePlatformAdapter {
   private async browserSubmitPost(input: RedditSubmitInput): Promise<AdapterActionResult> {
     const loaded = await this.ensureAvailableSession(input.account);
     const submitUrl = `${REDDIT_ORIGIN}/r/${encodeURIComponent(input.subreddit)}/submit${input.url ? "?type=LINK" : "?type=TEXT"}`;
-    const result = await runBrowserActionPlan({
+    const execution = await runFirstClassBrowserAction({
+      platform: this.platform,
+      action: "post",
+      actionLabel: "post",
       targetUrl: submitUrl,
       timeoutSeconds: input.browserTimeoutSeconds ?? 60,
       initialCookies: loaded.session.cookieJar.cookies,
       headless: true,
       userAgent: REDDIT_BROWSER_USER_AGENT,
       locale: "en-US",
-      steps: [{ source: "headless" }],
-      action: async (page) => {
+      strategy: "headless-only",
+      mode: "required",
+      actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
         await this.throwIfBrowserBlocked(page);
 
@@ -659,8 +666,9 @@ export class RedditAdapter extends BasePlatformAdapter {
         };
       },
     });
+    const result = execution.value;
 
-    return {
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: loaded.session.account,
@@ -674,24 +682,24 @@ export class RedditAdapter extends BasePlatformAdapter {
         title: input.title,
         kind: input.url ? "link" : "self",
       },
-    };
+    }, execution);
   }
 
   private async browserComment(input: RedditCommentActionInput): Promise<AdapterActionResult> {
     const loaded = await this.ensureAvailableSession(input.account);
     const resolved = normalizeRedditThingTarget(input.target);
     const targetUrl = resolved.url ? resolved.url.replace(REDDIT_ORIGIN, OLD_REDDIT_ORIGIN) : buildOldRedditThreadUrl(resolved);
-    const result = await runBrowserActionPlan({
+    const execution = await runFirstClassBrowserAction({
+      platform: this.platform,
+      action: "comment",
+      actionLabel: "comment",
       targetUrl,
       timeoutSeconds: input.browserTimeoutSeconds ?? 60,
       initialCookies: loaded.session.cookieJar.cookies,
-      steps: [
-        {
-          source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for Reddit commenting: ${targetUrl}`,
-        },
-      ],
-      action: async (page) => {
+      strategy: "shared-only",
+      announceLabel: `Opening shared AutoCLI browser profile for Reddit commenting: ${targetUrl}`,
+      mode: "required",
+      actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
         const thing = await this.findBrowserThing(page, resolved.fullname);
         const replyTrigger = thing.locator('.reply-button a, a[onclick*="reply"]');
@@ -711,8 +719,9 @@ export class RedditAdapter extends BasePlatformAdapter {
         };
       },
     });
+    const result = execution.value;
 
-    return {
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: loaded.session.account,
@@ -725,24 +734,24 @@ export class RedditAdapter extends BasePlatformAdapter {
       data: {
         target: resolved.fullname,
       },
-    };
+    }, execution);
   }
 
   private async browserUpvote(input: RedditThingActionInput): Promise<AdapterActionResult> {
     const loaded = await this.ensureAvailableSession(input.account);
     const resolved = normalizeRedditThingTarget(input.target);
     const targetUrl = resolved.url ? resolved.url.replace(REDDIT_ORIGIN, OLD_REDDIT_ORIGIN) : buildOldRedditThreadUrl(resolved);
-    const result = await runBrowserActionPlan({
+    const execution = await runFirstClassBrowserAction({
+      platform: this.platform,
+      action: "upvote",
+      actionLabel: "upvote",
       targetUrl,
       timeoutSeconds: input.browserTimeoutSeconds ?? 60,
       initialCookies: loaded.session.cookieJar.cookies,
-      steps: [
-        {
-          source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for Reddit voting: ${targetUrl}`,
-        },
-      ],
-      action: async (page) => {
+      strategy: "shared-only",
+      announceLabel: `Opening shared AutoCLI browser profile for Reddit voting: ${targetUrl}`,
+      mode: "required",
+      actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
         const thing = await this.findBrowserThing(page, resolved.fullname);
         const button = await firstVisibleLocatorWithin(thing, [".arrow.up", 'button[aria-label*="upvote" i]']);
@@ -753,8 +762,9 @@ export class RedditAdapter extends BasePlatformAdapter {
         };
       },
     });
+    const result = execution.value;
 
-    return {
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: loaded.session.account,
@@ -767,24 +777,24 @@ export class RedditAdapter extends BasePlatformAdapter {
       data: {
         target: resolved.fullname,
       },
-    };
+    }, execution);
   }
 
   private async browserSave(input: RedditThingActionInput): Promise<AdapterActionResult> {
     const loaded = await this.ensureAvailableSession(input.account);
     const resolved = normalizeRedditThingTarget(input.target);
     const targetUrl = resolved.url ? resolved.url.replace(REDDIT_ORIGIN, OLD_REDDIT_ORIGIN) : buildOldRedditThreadUrl(resolved);
-    const result = await runBrowserActionPlan({
+    const execution = await runFirstClassBrowserAction({
+      platform: this.platform,
+      action: "save",
+      actionLabel: "save",
       targetUrl,
       timeoutSeconds: input.browserTimeoutSeconds ?? 60,
       initialCookies: loaded.session.cookieJar.cookies,
-      steps: [
-        {
-          source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for Reddit save: ${targetUrl}`,
-        },
-      ],
-      action: async (page) => {
+      strategy: "shared-only",
+      announceLabel: `Opening shared AutoCLI browser profile for Reddit save: ${targetUrl}`,
+      mode: "required",
+      actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
         const thing = await this.findBrowserThing(page, resolved.fullname);
         const button = await firstVisibleLocatorWithin(thing, ['.save-button a', '.save-button button', 'button[aria-label*="save" i]']);
@@ -795,8 +805,9 @@ export class RedditAdapter extends BasePlatformAdapter {
         };
       },
     });
+    const result = execution.value;
 
-    return {
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: loaded.session.account,
@@ -809,7 +820,7 @@ export class RedditAdapter extends BasePlatformAdapter {
       data: {
         target: resolved.fullname,
       },
-    };
+    }, execution);
   }
 
   private async findBrowserThing(page: PlaywrightPage, fullname: string) {

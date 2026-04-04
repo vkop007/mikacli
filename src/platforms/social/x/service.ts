@@ -1,9 +1,12 @@
 import { readMediaFile } from "../../../utils/media.js";
-import { runBrowserActionPlan } from "../../../utils/browser-cookie-login.js";
 import { parseXProfileTarget, parseXTarget } from "../../../utils/targets.js";
 import { AutoCliError } from "../../../errors.js";
 import { maybeAutoRefreshSession } from "../../../utils/autorefresh.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
+import {
+  runFirstClassBrowserAction,
+  withBrowserActionMetadata,
+} from "../../../core/runtime/browser-action-runtime.js";
 import { getPlatformOrigin } from "../../config.js";
 import { normalizeWhitespace } from "../../data/shared/text.js";
 import { BasePlatformAdapter } from "../../shared/base-platform-adapter.js";
@@ -298,17 +301,21 @@ export class XAdapter extends BasePlatformAdapter {
     const username = probe.user?.username ?? session.user?.username;
     const timeoutSeconds = input.browserTimeoutSeconds ?? 60;
 
-    const result = await runBrowserActionPlan<{
+    const execution = await runFirstClassBrowserAction<{
       tweetId?: string;
       finalUrl?: string;
       source: "headless" | "profile" | "shared";
     }>({
+      platform: this.platform,
+      action: "post",
+      actionLabel: "post",
       targetUrl: X_COMPOSE_URL,
       timeoutSeconds,
       initialCookies: session.cookieJar.cookies,
       headless: true,
       userAgent: X_BROWSER_USER_AGENT,
       locale: "en-US",
+      mode: input.browser ? "required" : "fallback",
       steps: [
         {
           source: "headless",
@@ -319,7 +326,7 @@ export class XAdapter extends BasePlatformAdapter {
           announceLabel: `Opening shared AutoCLI browser profile for X posting: ${X_COMPOSE_URL}`,
         },
       ],
-      action: async (page, source) => {
+      actionFn: async (page, source) => {
         await this.ensureBrowserAuthenticated(page);
         await this.openComposer(page);
         await this.fillBrowserComposerText(page, input.text);
@@ -368,6 +375,7 @@ export class XAdapter extends BasePlatformAdapter {
         };
       },
     });
+    const result = execution.value;
 
     await this.persistExistingSession(session, {
       user: probe.user ?? session.user,
@@ -382,7 +390,7 @@ export class XAdapter extends BasePlatformAdapter {
       },
     });
 
-    return {
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: session.account,
@@ -395,9 +403,8 @@ export class XAdapter extends BasePlatformAdapter {
       data: {
         text: input.text,
         imagePath: input.imagePath,
-        source: result.source,
       },
-    };
+    }, execution);
   }
 
   private async waitForEnabledBrowserPostButton(page: PlaywrightPage) {
