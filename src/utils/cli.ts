@@ -3,6 +3,7 @@ import type { Ora } from "ora";
 
 import type { AdapterActionResult, CommandContext } from "../types.js";
 import { printJson } from "./output.js";
+import { setInteractiveProgressHandler } from "./interactive-progress.js";
 
 export function resolveCommandContext(command: Command): CommandContext {
   const options = command.optsWithGlobals<{ json?: boolean; verbose?: boolean }>();
@@ -73,6 +74,12 @@ export async function runCommandAction<T>(input: {
   onSuccess: (result: T) => void;
 }): Promise<void> {
   try {
+    if (input.spinner) {
+      setInteractiveProgressHandler((message) => {
+        input.spinner!.text = message;
+      });
+    }
+
     const result = await input.action();
     if (input.spinner) {
       const resultMessage = extractResultMessage(result);
@@ -86,6 +93,8 @@ export async function runCommandAction<T>(input: {
   } catch (error) {
     input.spinner?.stop();
     throw error;
+  } finally {
+    setInteractiveProgressHandler(null);
   }
 }
 

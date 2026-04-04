@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { execFile } from "node:child_process";
 
 import { AutoCliError } from "../errors.js";
+import { emitInteractiveProgress } from "./interactive-progress.js";
 import {
   DEFAULT_BROWSER_PROFILE,
   ensureBrowserDirectory,
@@ -194,7 +195,7 @@ export async function captureBrowserLogin(
     let page: BrowserPageLike | null = null;
     let announcedFallback = false;
 
-    announceBrowserLogin("Complete the sign-in flow in the opened browser window. AutoCLI will save the extracted session automatically once login is detected.");
+    announceBrowserLogin(`Browser opened for ${displayName}. Complete the sign-in flow there and AutoCLI will save the session automatically once login is detected.`);
 
     while (Date.now() < deadline) {
       if (!connected) {
@@ -203,7 +204,7 @@ export async function captureBrowserLogin(
           page = await openOrReusePage(connected.context, startUrl, Math.min(timeoutMs, 15_000));
         } else if (!announcedFallback) {
           announceBrowserLogin(
-            `AutoCLI is still attaching to the opened ${displayName} browser window. You can keep signing in normally. If live attach never succeeds, close the browser window when you are done and AutoCLI will import the saved session from the shared profile.`,
+            `Still waiting to attach to the opened ${displayName} browser window. Keep signing in normally. If AutoCLI is still waiting after you finish, close that browser window and it will import the saved session from the shared profile.`,
           );
           announcedFallback = true;
         }
@@ -1292,6 +1293,10 @@ function normalizePlaywrightCookieExpiry(value: unknown): number | undefined {
 
 function announceBrowserLogin(message: string): void {
   if (process.argv.includes("--json")) {
+    return;
+  }
+
+  if (emitInteractiveProgress(message)) {
     return;
   }
 
