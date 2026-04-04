@@ -80,6 +80,7 @@ Validate the install right away:
 ```bash
 autocli --version
 autocli doctor
+autocli doctor --fix
 ```
 
 Set up the repo locally with Bun:
@@ -239,10 +240,13 @@ After install, verify the command and your local environment:
 ```bash
 autocli --version
 autocli doctor
+autocli doctor --fix
 autocli status
 ```
 
 `autocli doctor` checks the shared browser setup plus optional local tools such as `ffmpeg`, `yt-dlp`, `qpdf`, `poppler`, `7z`, and macOS-native helpers when relevant.
+
+On macOS, `autocli doctor --fix` can install all supported missing browser and local-tool dependencies automatically with Homebrew, then rerun the health check.
 
 ### Local Development Setup
 

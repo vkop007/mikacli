@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { buildDoctorRecommendations, summarizeDoctorChecks } from "../commands/doctor.js";
+import { buildDoctorFixPlan, buildDoctorRecommendations, summarizeDoctorChecks } from "../commands/doctor.js";
 
 describe("doctor summary helpers", () => {
   test("summarizes pass warn fail counts and connection totals", () => {
@@ -81,6 +81,7 @@ describe("doctor summary helpers", () => {
 
     expect(recommendations).toEqual([
       "Fix the failing AutoCLI directories first so sessions, browser state, and jobs can be saved correctly.",
+      "Run `autocli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.",
       "Run `autocli login --browser` or a provider-specific `login` command to save your first reusable account.",
       "Install FFmpeg with `brew install ffmpeg`.",
     ]);
@@ -118,8 +119,116 @@ describe("doctor summary helpers", () => {
     );
 
     expect(recommendations).toEqual([
+      "Run `autocli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.",
       "Install a Chrome/Chromium browser for browser-backed actions. Install Google Chrome or Chromium, then re-run `autocli doctor`.",
       "Run `autocli login --browser` once to create the shared AutoCLI browser profile before using browser-backed actions.",
     ]);
+  });
+
+  test("builds a macOS auto-fix plan with deduped brew targets", () => {
+    const plan = buildDoctorFixPlan(
+      [
+        {
+          id: "browser-executable",
+          category: "browser",
+          status: "warn",
+          message: "missing",
+        },
+        {
+          id: "ffmpeg",
+          category: "binary",
+          status: "warn",
+          message: "missing",
+        },
+        {
+          id: "ffprobe",
+          category: "binary",
+          status: "warn",
+          message: "missing",
+        },
+        {
+          id: "pdftotext",
+          category: "binary",
+          status: "warn",
+          message: "missing",
+        },
+        {
+          id: "pdftoppm",
+          category: "binary",
+          status: "warn",
+          message: "missing",
+        },
+        {
+          id: "7z",
+          category: "binary",
+          status: "warn",
+          message: "missing",
+        },
+      ],
+      "darwin",
+    );
+
+    expect(plan).toEqual({
+      supported: true,
+      manager: "brew",
+      targets: [
+        {
+          id: "browser-executable",
+          kind: "brew-cask",
+          packageName: "google-chrome",
+          reason: "Chrome/Chromium is needed for shared-browser login and browser-backed actions.",
+          checkIds: ["browser-executable"],
+        },
+        {
+          id: "ffmpeg",
+          kind: "brew",
+          packageName: "ffmpeg",
+          reason: "Installs FFmpeg, ffprobe, and ffplay for media workflows.",
+          checkIds: ["ffmpeg", "ffprobe"],
+        },
+        {
+          id: "poppler",
+          kind: "brew",
+          packageName: "poppler",
+          reason: "Installs Poppler tools for PDF text extraction and rendering.",
+          checkIds: ["pdftotext", "pdftoppm"],
+        },
+        {
+          id: "7z",
+          kind: "brew",
+          packageName: "p7zip",
+          reason: "Installs 7-Zip support for archive workflows.",
+          checkIds: ["7z"],
+        },
+      ],
+      skipped: [],
+    });
+  });
+
+  test("skips unsupported auto-install targets", () => {
+    const plan = buildDoctorFixPlan(
+      [
+        {
+          id: "zip",
+          category: "binary",
+          status: "warn",
+          message: "missing",
+        },
+      ],
+      "darwin",
+    );
+
+    expect(plan).toEqual({
+      supported: true,
+      manager: "brew",
+      targets: [],
+      skipped: [
+        {
+          id: "zip",
+          reason:
+            "This archive utility is not auto-installed by `doctor --fix`. Install Xcode Command Line Tools or your preferred package manager if needed.",
+        },
+      ],
+    });
   });
 });

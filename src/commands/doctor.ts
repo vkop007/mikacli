@@ -49,6 +49,42 @@ type DoctorReport = {
   checks: DoctorCheck[];
 };
 
+type DoctorFixTarget = {
+  id: string;
+  kind: "brew" | "brew-cask";
+  packageName: string;
+  reason: string;
+  checkIds: string[];
+};
+
+type DoctorFixPlan = {
+  supported: boolean;
+  manager?: "brew";
+  targets: DoctorFixTarget[];
+  skipped: {
+    id: string;
+    reason: string;
+  }[];
+  reason?: string;
+};
+
+type DoctorFixExecution = {
+  attempted: boolean;
+  supported: boolean;
+  manager?: "brew";
+  installed: DoctorFixTarget[];
+  failed: Array<
+    DoctorFixTarget & {
+      error: string;
+    }
+  >;
+  skipped: {
+    id: string;
+    reason: string;
+  }[];
+  reason?: string;
+};
+
 type BinaryCheckDefinition = {
   id: string;
   command: string;
@@ -195,6 +231,7 @@ const BINARY_CHECKS: readonly BinaryCheckDefinition[] = [
 export function createDoctorCommand(): Command {
   return new Command("doctor")
     .description("Check local AutoCLI health, saved connection state, and optional binary availability")
+    .option("--fix", "Install all supported missing browser and local-tool dependencies automatically")
     .option("--strict", "Return a failing exit code for warnings too")
     .addHelpText(
       "after",
@@ -202,23 +239,72 @@ export function createDoctorCommand(): Command {
 Examples:
   autocli doctor
   autocli doctor --json
+  autocli doctor --fix
   autocli doctor --strict
 `,
     )
     .action(async function doctorAction(this: Command) {
       const ctx = resolveCommandContext(this);
-      const options = this.optsWithGlobals<{ strict?: boolean }>();
-      const report = await collectDoctorReport();
+      const options = this.optsWithGlobals<{ fix?: boolean; strict?: boolean }>();
+      const initialReport = await collectDoctorReport();
+      let report = initialReport;
+      let fixResult: DoctorFixExecution | undefined;
+
+      if (options.fix) {
+        fixResult = await runDoctorFix(initialReport.checks, {
+          json: ctx.json,
+        });
+        report = await collectDoctorReport();
+      }
 
       if (ctx.json) {
         printJson({
           ok: true,
+          ...(fixResult
+            ? {
+                fix: {
+                  attempted: fixResult.attempted,
+                  supported: fixResult.supported,
+                  manager: fixResult.manager,
+                  installed: fixResult.installed.map((target) => ({
+                    id: target.id,
+                    kind: target.kind,
+                    packageName: target.packageName,
+                    reason: target.reason,
+                    checkIds: target.checkIds,
+                  })),
+                  failed: fixResult.failed.map((target) => ({
+                    id: target.id,
+                    kind: target.kind,
+                    packageName: target.packageName,
+                    reason: target.reason,
+                    checkIds: target.checkIds,
+                    error: target.error,
+                  })),
+                  skipped: fixResult.skipped,
+                  reason: fixResult.reason,
+                  before: {
+                    health: initialReport.health,
+                    summary: initialReport.summary,
+                  },
+                  after: {
+                    health: report.health,
+                    summary: report.summary,
+                  },
+                },
+              }
+            : {}),
           health: report.health,
           summary: report.summary,
           recommendations: report.recommendations,
           checks: report.checks,
         });
       } else {
+        if (fixResult) {
+          printDoctorFixSummary(fixResult);
+          console.log("");
+        }
+
         const summaryLine = `Doctor health: ${report.health}. ${report.summary.pass} pass, ${report.summary.warn} warn, ${report.summary.fail} fail.`;
         console.log(summaryLine);
         printDoctorTable(
@@ -273,9 +359,14 @@ export function buildDoctorRecommendations(
   const browserExecutableCheck = checks.find((check) => check.id === "browser-executable");
   const browserProfileCheck = checks.find((check) => check.id === "shared-browser-profile");
   const browserRuntimeCheck = checks.find((check) => check.id === "shared-browser-runtime");
+  const fixPlan = buildDoctorFixPlan(checks);
 
   if (failedDirectories.length > 0) {
     recommendations.push("Fix the failing AutoCLI directories first so sessions, browser state, and jobs can be saved correctly.");
+  }
+
+  if (fixPlan.supported && fixPlan.targets.length > 0) {
+    recommendations.push("Run `autocli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.");
   }
 
   if (browserExecutableCheck && browserExecutableCheck.status !== "pass") {
@@ -629,6 +720,330 @@ async function probeBinary(command: string, args: readonly string[]): Promise<{ 
       });
     });
   });
+}
+
+export function buildDoctorFixPlan(
+  checks: readonly DoctorCheck[],
+  platform: NodeJS.Platform = process.platform,
+): DoctorFixPlan {
+  const missingBinaryChecks = checks.filter((check) => check.category === "binary" && check.status === "warn");
+  const missingBrowserCheck = checks.find((check) => check.id === "browser-executable" && check.status !== "pass");
+
+  if (platform !== "darwin") {
+    return {
+      supported: false,
+      targets: [],
+      skipped: [...missingBinaryChecks, ...(missingBrowserCheck ? [missingBrowserCheck] : [])].map((check) => ({
+        id: check.id,
+        reason: "Automatic installs are currently only implemented on macOS with Homebrew.",
+      })),
+      reason: "Automatic installs are currently only implemented on macOS with Homebrew.",
+    };
+  }
+
+  const targets = new Map<string, DoctorFixTarget>();
+  const skipped: DoctorFixPlan["skipped"] = [];
+
+  const registerTarget = (target: DoctorFixTarget) => {
+    const key = `${target.kind}:${target.packageName}`;
+    const existing = targets.get(key);
+    if (existing) {
+      existing.checkIds = dedupeStrings([...existing.checkIds, ...target.checkIds]);
+      return;
+    }
+    targets.set(key, target);
+  };
+
+  if (missingBrowserCheck) {
+    registerTarget({
+      id: "browser-executable",
+      kind: "brew-cask",
+      packageName: "google-chrome",
+      reason: "Chrome/Chromium is needed for shared-browser login and browser-backed actions.",
+      checkIds: ["browser-executable"],
+    });
+  }
+
+  for (const check of missingBinaryChecks) {
+    switch (check.id) {
+      case "ffmpeg":
+      case "ffprobe":
+      case "ffplay":
+        registerTarget({
+          id: "ffmpeg",
+          kind: "brew",
+          packageName: "ffmpeg",
+          reason: "Installs FFmpeg, ffprobe, and ffplay for media workflows.",
+          checkIds: [check.id],
+        });
+        break;
+      case "yt-dlp":
+        registerTarget({
+          id: "yt-dlp",
+          kind: "brew",
+          packageName: "yt-dlp",
+          reason: "Installs yt-dlp for YouTube and YouTube Music downloads.",
+          checkIds: [check.id],
+        });
+        break;
+      case "qpdf":
+        registerTarget({
+          id: "qpdf",
+          kind: "brew",
+          packageName: "qpdf",
+          reason: "Installs qpdf for advanced PDF actions.",
+          checkIds: [check.id],
+        });
+        break;
+      case "pdftotext":
+      case "pdftoppm":
+        registerTarget({
+          id: "poppler",
+          kind: "brew",
+          packageName: "poppler",
+          reason: "Installs Poppler tools for PDF text extraction and rendering.",
+          checkIds: [check.id],
+        });
+        break;
+      case "tesseract":
+        registerTarget({
+          id: "tesseract",
+          kind: "brew",
+          packageName: "tesseract",
+          reason: "Installs Tesseract OCR for document recognition.",
+          checkIds: [check.id],
+        });
+        break;
+      case "7z":
+        registerTarget({
+          id: "7z",
+          kind: "brew",
+          packageName: "p7zip",
+          reason: "Installs 7-Zip support for archive workflows.",
+          checkIds: [check.id],
+        });
+        break;
+      case "zip":
+      case "unzip":
+      case "tar":
+      case "gzip":
+      case "gunzip":
+        skipped.push({
+          id: check.id,
+          reason: "This archive utility is not auto-installed by `doctor --fix`. Install Xcode Command Line Tools or your preferred package manager if needed.",
+        });
+        break;
+      default:
+        skipped.push({
+          id: check.id,
+          reason: "This dependency does not have an automatic install target yet.",
+        });
+        break;
+    }
+  }
+
+  return {
+    supported: true,
+    manager: "brew",
+    targets: [...targets.values()],
+    skipped,
+  };
+}
+
+async function runDoctorFix(
+  checks: readonly DoctorCheck[],
+  options: {
+    json: boolean;
+  },
+): Promise<DoctorFixExecution> {
+  const plan = buildDoctorFixPlan(checks);
+
+  if (!plan.supported) {
+    return {
+      attempted: false,
+      supported: false,
+      installed: [],
+      failed: [],
+      skipped: plan.skipped,
+      reason: plan.reason,
+    };
+  }
+
+  if (plan.targets.length === 0) {
+    return {
+      attempted: false,
+      supported: true,
+      manager: plan.manager,
+      installed: [],
+      failed: [],
+      skipped: plan.skipped,
+      reason: "No supported missing dependencies need to be installed.",
+    };
+  }
+
+  const brewProbe = await probeBinary("brew", ["--version"]);
+  if (!brewProbe.available) {
+    return {
+      attempted: false,
+      supported: true,
+      manager: "brew",
+      installed: [],
+      failed: [],
+      skipped: [
+        ...plan.skipped,
+        ...plan.targets.map((target) => ({
+          id: target.id,
+          reason: "Homebrew is required for `autocli doctor --fix` on macOS. Install Homebrew first, then retry.",
+        })),
+      ],
+      reason: "Homebrew is required for automatic installs on macOS.",
+    };
+  }
+
+  const installed: DoctorFixTarget[] = [];
+  const failed: DoctorFixExecution["failed"] = [];
+
+  const brewTargets = plan.targets.filter((target) => target.kind === "brew");
+  const brewCaskTargets = plan.targets.filter((target) => target.kind === "brew-cask");
+
+  if (brewTargets.length > 0) {
+    const result = await runInstallCommand(
+      "brew",
+      ["install", ...brewTargets.map((target) => target.packageName)],
+      options.json,
+    );
+
+    if (result.ok) {
+      installed.push(...brewTargets);
+    } else {
+      for (const target of brewTargets) {
+        failed.push({
+          ...target,
+          error: result.error,
+        });
+      }
+    }
+  }
+
+  if (brewCaskTargets.length > 0) {
+    const result = await runInstallCommand(
+      "brew",
+      ["install", "--cask", ...brewCaskTargets.map((target) => target.packageName)],
+      options.json,
+    );
+
+    if (result.ok) {
+      installed.push(...brewCaskTargets);
+    } else {
+      for (const target of brewCaskTargets) {
+        failed.push({
+          ...target,
+          error: result.error,
+        });
+      }
+    }
+  }
+
+  return {
+    attempted: installed.length > 0 || failed.length > 0,
+    supported: true,
+    manager: "brew",
+    installed,
+    failed,
+    skipped: plan.skipped,
+    ...(failed.length > 0 ? { reason: "Some packages could not be installed automatically." } : {}),
+  };
+}
+
+async function runInstallCommand(
+  command: string,
+  args: string[],
+  jsonMode: boolean,
+): Promise<{ ok: boolean; error: string }> {
+  return await new Promise((resolve) => {
+    const child = spawn(command, args, {
+      stdio: jsonMode ? ["ignore", "pipe", "pipe"] : "inherit",
+    });
+
+    let stdout = "";
+    let stderr = "";
+
+    if (jsonMode && child.stdout) {
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk.toString();
+      });
+    }
+
+    if (jsonMode && child.stderr) {
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk.toString();
+      });
+    }
+
+    child.on("error", (error) => {
+      resolve({
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    });
+
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve({
+          ok: true,
+          error: "",
+        });
+        return;
+      }
+
+      const detail = compactInstallError(stderr || stdout) || `Command exited with code ${code ?? "unknown"}.`;
+      resolve({
+        ok: false,
+        error: detail,
+      });
+    });
+  });
+}
+
+function compactInstallError(text: string): string {
+  const normalized = text
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(-6)
+    .join(" ");
+  return normalized;
+}
+
+function printDoctorFixSummary(result: DoctorFixExecution): void {
+  if (!result.supported) {
+    console.log(`doctor --fix: ${result.reason ?? "Automatic installs are not supported on this platform."}`);
+    return;
+  }
+
+  if (!result.attempted && result.installed.length === 0 && result.failed.length === 0) {
+    console.log(`doctor --fix: ${result.reason ?? "Nothing supported needed to be installed."}`);
+    return;
+  }
+
+  const parts = [
+    `installed ${result.installed.length}`,
+    `failed ${result.failed.length}`,
+    `skipped ${result.skipped.length}`,
+  ];
+  console.log(`doctor --fix (${result.manager ?? "auto"}): ${parts.join(", ")}.`);
+
+  for (const target of result.installed) {
+    console.log(`- installed ${target.packageName} (${target.reason})`);
+  }
+
+  for (const target of result.failed) {
+    console.log(`- failed ${target.packageName}: ${target.error}`);
+  }
+
+  for (const target of result.skipped) {
+    console.log(`- skipped ${target.id}: ${target.reason}`);
+  }
 }
 
 function asNumber(value: unknown): number | undefined {
