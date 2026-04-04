@@ -43,6 +43,7 @@
     "prepare": "bun run build",
     "prepublishOnly": "bun run typecheck && bun test && bun run build",
     "link:global": "bun run scripts/link-global.ts",
+    "generate:skill-providers": "bun run scripts/generate-skill-provider-references.ts",
     "typecheck": "tsc --noEmit",
     "build": "bun build --target=node --format=esm --external tlsclientwrapper --external playwright-core --outdir dist ./src/index.ts",
     "build:bin": "bun build --compile --target=bun --external playwright-core --outfile bin/autocli ./src/index.ts",

@@ -2,6 +2,8 @@
 
 Use this file when you need to choose the right AutoCLI surface quickly.
 
+If the user intent is already concrete, read [recipes.md](recipes.md) first and run the direct command instead of exploring.
+
 ## Global Commands
 
 - `login --browser`: open AutoCLI's shared browser profile for interactive sign-in
@@ -44,9 +46,10 @@ Use this file when you need to choose the right AutoCLI surface quickly.
 ## Safe Agent Defaults
 
 - Use `--json` unless the user clearly wants formatted terminal output.
+- Prefer one direct command before discovery commands.
 - Prefer read-only commands before mutations.
 - Use `capabilities --json` before risky or unfamiliar provider actions so the agent can see auth type, stability, browser support, and read/write boundaries.
-- Use `doctor` and `sessions` before assuming auth is broken.
+- Use `doctor` and `sessions` only after a direct command fails or when the task is explicitly diagnostic.
 - If the user can sign in interactively, prefer `autocli login --browser` and then the provider's `login --browser`.
 - If a provider is authenticated but missing a modeled action, try `autocli tools http <provider-or-domain> inspect` before inventing custom automation.
 - For nested help, use `autocli <category> --help` then `autocli <category> <provider> --help`.
