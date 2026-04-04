@@ -1,5 +1,5 @@
 import { AutoCliError } from "../../../errors.js";
-import { runBrowserActionPlan } from "../../../utils/browser-cookie-login.js";
+import { runFirstClassBrowserAction } from "../../../core/runtime/browser-action-runtime.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { parseAmazonProductTarget } from "../../../utils/targets.js";
 import { getPlatformHomeUrl, getPlatformOrigin } from "../../config.js";
@@ -970,7 +970,11 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     timeoutSeconds: number | undefined,
     action: (page: PlaywrightPage, source: "headless" | "profile" | "shared") => Promise<T>,
   ): Promise<T> {
-    return runBrowserActionPlan({
+    return (
+      await runFirstClassBrowserAction({
+      platform: this.platform,
+      action: "browser-action",
+      actionLabel: "browser action",
       targetUrl,
       timeoutSeconds: timeoutSeconds ?? 60,
       initialCookies: session.cookieJar.cookies,
@@ -991,8 +995,9 @@ export class AmazonAdapter extends BaseShoppingAdapter {
           announceLabel: `Reusing the shared AutoCLI browser profile for Amazon: ${targetUrl}`,
         },
       ],
-      action,
-    });
+      actionFn: action,
+    })
+    ).value;
   }
 
   private async loadAmazonCartFromPage(page: PlaywrightPage, session: PlatformSession): Promise<AmazonCartData> {

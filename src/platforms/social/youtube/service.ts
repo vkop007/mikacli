@@ -6,7 +6,10 @@ import { basename, join, resolve } from "node:path";
 
 import { AutoCliError, isAutoCliError } from "../../../errors.js";
 import { maybeAutoRefreshSession } from "../../../utils/autorefresh.js";
-import { runBrowserActionPlan } from "../../../utils/browser-cookie-login.js";
+import {
+  runFirstClassBrowserAction,
+  withBrowserActionMetadata,
+} from "../../../core/runtime/browser-action-runtime.js";
 import { getPlatformHomeUrl, getPlatformOrigin } from "../../config.js";
 import { normalizeWhitespace } from "../../data/shared/text.js";
 import { parseYouTubeChannelTarget, parseYouTubePlaylistTarget, parseYouTubeTarget } from "../../../utils/targets.js";
@@ -231,7 +234,10 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     const timeoutSeconds = input.browserTimeoutSeconds ?? 900;
     const madeForKids = input.madeForKids ?? false;
 
-    const result = await runBrowserActionPlan<YouTubeUploadResult>({
+    const execution = await runFirstClassBrowserAction<YouTubeUploadResult>({
+      platform: this.platform,
+      action: "upload",
+      actionLabel: "upload",
       targetUrl: YOUTUBE_STUDIO_ORIGIN,
       timeoutSeconds,
       initialCookies: session.cookieJar.cookies,
@@ -248,7 +254,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
           announceLabel: `Opening shared AutoCLI browser profile for YouTube Studio upload: ${YOUTUBE_STUDIO_ORIGIN}`,
         },
       ],
-      action: async (page, source) => {
+      actionFn: async (page, source) => {
         await this.ensureStudioBrowserAuthenticated(page);
         await this.openStudioUploadPage(page);
         await this.attachStudioUploadFile(page, input.mediaPath);
@@ -280,8 +286,9 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         };
       },
     });
+    const result = execution.value;
 
-    return {
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: session.account,
@@ -300,9 +307,8 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         thumbnailPath: input.thumbnailPath,
         studioUrl: result.studioUrl,
         videoUrl: result.videoUrl,
-        source: result.source,
       },
-    };
+    }, execution);
   }
 
   async download(input: {

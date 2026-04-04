@@ -1,5 +1,5 @@
 import { AutoCliError } from "../../../errors.js";
-import { runBrowserActionPlan } from "../../../utils/browser-cookie-login.js";
+import { runFirstClassBrowserAction } from "../../../core/runtime/browser-action-runtime.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { parseFlipkartProductTarget } from "../../../utils/targets.js";
 import { getPlatformHomeUrl, getPlatformOrigin } from "../../config.js";
@@ -670,20 +670,25 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     timeoutSeconds: number | undefined,
     action: (page: PlaywrightPage) => Promise<T>,
   ): Promise<T> {
-    return runBrowserActionPlan({
+    return (
+      await runFirstClassBrowserAction({
+      platform: this.platform,
+      action: "browser-action",
+      actionLabel: "browser action",
       targetUrl: `${FLIPKART_ORIGIN}/viewcart`,
       timeoutSeconds: timeoutSeconds ?? 60,
       initialCookies: session.cookieJar.cookies,
       headless: true,
       userAgent: FLIPKART_USER_AGENT,
       locale: "en-US",
-      steps: [{ source: "headless" }],
-      action: async (page) => {
+      strategy: "headless-only",
+      actionFn: async (page) => {
         await page.waitForTimeout(2_000);
         this.assertFlipkartBrowserPageState(await page.locator("body").innerText(), page.url());
         return action(page);
       },
-    });
+    })
+    ).value;
   }
 
   private assertFlipkartBrowserPageState(bodyText: string, finalUrl: string): void {

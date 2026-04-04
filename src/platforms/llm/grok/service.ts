@@ -8,7 +8,7 @@ import { ModuleClient, SessionClient } from "tlsclientwrapper";
 
 import { ensureParentDirectory, getCachePath } from "../../../config.js";
 import { AutoCliError, isAutoCliError } from "../../../errors.js";
-import { runBrowserActionPlan } from "../../../utils/browser-cookie-login.js";
+import { runFirstClassBrowserAction } from "../../../core/runtime/browser-action-runtime.js";
 import { normalizeWhitespace } from "../../data/shared/text.js";
 
 import type { SessionHttpClient } from "../../../utils/http-client.js";
@@ -746,16 +746,20 @@ export class GrokService {
     },
   ): Promise<ParsedGrokConversationStream> {
     const initialCookies = (await client.jar.getCookies(GROK_HOME_URL)).map((cookie) => cookie.toJSON());
-    const result = await runBrowserActionPlan<{
+    const execution = await runFirstClassBrowserAction<{
       stream: string;
       cookies: unknown[];
     }>({
+      platform: "grok",
+      action: "text",
+      actionLabel: "text prompt",
       targetUrl: GROK_HOME_URL,
       timeoutSeconds: input.timeoutSeconds ?? 180,
       initialCookies,
       headless: true,
       userAgent: GROK_USER_AGENT,
       locale: "en-US",
+      mode: "fallback",
       steps: [
         {
           source: "headless",
@@ -766,7 +770,7 @@ export class GrokService {
           announceLabel: `Opening shared AutoCLI browser profile for Grok: ${GROK_HOME_URL}`,
         },
       ],
-      action: async (page) => {
+      actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
         const stream = await this.submitChatPromptInBrowser(page, input.prompt, input.timeoutSeconds);
         return {
@@ -775,6 +779,7 @@ export class GrokService {
         };
       },
     });
+    const result = execution.value;
 
     await syncBrowserCookiesToJar(client.jar, result.cookies);
     return parseGrokConversationStream(result.stream);
@@ -793,19 +798,23 @@ export class GrokService {
     parsed?: ParsedGrokConversationStream;
   }> {
     const initialCookies = (await client.jar.getCookies(GROK_HOME_URL)).map((cookie) => cookie.toJSON());
-    const result = await runBrowserActionPlan<{
+    const execution = await runFirstClassBrowserAction<{
       assetUrls: string[];
       collectedAssetUrls: string[];
       pageUrl: string;
       stream?: string;
       cookies: unknown[];
     }>({
+      platform: "grok",
+      action: input.mode,
+      actionLabel: `${input.mode} generation`,
       targetUrl: GROK_IMAGINE_URL,
       timeoutSeconds: input.timeoutSeconds ?? (input.mode === "video" ? 180 : 120),
       initialCookies,
       headless: true,
       userAgent: GROK_USER_AGENT,
       locale: "en-US",
+      mode: "required",
       steps: [
         {
           source: "headless",
@@ -816,7 +825,7 @@ export class GrokService {
           announceLabel: `Opening shared AutoCLI browser profile for Grok Imagine: ${GROK_IMAGINE_URL}`,
         },
       ],
-      action: async (page) => {
+      actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
         const assetCollector = createGrokGeneratedAssetCollector(page, input.mode);
         const streamPromise = this.captureBrowserConversationStream(
@@ -840,6 +849,7 @@ export class GrokService {
         }
       },
     });
+    const result = execution.value;
 
     await syncBrowserCookiesToJar(client.jar, result.cookies);
     const parsed = result.stream ? parseGrokConversationStream(result.stream) : undefined;
