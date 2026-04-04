@@ -1,6 +1,7 @@
 import pc from "picocolors";
 
-import { errorToJson, isAutoCliError } from "../errors.js";
+import { isAutoCliError } from "../errors.js";
+import { serializeCliError } from "./error-recovery.js";
 
 export function printJson(value: unknown): void {
   console.log(JSON.stringify(value, null, 2));
@@ -174,47 +175,35 @@ function padAnsi(value: string, width: number): string {
 }
 
 export function printError(error: unknown, json: boolean): never {
+  const serialized = serializeCliError(error);
   if (json) {
-    printJson(errorToJson(error));
+    printJson(serialized);
   } else if (isAutoCliError(error)) {
-    console.error(`${pc.red("error")} ${error.message}`);
+    console.error(`${pc.red("error")} ${serialized.error.message}`);
 
     if (error.details && Object.keys(error.details).length > 0) {
       console.error(pc.dim(JSON.stringify(error.details, null, 2)));
     }
 
-    const hint = buildErrorHint(error.code);
-    if (hint) {
-      console.error(pc.dim(`hint: ${hint}`));
+    if (serialized.error.nextCommand) {
+      console.error(`next: ${serialized.error.nextCommand}`);
+    }
+
+    if (serialized.error.hint) {
+      console.error(pc.dim(`hint: ${serialized.error.hint}`));
     }
   } else if (error instanceof Error) {
-    console.error(`${pc.red("error")} ${error.message}`);
+    console.error(`${pc.red("error")} ${serialized.error.message}`);
+    if (serialized.error.nextCommand) {
+      console.error(`next: ${serialized.error.nextCommand}`);
+    }
+    if (serialized.error.hint) {
+      console.error(pc.dim(`hint: ${serialized.error.hint}`));
+    }
   } else {
     console.error(`${pc.red("error")} Unknown error`);
   }
 
   process.exitCode = isAutoCliError(error) ? error.exitCode : 1;
   throw error;
-}
-
-function buildErrorHint(code: string): string | undefined {
-  switch (code) {
-    case "SESSION_NOT_FOUND":
-      return "Use `autocli sessions` to inspect saved records, or rerun the provider `login` command to create one.";
-    case "SESSION_EXPIRED":
-    case "SESSION_INVALID":
-      return "Refresh the account with the provider `login` command. `autocli login --browser` can also refresh shared browser identity first.";
-    case "BROWSER_LOGIN_TIMEOUT":
-      return "Try again with a longer timeout like `--browser-timeout 300` and finish the sign-in flow before the timer ends.";
-    case "TOOLS_HTTP_SESSION_REQUIRED":
-      return "Log in to the provider first, or retry the command with `--browser` after running `autocli login --browser`.";
-    case "TOOLS_HTTP_TARGET_AMBIGUOUS":
-    case "TOOLS_HTTP_PLATFORM_REQUIRED":
-      return "Re-run the command with an explicit provider, for example `--platform github`.";
-    case "API_TOKEN_REQUIRED":
-    case "BOT_TOKEN_REQUIRED":
-      return "Save the required token with the provider `login` command, then retry the action.";
-    default:
-      return undefined;
-  }
 }

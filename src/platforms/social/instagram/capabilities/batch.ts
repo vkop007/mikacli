@@ -1,8 +1,8 @@
 import { Command } from "commander";
 
-import { errorToJson } from "../../../../errors.js";
 import { Logger } from "../../../../logger.js";
 import { printJson } from "../../../../utils/output.js";
+import { serializeCliError } from "../../../../utils/error-recovery.js";
 import { readBatchTargets } from "../../../../utils/batch.js";
 import { resolveCommandContext } from "../../../../utils/cli.js";
 import { instagramAdapter } from "../adapter.js";
@@ -46,7 +46,7 @@ async function runInstagramBatchCommand(input: {
           url: result.url,
         });
       } catch (error) {
-        const serialized = errorToJson(error).error;
+        const serialized = serializeCliError(error).error;
         results.push({
           target,
           ok: false,

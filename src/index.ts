@@ -2,9 +2,9 @@
 
 import pc from "picocolors";
 
-import { errorToJson } from "./errors.js";
 import { assertCategoryOnlyInvocation, createProgram } from "./program.js";
 import { printJson } from "./utils/output.js";
+import { serializeCliError } from "./utils/error-recovery.js";
 
 async function main(): Promise<void> {
   const program = createProgram();
@@ -14,16 +14,19 @@ async function main(): Promise<void> {
     await program.parseAsync(process.argv);
   } catch (error) {
     const wantsJson = process.argv.includes("--json");
+    const serialized = serializeCliError(error);
     if (wantsJson) {
-      printJson(errorToJson(error));
+      printJson(serialized);
       process.exitCode = 1;
       return;
     }
 
-    if (error instanceof Error) {
-      console.error(`${pc.red("error")} ${error.message}`);
-    } else {
-      console.error(`${pc.red("error")} Unknown error`);
+    console.error(`${pc.red("error")} ${serialized.error.message}`);
+    if (serialized.error.nextCommand) {
+      console.error(`next: ${serialized.error.nextCommand}`);
+    }
+    if (serialized.error.hint) {
+      console.error(pc.dim(`hint: ${serialized.error.hint}`));
     }
 
     process.exitCode = 1;
