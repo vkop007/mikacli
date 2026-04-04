@@ -24,9 +24,9 @@ Interact with YouTube using an imported browser session for public lookup, engag
 
 ## Fast Start
 
+- `autocli social youtube login`
 - `autocli social youtube login --cookies ./cookiestest/youtube.json`
 - `autocli social youtube upload ./video.mp4 --title "AutoCLI upload" --visibility private`
-- `autocli social youtube upload ./video.mp4 --title "AutoCLI upload" --description "Uploaded from AutoCLI" --tags cli,automation --visibility unlisted`
 - `autocli social youtube capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli social youtube login [options]
 ```
 
-Import cookies and save the YouTube session for future headless use
+Save the YouTube session for future headless use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `download`

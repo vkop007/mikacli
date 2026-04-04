@@ -12,6 +12,7 @@ export const confluencePlatformDefinition: PlatformDefinition = {
   adapter: confluenceAdapter,
   capabilities: confluenceCapabilities,
   examples: [
+    "autocli confluence login --site https://your-workspace.atlassian.net/wiki",
     "autocli confluence login --cookies ./confluence.cookies.json --site https://your-workspace.atlassian.net/wiki",
     "autocli confluence me",
     'autocli confluence search "release process"',

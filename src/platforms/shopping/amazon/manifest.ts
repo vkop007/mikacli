@@ -12,6 +12,7 @@ export const amazonPlatformDefinition: PlatformDefinition = {
   adapter: amazonAdapter,
   capabilities: createShoppingCapabilities(amazonAdapter),
   examples: [
+    "autocli shopping amazon login",
     "autocli shopping amazon login --cookies ./amazon.cookies.json",
     'autocli shopping amazon search "wireless mouse" --limit 5',
     "autocli shopping amazon product B0B296NTFV",

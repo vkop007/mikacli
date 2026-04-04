@@ -12,6 +12,7 @@ export const notionPlatformDefinition: PlatformDefinition = {
   adapter: notionAdapter,
   capabilities: notionCapabilities,
   examples: [
+    "autocli notion login",
     "autocli notion login --cookies ./notion.cookies.json",
     "autocli notion me",
     'autocli notion search "roadmap"',

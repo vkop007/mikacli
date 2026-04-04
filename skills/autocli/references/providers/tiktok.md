@@ -24,9 +24,9 @@ Interact with TikTok using an imported browser session, with session/read flows 
 
 ## Fast Start
 
+- `autocli social tiktok login`
 - `autocli social tiktok login --cookies ./tiktok.cookies.json`
 - `autocli social tiktok post ./clip.mp4 --caption "Posting from AutoCLI"`
-- `autocli social tiktok like https://www.tiktok.com/@user/video/7486727777941556488`
 - `autocli social tiktok capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli social tiktok login [options]
 ```
 
-Import cookies and save the TikTok session for future headless use
+Save the TikTok session for future headless use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `post`

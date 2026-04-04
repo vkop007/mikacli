@@ -24,9 +24,9 @@ Use a saved GitLab web session to inspect projects, issues, and merge requests
 
 ## Fast Start
 
+- `autocli developer gitlab login`
 - `autocli developer gitlab login --cookies ./gitlab.cookies.json`
 - `autocli developer gitlab login --cookies ./gitlab.cookies.json --account work`
-- `autocli developer gitlab me`
 - `autocli developer gitlab capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli developer gitlab login [options]
 ```
 
-Import cookies and save the GitLab web session for future CLI use
+Save the GitLab web session for future CLI use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `me`

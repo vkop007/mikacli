@@ -24,9 +24,9 @@ Use a saved Confluence web session to search, inspect, and edit your workspace p
 
 ## Fast Start
 
+- `autocli developer confluence login --site https://your-workspace.atlassian.net/wiki`
 - `autocli developer confluence login --cookies ./confluence.cookies.json --site https://your-workspace.atlassian.net/wiki`
 - `autocli developer confluence me`
-- `autocli developer confluence search "release process"`
 - `autocli developer confluence capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli developer confluence login [options]
 ```
 
-Import cookies and save the Confluence web session for future CLI use
+Save the Confluence web session for future CLI use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 - `--site <url>`: Confluence site URL, like https://your-workspace.atlassian.net/wiki
 

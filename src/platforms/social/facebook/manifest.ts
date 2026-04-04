@@ -13,6 +13,7 @@ export const facebookPlatformDefinition: PlatformDefinition = {
   adapter: facebookAdapter,
   capabilities: facebookCapabilities,
   examples: [
+    "autocli facebook login",
     "autocli facebook login --cookies ./facebook.cookies.json",
     'autocli facebook post "Launching from AutoCLI"',
     "autocli facebook like https://www.facebook.com/permalink.php?story_fbid=456&id=123",

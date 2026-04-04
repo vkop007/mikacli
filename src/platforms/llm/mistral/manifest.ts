@@ -12,8 +12,9 @@ export const mistralPlatformDefinition: PlatformDefinition = {
   adapter: mistralAdapter,
   capabilities: createCookieLlmCapabilities(mistralAdapter),
   examples: [
-    'autocli mistral text "Draft a concise product changelog"',
+    "autocli mistral login",
     "autocli mistral login --cookies ./mistral.cookies.json",
+    'autocli mistral text "Draft a concise product changelog"',
     'autocli mistral text "Explain MoE models simply"',
   ],
 };

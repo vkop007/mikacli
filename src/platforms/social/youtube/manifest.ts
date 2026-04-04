@@ -13,6 +13,7 @@ export const youtubePlatformDefinition: PlatformDefinition = {
   adapter: youtubeAdapter,
   capabilities: youtubeCapabilities,
   examples: [
+    "autocli social youtube login",
     "autocli social youtube login --cookies ./cookiestest/youtube.json",
     "autocli social youtube upload ./video.mp4 --title \"AutoCLI upload\" --visibility private",
     "autocli social youtube upload ./video.mp4 --title \"AutoCLI upload\" --description \"Uploaded from AutoCLI\" --tags cli,automation --visibility unlisted",

@@ -24,9 +24,9 @@ Interact with Z.ai using imported browser cookies, with text flows strongest tod
 
 ## Fast Start
 
+- `autocli llm zai login`
 - `autocli llm zai login --cookies ./zai.cookies.json`
 - `autocli llm zai text "Outline a landing page for AutoCLI"`
-- `autocli llm zai video "Minimal product teaser with neon terminal UI"`
 - `autocli llm zai capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli llm zai login [options]
 ```
 
-Import cookies and save the Z.ai session for future CLI use
+Save the Z.ai session for future CLI use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `status`

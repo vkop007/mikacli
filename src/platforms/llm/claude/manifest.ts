@@ -12,6 +12,7 @@ export const claudePlatformDefinition: PlatformDefinition = {
   adapter: claudeAdapter,
   capabilities: createCookieLlmCapabilities(claudeAdapter),
   examples: [
+    "autocli claude login",
     "autocli claude login --cookies ./claude.cookies.json",
     'autocli claude text "Summarize this changelog"',
     'autocli claude image ./diagram.png --caption "Explain this architecture"',

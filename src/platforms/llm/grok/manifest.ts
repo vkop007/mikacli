@@ -12,6 +12,7 @@ export const grokPlatformDefinition: PlatformDefinition = {
   adapter: grokAdapter,
   capabilities: createGrokCapabilities(grokAdapter),
   examples: [
+    "autocli llm grok login",
     "autocli llm grok login --cookies ./grok.cookies.json",
     'autocli llm grok text "Summarize this sprint"',
     'autocli llm grok text "Summarize this sprint" --browser',

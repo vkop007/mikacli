@@ -12,6 +12,7 @@ export const jiraPlatformDefinition: PlatformDefinition = {
   adapter: jiraAdapter,
   capabilities: jiraCapabilities,
   examples: [
+    "autocli jira login --site https://your-workspace.atlassian.net",
     "autocli jira login --cookies ./jira.cookies.json --site https://your-workspace.atlassian.net",
     "autocli jira me",
     "autocli jira projects",

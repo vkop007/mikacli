@@ -12,6 +12,7 @@ export const linearPlatformDefinition: PlatformDefinition = {
   adapter: linearAdapter,
   capabilities: linearCapabilities,
   examples: [
+    "autocli linear login",
     "autocli linear login --cookies ./linear.cookies.json",
     "autocli linear me",
     "autocli linear teams",

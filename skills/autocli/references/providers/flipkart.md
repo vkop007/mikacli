@@ -24,9 +24,9 @@ Search Flipkart, inspect products, and control account data like orders, wishlis
 
 ## Fast Start
 
+- `autocli shopping flipkart login`
 - `autocli shopping flipkart login --cookies ./flipkart.cookies.json`
 - `autocli shopping flipkart search "wireless mouse" --limit 5`
-- `autocli shopping flipkart product ACCH9SPTRHTWG8QH`
 - `autocli shopping flipkart capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli shopping flipkart login [options]
 ```
 
-Import cookies and save the Flipkart session for future CLI use
+Save the Flipkart session for future CLI use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `status`

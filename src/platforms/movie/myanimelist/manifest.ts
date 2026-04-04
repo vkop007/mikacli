@@ -12,6 +12,7 @@ export const myAnimeListPlatformDefinition: PlatformDefinition = {
   adapter: myAnimeListAdapter,
   capabilities: createMovieCapabilities(myAnimeListAdapter),
   examples: [
+    "autocli myanimelist login",
     'autocli myanimelist search "naruto"',
     "autocli myanimelist title 20",
     "autocli myanimelist info https://myanimelist.net/anime/20/Naruto",

@@ -24,9 +24,9 @@ Interact with ChatGPT using the browserless web flow, with optional cookie sessi
 
 ## Fast Start
 
-- `autocli llm chatgpt text "Hello my name is Justine"`
+- `autocli llm chatgpt login`
 - `autocli llm chatgpt login --cookies ./chatgpt.cookies.json`
-- `autocli llm chatgpt image ./photo.png --caption "Gamer portrait"`
+- `autocli llm chatgpt text "Hello my name is Justine"`
 - `autocli llm chatgpt capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli llm chatgpt login [options]
 ```
 
-Import cookies and save the ChatGPT session for future CLI use
+Save the ChatGPT session for future CLI use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `status`

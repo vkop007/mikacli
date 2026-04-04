@@ -13,6 +13,7 @@ export const tiktokPlatformDefinition: PlatformDefinition = {
   adapter: tiktokAdapter,
   capabilities: tiktokCapabilities,
   examples: [
+    "autocli tiktok login",
     "autocli tiktok login --cookies ./tiktok.cookies.json",
     'autocli tiktok post ./clip.mp4 --caption "Posting from AutoCLI"',
     "autocli tiktok like https://www.tiktok.com/@user/video/7486727777941556488",

@@ -12,6 +12,7 @@ export const flipkartPlatformDefinition: PlatformDefinition = {
   adapter: flipkartAdapter,
   capabilities: createShoppingCapabilities(flipkartAdapter),
   examples: [
+    "autocli shopping flipkart login",
     "autocli shopping flipkart login --cookies ./flipkart.cookies.json",
     'autocli shopping flipkart search "wireless mouse" --limit 5',
     "autocli shopping flipkart product ACCH9SPTRHTWG8QH",

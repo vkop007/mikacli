@@ -24,9 +24,9 @@ Interact with Gemini using imported browser cookies
 
 ## Fast Start
 
+- `autocli llm gemini login`
 - `autocli llm gemini login --cookies ./gemini.cookies.json`
 - `autocli llm gemini text "Draft a polite follow-up email"`
-- `autocli llm gemini image ./diagram.png --caption "Explain this architecture"`
 - `autocli llm gemini capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli llm gemini login [options]
 ```
 
-Import cookies and save the Gemini session for future CLI use
+Save the Gemini session for future CLI use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `status`

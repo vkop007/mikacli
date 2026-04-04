@@ -13,6 +13,7 @@ export const instagramPlatformDefinition: PlatformDefinition = {
   adapter: instagramAdapter,
   capabilities: instagramCapabilities,
   examples: [
+    "autocli instagram login",
     "autocli instagram login --cookies ./instagram.cookies.txt",
     'autocli instagram search "blackpink"',
     "autocli instagram mediaid https://www.instagram.com/p/SHORTCODE/",

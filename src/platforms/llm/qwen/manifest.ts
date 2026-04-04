@@ -12,6 +12,7 @@ export const qwenPlatformDefinition: PlatformDefinition = {
   adapter: qwenAdapter,
   capabilities: createQwenCapabilities(qwenAdapter),
   examples: [
+    "autocli qwen login",
     "autocli qwen login --cookies ./qwen.cookies.json",
     "autocli qwen login --cookies ./qwen.cookies.json --token <bearerToken>",
     'autocli qwen text "Explain retrieval-augmented generation"',

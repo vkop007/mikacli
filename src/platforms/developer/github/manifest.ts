@@ -13,6 +13,7 @@ export const githubPlatformDefinition: PlatformDefinition = {
   adapter: githubAdapter,
   capabilities: githubCapabilities,
   examples: [
+    "autocli github login",
     "autocli github login --cookies ./github.cookies.json",
     "autocli github me",
     "autocli github user torvalds",

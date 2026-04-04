@@ -13,6 +13,7 @@ export const gitlabPlatformDefinition: PlatformDefinition = {
   adapter: gitlabAdapter,
   capabilities: gitlabCapabilities,
   examples: [
+    "autocli gitlab login",
     "autocli gitlab login --cookies ./gitlab.cookies.json",
     "autocli gitlab login --cookies ./gitlab.cookies.json --account work",
     "autocli gitlab me",

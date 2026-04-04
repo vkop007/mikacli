@@ -24,9 +24,9 @@ Search Amazon, inspect product details, and validate imported shopping sessions 
 
 ## Fast Start
 
+- `autocli shopping amazon login`
 - `autocli shopping amazon login --cookies ./amazon.cookies.json`
 - `autocli shopping amazon search "wireless mouse" --limit 5`
-- `autocli shopping amazon product B0B296NTFV`
 - `autocli shopping amazon capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli shopping amazon login [options]
 ```
 
-Import cookies and save the Amazon session for future CLI use
+Save the Amazon session for future CLI use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `status`

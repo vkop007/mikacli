@@ -24,9 +24,9 @@ Interact with Facebook using an imported browser session, with validation and re
 
 ## Fast Start
 
+- `autocli social facebook login`
 - `autocli social facebook login --cookies ./facebook.cookies.json`
 - `autocli social facebook post "Launching from AutoCLI"`
-- `autocli social facebook like https://www.facebook.com/permalink.php?story_fbid=456&id=123`
 - `autocli social facebook capabilities --json`
 
 ## Default Command
@@ -48,7 +48,7 @@ Usage:
 autocli social facebook login [options]
 ```
 
-Import cookies and save the Facebook session for future headless use
+Save the Facebook session for future headless use. With no auth flags, AutoCLI opens browser login by default
 
 Options:
 
@@ -56,7 +56,7 @@ Options:
 - `--account <name>`: Optional saved alias instead of the default session name
 - `--cookie-string <value>`: Raw cookie string instead of a file
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
-- `--browser`: Open a real browser, wait for manual login, then save the extracted session
+- `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
 ### `post`

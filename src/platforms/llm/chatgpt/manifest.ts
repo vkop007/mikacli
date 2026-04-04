@@ -12,8 +12,9 @@ export const chatgptPlatformDefinition: PlatformDefinition = {
   adapter: chatgptAdapter,
   capabilities: createCookieLlmCapabilities(chatgptAdapter),
   examples: [
-    'autocli chatgpt text "Hello my name is Justine"',
+    "autocli chatgpt login",
     "autocli chatgpt login --cookies ./chatgpt.cookies.json",
+    'autocli chatgpt text "Hello my name is Justine"',
     'autocli chatgpt image ./photo.png --caption "Gamer portrait"',
   ],
 };

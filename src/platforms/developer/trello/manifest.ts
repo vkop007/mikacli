@@ -12,6 +12,7 @@ export const trelloPlatformDefinition: PlatformDefinition = {
   adapter: trelloAdapter,
   capabilities: trelloCapabilities,
   examples: [
+    "autocli trello login",
     "autocli trello login --cookies ./trello.cookies.json",
     "autocli trello me",
     "autocli trello boards",

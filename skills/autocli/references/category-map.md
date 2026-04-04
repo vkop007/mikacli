@@ -36,7 +36,7 @@ If the user intent is already concrete, read [recipes.md](recipes.md) first and 
 | Needs | Meaning |
 | --- | --- |
 | `none` | Public or local functionality |
-| `cookies` | Use `login --cookies ...` or `login --browser` for a saved web session |
+| `cookies` | Use `login` for the default browser flow, or `login --cookies ...` to import a saved web session directly |
 | `cookies + local token` | Cookie-backed session plus a token stored in site storage |
 | `session` | Do one interactive login once, then reuse the saved user session |
 | `api token` | Save a personal or service token once with `login --token ...` |

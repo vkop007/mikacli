@@ -12,8 +12,8 @@ function createRedditCapabilities(): readonly PlatformCapability[] {
     createAdapterActionCapability({
       id: "login",
       command: "login",
-      description: "Import Reddit cookies or open a real browser and save the extracted Reddit session",
-      spinnerText: "Importing Reddit session...",
+      description: "Save the Reddit session for future CLI use. With no auth flags, AutoCLI opens browser login by default",
+      spinnerText: "Saving Reddit session...",
       successMessage: "Reddit session saved.",
       options: createCookieLoginOptions(),
       action: ({ options }) => redditAdapter.login(resolveCookieLoginInput(options)),
