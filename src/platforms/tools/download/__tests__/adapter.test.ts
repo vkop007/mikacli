@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { buildVideoFormatSelector, normalizeDownloadUrl, summarizeDownloadFormats } from "../adapter.js";
+import { buildVideoFormatSelector, normalizeDownloadUrl, summarizeDownloadFormats, summarizePlaylistEntries } from "../adapter.js";
 
 describe("download tools adapter helpers", () => {
   test("normalizes valid media URLs", () => {
@@ -26,6 +26,15 @@ describe("download tools adapter helpers", () => {
       { id: "137", label: "1080p mp4 video-only", ext: "mp4", height: 1080, fps: undefined, hasAudio: false },
       { id: "22", label: "720p mp4", ext: "mp4", height: 720, fps: undefined, hasAudio: true },
       { id: "18", label: "360p mp4", ext: "mp4", height: 360, fps: undefined, hasAudio: true },
+    ]);
+  });
+
+  test("summarizes playlist entries with a limit", () => {
+    expect(summarizePlaylistEntries([
+      { id: "a1", url: "https://example.com/watch?v=a1", title: "First", duration: 61, uploader: "Uploader A" },
+      { id: "a2", url: "https://example.com/watch?v=a2", title: "Second", duration: 125, channel: "Channel B" },
+    ], 1)).toEqual([
+      { id: "a1", url: "https://example.com/watch?v=a1", title: "First", durationLabel: "1:01", uploader: "Uploader A" },
     ]);
   });
 });

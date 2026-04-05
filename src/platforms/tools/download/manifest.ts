@@ -14,7 +14,9 @@ import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../c
 
 const EXAMPLES = [
   "autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "autocli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5",
   "autocli tools download video https://www.youtube.com/watch?v=dQw4w9WgXcQ --quality 720p",
+  "autocli tools download video 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 3",
   "autocli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3",
   "autocli tools download batch ./urls.txt --mode video --quality 720p",
   "autocli tools download video https://x.com/user/status/123 --platform x",
@@ -37,6 +39,7 @@ function buildInfoCommand(): Command {
   const command = new Command("info").description("Inspect media info and available formats for a URL");
   command.argument("<url>", "Media URL to inspect");
   addAuthOptions(command);
+  addPlaylistOptions(command);
   command.action(async (url: string, input: DownloadCommandOptions, cmd: Command) => {
     await runDownloadAction(cmd, "Loading media info...", "Media info loaded.", () =>
       downloadToolsAdapter.info({
@@ -44,6 +47,8 @@ function buildInfoCommand(): Command {
         cookiesPath: input.cookies,
         sessionPlatform: input.platform,
         account: input.account,
+        playlist: Boolean(input.playlist),
+        limit: input.limit,
       }));
   });
   return command;
@@ -54,6 +59,7 @@ function buildVideoCommand(): Command {
   command.argument("<url>", "Media URL to download");
   addAuthOptions(command);
   addOutputOptions(command);
+  addPlaylistOptions(command);
   command.option("--quality <resolution>", "Preferred max resolution, for example 720p or 1080");
   command.option("--format <selector>", "Custom yt-dlp format selector");
   command.action(async (url: string, input: DownloadCommandOptions, cmd: Command) => {
@@ -67,6 +73,8 @@ function buildVideoCommand(): Command {
         filenameTemplate: input.filename,
         quality: input.quality,
         format: input.format,
+        playlist: Boolean(input.playlist),
+        limit: input.limit,
       }));
   });
   return command;
@@ -77,6 +85,7 @@ function buildAudioCommand(): Command {
   command.argument("<url>", "Media URL to download");
   addAuthOptions(command);
   addOutputOptions(command);
+  addPlaylistOptions(command);
   command.option("--audio-format <format>", "Extracted audio format (default: mp3)", "mp3");
   command.option("--format <selector>", "Custom yt-dlp format selector");
   command.action(async (url: string, input: DownloadCommandOptions, cmd: Command) => {
@@ -90,6 +99,8 @@ function buildAudioCommand(): Command {
         filenameTemplate: input.filename,
         audioFormat: input.audioFormat,
         format: input.format,
+        playlist: Boolean(input.playlist),
+        limit: input.limit,
       }));
   });
   return command;
@@ -101,6 +112,7 @@ function buildBatchCommand(): Command {
   command.option("--mode <mode>", "Batch mode: info, video, or audio", parseBatchMode, "video");
   addAuthOptions(command);
   addOutputOptions(command);
+  addPlaylistOptions(command);
   command.option("--quality <resolution>", "Preferred max resolution in video mode, for example 720p or 1080");
   command.option("--format <selector>", "Custom yt-dlp format selector");
   command.option("--audio-format <format>", "Extracted audio format in audio mode (default: mp3)", "mp3");
@@ -241,6 +253,8 @@ async function executeBatchTarget(
       return downloadToolsAdapter.info({
         url: target,
         ...shared,
+        playlist: Boolean(input.playlist),
+        limit: input.limit,
       });
     case "audio":
       return downloadToolsAdapter.audio({
@@ -250,6 +264,8 @@ async function executeBatchTarget(
         filenameTemplate: input.filename,
         audioFormat: input.audioFormat,
         format: input.format,
+        playlist: Boolean(input.playlist),
+        limit: input.limit,
       });
     case "video":
       return downloadToolsAdapter.video({
@@ -259,6 +275,8 @@ async function executeBatchTarget(
         filenameTemplate: input.filename,
         quality: input.quality,
         format: input.format,
+        playlist: Boolean(input.playlist),
+        limit: input.limit,
       });
     default:
       throw new AutoCliError("DOWNLOAD_BATCH_MODE_INVALID", `Unknown batch mode "${mode}".`);
@@ -276,6 +294,11 @@ function addOutputOptions(command: Command): void {
   command.option("--filename <template>", "yt-dlp output template, for example '%(title)s [%(id)s].%(ext)s'");
 }
 
+function addPlaylistOptions(command: Command): void {
+  command.option("--playlist", "Allow playlist or multi-item URLs instead of forcing a single item");
+  command.option("--limit <number>", "Maximum playlist items to inspect or download (1-100)", parsePositiveInteger);
+}
+
 type DownloadCommandOptions = {
   cookies?: string;
   platform?: string;
@@ -287,6 +310,8 @@ type DownloadCommandOptions = {
   audioFormat?: string;
   mode?: DownloadBatchMode;
   failFast?: boolean;
+  playlist?: boolean;
+  limit?: number;
 };
 
 type DownloadBatchMode = "info" | "video" | "audio";
@@ -298,6 +323,15 @@ function parseBatchMode(value: string): DownloadBatchMode {
   }
 
   throw new Error('Expected --mode to be one of: info, video, audio.');
+}
+
+function parsePositiveInteger(value: string): number {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    throw new Error(`Invalid positive integer "${value}".`);
+  }
+
+  return parsed;
 }
 
 export const downloadPlatformDefinition: PlatformDefinition = {

@@ -8,6 +8,14 @@ type DownloadFormatSummary = {
   label: string;
 };
 
+type DownloadPlaylistItemSummary = {
+  id?: string;
+  url?: string;
+  title: string;
+  durationLabel?: string;
+  uploader?: string;
+};
+
 type DownloadBatchItem = {
   target: string;
   ok: boolean;
@@ -44,8 +52,18 @@ export function printDownloadResult(result: AdapterActionResult, json: boolean):
     console.log(`duration: ${data.durationLabel}`);
   }
 
+  if (typeof data.playlistCount === "number") {
+    console.log(`items: ${data.playlistCount}`);
+  }
+
   if (typeof data.outputPath === "string" && data.outputPath) {
     console.log(`file: ${data.outputPath}`);
+  }
+
+  if (Array.isArray(data.outputPaths) && data.outputPaths.length > 1) {
+    for (const outputPath of data.outputPaths as string[]) {
+      console.log(`file: ${outputPath}`);
+    }
   }
 
   if (typeof data.audioFormat === "string" && data.audioFormat) {
@@ -74,6 +92,24 @@ export function printDownloadResult(result: AdapterActionResult, json: boolean):
     }
     if (data.formats.length > 10) {
       console.log(`- ... ${data.formats.length - 10} more`);
+    }
+  }
+
+  if (Array.isArray(data.items) && data.items.length > 0) {
+    console.log("items:");
+    for (const item of data.items.slice(0, 10) as DownloadPlaylistItemSummary[]) {
+      const meta = [item.uploader, item.durationLabel].filter((value): value is string => Boolean(value));
+      const label = item.id ? `${item.title} (${item.id})` : item.title;
+      console.log(`- ${label}`);
+      if (meta.length > 0) {
+        console.log(`  ${meta.join(" • ")}`);
+      }
+      if (item.url) {
+        console.log(`  ${item.url}`);
+      }
+    }
+    if (data.items.length > 10) {
+      console.log(`- ... ${data.items.length - 10} more`);
     }
   }
 }

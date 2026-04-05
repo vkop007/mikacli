@@ -19,6 +19,8 @@ type DownloadAuthInput = {
 
 type DownloadInfoInput = DownloadAuthInput & {
   url: string;
+  playlist?: boolean;
+  limit?: number;
 };
 
 type DownloadVideoInput = DownloadAuthInput & {
@@ -27,6 +29,8 @@ type DownloadVideoInput = DownloadAuthInput & {
   filenameTemplate?: string;
   format?: string;
   quality?: string;
+  playlist?: boolean;
+  limit?: number;
 };
 
 type DownloadAudioInput = DownloadAuthInput & {
@@ -35,6 +39,8 @@ type DownloadAudioInput = DownloadAuthInput & {
   filenameTemplate?: string;
   format?: string;
   audioFormat?: string;
+  playlist?: boolean;
+  limit?: number;
 };
 
 type YtDlpFormat = {
@@ -58,7 +64,19 @@ type YtDlpInfo = {
   extractor?: string;
   webpage_url?: string;
   original_url?: string;
+  playlist_count?: number;
+  entries?: YtDlpPlaylistEntry[];
+  _type?: string;
   formats?: YtDlpFormat[];
+};
+
+type YtDlpPlaylistEntry = {
+  id?: string;
+  url?: string;
+  title?: string;
+  duration?: number;
+  channel?: string;
+  uploader?: string;
 };
 
 type PreparedAuth = {
@@ -76,6 +94,14 @@ export type DownloadFormatSummary = {
   hasAudio: boolean;
 };
 
+export type DownloadPlaylistItemSummary = {
+  id?: string;
+  url?: string;
+  title: string;
+  durationLabel?: string;
+  uploader?: string;
+};
+
 export class DownloadToolsAdapter {
   readonly platform = "download" as Platform;
   readonly displayName = "Download";
@@ -89,21 +115,26 @@ export class DownloadToolsAdapter {
 
     try {
       const { stdout } = await this.runProcess("yt-dlp", [
-        "--no-playlist",
         "--no-warnings",
         "--dump-single-json",
+        ...buildPlaylistArgs(input, { flat: true }),
         ...auth.args,
         url,
       ]);
       const info = parseYtDlpInfo(stdout);
-      const formats = summarizeDownloadFormats(info.formats ?? []);
+      const playlist = isPlaylistInfo(info);
+      const formats = playlist ? [] : summarizeDownloadFormats(info.formats ?? []);
+      const items = playlist ? summarizePlaylistEntries(info.entries ?? [], input.limit) : [];
+      const itemCount = typeof info.playlist_count === "number" ? info.playlist_count : items.length;
 
       return {
         ok: true,
         platform: this.platform,
         account: auth.source ?? "public",
         action: "info",
-        message: `Loaded download info${info.title ? ` for ${info.title}` : ""}.`,
+        message: playlist
+          ? `Loaded playlist info${info.title ? ` for ${info.title}` : ""}.`
+          : `Loaded download info${info.title ? ` for ${info.title}` : ""}.`,
         id: info.id,
         url: info.webpage_url ?? info.original_url ?? url,
         data: {
@@ -113,10 +144,13 @@ export class DownloadToolsAdapter {
           durationLabel: typeof info.duration === "number" ? formatDuration(info.duration) : null,
           uploader: info.uploader ?? null,
           extractor: info.extractor ?? null,
-          formats,
+          playlist,
+          playlistCount: playlist ? itemCount : undefined,
+          items: playlist ? items : undefined,
+          formats: playlist ? undefined : formats,
           meta: {
-            listKey: "formats",
-            count: formats.length,
+            listKey: playlist ? "items" : "formats",
+            count: playlist ? items.length : formats.length,
           },
           auth: auth.source ? { source: auth.source } : undefined,
         },
@@ -149,7 +183,6 @@ export class DownloadToolsAdapter {
 
     try {
       const { stdout, stderr } = await this.runProcess("yt-dlp", [
-        "--no-playlist",
         "--no-simulate",
         "--no-progress",
         "--no-warnings",
@@ -161,23 +194,30 @@ export class DownloadToolsAdapter {
         format,
         "--merge-output-format",
         "mp4",
+        ...buildPlaylistArgs(input),
         ...auth.args,
         url,
       ]);
-      const outputPath = extractDownloadedPath(stdout);
+      const outputPaths = extractDownloadedPaths(stdout);
+      const playlist = Boolean(input.playlist) || outputPaths.length > 1;
 
       return {
         ok: true,
         platform: this.platform,
         account: auth.source ?? "public",
         action: "video",
-        message: "Media download completed.",
+        message: playlist
+          ? `Playlist video download completed for ${outputPaths.length} item${outputPaths.length === 1 ? "" : "s"}.`
+          : "Media download completed.",
         url,
         data: {
-          outputPath,
+          outputPath: outputPaths[0],
+          outputPaths,
           outputDir,
           format,
           quality: normalizeQualityLabel(input.quality),
+          playlist,
+          limit: normalizePlaylistLimit(input.limit),
           stderr: stderr || undefined,
           auth: auth.source ? { source: auth.source } : undefined,
         },
@@ -211,7 +251,6 @@ export class DownloadToolsAdapter {
 
     try {
       const { stdout, stderr } = await this.runProcess("yt-dlp", [
-        "--no-playlist",
         "--no-simulate",
         "--no-progress",
         "--no-warnings",
@@ -224,23 +263,30 @@ export class DownloadToolsAdapter {
         "--extract-audio",
         "--audio-format",
         audioFormat,
+        ...buildPlaylistArgs(input),
         ...auth.args,
         url,
       ]);
-      const outputPath = extractDownloadedPath(stdout);
+      const outputPaths = extractDownloadedPaths(stdout);
+      const playlist = Boolean(input.playlist) || outputPaths.length > 1;
 
       return {
         ok: true,
         platform: this.platform,
         account: auth.source ?? "public",
         action: "audio",
-        message: "Audio download completed.",
+        message: playlist
+          ? `Playlist audio download completed for ${outputPaths.length} item${outputPaths.length === 1 ? "" : "s"}.`
+          : "Audio download completed.",
         url,
         data: {
-          outputPath,
+          outputPath: outputPaths[0],
+          outputPaths,
           outputDir,
           format,
           audioFormat,
+          playlist,
+          limit: normalizePlaylistLimit(input.limit),
           stderr: stderr || undefined,
           auth: auth.source ? { source: auth.source } : undefined,
         },
@@ -440,6 +486,26 @@ export function summarizeDownloadFormats(formats: readonly YtDlpFormat[]): Downl
     }));
 }
 
+export function summarizePlaylistEntries(
+  entries: readonly YtDlpPlaylistEntry[],
+  limit?: number,
+): DownloadPlaylistItemSummary[] {
+  const bounded = normalizePlaylistLimit(limit);
+  return entries
+    .slice(0, bounded ?? entries.length)
+    .map((entry) => ({
+      ...(typeof entry.id === "string" && entry.id ? { id: entry.id } : {}),
+      ...(typeof entry.url === "string" && entry.url ? { url: entry.url } : {}),
+      title: entry.title?.trim() || "Untitled item",
+      ...(typeof entry.duration === "number" ? { durationLabel: formatDuration(entry.duration) } : {}),
+      ...(typeof entry.uploader === "string" && entry.uploader
+        ? { uploader: entry.uploader }
+        : typeof entry.channel === "string" && entry.channel
+          ? { uploader: entry.channel }
+          : {}),
+    }));
+}
+
 export function buildVideoFormatSelector(input: {
   format?: string;
   quality?: string;
@@ -491,6 +557,10 @@ function parseYtDlpInfo(stdout: string): YtDlpInfo {
   }
 }
 
+function isPlaylistInfo(info: YtDlpInfo): boolean {
+  return info._type === "playlist" || Array.isArray(info.entries);
+}
+
 function buildFormatLabel(format: YtDlpFormat): string {
   const parts = [`${format.height}p`];
   if (format.fps && format.fps > 0) {
@@ -505,18 +575,17 @@ function buildFormatLabel(format: YtDlpFormat): string {
   return parts.join(" ");
 }
 
-function extractDownloadedPath(stdout: string): string {
+function extractDownloadedPaths(stdout: string): string[] {
   const lines = stdout
     .split(/\r?\n/gu)
     .map((line) => line.trim())
     .filter(Boolean);
 
-  const outputPath = lines.at(-1);
-  if (!outputPath) {
+  if (lines.length === 0) {
     throw new AutoCliError("DOWNLOAD_OUTPUT_MISSING", "yt-dlp completed but did not report an output file path.");
   }
 
-  return outputPath;
+  return lines;
 }
 
 function buildNetscapeCookies(session: PlatformSession): string {
@@ -598,4 +667,38 @@ function normalizeQualityLabel(value?: string): string | undefined {
 
   const height = parseQualityHeight(value);
   return `${height}p`;
+}
+
+function buildPlaylistArgs(
+  input: {
+    playlist?: boolean;
+    limit?: number;
+  },
+  options: {
+    flat?: boolean;
+  } = {},
+): string[] {
+  if (!input.playlist) {
+    return ["--no-playlist"];
+  }
+
+  const args: string[] = [];
+  if (options.flat) {
+    args.push("--flat-playlist");
+  }
+
+  const limit = normalizePlaylistLimit(input.limit);
+  if (typeof limit === "number") {
+    args.push("--playlist-end", String(limit));
+  }
+
+  return args;
+}
+
+function normalizePlaylistLimit(value?: number): number | undefined {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return undefined;
+  }
+
+  return Math.max(1, Math.min(100, Math.trunc(value)));
 }
