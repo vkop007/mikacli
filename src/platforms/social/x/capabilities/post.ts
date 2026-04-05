@@ -14,10 +14,10 @@ export const xPostCapability: PlatformCapability = {
     const postCommand = command
       .command("post <text>")
       .alias("tweet")
-      .description("Publish a text post on X, optionally with one image, using the latest saved session and auto-switching to a browser-backed compose flow when X blocks the request path")
+      .description("Publish a text post on X, optionally with one image, through a browser-backed compose flow")
       .option("--image <path>", "Attach an image to the post")
       .option("--account <name>", "Optional override for a specific saved X session")
-      .option("--browser", "Force the post through an invisible browser-backed compose flow instead of trying the request path first")
+      .option("--browser", "Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path")
       .option("--browser-timeout <seconds>", "Maximum seconds to allow the browser action to complete", parseBrowserTimeoutSeconds)
       .action(async (text, options, cmd) => {
         const ctx = resolveCommandContext(cmd);

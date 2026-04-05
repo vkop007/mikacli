@@ -572,7 +572,7 @@ The `Stability` column below matches the runtime metadata behind `autocli <categ
 | Threads | `partial` | none | public profile, post, and reply lookup | Uses the live Threads web surface through readable extraction; good for discovery, not write automation yet. |
 | TikTok | `partial` | cookies | session handling and light public automation | Session validation and read flows are strongest today; signing for private web writes is still a known hard part. |
 | WhatsApp | `partial` | session | QR or pairing-code login for account messaging | Uses a saved WhatsApp multi-device auth state with cached chats/messages for terminal workflows. |
-| X | `partial` | cookies | posting, likes, profile/tweet lookup | Strong cookie-backed adapter with reliable agent-friendly output. |
+| X | `partial` | cookies | posting, likes, profile/tweet lookup | Strong cookie-backed adapter with browser-backed write flows to reduce X automation friction. |
 | YouTube | `partial` | cookies | search, likes, comments, downloads | Upload/community posting are still separate future work. |
 
 ### Partial Support Notes

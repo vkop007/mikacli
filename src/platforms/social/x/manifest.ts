@@ -7,7 +7,7 @@ export const xPlatformDefinition: PlatformDefinition = {
   id: "x",
   category: "social",
   displayName: "X",
-  description: "Interact with X/Twitter using an imported browser session",
+  description: "Interact with X/Twitter using an imported browser session and browser-backed write flows",
   aliases: ["twitter"],
   authStrategies: ["cookies"],
   adapter: xAdapter,

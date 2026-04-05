@@ -225,7 +225,7 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     browserLogin: "supported",
     browserFallback: "supported",
     stability: "partial",
-    notes: ["When X blocks the request path, AutoCLI auto-switches `post` into the real compose UI. Use `post --browser` to force that path immediately."],
+    notes: ["X write actions run through browser-backed flows. Use `--browser` to force the shared AutoCLI browser profile immediately when you want the live browser path."],
   },
   instagram: {
     mutation: "supported",

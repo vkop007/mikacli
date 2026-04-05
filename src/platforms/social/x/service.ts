@@ -23,7 +23,7 @@ import type {
   SessionUser,
   TextPostInput,
 } from "../../../types.js";
-import type { Page as PlaywrightPage } from "playwright-core";
+import type { Locator as PlaywrightLocator, Page as PlaywrightPage, Response as PlaywrightResponse } from "playwright-core";
 
 const X_ORIGIN = getPlatformOrigin("x");
 const X_HOME = `${X_ORIGIN}/home`;
@@ -243,61 +243,11 @@ export class XAdapter extends BasePlatformAdapter {
   }
 
   async postText(input: TextPostInput): Promise<AdapterActionResult> {
-    if (input.browser) {
-      return this.browserPostText(input);
-    }
-
-    try {
-      const { session } = await this.prepareSession(input.account);
-      const probe = await this.ensureActiveSession(session);
-      const client = await this.createXClient(session);
-      const bearerToken = await this.resolveBearerToken(session, client, probe.metadata);
-      const mediaId = input.imagePath ? await this.uploadMedia(client, probe.metadata, bearerToken, input.imagePath) : undefined;
-      const response = await this.createTweet(client, session, bearerToken, {
-        tweet_text: input.text,
-        dark_request: false,
-        media: {
-          media_entities: mediaId ? [{ media_id: mediaId, tagged_users: [] as string[] }] : [],
-          possibly_sensitive: false,
-        },
-        semantic_annotation_ids: [] as string[],
-        disallowed_reply_options: null,
-      });
-
-      const tweetId = this.extractTweetId(response);
-      const username = probe.user?.username;
-      const url = username && tweetId ? `${X_ORIGIN}/${username}/status/${tweetId}` : undefined;
-
-      return {
-        ok: true,
-        platform: this.platform,
-        account: session.account,
-        action: "post",
-        message: `X post created for ${session.account}.`,
-        id: tweetId,
-        url,
-        user: probe.user,
-        data: {
-          text: input.text,
-          imagePath: input.imagePath,
-          source: "request",
-        },
-      };
-    } catch (error) {
-      if (error instanceof AutoCliError && error.code === "X_AUTOMATION_BLOCKED") {
-        return this.browserPostText({
-          ...input,
-          browser: true,
-        });
-      }
-
-      throw error;
-    }
+    return this.browserPostText(input);
   }
 
   private async browserPostText(input: TextPostInput): Promise<AdapterActionResult> {
-    const { session, path } = await this.prepareSession(input.account);
-    const probe = await this.ensureActiveSession(session);
+    const { session, path, probe } = await this.prepareBrowserWriteSession(input.account);
     const username = probe.user?.username ?? session.user?.username;
     const timeoutSeconds = input.browserTimeoutSeconds ?? 60;
 
@@ -315,17 +265,8 @@ export class XAdapter extends BasePlatformAdapter {
       headless: true,
       userAgent: X_BROWSER_USER_AGENT,
       locale: "en-US",
-      mode: input.browser ? "required" : "fallback",
-      steps: [
-        {
-          source: "headless",
-          shouldContinueOnError: (error) => shouldRetryXBrowserPost(error),
-        },
-        {
-          source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for X posting: ${X_COMPOSE_URL}`,
-        },
-      ],
+      mode: "required",
+      steps: this.buildBrowserWriteSteps("posting", X_COMPOSE_URL, Boolean(input.browser)),
       actionFn: async (page, source) => {
         await this.ensureBrowserAuthenticated(page);
         await this.openComposer(page);
@@ -377,18 +318,7 @@ export class XAdapter extends BasePlatformAdapter {
     });
     const result = execution.value;
 
-    await this.persistExistingSession(session, {
-      user: probe.user ?? session.user,
-      status: {
-        state: "active",
-        message: "X browser-backed compose flow succeeded.",
-        lastValidatedAt: new Date().toISOString(),
-      },
-      metadata: {
-        ...(session.metadata ?? {}),
-        ...(probe.metadata ?? {}),
-      },
-    });
+    await this.persistBrowserWriteSuccess(session, probe, "X browser-backed compose flow succeeded.");
 
     return withBrowserActionMetadata({
       ok: true,
@@ -437,98 +367,278 @@ export class XAdapter extends BasePlatformAdapter {
     });
   }
 
-  async like(input: LikeInput): Promise<AdapterActionResult> {
-    const { session } = await this.prepareSession(input.account);
-    const probe = await this.ensureActiveSession(session);
-    const client = await this.createXClient(session);
-    const bearerToken = await this.resolveBearerToken(session, client, probe.metadata);
+  async like(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    return this.browserLike(input);
+  }
+
+  async unlike(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    return this.browserUnlike(input);
+  }
+
+  async comment(input: CommentInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    return this.browserComment(input);
+  }
+
+  private async browserLike(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const { session, path, probe } = await this.prepareBrowserWriteSession(input.account);
     const target = parseXTarget(input.target);
+    const targetUrl = target.url ?? `${X_ORIGIN}/i/status/${target.tweetId}`;
+    const timeoutSeconds = input.browserTimeoutSeconds ?? 60;
 
-    await this.executeGraphQlMutation<XFavoriteTweetGraphQlResponse>(
-      client,
-      session,
-      bearerToken,
-      X_FAVORITE_TWEET_OPERATION,
-      {
-        tweet_id: target.tweetId,
+    const execution = await runFirstClassBrowserAction<{
+      finalUrl?: string;
+      source: "headless" | "profile" | "shared";
+      alreadyLiked?: boolean;
+    }>({
+      platform: this.platform,
+      action: "like",
+      actionLabel: "like",
+      targetUrl,
+      timeoutSeconds,
+      initialCookies: session.cookieJar.cookies,
+      headless: true,
+      userAgent: X_BROWSER_USER_AGENT,
+      locale: "en-US",
+      mode: "required",
+      steps: this.buildBrowserWriteSteps("liking", targetUrl, Boolean(input.browser)),
+      actionFn: async (page, source) => {
+        await this.ensureBrowserAuthenticated(page);
+        const article = await this.waitForPrimaryTweetArticle(page);
+        const initialState = await this.readBrowserLikeState(article);
+        if (initialState === "liked") {
+          return {
+            finalUrl: page.url(),
+            source,
+            alreadyLiked: true,
+          };
+        }
+
+        const responsePromise = this.waitForBrowserMutationResponse(page, X_FAVORITE_TWEET_OPERATION, timeoutSeconds);
+        const button = await firstVisibleXLocatorWithin(article, ['[data-testid="like"]']);
+        await button.click();
+        const liked = await this.waitForBrowserLikeState(page, article, "liked");
+        const response = await this.readBrowserMutationPayloadIfReady(page, responsePromise);
+        await this.throwIfBrowserBlocked(page);
+        if (!liked) {
+          throw new AutoCliError("X_BROWSER_ACTION_FAILED", "X did not confirm the like action in the browser flow.", {
+            details: {
+              tweetId: target.tweetId,
+              url: page.url(),
+            },
+          });
+        }
+
+        if (response) {
+          const payload = await this.readBrowserMutationPayload<XFavoriteTweetGraphQlResponse>(
+            response,
+            "X liked the post in the browser flow, but AutoCLI could not read the resulting response.",
+          );
+          this.throwOnGraphQlErrors(payload, X_FAVORITE_TWEET_OPERATION);
+        }
+
+        return {
+          finalUrl: page.url(),
+          source,
+        };
       },
-      {},
-    );
+    });
+    const result = execution.value;
 
-    return {
+    await this.persistBrowserWriteSuccess(session, probe, "X browser-backed like flow succeeded.");
+
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: session.account,
       action: "like",
-      message: `X post liked for ${session.account}.`,
+      message: result.alreadyLiked
+        ? `X post was already liked for ${session.account} in the browser-backed flow.`
+        : `X post liked for ${session.account} through a browser-backed flow.`,
       id: target.tweetId,
+      url: result.finalUrl ?? target.url,
       user: probe.user,
-    };
+      sessionPath: path,
+      data: {
+        target: target.tweetId,
+        alreadyLiked: Boolean(result.alreadyLiked),
+      },
+    }, execution);
   }
 
-  async unlike(input: LikeInput): Promise<AdapterActionResult> {
-    const { session } = await this.prepareSession(input.account);
-    const probe = await this.ensureActiveSession(session);
-    const client = await this.createXClient(session);
-    const bearerToken = await this.resolveBearerToken(session, client, probe.metadata);
+  private async browserUnlike(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const { session, path, probe } = await this.prepareBrowserWriteSession(input.account);
     const target = parseXTarget(input.target);
+    const targetUrl = target.url ?? `${X_ORIGIN}/i/status/${target.tweetId}`;
+    const timeoutSeconds = input.browserTimeoutSeconds ?? 60;
 
-    await this.executeGraphQlMutation<XBasicMutationResponse>(
-      client,
-      session,
-      bearerToken,
-      X_UNFAVORITE_TWEET_OPERATION,
-      {
-        tweet_id: target.tweetId,
+    const execution = await runFirstClassBrowserAction<{
+      finalUrl?: string;
+      source: "headless" | "profile" | "shared";
+      alreadyUnliked?: boolean;
+    }>({
+      platform: this.platform,
+      action: "unlike",
+      actionLabel: "unlike",
+      targetUrl,
+      timeoutSeconds,
+      initialCookies: session.cookieJar.cookies,
+      headless: true,
+      userAgent: X_BROWSER_USER_AGENT,
+      locale: "en-US",
+      mode: "required",
+      steps: this.buildBrowserWriteSteps("unliking", targetUrl, Boolean(input.browser)),
+      actionFn: async (page, source) => {
+        await this.ensureBrowserAuthenticated(page);
+        const article = await this.waitForPrimaryTweetArticle(page);
+        const initialState = await this.readBrowserLikeState(article);
+        if (initialState === "unliked") {
+          return {
+            finalUrl: page.url(),
+            source,
+            alreadyUnliked: true,
+          };
+        }
+
+        const responsePromise = this.waitForBrowserMutationResponse(page, X_UNFAVORITE_TWEET_OPERATION, timeoutSeconds);
+        const button = await firstVisibleXLocatorWithin(article, ['[data-testid="unlike"]']);
+        await button.click();
+        await this.confirmBrowserUnlikeIfNeeded(page);
+        const unliked = await this.waitForBrowserLikeState(page, article, "unliked");
+        const response = await this.readBrowserMutationPayloadIfReady(page, responsePromise);
+        await this.throwIfBrowserBlocked(page);
+        if (!unliked) {
+          throw new AutoCliError("X_BROWSER_ACTION_FAILED", "X did not confirm the unlike action in the browser flow.", {
+            details: {
+              tweetId: target.tweetId,
+              url: page.url(),
+            },
+          });
+        }
+
+        if (response) {
+          const payload = await this.readBrowserMutationPayload<XBasicMutationResponse>(
+            response,
+            "X unliked the post in the browser flow, but AutoCLI could not read the resulting response.",
+          );
+          this.throwOnGraphQlErrors(payload, X_UNFAVORITE_TWEET_OPERATION);
+        }
+
+        return {
+          finalUrl: page.url(),
+          source,
+        };
       },
-      {},
-    );
+    });
+    const result = execution.value;
 
-    return {
+    await this.persistBrowserWriteSuccess(session, probe, "X browser-backed unlike flow succeeded.");
+
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: session.account,
       action: "unlike",
-      message: `X post unliked for ${session.account}.`,
+      message: result.alreadyUnliked
+        ? `X post was already unliked for ${session.account} in the browser-backed flow.`
+        : `X post unliked for ${session.account} through a browser-backed flow.`,
       id: target.tweetId,
+      url: result.finalUrl ?? target.url,
       user: probe.user,
-    };
+      sessionPath: path,
+      data: {
+        target: target.tweetId,
+        alreadyUnliked: Boolean(result.alreadyUnliked),
+      },
+    }, execution);
   }
 
-  async comment(input: CommentInput): Promise<AdapterActionResult> {
-    const { session } = await this.prepareSession(input.account);
-    const probe = await this.ensureActiveSession(session);
-    const client = await this.createXClient(session);
-    const bearerToken = await this.resolveBearerToken(session, client, probe.metadata);
+  private async browserComment(input: CommentInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const { session, path, probe } = await this.prepareBrowserWriteSession(input.account);
     const target = parseXTarget(input.target);
-    const response = await this.createTweet(client, session, bearerToken, {
-      tweet_text: input.text,
-      dark_request: false,
-      media: {
-        media_entities: [],
-        possibly_sensitive: false,
-      },
-      semantic_annotation_ids: [] as string[],
-      disallowed_reply_options: null,
-      reply: {
-        in_reply_to_tweet_id: target.tweetId,
-        exclude_reply_user_ids: [] as string[],
+    const username = probe.user?.username ?? session.user?.username;
+    const targetUrl = target.url ?? `${X_ORIGIN}/i/status/${target.tweetId}`;
+    const timeoutSeconds = input.browserTimeoutSeconds ?? 60;
+
+    const execution = await runFirstClassBrowserAction<{
+      tweetId?: string;
+      finalUrl?: string;
+      source: "headless" | "profile" | "shared";
+    }>({
+      platform: this.platform,
+      action: "comment",
+      actionLabel: "reply",
+      targetUrl,
+      timeoutSeconds,
+      initialCookies: session.cookieJar.cookies,
+      headless: true,
+      userAgent: X_BROWSER_USER_AGENT,
+      locale: "en-US",
+      mode: "required",
+      steps: this.buildBrowserWriteSteps("replying", targetUrl, Boolean(input.browser)),
+      actionFn: async (page, source) => {
+        await this.ensureBrowserAuthenticated(page);
+        const article = await this.waitForPrimaryTweetArticle(page);
+        const replyButton = await firstVisibleXLocatorWithin(article, ['[data-testid="reply"]']);
+        await replyButton.click();
+        await page.waitForTimeout(700);
+        await this.fillBrowserComposerText(page, input.text);
+
+        const responsePromise = this.waitForBrowserMutationResponse(page, X_CREATE_TWEET_OPERATION, timeoutSeconds);
+        const submitButton = await this.waitForEnabledBrowserPostButton(page);
+        await submitButton.click();
+        const response = await responsePromise;
+
+        if (!response) {
+          await page.waitForTimeout(1_500);
+          await this.throwIfBrowserBlocked(page);
+          throw new AutoCliError(
+            "X_BROWSER_CREATE_TWEET_TIMEOUT",
+            "X never sent the reply request from the browser-backed flow. Retry once, or re-login with `autocli social x login --browser` if the problem persists.",
+            {
+              details: {
+                url: page.url(),
+                tweetId: target.tweetId,
+              },
+            },
+          );
+        }
+
+        const payload = await this.readBrowserMutationPayload<XCreateTweetGraphQlResponse>(
+          response,
+          "X submitted the browser reply, but AutoCLI could not read the resulting response.",
+        );
+        this.throwOnGraphQlErrors(payload, X_CREATE_TWEET_OPERATION);
+        const tweetId = this.extractTweetId(payload);
+        await page.waitForTimeout(1_500);
+        await this.throwIfBrowserBlocked(page);
+        const browserUsername = await this.resolveBrowserUsername(page).catch(() => undefined);
+
+        return {
+          tweetId,
+          finalUrl: this.buildBrowserTweetUrl(username ?? browserUsername, tweetId, page.url()),
+          source,
+        };
       },
     });
-    const tweetId = this.extractTweetId(response) ?? target.tweetId;
+    const result = execution.value;
 
-    return {
+    await this.persistBrowserWriteSuccess(session, probe, "X browser-backed reply flow succeeded.");
+
+    return withBrowserActionMetadata({
       ok: true,
       platform: this.platform,
       account: session.account,
       action: "comment",
-      message: `X reply sent for ${session.account}.`,
-      id: tweetId,
+      message: `X reply sent for ${session.account} through a browser-backed flow.`,
+      id: result.tweetId ?? target.tweetId,
+      url: result.finalUrl ?? target.url,
       user: probe.user,
+      sessionPath: path,
       data: {
         text: input.text,
+        target: target.tweetId,
       },
-    };
+    }, execution);
   }
 
   async search(input: {
@@ -708,6 +818,16 @@ export class XAdapter extends BasePlatformAdapter {
     return {
       path: loaded.path,
       session: await this.maybeAutoRefresh(loaded.session),
+    };
+  }
+
+  private async prepareBrowserWriteSession(account?: string): Promise<{ session: PlatformSession; path: string; probe: XProbe }> {
+    const { session, path } = await this.prepareSession(account);
+    const probe = await this.ensureActiveSession(session);
+    return {
+      session,
+      path,
+      probe,
     };
   }
 
@@ -1133,7 +1253,7 @@ export class XAdapter extends BasePlatformAdapter {
     return queryId;
   }
 
-  private throwOnGraphQlErrors(response: XCreateTweetGraphQlResponse, operationName: string): void {
+  private throwOnGraphQlErrors(response: { errors?: XGraphQlError[] }, operationName: string): void {
     const firstError = response.errors?.[0];
     if (!firstError) {
       return;
@@ -1200,6 +1320,65 @@ export class XAdapter extends BasePlatformAdapter {
     return response.data?.create_tweet?.tweet_results?.result?.rest_id ?? response.data?.create_tweet?.tweet_results?.result?.legacy?.id_str;
   }
 
+  private buildBrowserWriteSteps(actionLabel: string, targetUrl: string, forceShared: boolean) {
+    const sharedStep = {
+      source: "shared" as const,
+      announceLabel: `Opening shared AutoCLI browser profile for X ${actionLabel}: ${targetUrl}`,
+    };
+
+    if (forceShared) {
+      return [sharedStep];
+    }
+
+    return [
+      {
+        source: "headless" as const,
+        shouldContinueOnError: (error: unknown) => shouldRetryXBrowserWrite(error),
+      },
+      sharedStep,
+    ];
+  }
+
+  private async persistBrowserWriteSuccess(session: PlatformSession, probe: XProbe, message: string): Promise<void> {
+    await this.persistExistingSession(session, {
+      user: probe.user ?? session.user,
+      status: {
+        state: "active",
+        message,
+        lastValidatedAt: new Date().toISOString(),
+      },
+      metadata: {
+        ...(session.metadata ?? {}),
+        ...(probe.metadata ?? {}),
+      },
+    });
+  }
+
+  private waitForBrowserMutationResponse(
+    page: PlaywrightPage,
+    operationName: string,
+    timeoutSeconds: number,
+  ): Promise<PlaywrightResponse | undefined> {
+    return page.waitForResponse(
+      (response) => response.request().method() === "POST" && response.url().includes(`/${operationName}`),
+      { timeout: Math.min(timeoutSeconds * 1_000, 30_000) },
+    ).catch(() => undefined);
+  }
+
+  private async readBrowserMutationPayload<T>(response: PlaywrightResponse, errorMessage: string): Promise<T> {
+    const payload = (await response.json().catch(() => null)) as T | null;
+    if (!payload || typeof payload !== "object") {
+      throw new AutoCliError("X_BROWSER_ACTION_FAILED", errorMessage, {
+        details: {
+          status: response.status(),
+          url: response.url(),
+        },
+      });
+    }
+
+    return payload;
+  }
+
   private async ensureBrowserAuthenticated(page: PlaywrightPage): Promise<void> {
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(1_000);
@@ -1260,6 +1439,78 @@ export class XAdapter extends BasePlatformAdapter {
 
     await input.setInputFiles(imagePath);
     await page.waitForTimeout(1_500);
+  }
+
+  private async waitForPrimaryTweetArticle(page: PlaywrightPage): Promise<PlaywrightLocator> {
+    const article = page.locator("article").first();
+    try {
+      await article.waitFor({ state: "visible", timeout: 15_000 });
+      return article;
+    } catch (error) {
+      throw new AutoCliError("X_BROWSER_TWEET_NOT_FOUND", "X did not render the target post in the browser view.", {
+        cause: error,
+        details: {
+          url: page.url(),
+        },
+      });
+    }
+  }
+
+  private async readBrowserLikeState(root: PlaywrightPage | PlaywrightLocator): Promise<"liked" | "unliked" | "unknown"> {
+    if (await hasVisibleXLocatorWithin(root, ['[data-testid="unlike"]'])) {
+      return "liked";
+    }
+
+    if (await hasVisibleXLocatorWithin(root, ['[data-testid="like"]'])) {
+      return "unliked";
+    }
+
+    return "unknown";
+  }
+
+  private async confirmBrowserUnlikeIfNeeded(page: PlaywrightPage): Promise<void> {
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      const confirmButton = await firstVisibleXLocator(page, [
+        '[data-testid="confirmationSheetConfirm"]',
+        'div[role="dialog"] [data-testid="confirmationSheetConfirm"]',
+      ]).catch(() => null);
+      if (confirmButton) {
+        await confirmButton.click();
+        return;
+      }
+
+      await page.waitForTimeout(250);
+    }
+  }
+
+  private async waitForBrowserLikeState(
+    page: PlaywrightPage,
+    root: PlaywrightPage | PlaywrightLocator,
+    expectedState: "liked" | "unliked",
+    timeoutMs = 5_000,
+  ): Promise<boolean> {
+    const deadline = Date.now() + timeoutMs;
+
+    while (Date.now() < deadline) {
+      if ((await this.readBrowserLikeState(root)) === expectedState) {
+        return true;
+      }
+
+      await page.waitForTimeout(250);
+    }
+
+    return (await this.readBrowserLikeState(root)) === expectedState;
+  }
+
+  private async readBrowserMutationPayloadIfReady(
+    page: PlaywrightPage,
+    responsePromise: Promise<PlaywrightResponse | undefined>,
+    timeoutMs = 2_500,
+  ): Promise<PlaywrightResponse | undefined> {
+    return Promise.race([
+      responsePromise,
+      page.waitForTimeout(timeoutMs).then(() => undefined),
+    ]);
   }
 
   private async throwIfBrowserBlocked(page: PlaywrightPage): Promise<void> {
@@ -1684,6 +1935,35 @@ async function firstVisibleXLocator(page: PlaywrightPage, selectors: readonly st
   throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible X browser element for selectors: ${selectors.join(", ")}`);
 }
 
+async function firstVisibleXLocatorWithin(root: PlaywrightPage | PlaywrightLocator, selectors: readonly string[]) {
+  for (const selector of selectors) {
+    const locator = root.locator(selector);
+    const count = await locator.count().catch(() => 0);
+    for (let index = 0; index < count; index += 1) {
+      const candidate = locator.nth(index);
+      if (await candidate.isVisible().catch(() => false)) {
+        return candidate;
+      }
+    }
+  }
+
+  throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible X browser element for selectors: ${selectors.join(", ")}`);
+}
+
+async function hasVisibleXLocatorWithin(root: PlaywrightPage | PlaywrightLocator, selectors: readonly string[]): Promise<boolean> {
+  for (const selector of selectors) {
+    const locator = root.locator(selector);
+    const count = await locator.count().catch(() => 0);
+    for (let index = 0; index < count; index += 1) {
+      if (await locator.nth(index).isVisible().catch(() => false)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 function isXLoginUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -1693,10 +1973,17 @@ function isXLoginUrl(url: string): boolean {
   }
 }
 
-function shouldRetryXBrowserPost(error: unknown): boolean {
+function shouldRetryXBrowserWrite(error: unknown): boolean {
   if (!(error instanceof AutoCliError)) {
     return false;
   }
 
-  return ["X_BROWSER_NOT_LOGGED_IN", "X_BROWSER_ACTION_FAILED", "X_BROWSER_ELEMENT_NOT_FOUND"].includes(error.code);
+  return [
+    "BROWSER_PROFILE_IN_USE",
+    "X_BROWSER_NOT_LOGGED_IN",
+    "X_BROWSER_ACTION_FAILED",
+    "X_BROWSER_ELEMENT_NOT_FOUND",
+    "X_BROWSER_POST_BUTTON_DISABLED",
+    "X_BROWSER_CREATE_TWEET_TIMEOUT",
+  ].includes(error.code);
 }
