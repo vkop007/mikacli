@@ -22,7 +22,7 @@ If the user intent is already concrete, read [recipes.md](recipes.md) first and 
 | `devops` | infrastructure, deploys, DNS, and platform operations | `cloudflare`, `vercel`, `supabase`, `render`, `railway`, `netlify`, `digitalocean`, `fly` | `login`, `me`, `zones`, `projects`, `services`, `apps`, `deployments` |
 | `editor` | local file and media editing | `image`, `video`, `audio`, `pdf`, `document`, `subtitle`, `gif`, `archive` | `info`, `convert`, `resize`, `split`, `watermark`, `ocr` |
 | `data` | structured data cleanup and transformation | `json`, `csv`, `yaml`, `xml`, `html`, `markdown`, `text` | `format`, `query`, `to-json`, `filter`, `text`, `replace` |
-| `tools` | public utilities, session-aware HTTP inspection, and web helpers | `http`, `websearch`, `translate`, `page-links`, `favicon`, `headers`, `rss`, `timezone` | `inspect`, `capture`, `request`, and other lookup-style commands |
+| `tools` | public utilities, cross-site downloads, session-aware HTTP inspection, and web helpers | `download`, `http`, `websearch`, `translate`, `page-links`, `favicon`, `headers`, `rss`, `timezone` | `download`, `inspect`, `capture`, `request`, and other lookup-style commands |
 | `news` | public headline and feed discovery | `news` | `top`, `search`, `sources`, `feed` |
 | `maps` | geocoding, routing, geometry | `openstreetmap`, `osrm`, `geo` | `search`, `reverse`, `route`, `distance`, `elevation` |
 | `finance` | market and forex lookups | `stocks`, `crypto`, `currency` | quote and conversion commands |

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { join, resolve } from "node:path";
 
-import { buildVideoFormatSelector, normalizeDownloadUrl, summarizeDownloadFormats, summarizePlaylistEntries } from "../adapter.js";
+import { buildVideoFormatSelector, normalizeDownloadUrl, resolveDownloadOutputDir, summarizeDownloadFormats, summarizePlaylistEntries } from "../adapter.js";
 
 describe("download tools adapter helpers", () => {
   test("normalizes valid media URLs", () => {
@@ -36,5 +37,9 @@ describe("download tools adapter helpers", () => {
     ], 1)).toEqual([
       { id: "a1", url: "https://example.com/watch?v=a1", title: "First", durationLabel: "1:01", uploader: "Uploader A" },
     ]);
+  });
+
+  test("uses a single downloads folder by default", () => {
+    expect(resolveDownloadOutputDir()).toBe(resolve(join(process.cwd(), "downloads")));
   });
 });

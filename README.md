@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-104-blue)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-105-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-14-6f42c1)](#category-overview)
 
 AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
@@ -18,7 +18,7 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 
 ## Why It Matters
 
-- One command surface across `104` providers.
+- One command surface across `105` providers.
 - Shared browser login means less manual cookie exporting for cookie-backed platforms.
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
 - Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
@@ -60,7 +60,7 @@ autocli llm qwen text "Summarize this changelog"
 | --- | --- |
 | Package | `@vk007/autocli` |
 | CLI command | `autocli` |
-| Providers | `104` |
+| Providers | `105` |
 | Categories | `14` |
 | npm install | `npm install -g @vk007/autocli` |
 | bun install | `bun install -g @vk007/autocli` |
@@ -156,6 +156,22 @@ autocli tools translate "hello world" --to hi
 autocli tools timezone "Mumbai"
 autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
 autocli tools http github request GET /settings/profile
+autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ
+```
+
+## Cross-Site Downloads
+
+Use `autocli tools download` for multi-site media downloads powered by `yt-dlp`, with optional saved-session cookies from AutoCLI when a site needs auth.
+
+Examples:
+
+```bash
+autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ --json
+autocli tools download video https://x.com/user/status/123 --platform x
+autocli tools download video https://www.instagram.com/reel/SHORTCODE/ --platform instagram --account default
+autocli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3
+autocli tools download batch ./urls.txt --mode video --quality 720p
+autocli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5
 ```
 
 ## Agent JSON Conventions
@@ -207,9 +223,9 @@ autocli devops railway capabilities --json
 | `developer` | Confluence, GitHub, GitLab, Jira, Linear, Notion, Trello | 7 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `devops` | Cloudflare, DigitalOcean, Fly.io, Netlify, Railway, Render, Supabase, Vercel | 8 | api token | Infrastructure, deployment, DNS, platform, and backend automation | `autocli devops <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
-| `tools` | Cheat, DNS, Favicon, Headers, HTTP Toolkit, IP, Markdown Fetch, Metadata, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 24 | none or cookies | Public utilities, session-aware request inspection, and zero-setup helpers | `autocli tools <provider> ...` |
+| `tools` | Cheat, DNS, Download, Favicon, Headers, HTTP Toolkit, IP, Markdown Fetch, Metadata, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Translate, Uptime, Weather, Web Search, Whois | 25 | none or cookies | Public utilities, cross-site downloads, session-aware request inspection, and zero-setup helpers | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `104` providers across `14` active command groups.
+AutoCLI currently exposes `105` providers across `14` active command groups.
 
 ## Access Modes
 

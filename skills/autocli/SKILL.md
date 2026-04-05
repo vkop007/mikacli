@@ -72,6 +72,7 @@ Use only one recovery step before retrying unless the user explicitly asks for t
 - Use `capabilities --json` to verify support level only when the action is unfamiliar, risky, or failing.
 - Treat provider help as machine guidance too, but only read it when the command surface is unclear.
 - Use `tools` and `data` as glue around other providers.
+- Use `tools download` for cross-site media downloads instead of looking for a provider-specific download command first.
 - Use `tools http` to inspect saved web sessions, replay authenticated requests, and capture logged-in traffic from the shared browser.
 - Use `editor` for local transformations before upload or posting.
 - Use `news`, `movie`, `music`, `maps`, `finance`, and many `tools` providers for public lookup tasks with no login step.
@@ -86,6 +87,7 @@ autocli social linkedin post-media ./photo.png --caption "Launching AutoCLI" --j
 autocli social reddit comment https://www.reddit.com/... "Nice breakdown." --json
 autocli llm grok image "Minimal red logo" --json
 autocli social youtube upload ./video.mp4 --title "My upload" --visibility private --json
+autocli tools download video https://www.instagram.com/reel/SHORTCODE/ --platform instagram --json
 autocli tools http github inspect --json
 autocli data json query '{"items":[{"title":"AutoCLI"}]}' 'items[0].title'
 ```

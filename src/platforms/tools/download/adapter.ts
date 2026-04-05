@@ -102,6 +102,10 @@ export type DownloadPlaylistItemSummary = {
   uploader?: string;
 };
 
+export function resolveDownloadOutputDir(outputDir?: string): string {
+  return resolve(outputDir ?? join(process.cwd(), "downloads"));
+}
+
 export class DownloadToolsAdapter {
   readonly platform = "download" as Platform;
   readonly displayName = "Download";
@@ -171,7 +175,7 @@ export class DownloadToolsAdapter {
 
   async video(input: DownloadVideoInput): Promise<AdapterActionResult> {
     const url = normalizeDownloadUrl(input.url);
-    const outputDir = resolve(input.outputDir ?? join(process.cwd(), "downloads", "download"));
+    const outputDir = resolveDownloadOutputDir(input.outputDir);
     const filenameTemplate = (input.filenameTemplate?.trim() || "%(title)s [%(id)s].%(ext)s");
     const format = buildVideoFormatSelector(input);
 
@@ -238,7 +242,7 @@ export class DownloadToolsAdapter {
 
   async audio(input: DownloadAudioInput): Promise<AdapterActionResult> {
     const url = normalizeDownloadUrl(input.url);
-    const outputDir = resolve(input.outputDir ?? join(process.cwd(), "downloads", "download"));
+    const outputDir = resolveDownloadOutputDir(input.outputDir);
     const filenameTemplate = (input.filenameTemplate?.trim() || "%(title)s [%(id)s].%(ext)s");
     const format = input.format?.trim() || "bestaudio/best";
     const audioFormat = (input.audioFormat?.trim() || "mp3").toLowerCase();

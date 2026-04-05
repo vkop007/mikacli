@@ -28,6 +28,11 @@ Use this file when the user intent is clear and you want the fastest correct Aut
 | Generate Grok image | `autocli llm grok image "..." --json` | `autocli llm grok login --browser` |
 | Generate Grok video | `autocli llm grok video "..." --json` | `autocli llm grok login --browser` |
 | Upload to YouTube | `autocli social youtube upload <videoPath> --title "..." --visibility private --json` | `autocli social youtube login --browser` |
+| Inspect downloadable media for a URL | `autocli tools download info <url> --json` | `autocli doctor --json` |
+| Download video from a supported site | `autocli tools download video <url> --json` | retry with `--platform <provider> --account <name>` or `--cookies <path>` if auth is required |
+| Download audio from a supported site | `autocli tools download audio <url> --audio-format mp3 --json` | `autocli doctor --json` |
+| Download many URLs from a file | `autocli tools download batch ./urls.txt --mode video --json` | `autocli doctor --json` |
+| Inspect a playlist URL | `autocli tools download info <playlistUrl> --playlist --limit 5 --json` | none |
 | Check provider sessions | `autocli sessions --json` | none |
 | Diagnose missing local tools | `autocli doctor --json` | none |
 | Inspect a logged-in GitHub web session | `autocli tools http github inspect --json` | `autocli login --browser` |

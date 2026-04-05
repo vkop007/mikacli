@@ -1,11 +1,12 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "bun:test";
 
 import { getPlatformDefinitions } from "../platforms/index.js";
 
-const repoRoot = process.cwd();
+const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const providerReferenceDir = join(repoRoot, "skills", "autocli", "references", "providers");
 
 describe("AutoCLI skill provider references", () => {
