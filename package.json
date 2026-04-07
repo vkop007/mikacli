@@ -1,6 +1,6 @@
 {
   "name": "@vk007/autocli",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Terminal automation toolkit for developers and AI agents across LLMs, social platforms, developer tools, editors, data tools, and public utilities.",
   "type": "module",
   "license": "MIT",
@@ -57,6 +57,7 @@
     "csv-stringify": "^6.7.0",
     "fast-xml-parser": "^5.5.9",
     "fetch-cookie": "^3.2.0",
+    "libsignal": "^2.0.1",
     "marked": "^17.0.5",
     "open-location-code": "^1.0.3",
     "ora": "^9.3.0",

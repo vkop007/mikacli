@@ -16,11 +16,11 @@ Generated from the real AutoCLI provider definition and command tree.
 
 ## Description
 
-Interact with X/Twitter using an imported browser session
+Interact with X/Twitter using an imported browser session and browser-backed write flows
 
 ## Notes
 
-- When X blocks the request path, AutoCLI auto-switches `post` into the real compose UI. Use `post --browser` to force that path immediately.
+- X write actions run through browser-backed flows. Use `--browser` to force the shared AutoCLI browser profile immediately when you want the live browser path.
 
 ## Fast Start
 
@@ -68,13 +68,13 @@ autocli social x post [options] <text>
 
 Aliases: `tweet`, `publish`
 
-Publish a text post on X, optionally with one image, using the latest saved session and auto-switching to a browser-backed compose flow when X blocks the request path
+Publish a text post on X, optionally with one image, through a browser-backed compose flow
 
 Options:
 
 - `--image <path>`: Attach an image to the post
 - `--account <name>`: Optional override for a specific saved X session
-- `--browser`: Force the post through an invisible browser-backed compose flow instead of trying the request path first
+- `--browser`: Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path
 - `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `search`
@@ -142,11 +142,13 @@ Usage:
 autocli social x like [options] <target>
 ```
 
-Like an X post by URL or tweet ID using the latest saved session by default
+Like an X post by URL or tweet ID through a browser-backed action flow
 
 Options:
 
 - `--account <name>`: Optional override for a specific saved X session
+- `--browser`: Force the like through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `unlike`
 
@@ -155,11 +157,13 @@ Usage:
 autocli social x unlike [options] <target>
 ```
 
-Unlike an X post by URL or tweet ID
+Unlike an X post by URL or tweet ID through a browser-backed action flow
 
 Options:
 
 - `--account <name>`: Optional override for a specific saved X session
+- `--browser`: Force the unlike through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `comment`
 
@@ -168,11 +172,13 @@ Usage:
 autocli social x comment [options] <target> <text>
 ```
 
-Reply to an X post by URL or tweet ID using the latest saved session by default
+Reply to an X post by URL or tweet ID through a browser-backed reply flow
 
 Options:
 
 - `--account <name>`: Optional override for a specific saved X session
+- `--browser`: Force the reply through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `capabilities`
 
