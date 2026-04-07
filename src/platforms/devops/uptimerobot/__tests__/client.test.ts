@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtemp, rm } from "node:fs/promises";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 import { UptimeRobotApiClient } from "../client.js";
 
@@ -87,5 +90,91 @@ describe("UptimeRobotApiClient", () => {
       interval: 300,
     });
     expect(result.id).toBe(99);
+  });
+
+  test("deletes a monitor when the API returns no content", async () => {
+    let capturedMethod = "";
+
+    const client = new UptimeRobotApiClient("test-token", (async (input: string | URL | Request, init?: RequestInit) => {
+      capturedMethod = init?.method ?? "GET";
+
+      expect(String(input)).toBe("https://api.uptimerobot.com/v3/monitors/99");
+
+      return new Response(null, {
+        status: 204,
+      });
+    }) as typeof fetch);
+
+    const result = await client.deleteMonitor(99);
+
+    expect(capturedMethod).toBe("DELETE");
+    expect(result).toEqual({});
+  });
+
+  test("creates a public status page with multipart form data", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "uptimerobot-client-"));
+    const logoPath = join(dir, "logo.txt");
+    await Bun.write(logoPath, "logo");
+
+    let capturedHeaders: Headers | undefined;
+    let capturedBody: FormData | undefined;
+
+    try {
+      const client = new UptimeRobotApiClient("test-token", (async (_input: string | URL | Request, init?: RequestInit) => {
+        capturedHeaders = new Headers(init?.headers);
+        capturedBody = init?.body instanceof FormData ? init.body : undefined;
+
+        return new Response(JSON.stringify({ id: 15, friendlyName: "Status Page", status: "ACTIVE" }), {
+          status: 201,
+          headers: { "content-type": "application/json" },
+        });
+      }) as typeof fetch);
+
+      const result = await client.createPsp({
+        friendlyName: "Status Page",
+        logo: {
+          filePath: logoPath,
+          filename: "logo.txt",
+          contentType: "text/plain",
+        },
+      });
+
+      expect(capturedHeaders?.get("content-type")).toBeNull();
+      expect(capturedBody).toBeInstanceOf(FormData);
+      expect(capturedBody?.get("friendlyName")).toBe("Status Page");
+      expect(capturedBody?.get("logo")).toBeTruthy();
+      expect(result.id).toBe(15);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  test("surfaces validation messages returned as an array", async () => {
+    const client = new UptimeRobotApiClient("test-token", ((async () =>
+      new Response(
+        JSON.stringify({
+          message: [
+            "timeout must not be greater than 60",
+            "timeout must not be less than 0",
+          ],
+          error: "Bad Request",
+          statusCode: 400,
+        }),
+        {
+          status: 400,
+          headers: { "content-type": "application/json" },
+        },
+      )) as unknown) as typeof fetch);
+
+    await expect(
+      client.createMonitor({
+        friendlyName: "API",
+        url: "https://api.example.com/health",
+        type: "HTTP",
+        interval: 300,
+      }),
+    ).rejects.toMatchObject({
+      message: "timeout must not be greater than 60; timeout must not be less than 0",
+    });
   });
 });

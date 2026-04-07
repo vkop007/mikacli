@@ -4,6 +4,80 @@ import { printJson } from "../../../utils/output.js";
 import type { AdapterActionResult } from "../../../types.js";
 
 type PrintableRecord = Record<string, unknown>;
+type MetaField = string | readonly [key: string, label: string];
+type ResourceConfig = {
+  titleKeys: readonly string[];
+  metaFields: readonly MetaField[];
+  detailKeys: readonly string[];
+};
+
+const RESOURCE_CONFIGS: Record<string, ResourceConfig> = {
+  alertContacts: {
+    titleKeys: ["friendlyName", "value", "email", "phone", "id"],
+    metaFields: ["id", "type", "status", ["isDefault", "default"]],
+    detailKeys: ["value", "email", "phone"],
+  },
+  allAlertContacts: {
+    titleKeys: ["friendlyName", "value", "email", "phone", "id"],
+    metaFields: ["id", "type", "status", ["isDefault", "default"]],
+    detailKeys: ["value", "email", "phone"],
+  },
+  incidentComments: {
+    titleKeys: ["comment", "id"],
+    metaFields: ["id", "status", ["createdAt", "created"], ["updatedAt", "updated"]],
+    detailKeys: ["comment", "authorName", "authorEmail"],
+  },
+  incidentComment: {
+    titleKeys: ["comment", "id"],
+    metaFields: ["id", "status", ["createdAt", "created"], ["updatedAt", "updated"]],
+    detailKeys: ["comment", "authorName", "authorEmail"],
+  },
+  monitorGroups: {
+    titleKeys: ["name", "id"],
+    metaFields: ["id", "status"],
+    detailKeys: ["name", "description"],
+  },
+  monitorGroup: {
+    titleKeys: ["name", "id"],
+    metaFields: ["id", "status"],
+    detailKeys: ["name", "description"],
+  },
+  maintenanceWindows: {
+    titleKeys: ["name", "id"],
+    metaFields: ["id", "status", ["startsAt", "starts"], ["endsAt", "ends"]],
+    detailKeys: ["name", "description", "timezone"],
+  },
+  maintenanceWindow: {
+    titleKeys: ["name", "id"],
+    metaFields: ["id", "status", ["startsAt", "starts"], ["endsAt", "ends"]],
+    detailKeys: ["name", "description", "timezone"],
+  },
+  psps: {
+    titleKeys: ["friendlyName", "urlKey", "id"],
+    metaFields: ["id", "status", ["subdomain", "subdomain"], ["customDomain", "domain"]],
+    detailKeys: ["urlKey", "subdomain", "customDomain", "companyName", "website"],
+  },
+  psp: {
+    titleKeys: ["friendlyName", "urlKey", "id"],
+    metaFields: ["id", "status", ["subdomain", "subdomain"], ["customDomain", "domain"]],
+    detailKeys: ["urlKey", "subdomain", "customDomain", "companyName", "website"],
+  },
+  announcements: {
+    titleKeys: ["title", "id"],
+    metaFields: ["id", "status", ["startsAt", "starts"], ["endsAt", "ends"], ["pinned", "pinned"]],
+    detailKeys: ["message", "description"],
+  },
+  announcement: {
+    titleKeys: ["title", "id"],
+    metaFields: ["id", "status", ["startsAt", "starts"], ["endsAt", "ends"], ["pinned", "pinned"]],
+    detailKeys: ["message", "description"],
+  },
+  tags: {
+    titleKeys: ["name", "id"],
+    metaFields: ["id", "status", "color"],
+    detailKeys: ["name", "color"],
+  },
+};
 
 export function printUptimeRobotIdentityResult(result: AdapterActionResult, json: boolean): void {
   if (json) {
@@ -55,7 +129,10 @@ export function printUptimeRobotMonitorResult(result: AdapterActionResult, json:
   const monitor = toRecord(result.data?.monitor);
   if (monitor) {
     printMonitorDetail(monitor);
+    return;
   }
+
+  printMutationSummary(result.data, ["monitorId"]);
 }
 
 export function printUptimeRobotStatsResult(result: AdapterActionResult, json: boolean): void {
@@ -104,7 +181,10 @@ export function printUptimeRobotIncidentResult(result: AdapterActionResult, json
   const incident = toRecord(result.data?.incident);
   if (incident) {
     printIncidentDetail(incident);
+    return;
   }
+
+  printMutationSummary(result.data, ["incidentId"]);
 }
 
 export function printUptimeRobotIntegrationResult(result: AdapterActionResult, json: boolean): void {
@@ -127,7 +207,82 @@ export function printUptimeRobotIntegrationResult(result: AdapterActionResult, j
   const integration = toRecord(result.data?.integration);
   if (integration) {
     printIntegrationDetail(integration);
+    return;
   }
+
+  printMutationSummary(result.data, ["integrationId"]);
+}
+
+export function printUptimeRobotResourceResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+
+  const data = result.data;
+  if (!data) {
+    return;
+  }
+
+  const listMatch = findListMatch(data);
+  if (listMatch) {
+    const config = RESOURCE_CONFIGS[listMatch.key]!;
+    for (const [index, item] of listMatch.items.entries()) {
+      printGenericLine(item, index + 1, config);
+    }
+    printContextDetails(data);
+    printNextLink(data);
+    return;
+  }
+
+  const entityMatch = findEntityMatch(data);
+  if (entityMatch) {
+    const config = RESOURCE_CONFIGS[entityMatch.key]!;
+    printGenericDetail(entityMatch.record, config);
+    printContextDetails(data);
+    return;
+  }
+
+  if (toRecord(data.incidentComment)) {
+    printGenericDetail(toRecord(data.incidentComment) ?? {}, RESOURCE_CONFIGS.incidentComment!);
+    printContextDetails(data);
+    return;
+  }
+
+  if (Array.isArray(data.incidentAlerts)) {
+    printFallbackList("incident alerts", data.incidentAlerts);
+    printContextDetails(data);
+    return;
+  }
+
+  if (toRecord(data.incidentAlerts)) {
+    printFallbackRecord(toRecord(data.incidentAlerts) ?? {});
+    printContextDetails(data);
+    return;
+  }
+
+  if (Array.isArray(data.activityLog)) {
+    printFallbackList("activity log", data.activityLog);
+    printContextDetails(data);
+    return;
+  }
+
+  if (toRecord(data.activityLog)) {
+    printFallbackRecord(toRecord(data.activityLog) ?? {});
+    printContextDetails(data);
+    return;
+  }
+
+  printMutationSummary(data, [
+    "incidentId",
+    "commentId",
+    "monitorGroupId",
+    "maintenanceWindowId",
+    "pspId",
+    "tagId",
+  ]);
 }
 
 function printMonitorLine(monitor: PrintableRecord, index: number): void {
@@ -374,6 +529,178 @@ function printIntegrationDetail(integration: PrintableRecord): void {
   }
 }
 
+function printGenericLine(record: PrintableRecord, index: number, config: ResourceConfig): void {
+  const title = firstString(record, config.titleKeys) ?? `Item ${index}`;
+  console.log(`${index}. ${truncate(title, 120)}`);
+
+  const meta = config.metaFields
+    .map((field) => renderMetaField(record, field))
+    .filter((value): value is string => Boolean(value));
+
+  if (meta.length > 0) {
+    console.log(`   ${meta.join(" • ")}`);
+  }
+
+  const detail = config.detailKeys
+    .map((key) => firstString(record, [key]))
+    .find((value) => Boolean(value) && value !== title);
+
+  if (detail) {
+    console.log(`   ${truncate(detail, 160)}`);
+  }
+}
+
+function printGenericDetail(record: PrintableRecord, config: ResourceConfig): void {
+  const title = firstString(record, config.titleKeys);
+  if (title) {
+    console.log(truncate(title, 160));
+  }
+
+  const meta = config.metaFields
+    .map((field) => renderMetaField(record, field))
+    .filter((value): value is string => Boolean(value));
+
+  if (meta.length > 0) {
+    console.log(meta.join(" • "));
+  }
+
+  for (const key of config.detailKeys) {
+    const value = firstString(record, [key]);
+    if (value && value !== title) {
+      console.log(`${key}: ${truncate(value, 240)}`);
+    }
+  }
+
+  printNestedCollectionSummary(record);
+}
+
+function printMutationSummary(data: PrintableRecord | undefined, idKeys: readonly string[]): void {
+  if (!data) {
+    return;
+  }
+
+  const meta = [
+    ...idKeys.map((key) => prefixed(data, key)),
+    prefixed(data, "deleted"),
+    prefixed(data, "reset"),
+    prefixed(data, "pinned"),
+  ].filter((value): value is string => Boolean(value));
+
+  if (meta.length > 0) {
+    console.log(meta.join(" • "));
+  }
+}
+
+function printContextDetails(data: PrintableRecord): void {
+  const meta = [
+    prefixed(data, "incidentId", "incident"),
+    prefixed(data, "pspId", "psp"),
+    prefixed(data, "commentId", "comment"),
+  ].filter((value): value is string => Boolean(value));
+
+  if (meta.length > 0) {
+    console.log(meta.join(" • "));
+  }
+}
+
+function printFallbackList(label: string, value: unknown[]): void {
+  console.log(`${label}: ${value.length}`);
+
+  const records = value.filter((item): item is PrintableRecord => Boolean(item) && typeof item === "object" && !Array.isArray(item));
+  for (const [index, record] of records.slice(0, 5).entries()) {
+    const title = firstString(record, ["title", "name", "message", "status", "type", "id"]) ?? `Entry ${index + 1}`;
+    console.log(`${index + 1}. ${truncate(title, 120)}`);
+
+    const meta = summarizePrimitivePairs(record, ["title", "name", "message"])
+      .slice(0, 4)
+      .map(([key, item]) => `${key} ${item}`);
+
+    if (meta.length > 0) {
+      console.log(`   ${meta.join(" • ")}`);
+    }
+  }
+}
+
+function printFallbackRecord(record: PrintableRecord): void {
+  const title = firstString(record, ["title", "name", "message", "status", "id"]);
+  if (title) {
+    console.log(truncate(title, 160));
+  }
+
+  const meta = summarizePrimitivePairs(record, ["title", "name", "message"])
+    .slice(0, 8)
+    .map(([key, value]) => `${key} ${truncate(value, 80)}`);
+
+  if (meta.length > 0) {
+    console.log(meta.join(" • "));
+  }
+
+  printNestedCollectionSummary(record);
+}
+
+function printNestedCollectionSummary(record: PrintableRecord): void {
+  const nested = Object.entries(record)
+    .flatMap(([key, value]) => {
+      if (Array.isArray(value)) {
+        return [`${key} ${value.length}`];
+      }
+      if (isPlainObject(value)) {
+        return [`${key} object`];
+      }
+      return [];
+    });
+
+  if (nested.length > 0) {
+    console.log(`contains: ${nested.join(" • ")}`);
+  }
+}
+
+function findListMatch(data: PrintableRecord): { key: string; items: PrintableRecord[] } | undefined {
+  for (const key of Object.keys(RESOURCE_CONFIGS)) {
+    const value = data[key];
+    if (Array.isArray(value)) {
+      return {
+        key,
+        items: toRecordArray(value),
+      };
+    }
+  }
+
+  return undefined;
+}
+
+function findEntityMatch(data: PrintableRecord): { key: string; record: PrintableRecord } | undefined {
+  for (const key of Object.keys(RESOURCE_CONFIGS)) {
+    const value = data[key];
+    const record = toRecord(value);
+    if (record) {
+      return {
+        key,
+        record,
+      };
+    }
+  }
+
+  return undefined;
+}
+
+function renderMetaField(record: PrintableRecord, field: MetaField): string | undefined {
+  if (typeof field === "string") {
+    return prefixed(record, field);
+  }
+
+  return prefixed(record, field[0], field[1]);
+}
+
+function summarizePrimitivePairs(record: PrintableRecord, excluded: readonly string[]): Array<[string, string]> {
+  return Object.entries(record)
+    .filter(([key]) => !excluded.includes(key))
+    .flatMap(([key, value]) => {
+      const rendered = primitiveString(value);
+      return rendered ? [[key, rendered] as [string, string]] : [];
+    });
+}
+
 function printNextLink(data: Record<string, unknown> | undefined): void {
   const nextLink = firstString(data, ["nextLink"]);
   if (nextLink) {
@@ -440,19 +767,30 @@ function firstString(record: PrintableRecord | undefined, keys: readonly string[
   }
 
   for (const key of keys) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim().length > 0) {
-      return value.trim();
-    }
-    if (typeof value === "number" && Number.isFinite(value)) {
-      return String(value);
-    }
-    if (typeof value === "boolean") {
-      return String(value);
+    const value = primitiveString(record[key]);
+    if (value) {
+      return value;
     }
   }
 
   return undefined;
+}
+
+function primitiveString(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value.trim();
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  if (typeof value === "boolean") {
+    return String(value);
+  }
+  return undefined;
+}
+
+function truncate(value: string, maxLength: number): string {
+  return value.length > maxLength ? `${value.slice(0, maxLength - 1)}…` : value;
 }
 
 function asNumber(value: unknown): number | undefined {
@@ -471,4 +809,8 @@ function toRecordArray(value: unknown): PrintableRecord[] {
   return Array.isArray(value)
     ? value.filter((entry): entry is PrintableRecord => Boolean(entry) && typeof entry === "object" && !Array.isArray(entry))
     : [];
+}
+
+function isPlainObject(value: unknown): value is PrintableRecord {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
