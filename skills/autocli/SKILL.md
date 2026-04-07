@@ -60,6 +60,7 @@ Use only one recovery step before retrying unless the user explicitly asks for t
 ## Global Commands
 
 - `autocli login --browser`
+- `autocli search <query>`
 - `autocli status --json`
 - `autocli doctor --json`
 - `autocli sessions --json`

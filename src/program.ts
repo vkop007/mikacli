@@ -4,6 +4,7 @@ import pc from "picocolors";
 import packageJson from "../package.json" with { type: "json" };
 import { createDoctorCommand } from "./commands/doctor.js";
 import { createLoginCommand } from "./commands/login.js";
+import { createSearchCommand } from "./commands/search.js";
 import { createSessionsCommand } from "./commands/sessions.js";
 import { createStatusCommand } from "./commands/status.js";
 import { AutoCliError } from "./errors.js";
@@ -16,6 +17,7 @@ ${pc.dim("Terminal automation across LLMs, editors, finance, maps, movies, news,
 
 const ROOT_EXAMPLES = [
   "autocli login --browser",
+  'autocli search "youtube download"',
   'autocli llm chatgpt text "Hello my name is Justine"',
   "autocli doctor",
   "autocli sessions",
@@ -54,6 +56,7 @@ ${ROOT_EXAMPLES.map((example) => `  ${example}`).join("\n")}
 `,
     )
     .addCommand(createLoginCommand())
+    .addCommand(createSearchCommand())
     .addCommand(createStatusCommand())
     .addCommand(createDoctorCommand())
     .addCommand(createSessionsCommand());
@@ -98,7 +101,7 @@ function findLegacyDirectProviderInvocation(argv: readonly string[]): {
     return undefined;
   }
 
-  const reserved = new Set<string>(["help", "login", "status", "doctor", "sessions", ...getPlatformCategories()]);
+  const reserved = new Set<string>(["help", "login", "search", "status", "doctor", "sessions", ...getPlatformCategories()]);
   const isHelpRequest = positionals[0] === "help";
   const candidate = isHelpRequest ? positionals[1] : positionals[0];
   if (!candidate || reserved.has(candidate)) {

@@ -100,6 +100,7 @@ Typical commands:
 
 ```bash
 autocli status
+autocli search "youtube download"
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli developer github login --browser
 autocli developer github me --json
@@ -173,6 +174,19 @@ autocli tools download video https://www.instagram.com/reel/SHORTCODE/ --platfor
 autocli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3
 autocli tools download batch ./urls.txt --mode video --quality 720p
 autocli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5
+```
+
+## Command Search
+
+Use `autocli search` to find providers and exact runnable commands across AutoCLI's built-in command surface.
+
+Examples:
+
+```bash
+autocli search github
+autocli search "youtube download"
+autocli search uptime --category devops
+autocli search transcript --json
 ```
 
 ## Cross-Site Transcripts
