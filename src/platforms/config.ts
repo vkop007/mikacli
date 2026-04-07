@@ -87,6 +87,7 @@ export const PLATFORM_NAMES = [
   "timezone",
   "translate",
   "uptime",
+  "uptimerobot",
   "subtitle",
   "supabase",
   "text",
@@ -741,6 +742,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://example.com",
     homeUrl: "https://example.com/",
     cookieDomain: "example.com",
+    authCookieNames: [],
+  },
+  uptimerobot: {
+    displayName: "UptimeRobot",
+    origin: "https://api.uptimerobot.com/v3",
+    homeUrl: "https://dashboard.uptimerobot.com/",
+    cookieDomain: "uptimerobot.com",
     authCookieNames: [],
   },
   subtitle: {

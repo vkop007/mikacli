@@ -127,6 +127,7 @@ describe("platform category routing", () => {
       "railway",
       "render",
       "supabase",
+      "uptimerobot",
       "vercel",
     ]);
   });

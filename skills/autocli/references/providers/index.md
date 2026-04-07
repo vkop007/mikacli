@@ -114,6 +114,7 @@ Use these files when the main `$autocli` skill already knows the provider and ne
 - [Railway](./railway.md)
 - [Render](./render.md)
 - [Supabase](./supabase.md)
+- [UptimeRobot](./uptimerobot.md)
 - [Vercel](./vercel.md)
 
 ## bot

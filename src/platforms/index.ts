@@ -18,6 +18,7 @@ import { flyPlatformDefinition } from "./devops/fly/manifest.js";
 import { jiraPlatformDefinition } from "./developer/jira/manifest.js";
 import { linearPlatformDefinition } from "./developer/linear/manifest.js";
 import { supabasePlatformDefinition } from "./devops/supabase/manifest.js";
+import { uptimeRobotPlatformDefinition } from "./devops/uptimerobot/manifest.js";
 import { archiveEditorPlatformDefinition } from "./editor/archive/manifest.js";
 import { audioEditorPlatformDefinition } from "./editor/audio/manifest.js";
 import { documentEditorPlatformDefinition } from "./editor/document/manifest.js";
@@ -202,6 +203,7 @@ const definitions: readonly PlatformDefinition[] = [
   uptimePlatformDefinition,
   subtitleEditorPlatformDefinition,
   supabasePlatformDefinition,
+  uptimeRobotPlatformDefinition,
   videoEditorPlatformDefinition,
   vercelPlatformDefinition,
   weatherPlatformDefinition,
