@@ -83,6 +83,7 @@ import { sitemapPlatformDefinition } from "./tools/sitemap/manifest.js";
 import { sslPlatformDefinition } from "./tools/ssl/manifest.js";
 import { timePlatformDefinition } from "./tools/time/manifest.js";
 import { timezonePlatformDefinition } from "./tools/timezone/manifest.js";
+import { transcriptPlatformDefinition } from "./tools/transcript/manifest.js";
 import { translatePlatformDefinition } from "./tools/translate/manifest.js";
 import { uptimePlatformDefinition } from "./tools/uptime/manifest.js";
 import { weatherPlatformDefinition } from "./tools/weather/manifest.js";
@@ -197,6 +198,7 @@ const definitions: readonly PlatformDefinition[] = [
   tiktokPlatformDefinition,
   timePlatformDefinition,
   timezonePlatformDefinition,
+  transcriptPlatformDefinition,
   trelloPlatformDefinition,
   translatePlatformDefinition,
   tvMazePlatformDefinition,

@@ -7,7 +7,7 @@ import { assertLocalInputFile, normalizeOutputExtension, runFfmpegEdit } from ".
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
-type SubtitleFormat = "srt" | "vtt";
+export type SubtitleFormat = "srt" | "vtt";
 
 type SubtitleInfoInput = {
   inputPath: string;
@@ -41,7 +41,7 @@ type SubtitleBurnInput = {
   output?: string;
 };
 
-interface SubtitleCue {
+export interface SubtitleCue {
   startMs: number;
   endMs: number;
   text: string[];
@@ -394,7 +394,7 @@ function detectSubtitleFormat(inputPath: string, content: string): SubtitleForma
   return content.trimStart().startsWith("WEBVTT") ? "vtt" : "srt";
 }
 
-function parseSrt(content: string): SubtitleCue[] {
+export function parseSrt(content: string): SubtitleCue[] {
   const blocks = content.replace(/\r\n/g, "\n").trim().split(/\n{2,}/);
   const cues: SubtitleCue[] = [];
 
@@ -422,7 +422,7 @@ function parseSrt(content: string): SubtitleCue[] {
   return cues;
 }
 
-function parseVtt(content: string): SubtitleCue[] {
+export function parseVtt(content: string): SubtitleCue[] {
   const normalized = content.replace(/\r\n/g, "\n").trim();
   const body = normalized.startsWith("WEBVTT") ? normalized.slice("WEBVTT".length).trimStart() : normalized;
   const blocks = body.split(/\n{2,}/);
@@ -452,7 +452,7 @@ function parseVtt(content: string): SubtitleCue[] {
   return cues;
 }
 
-function serializeSubtitleDocument(cues: SubtitleCue[], format: SubtitleFormat): string {
+export function serializeSubtitleDocument(cues: SubtitleCue[], format: SubtitleFormat): string {
   if (format === "vtt") {
     return ["WEBVTT", "", ...cues.map((cue) => `${formatMsToTimestamp(cue.startMs)} --> ${formatMsToTimestamp(cue.endMs)}\n${cue.text.join("\n")}`)].join("\n\n") + "\n";
   }

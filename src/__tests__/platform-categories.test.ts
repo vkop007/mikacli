@@ -174,6 +174,7 @@ describe("platform category routing", () => {
     expect(toolIds).toContain("robots");
     expect(toolIds).toContain("ssl");
     expect(toolIds).toContain("timezone");
+    expect(toolIds).toContain("transcript");
     expect(toolIds).toContain("markdown-fetch");
     expect(toolIds).toContain("uptime");
     expect(toolIds).not.toContain("news");

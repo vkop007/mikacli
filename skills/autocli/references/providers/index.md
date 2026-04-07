@@ -146,6 +146,7 @@ Use these files when the main `$autocli` skill already knows the provider and ne
 - [SSL](./ssl.md)
 - [Time](./time.md)
 - [Timezone](./timezone.md)
+- [Transcript](./transcript.md)
 - [Translate](./translate.md)
 - [Uptime](./uptime.md)
 - [Weather](./weather.md)

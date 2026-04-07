@@ -85,6 +85,7 @@ export const PLATFORM_NAMES = [
   "tiktok",
   "time",
   "timezone",
+  "transcript",
   "translate",
   "uptime",
   "uptimerobot",
@@ -728,6 +729,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://timeapi.io",
     homeUrl: "https://timeapi.io/",
     cookieDomain: "timeapi.io",
+    authCookieNames: [],
+  },
+  transcript: {
+    displayName: "Transcript",
+    origin: "https://github.com/yt-dlp/yt-dlp",
+    homeUrl: "https://github.com/yt-dlp/yt-dlp",
+    cookieDomain: "yt-dlp.github.io",
     authCookieNames: [],
   },
   translate: {
