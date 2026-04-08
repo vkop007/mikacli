@@ -250,10 +250,15 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     stability: "partial",
   },
   twitch: {
-    mutation: "unsupported",
+    mutation: "partial",
     browserLogin: "supported",
+    browserFallback: "supported",
     stability: "partial",
-    notes: ["Uses Twitch's authenticated web GraphQL surface for read-heavy channel, stream, video, and clip lookups."],
+    notes: [
+      "Uses Twitch's authenticated web GraphQL surface for channel, stream, video, and clip lookups.",
+      "Follow and unfollow try Twitch's web mutation path first, then can fall back to the shared AutoCLI browser profile when Twitch enforces an integrity challenge.",
+      "Clip creation and stream settings updates currently run through the shared AutoCLI browser profile.",
+    ],
   },
   youtube: {
     mutation: "partial",
