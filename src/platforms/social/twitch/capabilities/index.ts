@@ -6,6 +6,12 @@ import {
   twitchStreamCapability,
   twitchVideosCapability,
 } from "./read.js";
+import {
+  twitchCreateClipCapability,
+  twitchFollowCapability,
+  twitchUnfollowCapability,
+  twitchUpdateStreamCapability,
+} from "./write.js";
 
 export const twitchCapabilities = [
   twitchLoginCapability,
@@ -16,4 +22,8 @@ export const twitchCapabilities = [
   twitchStreamCapability,
   twitchVideosCapability,
   twitchClipsCapability,
+  twitchFollowCapability,
+  twitchUnfollowCapability,
+  twitchCreateClipCapability,
+  twitchUpdateStreamCapability,
 ] as const;

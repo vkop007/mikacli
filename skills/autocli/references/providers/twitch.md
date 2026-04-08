@@ -9,18 +9,20 @@ Generated from the real AutoCLI provider definition and command tree.
 - Auth: `cookies`
 - Stability: `partial`
 - Discovery: `supported`
-- Mutation: `unsupported`
+- Mutation: `partial`
 - Browser login: `supported`
-- Browser fallback: `unsupported`
+- Browser fallback: `supported`
 - Async jobs: `unsupported`
 
 ## Description
 
-Inspect Twitch channels, live status, videos, and clips with an imported browser session
+Inspect Twitch channels, live status, videos, and clips, then follow channels or adjust stream settings with a saved Twitch session
 
 ## Notes
 
-- Uses Twitch's authenticated web GraphQL surface for read-heavy channel, stream, video, and clip lookups.
+- Uses Twitch's authenticated web GraphQL surface for channel, stream, video, and clip lookups.
+- Follow and unfollow try Twitch's web mutation path first, then can fall back to the shared AutoCLI browser profile when Twitch enforces an integrity challenge.
+- Clip creation and stream settings updates currently run through the shared AutoCLI browser profile.
 
 ## Fast Start
 
@@ -161,6 +163,74 @@ Options:
 - `--limit <number>`: Maximum clips to return (default: 5)
 - `--period <window>`: Clip window: all-time, last-week, or last-day
 - `--account <name>`: Optional override for a specific saved Twitch session
+
+### `follow`
+
+Usage:
+```bash
+autocli social twitch follow [options] <target>
+```
+
+Follow a Twitch channel by URL, @handle, or login. AutoCLI tries the web mutation first and can switch to the shared browser when needed
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved Twitch session
+- `--browser`: Force the follow through the shared AutoCLI browser profile instead of trying the direct web mutation first
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
+
+### `unfollow`
+
+Usage:
+```bash
+autocli social twitch unfollow [options] <target>
+```
+
+Unfollow a Twitch channel by URL, @handle, or login
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved Twitch session
+- `--browser`: Force the unfollow through the shared AutoCLI browser profile instead of trying the direct web mutation first
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
+
+### `create-clip`
+
+Usage:
+```bash
+autocli social twitch create-clip [options] <target>
+```
+
+Aliases: `clip`
+
+Create a Twitch clip for a live channel through the shared AutoCLI browser profile
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved Twitch session
+- `--browser-timeout <seconds>`: Maximum seconds to allow the shared browser action to complete
+
+### `update-stream`
+
+Usage:
+```bash
+autocli social twitch update-stream [options]
+```
+
+Aliases: `stream-update`
+
+Update Twitch stream settings like title, category, tags, or the mature toggle through the shared AutoCLI browser profile
+
+Options:
+
+- `--title <text>`: New stream title
+- `--category <name>`: New category or game name
+- `--tags <csv>`: Comma-separated stream tags to add
+- `--clear-tags`: Remove existing stream tags before adding new ones
+- `--mature`: Turn the mature content toggle on
+- `--not-mature`: Turn the mature content toggle off
+- `--account <name>`: Optional override for a specific saved Twitch session
+- `--browser-timeout <seconds>`: Maximum seconds to allow the shared browser action to complete
 
 ### `capabilities`
 

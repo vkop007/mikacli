@@ -7,7 +7,7 @@ export const twitchPlatformDefinition: PlatformDefinition = {
   id: "twitch",
   category: "social",
   displayName: "Twitch",
-  description: "Inspect Twitch channels, live status, videos, and clips with an imported browser session",
+  description: "Inspect Twitch channels, live status, videos, and clips, then follow channels or adjust stream settings with a saved Twitch session",
   authStrategies: ["cookies"],
   adapter: twitchAdapter,
   capabilities: twitchCapabilities,
@@ -21,5 +21,9 @@ export const twitchPlatformDefinition: PlatformDefinition = {
     "autocli social twitch stream tradereign",
     "autocli social twitch videos twitch --limit 5",
     "autocli social twitch clips twitch --period all-time --limit 5",
+    "autocli social twitch follow twitch",
+    "autocli social twitch unfollow twitch --browser",
+    "autocli social twitch create-clip tradereign",
+    "autocli social twitch update-stream --title \"AutoCLI live\" --category Crypto --tags trading,analysis",
   ],
 };
