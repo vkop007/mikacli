@@ -216,6 +216,90 @@ export function parseXProfileTarget(target: string): {
   });
 }
 
+const TWITCH_RESERVED_LOGINS = new Set([
+  "",
+  "activate",
+  "bits",
+  "collections",
+  "dashboard",
+  "directory",
+  "downloads",
+  "friends",
+  "inventory",
+  "jobs",
+  "login",
+  "messages",
+  "notifications",
+  "payments",
+  "prime",
+  "products",
+  "search",
+  "settings",
+  "signin",
+  "signup",
+  "store",
+  "subscriptions",
+  "turbo",
+  "videos",
+  "wallet",
+]);
+
+export function parseTwitchProfileTarget(target: string): {
+  username: string;
+  url?: string;
+} {
+  const trimmed = target.trim();
+
+  if (!trimmed) {
+    throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL, @handle, or channel login.", {
+      details: { target },
+    });
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    let parsedUrl: URL;
+
+    try {
+      parsedUrl = new URL(trimmed);
+    } catch {
+      throw new AutoCliError("INVALID_TARGET", "Expected a valid Twitch channel URL.", {
+        details: { target },
+      });
+    }
+
+    const hostname = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
+    if (hostname !== "twitch.tv") {
+      throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL.", {
+        details: { target },
+      });
+    }
+
+    const [firstSegment] = parsedUrl.pathname.split("/").filter(Boolean);
+    const username = firstSegment?.trim();
+    if (username && isValidTwitchLogin(username) && !TWITCH_RESERVED_LOGINS.has(username.toLowerCase())) {
+      return {
+        username,
+        url: trimmed,
+      };
+    }
+
+    throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL.", {
+      details: { target },
+    });
+  }
+
+  const normalized = trimmed.startsWith("@") ? trimmed.slice(1) : trimmed;
+  if (isValidTwitchLogin(normalized) && !TWITCH_RESERVED_LOGINS.has(normalized.toLowerCase())) {
+    return {
+      username: normalized,
+    };
+  }
+
+  throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL, @handle, or channel login.", {
+    details: { target },
+  });
+}
+
 export function parseLinkedInTarget(target: string): {
   entityUrns: string[];
   url?: string;
@@ -798,4 +882,8 @@ function formatYouTubeMusicBrowseTargetError(type: YouTubeMusicBrowseTargetType)
     default:
       return "Expected a valid YouTube Music browse target.";
   }
+}
+
+function isValidTwitchLogin(value: string): boolean {
+  return /^[A-Za-z0-9_]{4,25}$/.test(value);
 }

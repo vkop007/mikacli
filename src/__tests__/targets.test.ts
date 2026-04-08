@@ -13,6 +13,7 @@ import {
   parseSpotifyPlaylistTarget,
   parseSpotifyTrackTarget,
   parseTikTokTarget,
+  parseTwitchProfileTarget,
   parseXProfileTarget,
   parseXTarget,
   parseYouTubeChannelTarget,
@@ -207,6 +208,27 @@ describe("parseXProfileTarget", () => {
     expect(parseXProfileTarget("https://x.com/OpenAI")).toEqual({
       username: "OpenAI",
       url: "https://x.com/OpenAI",
+    });
+  });
+});
+
+describe("parseTwitchProfileTarget", () => {
+  test("parses a raw login", () => {
+    expect(parseTwitchProfileTarget("twitch")).toEqual({
+      username: "twitch",
+    });
+  });
+
+  test("parses a handle target", () => {
+    expect(parseTwitchProfileTarget("@twitch")).toEqual({
+      username: "twitch",
+    });
+  });
+
+  test("parses a channel URL", () => {
+    expect(parseTwitchProfileTarget("https://www.twitch.tv/twitch/videos")).toEqual({
+      username: "twitch",
+      url: "https://www.twitch.tv/twitch/videos",
     });
   });
 });

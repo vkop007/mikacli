@@ -84,6 +84,7 @@ Use these files when the main `$autocli` skill already knows the provider and ne
 - [Telegram](./telegram.md)
 - [Threads](./threads.md)
 - [TikTok](./tiktok.md)
+- [Twitch](./twitch.md)
 - [WhatsApp](./whatsapp.md)
 - [X](./x.md)
 - [YouTube](./youtube.md)

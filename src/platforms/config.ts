@@ -87,6 +87,7 @@ export const PLATFORM_NAMES = [
   "timezone",
   "transcript",
   "translate",
+  "twitch",
   "uptime",
   "uptimerobot",
   "subtitle",
@@ -744,6 +745,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     homeUrl: "https://translate.google.com/",
     cookieDomain: "googleapis.com",
     authCookieNames: [],
+  },
+  twitch: {
+    displayName: "Twitch",
+    origin: "https://gql.twitch.tv/gql",
+    homeUrl: "https://www.twitch.tv/",
+    cookieDomain: "twitch.tv",
+    authCookieNames: ["auth-token", "api_token"],
   },
   uptime: {
     displayName: "Uptime",

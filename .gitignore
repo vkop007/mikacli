@@ -4,3 +4,9 @@ bin
 .DS_Store
 *.log
 cookiestest
+/x.json
+/youtube.json
+/instagram.json
+/twitch.json
+/*.cookies.json
+/*.cookies.txt

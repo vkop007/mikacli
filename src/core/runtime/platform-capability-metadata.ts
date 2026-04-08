@@ -249,6 +249,12 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     browserLogin: "supported",
     stability: "partial",
   },
+  twitch: {
+    mutation: "unsupported",
+    browserLogin: "supported",
+    stability: "partial",
+    notes: ["Uses Twitch's authenticated web GraphQL surface for read-heavy channel, stream, video, and clip lookups."],
+  },
   youtube: {
     mutation: "partial",
     browserLogin: "supported",

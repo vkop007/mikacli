@@ -100,6 +100,7 @@ import { renderPlatformDefinition } from "./devops/render/manifest.js";
 import { telegramPlatformDefinition } from "./social/telegram/manifest.js";
 import { threadsPlatformDefinition } from "./social/threads/manifest.js";
 import { tiktokPlatformDefinition } from "./social/tiktok/manifest.js";
+import { twitchPlatformDefinition } from "./social/twitch/manifest.js";
 import { trelloPlatformDefinition } from "./developer/trello/manifest.js";
 import { vercelPlatformDefinition } from "./devops/vercel/manifest.js";
 import { whatsappPlatformDefinition } from "./social/whatsapp/manifest.js";
@@ -196,6 +197,7 @@ const definitions: readonly PlatformDefinition[] = [
   telegrambotPlatformDefinition,
   threadsPlatformDefinition,
   tiktokPlatformDefinition,
+  twitchPlatformDefinition,
   timePlatformDefinition,
   timezonePlatformDefinition,
   transcriptPlatformDefinition,
