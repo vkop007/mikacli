@@ -1,4 +1,4 @@
-import { youtubeLoginCapability } from "./auth.js";
+import { youtubeLoginCapability, youtubeStatusCapability } from "./auth.js";
 import {
   youtubeCaptionsCapability,
   youtubeChannelIdCapability,
@@ -11,6 +11,7 @@ import {
 } from "./media.js";
 import {
   youtubeCommentCapability,
+  youtubeDeleteCapability,
   youtubeDislikeCapability,
   youtubeLikeCapability,
   youtubeSubscribeCapability,
@@ -20,6 +21,7 @@ import {
 
 export const youtubeCapabilities = [
   youtubeLoginCapability,
+  youtubeStatusCapability,
   youtubeUploadCapability,
   youtubePostCapability,
   youtubeSearchCapability,
@@ -32,6 +34,7 @@ export const youtubeCapabilities = [
   youtubeDislikeCapability,
   youtubeUnlikeCapability,
   youtubeCommentCapability,
+  youtubeDeleteCapability,
   youtubeSubscribeCapability,
   youtubeUnsubscribeCapability,
 ] as const;

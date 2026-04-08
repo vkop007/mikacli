@@ -27,7 +27,7 @@ import type {
   SessionStatus,
   TextPostInput,
 } from "../../../types.js";
-import type { Page as PlaywrightPage } from "playwright-core";
+import type { Locator as PlaywrightLocator, Page as PlaywrightPage } from "playwright-core";
 
 const YOUTUBE_ORIGIN = getPlatformOrigin("youtube");
 const YOUTUBE_HOME = getPlatformHomeUrl("youtube");
@@ -73,6 +73,7 @@ interface YouTubePageConfig {
   sessionIndex?: string;
   createCommentParams?: string;
   loggedIn?: boolean;
+  html?: string;
 }
 
 interface YouTubeActionContext {
@@ -213,6 +214,25 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     });
   }
 
+  async statusAction(account?: string): Promise<AdapterActionResult> {
+    const status = await this.getStatus(account);
+    return {
+      ok: true,
+      platform: this.platform,
+      account: status.account,
+      action: "status",
+      message: `YouTube session is ${status.status}.`,
+      user: status.user,
+      sessionPath: status.sessionPath,
+      data: {
+        connected: status.connected,
+        status: status.status,
+        details: status.message,
+        lastValidatedAt: status.lastValidatedAt,
+      },
+    };
+  }
+
   async postMedia(_input: PostMediaInput): Promise<AdapterActionResult> {
     const input = _input;
     const { session, path } = await this.prepareSession(input.account);
@@ -247,7 +267,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       steps: [
         {
           source: "headless",
-          shouldContinueOnError: (error) => shouldRetryYouTubeUploadInSharedBrowser(error),
+          shouldContinueOnError: (error) => shouldRetryYouTubeBrowserWriteInSharedBrowser(error),
         },
         {
           source: "shared",
@@ -396,10 +416,236 @@ export class YouTubeAdapter extends BasePlatformAdapter {
   }
 
   async postText(_input: TextPostInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(
-      "UNSUPPORTED_ACTION",
-      "YouTube community posting is not implemented yet. The current CLI supports engagement actions on videos and channels.",
-    );
+    const input = _input;
+    const { session, path } = await this.prepareSession(input.account);
+    await this.ensureUsableSession(session);
+
+    const text = normalizeWhitespace(input.text);
+    if (!text) {
+      throw new AutoCliError("INVALID_POST_TEXT", "Expected non-empty text for the YouTube community post.");
+    }
+    if (input.imagePath) {
+      await this.assertReadableUploadFile(
+        input.imagePath,
+        "YOUTUBE_POST_IMAGE_MISSING",
+        "Expected a readable image file for the YouTube community post.",
+      );
+    }
+
+    const timeoutSeconds = input.browserTimeoutSeconds ?? 90;
+    const steps = input.browser
+      ? [{
+          source: "shared" as const,
+          announceLabel: `Opening shared AutoCLI browser profile for YouTube community posting: ${YOUTUBE_STUDIO_ORIGIN}`,
+        }]
+      : [
+          {
+            source: "headless" as const,
+            shouldContinueOnError: (error: unknown) => shouldRetryYouTubeBrowserWriteInSharedBrowser(error),
+          },
+          {
+            source: "shared" as const,
+            announceLabel: `Opening shared AutoCLI browser profile for YouTube community posting: ${YOUTUBE_STUDIO_ORIGIN}`,
+          },
+        ];
+
+    const execution = await runFirstClassBrowserAction<{
+      source: "headless" | "profile" | "shared";
+      finalUrl?: string;
+      postUrl?: string;
+      postId?: string;
+    }>({
+      platform: this.platform,
+      action: "post",
+      actionLabel: "community post",
+      targetUrl: YOUTUBE_STUDIO_ORIGIN,
+      timeoutSeconds,
+      initialCookies: session.cookieJar.cookies,
+      headless: true,
+      userAgent: YOUTUBE_USER_AGENT,
+      locale: "en-US",
+      mode: "required",
+      steps,
+      actionFn: async (page, source) => {
+        await this.ensureYouTubeBrowserAuthenticated(page);
+        const postsUrl = await this.resolveOwnChannelPostsUrl(page);
+        await page.goto(postsUrl, {
+          waitUntil: "domcontentloaded",
+        });
+        await page.waitForTimeout(1_500);
+        await this.throwIfStudioBrowserBlocked(page);
+
+        const editor = await this.openYouTubePostComposer(page);
+        if (input.imagePath) {
+          await this.attachYouTubePostImage(page, input.imagePath);
+        }
+        await this.fillYouTubePostEditor(page, editor, text);
+
+        const responsePromise = page.waitForResponse(
+          (response) =>
+            response.url().includes("/backstage/create_post") && response.request().method().toUpperCase() === "POST",
+          {
+            timeout: 20_000,
+          },
+        );
+        const submitButton = await this.waitForEnabledYouTubePostButton(page);
+        await clickYouTubeStudioLocator(submitButton);
+        const response = await responsePromise;
+        if (!response.ok()) {
+          throw new AutoCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed community post request.", {
+            details: {
+              url: response.url(),
+              status: response.status(),
+              statusText: response.statusText(),
+            },
+          });
+        }
+
+        await page.waitForTimeout(1_500);
+        await this.throwIfStudioBrowserBlocked(page);
+        const published = await this.findPublishedYouTubeCommunityPost(page, text).catch(() => undefined);
+
+        return {
+          source,
+          finalUrl: published?.postUrl ?? postsUrl,
+          postUrl: published?.postUrl,
+          postId: published?.postId,
+        };
+      },
+    });
+
+    return withBrowserActionMetadata({
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "post",
+      message: `YouTube community post published for ${session.account} through a browser-backed flow.`,
+      id: execution.value.postId,
+      url: execution.value.finalUrl,
+      sessionPath: path,
+      data: {
+        text,
+        imagePath: input.imagePath,
+        postUrl: execution.value.postUrl,
+      },
+    }, execution);
+  }
+
+  async deletePost(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const { session, path } = await this.prepareSession(input.account);
+    await this.ensureUsableSession(session);
+
+    const target = resolveYouTubeCommunityPostTarget(input.target);
+    const timeoutSeconds = input.browserTimeoutSeconds ?? 90;
+    const steps = input.browser
+      ? [{
+          source: "shared" as const,
+          announceLabel: `Opening shared AutoCLI browser profile for YouTube community delete: ${target.url}`,
+        }]
+      : [
+          {
+            source: "headless" as const,
+            shouldContinueOnError: (error: unknown) => shouldRetryYouTubeBrowserWriteInSharedBrowser(error),
+          },
+          {
+            source: "shared" as const,
+            announceLabel: `Opening shared AutoCLI browser profile for YouTube community delete: ${target.url}`,
+          },
+        ];
+
+    const execution = await runFirstClassBrowserAction<{
+      finalUrl?: string;
+      source: "headless" | "profile" | "shared";
+    }>({
+      platform: this.platform,
+      action: "delete",
+      actionLabel: "community delete",
+      targetUrl: target.url,
+      timeoutSeconds,
+      initialCookies: session.cookieJar.cookies,
+      headless: true,
+      userAgent: YOUTUBE_USER_AGENT,
+      locale: "en-US",
+      mode: "required",
+      steps,
+      actionFn: async (page, source) => {
+        await this.ensureYouTubeBrowserAuthenticated(page);
+        await page.goto(target.url, {
+          waitUntil: "domcontentloaded",
+        });
+        await page.waitForTimeout(1_500);
+        await this.throwIfStudioBrowserBlocked(page);
+        await this.waitForVisibleYouTubeCommunityPost(page, target.postId);
+
+        const responsePromise = page.waitForResponse(
+          (response) =>
+            response.request().method().toUpperCase() === "POST" &&
+            response.url().includes("/backstage/") &&
+            /delete|remove/i.test(response.url()),
+          {
+            timeout: 20_000,
+          },
+        ).catch(() => null);
+
+        await this.openYouTubeCommunityPostActionMenu(page, target.postId);
+        const deleteItem = await firstVisibleYouTubeStudioLocator(page, [
+          'ytd-menu-service-item-renderer:has-text("Delete")',
+          'ytd-menu-service-item-renderer:has-text("Remove")',
+          'tp-yt-paper-item:has-text("Delete")',
+          'tp-yt-paper-item:has-text("Remove")',
+          '[role="menuitem"]:has-text("Delete")',
+          '[role="menuitem"]:has-text("Remove")',
+          'button:has-text("Delete")',
+          'button:has-text("Remove")',
+        ]);
+        await clickYouTubeStudioLocator(deleteItem);
+        await page.waitForTimeout(400);
+
+        const confirmButton = await firstVisibleYouTubeStudioLocator(page, [
+          '[role="dialog"] button:has-text("Delete")',
+          '[role="dialog"] button:has-text("Remove")',
+          'tp-yt-paper-dialog button:has-text("Delete")',
+          'tp-yt-paper-dialog button:has-text("Remove")',
+          'button:has-text("Delete")',
+          'button:has-text("Remove")',
+        ]);
+        await clickYouTubeStudioLocator(confirmButton);
+
+        const response = await responsePromise;
+        if (response && !response.ok()) {
+          throw new AutoCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed community delete request.", {
+            details: {
+              url: response.url(),
+              status: response.status(),
+              statusText: response.statusText(),
+            },
+          });
+        }
+
+        await page.waitForTimeout(1_500);
+        await this.throwIfStudioBrowserBlocked(page);
+        await this.waitForYouTubeCommunityPostRemoval(page, target.postId);
+
+        return {
+          finalUrl: page.url(),
+          source,
+        };
+      },
+    });
+
+    return withBrowserActionMetadata({
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "delete",
+      message: `YouTube community post deleted for ${session.account} through a browser-backed flow.`,
+      id: target.postId,
+      url: execution.value.finalUrl ?? target.url,
+      sessionPath: path,
+      data: {
+        target: target.postId,
+      },
+    }, execution);
   }
 
   async like(input: LikeInput): Promise<AdapterActionResult> {
@@ -481,55 +727,63 @@ export class YouTubeAdapter extends BasePlatformAdapter {
   }
 
   async comment(input: CommentInput): Promise<AdapterActionResult> {
-    const { session } = await this.prepareSession(input.account);
+    const { session, path } = await this.prepareSession(input.account);
     await this.ensureUsableSession(session);
 
     const target = parseYouTubeTarget(input.target);
     const context = await this.prepareVideoActionContext(session, target.videoId, target.url);
     const watchUrl = context.url;
-    const createCommentParams = this.requirePageField(
-      context.page.createCommentParams,
-      "YouTube createCommentParams token",
-      "YouTube did not expose a comment token for this video. Comments may be disabled, or the page needs a fresh logged-in cookie export.",
-    );
 
-    try {
-      await context.client.request(this.buildYoutubeiUrl("comment/create_comment", context.apiKey), {
-        method: "POST",
-        expectedStatus: 200,
-        headers: await this.buildYouTubeApiHeaders(context.client, {
-          clientVersion: context.clientVersion,
-          visitorData: context.page.visitorData,
-          delegatedSessionId: context.page.delegatedSessionId,
-          sessionIndex: context.page.sessionIndex,
-          referer: watchUrl,
-        }),
-        body: JSON.stringify({
-          context: this.buildYouTubeContext({
+    if (context.page.createCommentParams) {
+      try {
+        await context.client.request(this.buildYoutubeiUrl("comment/create_comment", context.apiKey), {
+          method: "POST",
+          expectedStatus: 200,
+          headers: await this.buildYouTubeApiHeaders(context.client, {
             clientVersion: context.clientVersion,
             visitorData: context.page.visitorData,
-            originalUrl: watchUrl,
+            delegatedSessionId: context.page.delegatedSessionId,
+            sessionIndex: context.page.sessionIndex,
+            referer: watchUrl,
           }),
-          createCommentParams,
-          commentText: input.text,
-        }),
-      });
-    } catch (error) {
-      throw this.mapYouTubeWriteError(error, "Failed to comment on the YouTube video.");
+          body: JSON.stringify({
+            context: this.buildYouTubeContext({
+              clientVersion: context.clientVersion,
+              visitorData: context.page.visitorData,
+              originalUrl: watchUrl,
+            }),
+            createCommentParams: context.page.createCommentParams,
+            commentText: input.text,
+          }),
+        });
+
+        return {
+          ok: true,
+          platform: this.platform,
+          account: session.account,
+          action: "comment",
+          message: `YouTube comment sent for ${session.account}.`,
+          id: target.videoId,
+          url: watchUrl,
+          data: {
+            text: input.text,
+          },
+        };
+      } catch (error) {
+        const mapped = this.mapYouTubeWriteError(error, "Failed to comment on the YouTube video.");
+        if (!shouldRetryYouTubeBrowserWriteInSharedBrowser(mapped)) {
+          throw mapped;
+        }
+      }
     }
 
-    return {
-      ok: true,
-      platform: this.platform,
-      account: session.account,
-      action: "comment",
-      message: `YouTube comment sent for ${session.account}.`,
-      id: target.videoId,
-      url: watchUrl,
-      data: {
-        text: input.text,
-      },
-    };
+    return this.browserComment({
+      session,
+      sessionPath: path,
+      videoId: target.videoId,
+      targetUrl: watchUrl,
+      text: input.text,
+    });
   }
 
   async search(input: {
@@ -617,7 +871,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
     let info: YouTubeVideoInfo;
     try {
-      const response = await context.client.request<Record<string, unknown>>(
+      let response = await context.client.request<Record<string, unknown>>(
         this.buildYoutubeiUrl("player", context.apiKey),
         {
           method: "POST",
@@ -639,6 +893,21 @@ export class YouTubeAdapter extends BasePlatformAdapter {
           }),
         },
       );
+
+      const playabilityStatus =
+        "playabilityStatus" in response && response.playabilityStatus && typeof response.playabilityStatus === "object"
+          ? response.playabilityStatus
+          : undefined;
+      const playabilityState =
+        playabilityStatus && "status" in playabilityStatus && typeof playabilityStatus.status === "string"
+          ? playabilityStatus.status
+          : undefined;
+      if (playabilityState && playabilityState !== "OK") {
+        const watchResponse = await this.loadWatchPlayerResponse(context.client, context.url).catch(() => undefined);
+        if (watchResponse && "videoDetails" in watchResponse) {
+          response = watchResponse;
+        }
+      }
 
       info = this.parseVideoInfoResponse(response, target.videoId, context.url);
     } catch (error) {
@@ -781,7 +1050,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
     let tracks: YouTubeCaptionTrack[];
     try {
-      const response = await context.client.request<Record<string, unknown>>(
+      let response = await context.client.request<Record<string, unknown>>(
         this.buildYoutubeiUrl("player", context.apiKey),
         {
           method: "POST",
@@ -804,7 +1073,16 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         },
       );
 
-      tracks = this.extractCaptionTracks(response);
+      let extractedTracks = this.extractCaptionTracks(response);
+      if (extractedTracks.length === 0) {
+        const watchResponse = await this.loadWatchPlayerResponse(context.client, context.url).catch(() => undefined);
+        if (watchResponse) {
+          response = watchResponse;
+          extractedTracks = this.extractCaptionTracks(response);
+        }
+      }
+
+      tracks = extractedTracks;
     } catch (error) {
       throw this.mapYouTubeWriteError(error, "Failed to load YouTube caption tracks.");
     }
@@ -1183,6 +1461,14 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     return this.preparePageActionContext(client, url);
   }
 
+  private async loadWatchPlayerResponse(
+    client: Awaited<ReturnType<YouTubeAdapter["createYouTubeClient"]>>,
+    url: string,
+  ): Promise<Record<string, unknown>> {
+    const html = await this.loadPageHtml(client, url);
+    return this.extractAssignedJsonObject(html, "ytInitialPlayerResponse");
+  }
+
   private async preparePageActionContext(
     client: Awaited<ReturnType<YouTubeAdapter["createYouTubeClient"]>>,
     url: string,
@@ -1253,6 +1539,10 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     fallbackMessage: string;
   }): Promise<void> {
     try {
+      const params =
+        typeof input.context.page.html === "string"
+          ? this.extractSubscriptionMutationParams(input.context.page.html, input.channelId, input.expectedSubscribed)
+          : undefined;
       const response = await input.context.client.request<Record<string, unknown>>(
         this.buildYoutubeiUrl(input.path, input.context.apiKey),
         {
@@ -1272,6 +1562,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
               originalUrl: input.context.url,
             }),
             channelIds: [input.channelId],
+            ...(params ? { params } : {}),
           }),
         },
       );
@@ -1332,7 +1623,10 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       throw new AutoCliError("SESSION_EXPIRED", "YouTube returned a logged-out page. Re-import cookies.txt.");
     }
 
-    return page;
+    return {
+      ...page,
+      html,
+    };
   }
 
   private parseYouTubePageConfig(html: string): YouTubePageConfig {
@@ -1507,6 +1801,10 @@ export class YouTubeAdapter extends BasePlatformAdapter {
   }
 
   private async ensureStudioBrowserAuthenticated(page: PlaywrightPage): Promise<void> {
+    await this.ensureYouTubeBrowserAuthenticated(page);
+  }
+
+  private async ensureYouTubeBrowserAuthenticated(page: PlaywrightPage): Promise<void> {
     await page.waitForLoadState("domcontentloaded");
     await page.waitForTimeout(1_000);
 
@@ -1516,6 +1814,169 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     }
 
     await this.throwIfStudioBrowserBlocked(page);
+  }
+
+  private async browserComment(input: {
+    session: PlatformSession;
+    sessionPath: string;
+    videoId: string;
+    targetUrl: string;
+    text: string;
+  }): Promise<AdapterActionResult> {
+    const execution = await runFirstClassBrowserAction<{
+      finalUrl?: string;
+      source: "headless" | "profile" | "shared";
+    }>({
+      platform: this.platform,
+      action: "comment",
+      actionLabel: "comment",
+      targetUrl: input.targetUrl,
+      timeoutSeconds: 90,
+      initialCookies: input.session.cookieJar.cookies,
+      headless: true,
+      userAgent: YOUTUBE_USER_AGENT,
+      locale: "en-US",
+      steps: [
+        {
+          source: "headless",
+          shouldContinueOnError: (error) => shouldRetryYouTubeBrowserWriteInSharedBrowser(error),
+        },
+        {
+          source: "shared",
+          announceLabel: `Opening shared AutoCLI browser profile for YouTube commenting: ${input.targetUrl}`,
+        },
+      ],
+      actionFn: async (page, source) => {
+        await this.ensureYouTubeBrowserAuthenticated(page);
+        const editor = await this.openYouTubeCommentComposer(page);
+        await this.fillYouTubeCommentEditor(page, editor, input.text);
+
+        const responsePromise = page.waitForResponse(
+          (response) =>
+            response.url().includes("/comment/create_comment") && response.request().method().toUpperCase() === "POST",
+          {
+            timeout: 20_000,
+          },
+        );
+        const submitButton = await this.waitForEnabledYouTubeCommentSubmitButton(page);
+        await clickYouTubeStudioLocator(submitButton);
+        const response = await responsePromise;
+        if (!response.ok()) {
+          throw new AutoCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed comment request.", {
+            details: {
+              url: response.url(),
+              status: response.status(),
+              statusText: response.statusText(),
+            },
+          });
+        }
+
+        await page.waitForTimeout(1_500);
+        await this.throwIfStudioBrowserBlocked(page);
+        return {
+          finalUrl: page.url(),
+          source,
+        };
+      },
+    });
+
+    return withBrowserActionMetadata({
+      ok: true,
+      platform: this.platform,
+      account: input.session.account,
+      action: "comment",
+      message: `YouTube comment sent for ${input.session.account} through a browser-backed flow.`,
+      id: input.videoId,
+      url: execution.value.finalUrl ?? input.targetUrl,
+      sessionPath: input.sessionPath,
+      data: {
+        text: input.text,
+      },
+    }, execution);
+  }
+
+  private async openYouTubeCommentComposer(page: PlaywrightPage) {
+    const placeholderSelectors = [
+      "ytd-comment-simplebox-renderer #placeholder-area",
+      "#simplebox-placeholder",
+      'ytd-comment-simplebox-renderer [aria-label*="comment" i]',
+      'tp-yt-paper-dialog ytd-comment-simplebox-renderer #placeholder-area',
+    ] as const;
+
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+      if (await hasVisibleYouTubeStudioLocator(page, placeholderSelectors)) {
+        const placeholder = await firstVisibleYouTubeStudioLocator(page, placeholderSelectors);
+        await clickYouTubeStudioLocator(placeholder);
+        await page.waitForTimeout(500);
+        return this.findYouTubeCommentEditor(page);
+      }
+
+      await page.mouse.wheel(0, 1200);
+      await page.waitForTimeout(400);
+      await this.throwIfStudioBrowserBlocked(page);
+    }
+
+    throw new AutoCliError(
+      "YOUTUBE_COMMENT_BOX_NOT_FOUND",
+      "YouTube never exposed the comment composer in the browser-backed flow.",
+      {
+        details: {
+          url: page.url(),
+        },
+      },
+    );
+  }
+
+  private async findYouTubeCommentEditor(page: PlaywrightPage) {
+    return firstVisibleYouTubeStudioLocator(page, [
+      'ytd-comment-simplebox-renderer div[contenteditable="true"]',
+      'ytd-comment-simplebox-renderer #contenteditable-root',
+      'div[contenteditable="true"][aria-label*="comment" i]',
+    ]);
+  }
+
+  private async fillYouTubeCommentEditor(
+    page: PlaywrightPage,
+    editor: ReturnType<PlaywrightPage["locator"]>,
+    text: string,
+  ): Promise<void> {
+    await clickYouTubeStudioLocator(editor);
+    await page.keyboard.press("Meta+A").catch(() => {});
+    await page.keyboard.type(text, { delay: 8 });
+    await page.waitForTimeout(400);
+  }
+
+  private async waitForEnabledYouTubeCommentSubmitButton(page: PlaywrightPage) {
+    const selectors = [
+      "ytd-comment-simplebox-renderer #submit-button button",
+      "ytd-comment-simplebox-renderer #submit-button",
+      'button[aria-label="Comment"]',
+      'button:has-text("Comment")',
+    ] as const;
+    const deadline = Date.now() + 20_000;
+
+    while (Date.now() < deadline) {
+      for (const selector of selectors) {
+        const locator = page.locator(selector);
+        const count = await locator.count().catch(() => 0);
+        for (let index = 0; index < count; index += 1) {
+          const candidate = locator.nth(index);
+          const visible = await candidate.isVisible().catch(() => false);
+          const enabled = await candidate.isEnabled().catch(() => false);
+          if (visible && enabled) {
+            return candidate;
+          }
+        }
+      }
+
+      await page.waitForTimeout(250);
+    }
+
+    throw new AutoCliError("YOUTUBE_COMMENT_SUBMIT_DISABLED", "YouTube never enabled the comment submit button.", {
+      details: {
+        url: page.url(),
+      },
+    });
   }
 
   private async openStudioUploadPage(page: PlaywrightPage): Promise<void> {
@@ -1753,6 +2214,289 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     return undefined;
   }
 
+  private async resolveOwnChannelPostsUrl(page: PlaywrightPage): Promise<string> {
+    const channelId = extractStudioChannelId(page.url()) ?? (await this.resolveStudioChannelId(page));
+    if (!channelId) {
+      throw new AutoCliError(
+        "YOUTUBE_CHANNEL_RESOLUTION_FAILED",
+        "Could not resolve the current YouTube channel before opening the Posts tab.",
+        {
+          details: {
+            url: page.url(),
+          },
+        },
+      );
+    }
+
+    return `${YOUTUBE_ORIGIN}/channel/${channelId}/posts`;
+  }
+
+  private async openYouTubePostComposer(page: PlaywrightPage) {
+    const placeholder = await firstVisibleYouTubeStudioLocator(page, [
+      "#placeholder-area",
+      "#commentbox-placeholder",
+      '[aria-label*="post an update" i]',
+      'yt-formatted-string[role="button"][aria-label*="post" i]',
+    ]);
+    await clickYouTubeStudioLocator(placeholder);
+    await page.waitForTimeout(400);
+
+    const deadline = Date.now() + 15_000;
+    while (Date.now() < deadline) {
+      const editor = await this.findVisibleYouTubePostEditor(page);
+      if (editor) {
+        return editor;
+      }
+
+      await page.waitForTimeout(250);
+    }
+
+    throw new AutoCliError("YOUTUBE_POST_EDITOR_NOT_FOUND", "YouTube never exposed the community post editor.", {
+      details: {
+        url: page.url(),
+      },
+    });
+  }
+
+  private async findVisibleYouTubePostEditor(page: PlaywrightPage) {
+    const selectors = [
+      '#contenteditable-root[contenteditable="true"]',
+      'div[contenteditable="true"][aria-label*="post" i]',
+      'div[contenteditable="true"][aria-label*="update" i]',
+    ] as const;
+
+    for (const selector of selectors) {
+      const locator = page.locator(selector);
+      const count = await locator.count().catch(() => 0);
+      for (let index = 0; index < count; index += 1) {
+        const candidate = locator.nth(index);
+        if (await candidate.isVisible().catch(() => false)) {
+          return candidate;
+        }
+      }
+    }
+
+    return undefined;
+  }
+
+  private async fillYouTubePostEditor(
+    page: PlaywrightPage,
+    editor: ReturnType<PlaywrightPage["locator"]>,
+    text: string,
+  ): Promise<void> {
+    await clickYouTubeStudioLocator(editor);
+    await page.keyboard.press("Meta+A").catch(() => {});
+    await page.keyboard.type(text, { delay: 8 });
+    await page.waitForTimeout(400);
+  }
+
+  private async attachYouTubePostImage(page: PlaywrightPage, imagePath: string): Promise<void> {
+    const input = await firstPresentYouTubeStudioLocator(page, [
+      'input[type="file"][accept*="image"]',
+      'input[accept*="image"]',
+      'input[type="file"]',
+    ]);
+    await input.setInputFiles(imagePath);
+
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      if (
+        (await hasVisibleYouTubeStudioLocator(page, [
+          '[aria-label*="Cancel image post" i]',
+          'button[aria-label*="Cancel image post" i]',
+          'text=Drag to reorder! Add up to',
+        ])) ||
+        (await hasVisibleYouTubeStudioLocator(page, [
+          'img[src^="blob:"]',
+          'img[src*="googleusercontent.com"]',
+        ]))
+      ) {
+        await page.waitForTimeout(400);
+        return;
+      }
+
+      await page.waitForTimeout(250);
+      await this.throwIfStudioBrowserBlocked(page);
+    }
+
+    throw new AutoCliError("YOUTUBE_POST_IMAGE_UPLOAD_TIMEOUT", "YouTube never showed the image preview for the community post.", {
+      details: {
+        url: page.url(),
+        path: imagePath,
+      },
+    });
+  }
+
+  private async findPublishedYouTubeCommunityPost(
+    page: PlaywrightPage,
+    text: string,
+  ): Promise<{ postUrl?: string; postId?: string }> {
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      const item = page
+        .locator("ytd-backstage-post-thread-renderer, ytd-backstage-post-renderer")
+        .filter({ hasText: text })
+        .first();
+      if (await item.isVisible().catch(() => false)) {
+        const href = await item
+          .locator('a[href^="/post/"]')
+          .first()
+          .getAttribute("href")
+          .catch(() => null);
+        const postUrl = href ? new URL(href, YOUTUBE_ORIGIN).toString() : undefined;
+        return {
+          postUrl,
+          postId: extractYouTubeCommunityPostId(postUrl ?? href ?? undefined),
+        };
+      }
+
+      await page.waitForTimeout(500);
+    }
+
+    return {};
+  }
+
+  private async findVisibleYouTubeCommunityPost(
+    page: PlaywrightPage,
+    postId: string,
+  ): Promise<PlaywrightLocator | undefined> {
+    const posts = page.locator("ytd-backstage-post-thread-renderer, ytd-backstage-post-renderer");
+    const count = await posts.count().catch(() => 0);
+
+    for (let index = 0; index < count; index += 1) {
+      const candidate = posts.nth(index);
+      if (!await candidate.isVisible().catch(() => false)) {
+        continue;
+      }
+
+      const matchingLink = candidate.locator(`a[href*="/post/${postId}"], a[href*="lb=${postId}"]`).first();
+      if (await matchingLink.count().catch(() => 0)) {
+        return candidate;
+      }
+
+      if (count === 1 && extractYouTubeCommunityPostId(page.url()) === postId) {
+        return candidate;
+      }
+    }
+
+    return undefined;
+  }
+
+  private async waitForVisibleYouTubeCommunityPost(page: PlaywrightPage, postId: string): Promise<PlaywrightLocator> {
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      const post = await this.findVisibleYouTubeCommunityPost(page, postId);
+      if (post) {
+        return post;
+      }
+
+      await this.throwIfStudioBrowserBlocked(page);
+      await page.waitForTimeout(250);
+    }
+
+    throw new AutoCliError("YOUTUBE_POST_NOT_FOUND", "YouTube never exposed the requested community post.", {
+      details: {
+        postId,
+        url: page.url(),
+      },
+    });
+  }
+
+  private async openYouTubeCommunityPostActionMenu(page: PlaywrightPage, postId: string): Promise<void> {
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      const post = await this.findVisibleYouTubeCommunityPost(page, postId);
+      if (post) {
+        await post.hover().catch(() => undefined);
+        await page.waitForTimeout(250);
+
+        const menuButton = await firstVisibleYouTubeStudioLocatorWithin(post, [
+          'button[aria-label*="More actions" i]',
+          'button[aria-label*="Action menu" i]',
+          'button[aria-label*="More" i]',
+          'button[aria-label*="Options" i]',
+          'tp-yt-paper-icon-button[aria-label*="More" i]',
+          'yt-icon-button[aria-label*="More" i]',
+          '#button[aria-label*="More" i]',
+          'ytd-menu-renderer button',
+        ]).catch(() => undefined);
+
+        if (menuButton) {
+          await clickYouTubeStudioLocator(menuButton);
+          await page.waitForTimeout(400);
+          return;
+        }
+      }
+
+      await this.throwIfStudioBrowserBlocked(page);
+      await page.waitForTimeout(250);
+    }
+
+    throw new AutoCliError("YOUTUBE_POST_ACTIONS_NOT_FOUND", "YouTube never exposed the community post actions menu.", {
+      details: {
+        postId,
+        url: page.url(),
+      },
+    });
+  }
+
+  private async waitForYouTubeCommunityPostRemoval(page: PlaywrightPage, postId: string): Promise<void> {
+    const deadline = Date.now() + 20_000;
+    while (Date.now() < deadline) {
+      const post = await this.findVisibleYouTubeCommunityPost(page, postId);
+      if (!post) {
+        return;
+      }
+
+      const bodyText = normalizeWhitespace(await page.locator("body").innerText().catch(() => ""));
+      if (bodyText && /post/i.test(bodyText) && /unavailable|deleted|removed/i.test(bodyText)) {
+        return;
+      }
+
+      await this.throwIfStudioBrowserBlocked(page);
+      await page.waitForTimeout(500);
+    }
+
+    throw new AutoCliError("YOUTUBE_POST_DELETE_TIMEOUT", "YouTube never confirmed that the community post was removed.", {
+      details: {
+        postId,
+        url: page.url(),
+      },
+    });
+  }
+
+  private async waitForEnabledYouTubePostButton(page: PlaywrightPage) {
+    const selectors = [
+      'button[aria-label="Post"]',
+      'ytd-backstage-post-dialog-renderer button:has-text("Post")',
+      'button:has-text("Post")',
+    ] as const;
+    const deadline = Date.now() + 20_000;
+
+    while (Date.now() < deadline) {
+      for (const selector of selectors) {
+        const locator = page.locator(selector);
+        const count = await locator.count().catch(() => 0);
+        for (let index = 0; index < count; index += 1) {
+          const candidate = locator.nth(index);
+          const visible = await candidate.isVisible().catch(() => false);
+          const enabled = await candidate.isEnabled().catch(() => false);
+          if (visible && enabled) {
+            return candidate;
+          }
+        }
+      }
+
+      await page.waitForTimeout(250);
+    }
+
+    throw new AutoCliError("YOUTUBE_POST_SUBMIT_DISABLED", "YouTube never enabled the community post button.", {
+      details: {
+        url: page.url(),
+      },
+    });
+  }
+
   private async throwIfStudioBrowserBlocked(page: PlaywrightPage): Promise<void> {
     const bodyText = normalizeWhitespace(await page.locator("body").innerText().catch(() => ""));
     if (!bodyText) {
@@ -1830,6 +2574,69 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         typeof update.subscribed === "boolean"
       ) {
         return update.subscribed;
+      }
+    }
+
+    return undefined;
+  }
+
+  private extractSubscriptionMutationParams(
+    html: string,
+    channelId: string,
+    expectedSubscribed: boolean,
+  ): string | undefined {
+    let initialData: Record<string, unknown>;
+    try {
+      initialData = this.extractAssignedJsonObject(html, "ytInitialData");
+    } catch {
+      return undefined;
+    }
+
+    return this.findSubscriptionEndpointParams(
+      initialData,
+      expectedSubscribed ? "subscribeEndpoint" : "unsubscribeEndpoint",
+      channelId,
+    );
+  }
+
+  private findSubscriptionEndpointParams(
+    node: unknown,
+    endpointKey: "subscribeEndpoint" | "unsubscribeEndpoint",
+    channelId: string,
+  ): string | undefined {
+    if (!node || typeof node !== "object") {
+      return undefined;
+    }
+
+    if (Array.isArray(node)) {
+      for (const entry of node) {
+        const params = this.findSubscriptionEndpointParams(entry, endpointKey, channelId);
+        if (typeof params === "string" && params.length > 0) {
+          return params;
+        }
+      }
+
+      return undefined;
+    }
+
+    if (endpointKey in node) {
+      const endpoint = (node as Record<string, unknown>)[endpointKey];
+      if (endpoint && typeof endpoint === "object") {
+        const channelIds =
+          "channelIds" in endpoint && Array.isArray(endpoint.channelIds)
+            ? endpoint.channelIds.filter((value: unknown): value is string => typeof value === "string")
+            : [];
+        const params = "params" in endpoint && typeof endpoint.params === "string" ? endpoint.params : undefined;
+        if (channelIds.includes(channelId) && params) {
+          return params;
+        }
+      }
+    }
+
+    for (const value of Object.values(node)) {
+      const params = this.findSubscriptionEndpointParams(value, endpointKey, channelId);
+      if (typeof params === "string" && params.length > 0) {
+        return params;
       }
     }
 
@@ -1992,6 +2799,10 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     videoId: string,
     url: string,
   ): YouTubeVideoInfo {
+    const videoDetails =
+      "videoDetails" in response && response.videoDetails && typeof response.videoDetails === "object"
+        ? response.videoDetails
+        : undefined;
     const playabilityStatus =
       "playabilityStatus" in response && response.playabilityStatus && typeof response.playabilityStatus === "object"
         ? response.playabilityStatus
@@ -2002,7 +2813,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         ? playabilityStatus.status
         : undefined;
 
-    if (playabilityState && playabilityState !== "OK") {
+    if (playabilityState && playabilityState !== "OK" && !videoDetails) {
       const reason =
         (playabilityStatus && "reason" in playabilityStatus && typeof playabilityStatus.reason === "string"
           ? playabilityStatus.reason
@@ -2015,10 +2826,6 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       });
     }
 
-    const videoDetails =
-      "videoDetails" in response && response.videoDetails && typeof response.videoDetails === "object"
-        ? response.videoDetails
-        : undefined;
     if (!videoDetails) {
       throw new AutoCliError("YOUTUBE_VIDEO_INFO_MISSING", "YouTube did not return video details.", {
         details: { videoId },
@@ -2774,7 +3581,7 @@ function capitalizeUploadVisibility(value: YouTubeUploadVisibility): string {
   return `${value.charAt(0).toUpperCase()}${value.slice(1)}`;
 }
 
-function shouldRetryYouTubeUploadInSharedBrowser(error: unknown): boolean {
+function shouldRetryYouTubeBrowserWriteInSharedBrowser(error: unknown): boolean {
   if (!isAutoCliError(error)) {
     return false;
   }
@@ -2783,7 +3590,8 @@ function shouldRetryYouTubeUploadInSharedBrowser(error: unknown): boolean {
     error.code === "SESSION_EXPIRED" ||
     error.code === "YOUTUBE_UPLOAD_FILE_MISSING" ||
     error.code === "YOUTUBE_UPLOAD_THUMBNAIL_MISSING" ||
-    error.code === "YOUTUBE_UPLOAD_VISIBILITY_INVALID"
+    error.code === "YOUTUBE_UPLOAD_VISIBILITY_INVALID" ||
+    error.code === "YOUTUBE_POST_IMAGE_MISSING"
   ) {
     return false;
   }
@@ -2856,6 +3664,69 @@ function extractYouTubeUploadVideoId(url: string | undefined): string | undefine
   }
 }
 
+function extractYouTubeCommunityPostId(url: string | undefined): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+
+  try {
+    const parsed = new URL(url, YOUTUBE_ORIGIN);
+    const match = parsed.pathname.match(/\/post\/([A-Za-z0-9_-]+)/u);
+    return match?.[1];
+  } catch {
+    const match = url.match(/\/post\/([A-Za-z0-9_-]+)/u);
+    return match?.[1];
+  }
+}
+
+export function resolveYouTubeCommunityPostTarget(target: string): { postId: string; url: string } {
+  const trimmed = target.trim();
+  if (!trimmed) {
+    throw new AutoCliError("INVALID_POST_TARGET", "Expected a YouTube community post URL or post ID.");
+  }
+
+  const postId = extractYouTubeCommunityPostId(trimmed) ?? extractYouTubeCommunityLbId(trimmed) ?? extractBareYouTubeCommunityPostId(trimmed);
+  if (!postId) {
+    throw new AutoCliError("INVALID_POST_TARGET", "Expected a YouTube community post URL or post ID.", {
+      details: {
+        target: trimmed,
+      },
+    });
+  }
+
+  return {
+    postId,
+    url: `${YOUTUBE_ORIGIN}/post/${postId}`,
+  };
+}
+
+function extractYouTubeCommunityLbId(url: string | undefined): string | undefined {
+  if (!url) {
+    return undefined;
+  }
+
+  try {
+    const parsed = new URL(url, YOUTUBE_ORIGIN);
+    return parsed.searchParams.get("lb") ?? undefined;
+  } catch {
+    const match = url.match(/[?&]lb=([A-Za-z0-9_-]+)/u);
+    return match?.[1];
+  }
+}
+
+function extractBareYouTubeCommunityPostId(value: string | undefined): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed || /[/?#=&]/u.test(trimmed)) {
+    return undefined;
+  }
+
+  return /^[A-Za-z0-9_-]{10,}$/u.test(trimmed) ? trimmed : undefined;
+}
+
 async function firstVisibleYouTubeStudioLocator(page: PlaywrightPage, selectors: readonly string[]) {
   for (const selector of selectors) {
     const locator = page.locator(selector);
@@ -2886,6 +3757,24 @@ async function firstPresentYouTubeStudioLocator(page: PlaywrightPage, selectors:
   throw new AutoCliError(
     "YOUTUBE_STUDIO_ELEMENT_NOT_FOUND",
     `Could not find any YouTube Studio element for selectors: ${selectors.join(", ")}`,
+  );
+}
+
+async function firstVisibleYouTubeStudioLocatorWithin(root: PlaywrightLocator, selectors: readonly string[]) {
+  for (const selector of selectors) {
+    const locator = root.locator(selector);
+    const count = await locator.count().catch(() => 0);
+    for (let index = 0; index < count; index += 1) {
+      const candidate = locator.nth(index);
+      if (await candidate.isVisible().catch(() => false)) {
+        return candidate;
+      }
+    }
+  }
+
+  throw new AutoCliError(
+    "YOUTUBE_STUDIO_ELEMENT_NOT_FOUND",
+    `Could not find any visible YouTube Studio element for selectors: ${selectors.join(", ")}`,
   );
 }
 

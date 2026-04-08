@@ -11,3 +11,13 @@ export const youtubeLoginCapability = createAdapterActionCapability({
   options: createCookieLoginOptions(),
   action: ({ options }) => youtubeAdapter.login(resolveCookieLoginInput(options)),
 });
+
+export const youtubeStatusCapability = createAdapterActionCapability({
+  id: "status",
+  command: "status",
+  description: "Show the saved YouTube session status",
+  spinnerText: "Checking YouTube session...",
+  successMessage: "YouTube session checked.",
+  options: [{ flags: "--account <name>", description: "Optional override for a specific saved YouTube session" }],
+  action: ({ options }) => youtubeAdapter.statusAction(options.account as string | undefined),
+});

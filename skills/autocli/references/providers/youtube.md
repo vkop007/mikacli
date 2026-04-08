@@ -26,7 +26,7 @@ Interact with YouTube using an imported browser session for public lookup, engag
 
 - `autocli social youtube login`
 - `autocli social youtube login --cookies ./cookiestest/youtube.json`
-- `autocli social youtube upload ./video.mp4 --title "AutoCLI upload" --visibility private`
+- `autocli social youtube status`
 - `autocli social youtube capabilities --json`
 
 ## Default Command
@@ -59,6 +59,19 @@ Options:
 - `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
+### `status`
+
+Usage:
+```bash
+autocli social youtube status [options]
+```
+
+Show the saved YouTube session status
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved YouTube session
+
 ### `upload`
 
 Usage:
@@ -89,11 +102,14 @@ Usage:
 autocli social youtube post [options] <text>
 ```
 
-YouTube text posting is not implemented in this CLI
+Publish a YouTube community post, optionally with one image, through a browser-backed Community tab flow
 
 Options:
 
 - `--account <name>`: Optional override for a specific saved YouTube session
+- `--image <path>`: Attach one image to the YouTube community post
+- `--browser`: Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `search`
 
@@ -233,6 +249,23 @@ Comment on a YouTube video by URL or 11-character video ID using the latest save
 Options:
 
 - `--account <name>`: Optional override for a specific saved YouTube session
+
+### `delete`
+
+Usage:
+```bash
+autocli social youtube delete [options] <target>
+```
+
+Aliases: `remove`
+
+Delete your own YouTube community post by /post URL, community?lb= URL, or post ID through a browser-backed flow
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved YouTube session
+- `--browser`: Force the delete through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `subscribe`
 

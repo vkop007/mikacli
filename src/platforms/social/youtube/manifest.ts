@@ -15,6 +15,10 @@ export const youtubePlatformDefinition: PlatformDefinition = {
   examples: [
     "autocli social youtube login",
     "autocli social youtube login --cookies ./cookiestest/youtube.json",
+    "autocli social youtube status",
+    "autocli social youtube post \"Shipping a new video soon\"",
+    "autocli social youtube post \"Sneak peek\" --image ./cover.png",
+    "autocli social youtube delete https://www.youtube.com/post/Ugkx1234567890",
     "autocli social youtube upload ./video.mp4 --title \"AutoCLI upload\" --visibility private",
     "autocli social youtube upload ./video.mp4 --title \"AutoCLI upload\" --description \"Uploaded from AutoCLI\" --tags cli,automation --visibility unlisted",
     "autocli tools download video https://www.youtube.com/watch?v=dQw4w9WgXcQ --platform youtube",

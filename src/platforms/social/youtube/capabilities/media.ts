@@ -9,6 +9,7 @@ import {
 } from "../output.js";
 import { parseYouTubeLimitOption } from "../options.js";
 import { youtubeAdapter } from "../adapter.js";
+import { parseBrowserTimeoutSeconds } from "../../../shared/cookie-login.js";
 
 export const youtubeUploadCapability = createAdapterActionCapability({
   id: "upload",
@@ -49,14 +50,26 @@ export const youtubeUploadCapability = createAdapterActionCapability({
 export const youtubePostCapability = createAdapterActionCapability({
   id: "post",
   command: "post <text>",
-  description: "YouTube text posting is not implemented in this CLI",
-  spinnerText: "Checking YouTube posting support...",
-  successMessage: "YouTube action completed.",
-  options: [{ flags: "--account <name>", description: "Optional override for a specific saved YouTube session" }],
+  description: "Publish a YouTube community post, optionally with one image, through a browser-backed Community tab flow",
+  spinnerText: "Publishing YouTube community post...",
+  successMessage: "YouTube community post published.",
+  options: [
+    { flags: "--account <name>", description: "Optional override for a specific saved YouTube session" },
+    { flags: "--image <path>", description: "Attach one image to the YouTube community post" },
+    { flags: "--browser", description: "Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    {
+      flags: "--browser-timeout <seconds>",
+      description: "Maximum seconds to allow the browser action to complete",
+      parser: parseBrowserTimeoutSeconds,
+    },
+  ],
   action: ({ args, options }) =>
     youtubeAdapter.postText({
       account: options.account as string | undefined,
       text: String(args[0] ?? ""),
+      imagePath: options.image as string | undefined,
+      browser: Boolean(options.browser),
+      browserTimeoutSeconds: options.browserTimeout as number | undefined,
     }),
 });
 
