@@ -147,3 +147,32 @@ export function printXProfileResult(result: AdapterActionResult, json: boolean):
     console.log(preview);
   }
 }
+
+export function printXStatusResult(result: AdapterActionResult, json: boolean): void {
+  if (json) {
+    printJson(result);
+    return;
+  }
+
+  printActionResult(result, false);
+  const data = result.data;
+  if (!data || typeof data !== "object") {
+    return;
+  }
+
+  if (typeof data.status === "string") {
+    console.log(`status: ${data.status}`);
+  }
+
+  if (typeof data.connected === "boolean") {
+    console.log(`connected: ${data.connected ? "yes" : "no"}`);
+  }
+
+  if (typeof data.lastValidatedAt === "string") {
+    console.log(`lastValidatedAt: ${data.lastValidatedAt}`);
+  }
+
+  if (typeof data.details === "string" && data.details.length > 0) {
+    console.log(`details: ${data.details}`);
+  }
+}

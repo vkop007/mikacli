@@ -26,7 +26,7 @@ Interact with X/Twitter using an imported browser session and browser-backed wri
 
 - `autocli social x login`
 - `autocli social x login --cookies ./x.cookies.json`
-- `autocli social x post "Launching AutoCLI"`
+- `autocli social x status`
 - `autocli social x capabilities --json`
 
 ## Default Command
@@ -58,6 +58,19 @@ Options:
 - `--cookie-json <json>`: Inline JSON cookie array or jar export
 - `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
+
+### `status`
+
+Usage:
+```bash
+autocli social x status [options]
+```
+
+Show the saved X session status
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved X session
 
 ### `post`
 
@@ -134,6 +147,23 @@ Options:
 
 - `--limit <number>`: Maximum number of posts to return (1-25, default: 5)
 - `--account <name>`: Optional override for a specific saved X session
+
+### `delete`
+
+Usage:
+```bash
+autocli social x delete [options] <target>
+```
+
+Aliases: `remove`
+
+Delete your own X post by URL or tweet ID through a browser-backed action flow
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved X session
+- `--browser`: Force the delete through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `like`
 

@@ -38,6 +38,7 @@ const X_MEDIA_UPLOAD_ENDPOINTS = [
   "https://upload.twitter.com/i/media/upload.json",
 ] as const;
 const X_CREATE_TWEET_OPERATION = "CreateTweet";
+const X_DELETE_TWEET_OPERATION = "DeleteTweet";
 const X_FAVORITE_TWEET_OPERATION = "FavoriteTweet";
 const X_UNFAVORITE_TWEET_OPERATION = "UnfavoriteTweet";
 const X_TWEET_RESULT_OPERATION = "TweetResultByRestId";
@@ -234,6 +235,25 @@ export class XAdapter extends BasePlatformAdapter {
     });
   }
 
+  async statusAction(account?: string): Promise<AdapterActionResult> {
+    const status = await this.getStatus(account);
+    return {
+      ok: true,
+      platform: this.platform,
+      account: status.account,
+      action: "status",
+      message: `X session is ${status.status}.`,
+      user: status.user,
+      sessionPath: status.sessionPath,
+      data: {
+        connected: status.connected,
+        status: status.status,
+        details: status.message,
+        lastValidatedAt: status.lastValidatedAt,
+      },
+    };
+  }
+
   async postMedia(input: PostMediaInput): Promise<AdapterActionResult> {
     return this.postText({
       account: input.account,
@@ -379,11 +399,21 @@ export class XAdapter extends BasePlatformAdapter {
     return this.browserComment(input);
   }
 
+  async deleteTweet(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    return this.browserDeleteTweet(input);
+  }
+
   private async browserLike(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
     const { session, path, probe } = await this.prepareBrowserWriteSession(input.account);
     const target = parseXTarget(input.target);
     const targetUrl = target.url ?? `${X_ORIGIN}/i/status/${target.tweetId}`;
     const timeoutSeconds = input.browserTimeoutSeconds ?? 60;
+    const steps = input.browser
+      ? [{
+          source: "shared" as const,
+          announceLabel: `Opening shared AutoCLI browser profile for X deleting: ${targetUrl}`,
+        }]
+      : [{ source: "headless" as const }];
 
     const execution = await runFirstClassBrowserAction<{
       finalUrl?: string;
@@ -403,7 +433,7 @@ export class XAdapter extends BasePlatformAdapter {
       steps: this.buildBrowserWriteSteps("liking", targetUrl, Boolean(input.browser)),
       actionFn: async (page, source) => {
         await this.ensureBrowserAuthenticated(page);
-        const article = await this.waitForPrimaryTweetArticle(page);
+        const article = await this.waitForBrowserTweetArticle(page, target.tweetId);
         const initialState = await this.readBrowserLikeState(article);
         if (initialState === "liked") {
           return {
@@ -489,7 +519,7 @@ export class XAdapter extends BasePlatformAdapter {
       steps: this.buildBrowserWriteSteps("unliking", targetUrl, Boolean(input.browser)),
       actionFn: async (page, source) => {
         await this.ensureBrowserAuthenticated(page);
-        const article = await this.waitForPrimaryTweetArticle(page);
+        const article = await this.waitForBrowserTweetArticle(page, target.tweetId);
         const initialState = await this.readBrowserLikeState(article);
         if (initialState === "unliked") {
           return {
@@ -577,7 +607,7 @@ export class XAdapter extends BasePlatformAdapter {
       steps: this.buildBrowserWriteSteps("replying", targetUrl, Boolean(input.browser)),
       actionFn: async (page, source) => {
         await this.ensureBrowserAuthenticated(page);
-        const article = await this.waitForPrimaryTweetArticle(page);
+        const article = await this.waitForBrowserTweetArticle(page, target.tweetId);
         const replyButton = await firstVisibleXLocatorWithin(article, ['[data-testid="reply"]']);
         await replyButton.click();
         await page.waitForTimeout(700);
@@ -636,6 +666,90 @@ export class XAdapter extends BasePlatformAdapter {
       sessionPath: path,
       data: {
         text: input.text,
+        target: target.tweetId,
+      },
+    }, execution);
+  }
+
+  private async browserDeleteTweet(input: LikeInput & { browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
+    const { session, path, probe } = await this.prepareBrowserWriteSession(input.account);
+    const target = parseXTarget(input.target);
+    const targetUrl = target.url ?? `${X_ORIGIN}/i/status/${target.tweetId}`;
+    const timeoutSeconds = input.browserTimeoutSeconds ?? 60;
+    const steps = input.browser
+      ? [{
+          source: "shared" as const,
+          announceLabel: `Opening shared AutoCLI browser profile for X deleting: ${targetUrl}`,
+        }]
+      : [{ source: "headless" as const }];
+
+    const execution = await runFirstClassBrowserAction<{
+      finalUrl?: string;
+      source: "headless" | "profile" | "shared";
+    }>({
+      platform: this.platform,
+      action: "delete",
+      actionLabel: "delete",
+      targetUrl,
+      timeoutSeconds,
+      initialCookies: session.cookieJar.cookies,
+      headless: true,
+      userAgent: X_BROWSER_USER_AGENT,
+      locale: "en-US",
+      mode: "required",
+      steps,
+      actionFn: async (page, source) => {
+        await this.ensureBrowserAuthenticated(page);
+        const article = await this.waitForBrowserTweetArticle(page, target.tweetId);
+
+        const responsePromise = this.waitForBrowserMutationResponse(page, X_DELETE_TWEET_OPERATION, timeoutSeconds);
+        const menuButton = await firstVisibleXLocatorWithin(article, [
+          '[data-testid="caret"]',
+          'button[aria-label*="More" i]',
+          'button[aria-label*="more" i]',
+        ]);
+        await menuButton.click();
+        await page.waitForTimeout(400);
+
+        const deleteOption = await firstVisibleXMenuItem(page, /delete/i);
+        await deleteOption.click();
+        await page.waitForTimeout(400);
+
+        const confirmButton = await firstVisibleXDialogButton(page, /delete/i);
+        await confirmButton.click();
+
+        const response = await this.readBrowserMutationPayloadIfReady(page, responsePromise, Math.min(timeoutSeconds * 1_000, 10_000));
+        if (response) {
+          const payload = await this.readBrowserMutationPayload<XBasicMutationResponse>(
+            response,
+            "X deleted the post in the browser flow, but AutoCLI could not read the resulting response.",
+          );
+          this.throwOnGraphQlErrors(payload, X_DELETE_TWEET_OPERATION);
+        }
+
+        await page.waitForTimeout(1_500);
+        await this.throwIfBrowserBlocked(page);
+        return {
+          finalUrl: page.url(),
+          source,
+        };
+      },
+    });
+    const result = execution.value;
+
+    await this.persistBrowserWriteSuccess(session, probe, "X browser-backed delete flow succeeded.");
+
+    return withBrowserActionMetadata({
+      ok: true,
+      platform: this.platform,
+      account: session.account,
+      action: "delete",
+      message: `X post deleted for ${session.account} through a browser-backed flow.`,
+      id: target.tweetId,
+      url: result.finalUrl ?? target.url,
+      user: probe.user,
+      sessionPath: path,
+      data: {
         target: target.tweetId,
       },
     }, execution);
@@ -1441,8 +1555,12 @@ export class XAdapter extends BasePlatformAdapter {
     await page.waitForTimeout(1_500);
   }
 
-  private async waitForPrimaryTweetArticle(page: PlaywrightPage): Promise<PlaywrightLocator> {
-    const article = page.locator("article").first();
+  private async waitForBrowserTweetArticle(page: PlaywrightPage, tweetId?: string): Promise<PlaywrightLocator> {
+    const article = tweetId
+      ? page.locator("article").filter({
+          has: page.locator(`a[href*="/status/${tweetId}"]`),
+        }).first()
+      : page.locator("article").first();
     try {
       await article.waitFor({ state: "visible", timeout: 15_000 });
       return article;
@@ -1986,4 +2104,32 @@ function shouldRetryXBrowserWrite(error: unknown): boolean {
     "X_BROWSER_POST_BUTTON_DISABLED",
     "X_BROWSER_CREATE_TWEET_TIMEOUT",
   ].includes(error.code);
+}
+
+async function firstVisibleXMenuItem(page: PlaywrightPage, namePattern: RegExp): Promise<PlaywrightLocator> {
+  const items = page.getByRole("menuitem");
+  const count = await items.count().catch(() => 0);
+  for (let index = 0; index < count; index += 1) {
+    const candidate = items.nth(index);
+    const text = normalizeWhitespace(await candidate.innerText().catch(() => ""));
+    if (namePattern.test(text) && (await candidate.isVisible().catch(() => false))) {
+      return candidate;
+    }
+  }
+
+  throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find a visible X menu item matching ${namePattern}.`);
+}
+
+async function firstVisibleXDialogButton(page: PlaywrightPage, namePattern: RegExp): Promise<PlaywrightLocator> {
+  const buttons = page.getByRole("button");
+  const count = await buttons.count().catch(() => 0);
+  for (let index = 0; index < count; index += 1) {
+    const candidate = buttons.nth(index);
+    const text = normalizeWhitespace(await candidate.innerText().catch(() => ""));
+    if (namePattern.test(text) && (await candidate.isVisible().catch(() => false))) {
+      return candidate;
+    }
+  }
+
+  throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find a visible X dialog button matching ${namePattern}.`);
 }
