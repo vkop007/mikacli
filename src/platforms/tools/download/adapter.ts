@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 
 import { AutoCliError, isAutoCliError } from "../../../errors.js";
 import { CookieManager } from "../../../utils/cookie-manager.js";
+import { parseYouTubeChannelTarget } from "../../../utils/targets.js";
 import { getPlatformCookieDomain, isPlatform } from "../../config.js";
 
 import type { AdapterActionResult, Platform, PlatformSession } from "../../../types.js";
@@ -541,6 +542,29 @@ export function normalizeDownloadUrl(value: string): string {
   } catch {
     throw new AutoCliError("DOWNLOAD_URL_INVALID", `Invalid media URL "${value}".`);
   }
+}
+
+export function normalizeYouTubeChannelVideosUrl(target: string): string {
+  const parsed = parseYouTubeChannelTarget(target);
+  if (parsed.channelId) {
+    return `https://www.youtube.com/channel/${parsed.channelId}/videos`;
+  }
+
+  if (parsed.handle) {
+    return `https://www.youtube.com/${parsed.handle}/videos`;
+  }
+
+  if (parsed.path) {
+    return `https://www.youtube.com${parsed.path}/videos`;
+  }
+
+  throw new AutoCliError(
+    "INVALID_TARGET",
+    "Expected a YouTube channel URL, @handle, /channel/<id> URL, or raw UC... channel ID.",
+    {
+      details: { target },
+    },
+  );
 }
 
 export function summarizeDownloadFormats(formats: readonly YtDlpFormat[]): DownloadFormatSummary[] {

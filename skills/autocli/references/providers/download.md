@@ -76,6 +76,28 @@ Options:
 - `--format <selector>`: Custom yt-dlp format selector
 - `--audio`: Resolve an audio stream URL instead of a video stream URL
 
+### `channel`
+
+Usage:
+```bash
+autocli tools download channel [options] <target>
+```
+
+Inspect or download all videos from a YouTube channel automatically
+
+Options:
+
+- `--mode <mode>`: Channel mode: info, video, or audio
+- `--cookies <path>`: Path to cookies.txt or a yt-dlp-compatible cookies file
+- `--platform <provider>`: Reuse a saved AutoCLI session for this provider as yt-dlp cookies
+- `--account <name>`: Saved AutoCLI session account to use with --platform
+- `--output-dir <path>`: Directory to save downloaded files
+- `--filename <template>`: yt-dlp output template, for example '%(title)s [%(id)s].%(ext)s'
+- `--limit <number>`: Maximum channel videos to inspect or download (1-100)
+- `--quality <resolution>`: Preferred max resolution in video mode, for example 720p or 1080
+- `--format <selector>`: Custom yt-dlp format selector
+- `--audio-format <format>`: Extracted audio format in audio mode (default: mp3)
+
 ### `video`
 
 Usage:

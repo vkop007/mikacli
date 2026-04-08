@@ -6,6 +6,7 @@ import {
   buildVideoFormatSelector,
   extractStreamUrls,
   normalizeDownloadUrl,
+  normalizeYouTubeChannelVideosUrl,
   resolveDownloadOutputDir,
   summarizeDownloadFormats,
   summarizePlaylistEntries,
@@ -14,6 +15,16 @@ import {
 describe("download tools adapter helpers", () => {
   test("normalizes valid media URLs", () => {
     expect(normalizeDownloadUrl("https://example.com/watch?v=123")).toBe("https://example.com/watch?v=123");
+  });
+
+  test("normalizes YouTube channel targets into a videos feed URL", () => {
+    expect(normalizeYouTubeChannelVideosUrl("@RickAstleyYT")).toBe("https://www.youtube.com/@RickAstleyYT/videos");
+    expect(normalizeYouTubeChannelVideosUrl("https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw")).toBe(
+      "https://www.youtube.com/channel/UCuAXFkgsw1L7xaCfnd5JJOw/videos",
+    );
+    expect(normalizeYouTubeChannelVideosUrl("https://www.youtube.com/user/Google/videos")).toBe(
+      "https://www.youtube.com/user/Google/videos",
+    );
   });
 
   test("builds a bounded quality selector when quality is provided", () => {

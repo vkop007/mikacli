@@ -7,7 +7,7 @@ import { serializeCliError } from "../../../utils/error-recovery.js";
 import { readBatchTargets } from "../../../utils/batch.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { printDownloadBatchResult, printDownloadResult } from "./output.js";
-import { downloadToolsAdapter } from "./adapter.js";
+import { downloadToolsAdapter, normalizeYouTubeChannelVideosUrl } from "./adapter.js";
 
 import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
@@ -16,6 +16,8 @@ const EXAMPLES = [
   "autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   "autocli tools download stream https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   "autocli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5",
+  "autocli tools download channel @RickAstleyYT --mode info --limit 5",
+  "autocli tools download channel @RickAstleyYT --limit 10",
   "autocli tools download video https://www.youtube.com/watch?v=dQw4w9WgXcQ --quality 720p",
   "autocli tools download video 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 3",
   "autocli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3",
@@ -29,6 +31,7 @@ function buildDownloadCommand(options: PlatformCommandBuildOptions = {}): Comman
 
   command.addCommand(buildInfoCommand());
   command.addCommand(buildStreamCommand());
+  command.addCommand(buildChannelCommand());
   command.addCommand(buildVideoCommand());
   command.addCommand(buildAudioCommand());
   command.addCommand(buildBatchCommand());
@@ -74,6 +77,36 @@ function buildInfoCommand(): Command {
         playlist: Boolean(input.playlist),
         limit: input.limit,
       }));
+  });
+  return command;
+}
+
+function buildChannelCommand(): Command {
+  const command = new Command("channel").description("Inspect or download all videos from a YouTube channel automatically");
+  command.argument("<target>", "YouTube channel URL, @handle, or UC... channel ID");
+  command.option("--mode <mode>", "Channel mode: info, video, or audio", parseBatchMode, "video");
+  addAuthOptions(command);
+  addOutputOptions(command);
+  command.option("--limit <number>", "Maximum channel videos to inspect or download (1-100)", parsePositiveInteger);
+  command.option("--quality <resolution>", "Preferred max resolution in video mode, for example 720p or 1080");
+  command.option("--format <selector>", "Custom yt-dlp format selector");
+  command.option("--audio-format <format>", "Extracted audio format in audio mode (default: mp3)", "mp3");
+  command.action(async (target: string, input: DownloadCommandOptions, cmd: Command) => {
+    const channelUrl = normalizeYouTubeChannelVideosUrl(target);
+    await runDownloadAction(
+      cmd,
+      input.mode === "info"
+        ? "Loading YouTube channel videos..."
+        : input.mode === "audio"
+          ? "Downloading YouTube channel audio..."
+          : "Downloading YouTube channel videos...",
+      input.mode === "info"
+        ? "YouTube channel videos loaded."
+        : input.mode === "audio"
+          ? "YouTube channel audio download completed."
+          : "YouTube channel video download completed.",
+      () => executeBatchTarget(channelUrl, { ...input, playlist: true }, parseBatchMode(input.mode ?? "video")),
+    );
   });
   return command;
 }
