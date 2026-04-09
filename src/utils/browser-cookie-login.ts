@@ -16,6 +16,7 @@ import {
 } from "../config.js";
 import {
   getPlatformBrowserAuthCookieNames,
+  getPlatformBrowserReadyCookieNames,
   getPlatformBrowserAuthStorageKeys,
   getPlatformCookieDomain,
   getPlatformDisplayName,
@@ -194,6 +195,7 @@ export async function captureBrowserLogin(
   const startUrl = input.browserUrl?.trim() || getPlatformHomeUrl(platform);
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 600) * 1000;
   const authCookieNames = getPlatformBrowserAuthCookieNames(platform);
+  const browserReadyCookieNames = getPlatformBrowserReadyCookieNames(platform);
   const authStorageKeys = getPlatformBrowserAuthStorageKeys(platform);
   const expectedDomain = getPlatformCookieDomain(platform);
 
@@ -226,7 +228,7 @@ export async function captureBrowserLogin(
       if (connected && page) {
         const cookies = await connected.context.cookies();
         const storage = await readStorage(page);
-        if (hasDetectedAuthenticatedState(cookies, authCookieNames, authStorageKeys, expectedDomain, storage)) {
+        if (hasDetectedAuthenticatedState(cookies, authCookieNames, authStorageKeys, expectedDomain, storage, browserReadyCookieNames)) {
           return {
             cookies,
             finalUrl: page.url(),
@@ -545,6 +547,7 @@ export function hasDetectedAuthenticatedState(
   authStorageKeys: readonly string[],
   expectedDomain: string,
   storage: { localStorage: Record<string, string>; sessionStorage: Record<string, string> },
+  readyCookieNames: readonly string[] = [],
 ): boolean {
   const browserCookies = Array.isArray(cookies) ? cookies : [];
   const matchingDomainCookies = browserCookies.filter((cookie) => {
@@ -557,7 +560,11 @@ export function hasDetectedAuthenticatedState(
   });
 
   if (authCookieNames.some((pattern) => browserCookies.some((cookie) => isStrongBrowserAuthCookie(cookie, pattern)))) {
-    return true;
+    if (readyCookieNames.length === 0) {
+      return true;
+    }
+
+    return readyCookieNames.every((pattern) => browserCookies.some((cookie) => hasPresentBrowserCookie(cookie, pattern)));
   }
 
   if (authStorageKeys.some((key) => hasTruthyStorageValue(storage.localStorage[key]) || hasTruthyStorageValue(storage.sessionStorage[key]))) {
@@ -699,6 +706,7 @@ async function extractBrowserLoginFromProfile(input: {
   profilePath: string;
 }): Promise<BrowserLoginCapture> {
   const authCookieNames = getPlatformBrowserAuthCookieNames(input.platform);
+  const browserReadyCookieNames = getPlatformBrowserReadyCookieNames(input.platform);
   const authStorageKeys = getPlatformBrowserAuthStorageKeys(input.platform);
   const expectedDomain = getPlatformCookieDomain(input.platform);
   const { chromium } = await import("playwright-core");
@@ -716,7 +724,7 @@ async function extractBrowserLoginFromProfile(input: {
 
     const cookies = await context.cookies();
     const storage = await readStorage(page);
-    if (!hasDetectedAuthenticatedState(cookies, authCookieNames, authStorageKeys, expectedDomain, storage)) {
+    if (!hasDetectedAuthenticatedState(cookies, authCookieNames, authStorageKeys, expectedDomain, storage, browserReadyCookieNames)) {
       throw new AutoCliError(
         "BROWSER_LOGIN_FAILED",
         `AutoCLI reopened the saved browser profile, but no authenticated ${getPlatformDisplayName(input.platform)} session was detected after login.`,
@@ -1321,6 +1329,20 @@ function isStrongBrowserAuthCookie(cookie: unknown, pattern: string): boolean {
 
   if (BOOLEAN_BROWSER_AUTH_COOKIE_NAMES.has(name)) {
     return !FALSEY_AUTH_COOKIE_VALUES.has(value.trim().toLowerCase());
+  }
+
+  return value.trim().length > 0;
+}
+
+function hasPresentBrowserCookie(cookie: unknown, pattern: string): boolean {
+  if (!cookie || typeof cookie !== "object") {
+    return false;
+  }
+
+  const name = "name" in cookie && typeof cookie.name === "string" ? cookie.name : null;
+  const value = "value" in cookie && typeof cookie.value === "string" ? cookie.value : "";
+  if (!name || !matchesCookiePattern(name, pattern)) {
+    return false;
   }
 
   return value.trim().length > 0;

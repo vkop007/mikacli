@@ -340,7 +340,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       return {
         status: {
           state: "expired",
-          message: "Missing required LinkedIn session cookies. Re-import cookies.txt.",
+          message: "Missing required LinkedIn session cookies. Re-login with `autocli social linkedin login --browser` or import fresh cookies.",
           lastValidatedAt: new Date().toISOString(),
           lastErrorCode: "COOKIE_MISSING",
         },
@@ -370,7 +370,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       return {
         status: {
           state: "expired",
-          message: "Missing required LinkedIn session cookies. Re-import cookies.txt.",
+          message: "Missing required LinkedIn session cookies. Re-login with `autocli social linkedin login --browser` or import fresh cookies.",
           lastValidatedAt: new Date().toISOString(),
           lastErrorCode: "COOKIE_MISSING",
         },
@@ -401,7 +401,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
         return {
           status: {
             state: "expired",
-            message: "LinkedIn rejected the saved session. Re-import cookies.txt.",
+            message: "LinkedIn rejected the saved session. Re-login with `autocli social linkedin login --browser` or import fresh cookies.",
             lastValidatedAt: new Date().toISOString(),
             lastErrorCode: "AUTH_FAILED",
           },
