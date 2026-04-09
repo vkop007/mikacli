@@ -61,6 +61,38 @@ describe("browser cookie login detection", () => {
     expect(detected).toBe(true);
   });
 
+  it("can require a stronger ready-cookie set before browser login completes", () => {
+    const missingCsrf = hasDetectedAuthenticatedState(
+      [{ name: "li_at", value: "signed-in-session", domain: ".www.linkedin.com" }],
+      ["li_at"],
+      [],
+      "linkedin.com",
+      {
+        localStorage: {},
+        sessionStorage: {},
+      },
+      ["li_at", "JSESSIONID"],
+    );
+
+    const complete = hasDetectedAuthenticatedState(
+      [
+        { name: "li_at", value: "signed-in-session", domain: ".www.linkedin.com" },
+        { name: "JSESSIONID", value: "\"ajax:12345\"", domain: ".www.linkedin.com" },
+      ],
+      ["li_at"],
+      [],
+      "linkedin.com",
+      {
+        localStorage: {},
+        sessionStorage: {},
+      },
+      ["li_at", "JSESSIONID"],
+    );
+
+    expect(missingCsrf).toBe(false);
+    expect(complete).toBe(true);
+  });
+
   it("normalizes serialized session cookies into Playwright cookie objects", () => {
     const cookie = normalizePlaywrightCookie({
       key: "reddit_session",

@@ -118,6 +118,7 @@ export interface PlatformConfig {
   cookieDomain: string;
   authCookieNames: readonly string[];
   browserAuthCookieNames?: readonly string[];
+  browserReadyCookieNames?: readonly string[];
   browserAuthStorageKeys?: readonly string[];
 }
 
@@ -540,6 +541,7 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     cookieDomain: "linkedin.com",
     authCookieNames: ["li_at", "JSESSIONID"],
     browserAuthCookieNames: ["li_at"],
+    browserReadyCookieNames: ["li_at", "JSESSIONID"],
   },
   linear: {
     displayName: "Linear",
@@ -920,6 +922,11 @@ export function getPlatformAuthCookieNames(platform: PlatformName): readonly str
 export function getPlatformBrowserAuthCookieNames(platform: PlatformName): readonly string[] {
   const config = getPlatformConfig(platform);
   return config.browserAuthCookieNames ?? config.authCookieNames;
+}
+
+export function getPlatformBrowserReadyCookieNames(platform: PlatformName): readonly string[] {
+  const config = getPlatformConfig(platform);
+  return config.browserReadyCookieNames ?? getPlatformBrowserAuthCookieNames(platform);
 }
 
 export function getPlatformBrowserAuthStorageKeys(platform: PlatformName): readonly string[] {
