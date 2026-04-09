@@ -24,7 +24,7 @@ Search public Bluesky profiles through the public appview API, then use app-pass
 
 ## Fast Start
 
-- `autocli social bluesky login --handle alice.bsky.social --app-password xxxx-xxxx-xxxx-xxxx`
+- `autocli social bluesky login --handle alice.bsky.social --app-password app-password-example`
 - `autocli social bluesky me`
 - `autocli social bluesky search "karpathy"`
 - `autocli social bluesky capabilities --json`

@@ -12,7 +12,7 @@ export const blueskyPlatformDefinition: PlatformDefinition = {
   adapter: blueskyAdapter,
   capabilities: blueskyCapabilities,
   examples: [
-    "autocli social bluesky login --handle alice.bsky.social --app-password xxxx-xxxx-xxxx-xxxx",
+    "autocli social bluesky login --handle alice.bsky.social --app-password app-password-example",
     "autocli social bluesky me",
     'autocli social bluesky search "karpathy"',
     "autocli social bluesky profile karpathy.bsky.social",

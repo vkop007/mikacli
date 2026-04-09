@@ -52,7 +52,7 @@ describe("bluesky service", () => {
 
     const result = await adapter.loginWithCredentials({
       handle: "alice.bsky.social",
-      appPassword: "xxxx-xxxx-xxxx-xxxx",
+      appPassword: "app-password-example",
     });
 
     expect(result.ok).toBe(true);
