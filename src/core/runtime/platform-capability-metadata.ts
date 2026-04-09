@@ -235,9 +235,11 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     notes: ["Reads and image/comment writes are browserless; post and comment deletion can fall back to browser-backed flows when Instagram's web APIs get flaky."],
   },
   facebook: {
-    mutation: "partial",
+    mutation: "supported",
     browserLogin: "supported",
+    browserFallback: "supported",
     stability: "partial",
+    notes: ["Facebook writes now run through browser-backed post, like, and comment flows. Use `--browser` to jump straight into the shared AutoCLI browser profile when you want the visible browser path."],
   },
   linkedin: {
     mutation: "partial",

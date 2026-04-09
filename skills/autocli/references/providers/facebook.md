@@ -9,24 +9,24 @@ Generated from the real AutoCLI provider definition and command tree.
 - Auth: `cookies`
 - Stability: `partial`
 - Discovery: `supported`
-- Mutation: `partial`
+- Mutation: `supported`
 - Browser login: `supported`
-- Browser fallback: `unsupported`
+- Browser fallback: `supported`
 - Async jobs: `unsupported`
 
 ## Description
 
-Interact with Facebook using an imported browser session, with validation and read flows strongest today
+Post, like, and comment through browser-backed flows using saved Facebook sessions or the shared AutoCLI browser profile
 
 ## Notes
 
-- none
+- Facebook writes now run through browser-backed post, like, and comment flows. Use `--browser` to jump straight into the shared AutoCLI browser profile when you want the visible browser path.
 
 ## Fast Start
 
 - `autocli social facebook login`
 - `autocli social facebook login --cookies ./facebook.cookies.json`
-- `autocli social facebook post "Launching from AutoCLI"`
+- `autocli social facebook status`
 - `autocli social facebook capabilities --json`
 
 ## Default Command
@@ -59,6 +59,19 @@ Options:
 - `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
+### `status`
+
+Usage:
+```bash
+autocli social facebook status [options]
+```
+
+Show the saved Facebook session status
+
+Options:
+
+- `--account <name>`: Optional override for a specific saved Facebook session
+
 ### `post`
 
 Usage:
@@ -66,12 +79,14 @@ Usage:
 autocli social facebook post [options] <text>
 ```
 
-Publish a Facebook post using the latest saved session by default
+Publish a Facebook post through a browser-backed flow using the latest saved session by default
 
 Options:
 
-- `--image <path>`: Optional image path for future Facebook post support
+- `--image <path>`: Optional image path to attach to the Facebook post
 - `--account <name>`: Optional override for a specific saved Facebook session
+- `--browser`: Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `like`
 
@@ -80,11 +95,13 @@ Usage:
 autocli social facebook like [options] <target>
 ```
 
-Like a Facebook post by URL or numeric object ID using the latest saved session by default
+Like a Facebook post by post URL, timeline URL, or numeric object ID through a browser-backed flow using the latest saved session by default
 
 Options:
 
 - `--account <name>`: Optional override for a specific saved Facebook session
+- `--browser`: Force the like through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `comment`
 
@@ -93,11 +110,13 @@ Usage:
 autocli social facebook comment [options] <target> <text>
 ```
 
-Comment on a Facebook post by URL or numeric object ID using the latest saved session by default
+Comment on a Facebook post by post URL, timeline URL, or numeric object ID through a browser-backed flow using the latest saved session by default
 
 Options:
 
 - `--account <name>`: Optional override for a specific saved Facebook session
+- `--browser`: Force the comment through the shared AutoCLI browser profile instead of the invisible browser-backed path
+- `--browser-timeout <seconds>`: Maximum seconds to allow the browser action to complete
 
 ### `capabilities`
 
