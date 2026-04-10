@@ -64,6 +64,7 @@ Use only one recovery step before retrying unless the user explicitly asks for t
 - `autocli status --json`
 - `autocli doctor --json`
 - `autocli sessions --json`
+- `autocli sessions validate --json`
 - `autocli sessions show <platform> <account> --json`
 - `autocli <category> <provider> capabilities --json`
 

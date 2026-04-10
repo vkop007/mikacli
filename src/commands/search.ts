@@ -64,6 +64,8 @@ const ROOT_SEARCH_COMMANDS: readonly RootSearchCommand[] = [
     builder: createSessionsCommand,
     examples: [
       "autocli sessions",
+      "autocli sessions validate",
+      "autocli sessions validate x default",
       "autocli sessions show x default",
       "autocli sessions remove spotify default",
     ],

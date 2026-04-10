@@ -1,6 +1,26 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 
-import { buildSessionRecommendations, listSessionEntries, loadSessionEntry, summarizeSessionEntries } from "../commands/sessions.js";
+import {
+  buildSessionRecommendations,
+  listSessionEntries,
+  loadSessionEntry,
+  summarizeSessionEntries,
+  summarizeValidatedSessionEntries,
+  validateSessionEntries,
+} from "../commands/sessions.js";
+import { getPlatformDefinition } from "../platforms/index.js";
+
+import type { ConnectionRecord } from "../core/auth/auth-types.js";
+import type { AdapterStatusResult } from "../types.js";
+
+const originalGithubAdapter = getPlatformDefinition("github")?.adapter;
+
+afterEach(() => {
+  const github = getPlatformDefinition("github");
+  if (github) {
+    github.adapter = originalGithubAdapter;
+  }
+});
 
 describe("sessions command helpers", () => {
   test("maps saved connections into session entries", async () => {
@@ -154,8 +174,137 @@ describe("sessions command helpers", () => {
       },
     });
     expect(buildSessionRecommendations(summary)).toEqual([
-      "Review expired records with `autocli sessions --status expired` and refresh them with the provider's `login` command.",
-      "Use `autocli doctor` if some sessions have unknown health and need a quick validation overview.",
+      "Run `autocli sessions validate` to confirm expired records live, then refresh them with the provider's `login` command.",
+      "Run `autocli sessions validate` to replace unknown saved state with a live provider check.",
     ]);
   });
+
+  test("validates saved records live and persists the refreshed status", async () => {
+    const github = getPlatformDefinition("github");
+    expect(github).toBeDefined();
+    github!.adapter = {
+      async getStatus(account?: string): Promise<AdapterStatusResult> {
+        return {
+          platform: "github",
+          account: account ?? "default",
+          sessionPath: "/tmp/github/default.json",
+          connected: false,
+          status: "expired",
+          message: "GitHub session expired.",
+          user: { username: "octocat" },
+          lastValidatedAt: "2026-04-10T12:00:00.000Z",
+        };
+      },
+    };
+
+    const saved: ConnectionRecord[] = [];
+    const entries = await validateSessionEntries({
+      platform: "github",
+      connectionStore: {
+        async listConnections() {
+          return [createConnectionEntry()];
+        },
+        async saveConnection(connection: ConnectionRecord) {
+          saved.push(connection);
+          return "/tmp/connections/github/default.json";
+        },
+      } as never,
+    });
+
+    expect(entries).toEqual([
+      expect.objectContaining({
+        platform: "github",
+        account: "default",
+        status: "expired",
+        basis: "live",
+        connected: false,
+        path: "/tmp/connections/github/default.json",
+        next: "autocli developer github login",
+      }),
+    ]);
+    expect(saved).toEqual([
+      expect.objectContaining({
+        updatedAt: "2026-04-10T12:00:00.000Z",
+        status: expect.objectContaining({
+          state: "expired",
+          message: "GitHub session expired.",
+          lastValidatedAt: "2026-04-10T12:00:00.000Z",
+        }),
+      }),
+    ]);
+    expect(summarizeValidatedSessionEntries(entries)).toEqual({
+      total: 1,
+      active: 0,
+      expired: 1,
+      unknown: 0,
+      live: 1,
+      refreshFailed: 0,
+      updated: 1,
+    });
+  });
+
+  test("keeps stored state when live validation fails and suggests relogin for expired accounts", async () => {
+    const github = getPlatformDefinition("github");
+    expect(github).toBeDefined();
+    github!.adapter = {
+      async getStatus(): Promise<AdapterStatusResult> {
+        throw new Error("network down");
+      },
+    };
+
+    let saveCalled = false;
+    const entries = await validateSessionEntries({
+      platform: "github",
+      connectionStore: {
+        async listConnections() {
+          const entry = createConnectionEntry();
+          entry.connection.status.state = "expired";
+          entry.connection.status.message = "Saved GitHub session expired.";
+          return [entry];
+        },
+        async saveConnection() {
+          saveCalled = true;
+          return "/tmp/should-not-write.json";
+        },
+      } as never,
+    });
+
+    expect(entries).toEqual([
+      expect.objectContaining({
+        platform: "github",
+        account: "default",
+        status: "expired",
+        basis: "refresh-failed",
+        next: "autocli developer github login",
+        refreshError: "network down",
+      }),
+    ]);
+    expect(entries[0]?.message).toContain("Live refresh failed: network down");
+    expect(saveCalled).toBeFalse();
+  });
 });
+
+function createConnectionEntry(): { connection: ConnectionRecord; path: string } {
+  return {
+    path: "/tmp/github/default.json",
+    connection: {
+      version: 1,
+      platform: "github",
+      account: "default",
+      createdAt: "2026-04-10T00:00:00.000Z",
+      updatedAt: "2026-04-10T00:00:00.000Z",
+      auth: {
+        kind: "cookies",
+        source: "cookie_json",
+      },
+      status: {
+        state: "active",
+        message: "Saved GitHub web session.",
+        lastValidatedAt: "2026-04-10T00:00:00.000Z",
+      },
+      user: {
+        username: "octocat",
+      },
+    },
+  };
+}

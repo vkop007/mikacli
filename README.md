@@ -100,6 +100,7 @@ Typical commands:
 
 ```bash
 autocli status
+autocli sessions validate
 autocli search "youtube download"
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli developer github login --browser
@@ -187,6 +188,18 @@ autocli search github
 autocli search "youtube download"
 autocli search uptime --category devops
 autocli search transcript --json
+```
+
+## Session Validation
+
+Use `autocli sessions validate` when you want a live provider check instead of the last saved session state.
+
+Examples:
+
+```bash
+autocli sessions validate
+autocli sessions validate x
+autocli sessions validate youtube default --json
 ```
 
 ## Cross-Site Transcripts

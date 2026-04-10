@@ -3,12 +3,15 @@ import { constants } from "node:fs";
 
 import { Command } from "commander";
 
-import { getConnectionPath, getSessionPath } from "../config.js";
+import { getConnectionPath, getSessionPath, sanitizeAccountName } from "../config.js";
 import { ConnectionStore } from "../core/auth/connection-store.js";
+import { buildPlatformCommandPrefix } from "../core/runtime/platform-command-prefix.js";
 import { AutoCliError } from "../errors.js";
 import { getPlatformDisplayName, isPlatform } from "../platforms/config.js";
+import { getPlatformDefinition } from "../platforms/index.js";
 import { resolveCommandContext } from "../utils/cli.js";
-import { printJson, printSessionsTable } from "../utils/output.js";
+import { printJson, printSessionsTable, printStatusTable } from "../utils/output.js";
+import { refreshConnectionStatusEntry } from "./status.js";
 
 import type { ConnectionRecord } from "../core/auth/auth-types.js";
 import type { Platform } from "../types.js";
@@ -37,6 +40,23 @@ type SessionSummary = {
   byAuth: Record<ConnectionRecord["auth"]["kind"], number>;
 };
 
+type SessionValidationEntry = SessionEntry & {
+  connected: boolean;
+  basis: "live" | "refresh-failed";
+  refreshError?: string;
+  next?: string;
+};
+
+type SessionValidationSummary = {
+  total: number;
+  active: number;
+  expired: number;
+  unknown: number;
+  live: number;
+  refreshFailed: number;
+  updated: number;
+};
+
 const REDACTED_METADATA_VALUE = "[redacted]";
 
 export function createSessionsCommand(): Command {
@@ -51,6 +71,8 @@ export function createSessionsCommand(): Command {
 Examples:
   autocli sessions
   autocli sessions --platform x
+  autocli sessions validate
+  autocli sessions validate x default
   autocli sessions show x cookie-check
   autocli sessions remove spotify default
 `,
@@ -67,6 +89,15 @@ Examples:
     .option("--auth <kind>", "Filter by auth kind: cookies, apiKey, botToken, session, oauth2, none")
     .action(async function sessionsListCommandAction(this: Command) {
       await handleSessionsList(this);
+    });
+
+  command
+    .command("validate")
+    .description("Live-validate saved sessions and token connections")
+    .argument("[platform]", "Optional platform id")
+    .argument("[account]", "Optional saved account name; when omitted, all accounts for the platform are validated")
+    .action(async function sessionsValidateAction(this: Command, platform?: string, account?: string) {
+      await handleSessionsValidate(this, platform, account);
     });
 
   command
@@ -185,6 +216,56 @@ export async function loadSessionEntry(platform: Platform, account?: string, con
   return toSessionEntry(loaded.connection, loaded.path);
 }
 
+export async function validateSessionEntries(input: {
+  platform?: string;
+  account?: string;
+  connectionStore?: Pick<ConnectionStore, "listConnections" | "saveConnection">;
+}): Promise<SessionValidationEntry[]> {
+  const connectionStore = input.connectionStore ?? new ConnectionStore();
+  const platform = input.platform ? requirePlatform(input.platform) : undefined;
+  const account = input.account ? sanitizeAccountName(input.account) : undefined;
+  const listed = await connectionStore.listConnections();
+  const filtered = listed.filter((entry) => {
+    if (platform && entry.connection.platform !== platform) {
+      return false;
+    }
+
+    if (account && entry.connection.account !== account) {
+      return false;
+    }
+
+    return true;
+  });
+
+  if (filtered.length === 0 && (platform || account)) {
+    throw new AutoCliError(
+      "SESSION_NOT_FOUND",
+      account
+        ? `No saved ${platform ?? "provider"} record found for account "${account}".`
+        : `No saved records found for ${platform}.`,
+      {
+        details: {
+          ...(platform ? { platform } : {}),
+          ...(account ? { account } : {}),
+        },
+      },
+    );
+  }
+
+  return Promise.all(
+    filtered.map(async (entry) => {
+      const refreshed = await refreshConnectionStatusEntry(entry);
+      if (refreshed.basis === "live") {
+        const updatedConnection = applyValidatedStatus(entry.connection, refreshed);
+        const savedPath = await connectionStore.saveConnection(updatedConnection);
+        return toValidatedSessionEntry(updatedConnection, savedPath, refreshed);
+      }
+
+      return toValidatedSessionEntry(entry.connection, entry.path, refreshed);
+    }),
+  );
+}
+
 export function summarizeSessionEntries(entries: readonly SessionEntry[]): SessionSummary {
   const byAuth: SessionSummary["byAuth"] = {
     cookies: 0,
@@ -211,6 +292,30 @@ export function summarizeSessionEntries(entries: readonly SessionEntry[]): Sessi
   return summary;
 }
 
+export function summarizeValidatedSessionEntries(entries: readonly SessionValidationEntry[]): SessionValidationSummary {
+  const summary: SessionValidationSummary = {
+    total: entries.length,
+    active: 0,
+    expired: 0,
+    unknown: 0,
+    live: 0,
+    refreshFailed: 0,
+    updated: 0,
+  };
+
+  for (const entry of entries) {
+    summary[entry.status] += 1;
+    if (entry.basis === "live") {
+      summary.live += 1;
+      summary.updated += 1;
+    } else {
+      summary.refreshFailed += 1;
+    }
+  }
+
+  return summary;
+}
+
 export function buildSessionRecommendations(summary: SessionSummary): string[] {
   const recommendations: string[] = [];
   if (summary.total === 0) {
@@ -219,14 +324,64 @@ export function buildSessionRecommendations(summary: SessionSummary): string[] {
   }
 
   if (summary.expired > 0) {
-    recommendations.push("Review expired records with `autocli sessions --status expired` and refresh them with the provider's `login` command.");
+    recommendations.push("Run `autocli sessions validate` to confirm expired records live, then refresh them with the provider's `login` command.");
   }
 
   if (summary.unknown > 0) {
-    recommendations.push("Use `autocli doctor` if some sessions have unknown health and need a quick validation overview.");
+    recommendations.push("Run `autocli sessions validate` to replace unknown saved state with a live provider check.");
   }
 
   return recommendations;
+}
+
+async function handleSessionsValidate(command: Command, platform?: string, account?: string): Promise<void> {
+  const ctx = resolveCommandContext(command);
+  const entries = await validateSessionEntries({
+    platform,
+    account,
+  });
+  const summary = summarizeValidatedSessionEntries(entries);
+
+  if (ctx.json) {
+    printJson({
+      ok: true,
+      validated: summary.total,
+      summary,
+      sessions: entries,
+    });
+    return;
+  }
+
+  console.log(
+    `Validated ${summary.total} saved record${summary.total === 1 ? "" : "s"}. ${summary.active} active, ${summary.expired} expired, ${summary.unknown} unknown. ${summary.live} live, ${summary.refreshFailed} refresh-failed.`,
+  );
+
+  if (summary.updated > 0) {
+    console.log(`Updated ${summary.updated} saved record${summary.updated === 1 ? "" : "s"} with fresh live status.`);
+  }
+
+  printStatusTable(
+    entries.map((entry) => ({
+      platform: entry.platform,
+      account: entry.account,
+      status: entry.status,
+      basis: entry.basis,
+      user: entry.user,
+      message: entry.message,
+    })),
+  );
+
+  const nextCommands = Array.from(
+    new Set(entries.map((entry) => entry.next).filter((value): value is string => typeof value === "string" && value.length > 0)),
+  );
+
+  if (nextCommands.length > 0) {
+    console.log("");
+    console.log("next:");
+    for (const next of nextCommands) {
+      console.log(`- ${next}`);
+    }
+  }
 }
 
 function toSessionEntry(connection: ConnectionRecord, path: string): SessionEntry {
@@ -250,6 +405,51 @@ function toSessionEntry(connection: ConnectionRecord, path: string): SessionEntr
     path,
     metadata: sanitizeSessionMetadata(connection.metadata),
   };
+}
+
+function toValidatedSessionEntry(
+  connection: ConnectionRecord,
+  path: string,
+  status: Awaited<ReturnType<typeof refreshConnectionStatusEntry>>,
+): SessionValidationEntry {
+  const entry = toSessionEntry(connection, path);
+  return {
+    ...entry,
+    connected: status.connected,
+    basis: status.basis === "live" ? "live" : "refresh-failed",
+    ...(status.refreshError ? { refreshError: status.refreshError } : {}),
+    ...(status.status !== "active" ? { next: buildProviderLoginCommand(connection.platform, connection.account) } : {}),
+    message: status.message ?? entry.message,
+    user: status.user?.username ?? status.user?.displayName ?? entry.user,
+    lastValidatedAt: status.lastValidatedAt ?? entry.lastValidatedAt,
+  };
+}
+
+function applyValidatedStatus(
+  connection: ConnectionRecord,
+  status: Awaited<ReturnType<typeof refreshConnectionStatusEntry>>,
+): ConnectionRecord {
+  const lastValidatedAt = status.lastValidatedAt ?? new Date().toISOString();
+  return {
+    ...connection,
+    updatedAt: lastValidatedAt,
+    status: {
+      state: status.status,
+      message: status.message,
+      lastValidatedAt,
+    },
+    user: status.user ?? connection.user,
+  };
+}
+
+function buildProviderLoginCommand(platform: Platform, account: string): string | undefined {
+  const definition = getPlatformDefinition(platform);
+  if (!definition) {
+    return undefined;
+  }
+
+  const base = `${buildPlatformCommandPrefix(definition)} login`;
+  return account === "default" ? base : `${base} --account ${account}`;
 }
 
 function sanitizeSessionMetadata(metadata: Record<string, unknown> | undefined): Record<string, unknown> | undefined {

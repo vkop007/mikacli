@@ -30,7 +30,7 @@ type StatusAdapter = {
   getStatus(account?: string): Promise<AdapterStatusResult>;
 };
 
-type ListedConnection = {
+export type ListedConnection = {
   connection: ConnectionRecord;
   path: string;
 };
@@ -108,7 +108,7 @@ export async function loadRootStatusEntries(input: {
     return connections.map(toLastKnownStatusEntry);
   }
 
-  return Promise.all(connections.map((entry) => refreshRootStatusEntry(entry)));
+  return Promise.all(connections.map((entry) => refreshConnectionStatusEntry(entry)));
 }
 
 export function summarizeRootStatusEntries(entries: readonly RootStatusEntry[]): StatusSummary {
@@ -136,7 +136,7 @@ export function summarizeRootStatusEntries(entries: readonly RootStatusEntry[]):
   return summary;
 }
 
-async function refreshRootStatusEntry(entry: ListedConnection): Promise<RootStatusEntry> {
+export async function refreshConnectionStatusEntry(entry: ListedConnection): Promise<RootStatusEntry> {
   const definition = getPlatformDefinition(entry.connection.platform);
   const adapter = definition?.adapter;
 
