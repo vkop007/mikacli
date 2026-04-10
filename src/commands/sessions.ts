@@ -890,7 +890,7 @@ function filterSessionEntries(
   });
 }
 
-async function removeSessionArtifacts(platform: Platform, account: string): Promise<Array<{ kind: "session" | "connection"; path: string }>> {
+export async function removeSessionArtifacts(platform: Platform, account: string): Promise<Array<{ kind: "session" | "connection"; path: string }>> {
   const store = new ConnectionStore();
   let authDir: string | undefined;
   try {

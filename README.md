@@ -96,12 +96,21 @@ Bootstrap the shared browser once if you want browser-assisted logins:
 autocli login --browser
 ```
 
+Clear saved state when you want to sign back out:
+
+```bash
+autocli logout
+autocli logout x default
+autocli logout --browser
+```
+
 Typical commands:
 
 ```bash
 autocli status
 autocli sessions validate
 autocli sessions repair
+autocli logout x default
 autocli search "youtube download"
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli developer github login --browser
