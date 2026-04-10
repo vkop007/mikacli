@@ -6,11 +6,13 @@ import { createNotionMeCapability } from "./me.js";
 import { createNotionAppendCapability, createNotionCreatePageCapability, createNotionPageCapability, createNotionUpdatePageCapability } from "./pages.js";
 import { createNotionDataSourcesCapability, createNotionPagesCapability, createNotionSearchCapability } from "./search.js";
 
+import { createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import type { PlatformCapability } from "../../../../core/runtime/platform-definition.js";
 
 export function createNotionCapabilities(adapter: NotionAdapter): readonly PlatformCapability[] {
   return [
     createNotionLoginCapability(adapter),
+    createAdapterStatusCapability({ adapter, subject: "session" }),
     createNotionMeCapability(adapter),
     createNotionSearchCapability(adapter),
     createNotionPagesCapability(adapter),
@@ -26,4 +28,3 @@ export function createNotionCapabilities(adapter: NotionAdapter): readonly Platf
 }
 
 export const notionCapabilities: readonly PlatformCapability[] = createNotionCapabilities(notionAdapter);
-

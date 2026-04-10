@@ -1,4 +1,4 @@
-import { createAdapterActionCapability } from "../../../../core/runtime/capability-helpers.js";
+import { createAdapterActionCapability, createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import { telegrambotAdapter } from "../adapter.js";
 
 export const telegrambotLoginCapability = createAdapterActionCapability({
@@ -16,4 +16,13 @@ export const telegrambotLoginCapability = createAdapterActionCapability({
       token: options.token as string | undefined,
       account: options.name as string | undefined,
     }),
+});
+
+export const telegrambotStatusCapability = createAdapterStatusCapability({
+  adapter: telegrambotAdapter,
+  accountOption: {
+    key: "bot",
+    flags: "--bot <name>",
+    description: "Optional saved Telegram bot name to inspect",
+  },
 });

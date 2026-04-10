@@ -59,6 +59,19 @@ Options:
 - `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
+### `status`
+
+Usage:
+```bash
+autocli developer github status [options]
+```
+
+Show the saved GitHub session status
+
+Options:
+
+- `--account <name>`: Optional saved GitHub session name to inspect
+
 ### `me`
 
 Usage:

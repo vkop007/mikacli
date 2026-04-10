@@ -90,6 +90,77 @@ export class SlackbotClient {
     });
   }
 
+  async status(input: { account?: string }): Promise<SlackbotActionResult> {
+    const { account, path, auth: tokenAuth, connection } = await this.loadConnection(input.account);
+    const validatedAt = new Date().toISOString();
+
+    try {
+      const auth = await this.inspectToken(tokenAuth.token);
+      const statusMessage = this.describeAuth(auth, "Authenticated");
+      await this.connectionStore.saveBotTokenConnection({
+        platform: "slackbot",
+        account,
+        provider: "slack",
+        token: tokenAuth.token,
+        user: this.toSessionUser(auth),
+        status: {
+          state: "active",
+          message: statusMessage,
+          lastValidatedAt: validatedAt,
+        },
+        metadata: {
+          auth,
+          previousStatus: connection.status,
+        },
+      });
+
+      return this.actionResult({
+        account,
+        action: "status",
+        message: "Slack Bot connection is active.",
+        sessionPath: path,
+        user: this.toSessionUser(auth),
+        data: {
+          connected: true,
+          status: "active",
+          details: statusMessage,
+          lastValidatedAt: validatedAt,
+          auth,
+        },
+      });
+    } catch (error) {
+      const details = error instanceof Error && error.message.trim().length > 0 ? error.message : "Slack bot token could not be validated.";
+      await this.connectionStore.saveBotTokenConnection({
+        platform: "slackbot",
+        account,
+        provider: "slack",
+        token: tokenAuth.token,
+        user: connection.user,
+        status: {
+          state: "expired",
+          message: details,
+          lastValidatedAt: validatedAt,
+          lastErrorCode: "TOKEN_INVALID",
+        },
+        metadata: connection.metadata,
+      });
+
+      return this.actionResult({
+        account,
+        action: "status",
+        message: "Slack Bot connection is expired.",
+        sessionPath: path,
+        user: connection.user,
+        data: {
+          connected: false,
+          status: "expired",
+          details,
+          lastValidatedAt: validatedAt,
+        },
+      });
+    }
+  }
+
   async listChannels(input: { account?: string }): Promise<SlackbotChannelsResult> {
     const { account, path, auth: tokenAuth } = await this.loadConnection(input.account);
     const api = new SlackbotApiClient({ token: tokenAuth.token, fetchImpl: this.fetchImpl });

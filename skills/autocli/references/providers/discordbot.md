@@ -55,6 +55,19 @@ Options:
 - `--token <token>`: Discord bot token to save
 - `--name <botName>`: Optional bot name to save instead of the detected Discord bot username
 
+### `status`
+
+Usage:
+```bash
+autocli bot discordbot status [options]
+```
+
+Show the saved Discord Bot connection status
+
+Options:
+
+- `--bot <name>`: Optional saved Discord bot name to inspect
+
 ### `me`
 
 Usage:

@@ -55,6 +55,19 @@ Options:
 - `--token <value>`: Telegram bot token from BotFather
 - `--name <botName>`: Optional bot name to save instead of the detected Telegram bot username
 
+### `status`
+
+Usage:
+```bash
+autocli bot telegrambot status [options]
+```
+
+Show the saved Telegram Bot connection status
+
+Options:
+
+- `--bot <name>`: Optional saved Telegram bot name to inspect
+
 ### `me`
 
 Usage:

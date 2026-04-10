@@ -1,4 +1,4 @@
-import { createAdapterActionCapability } from "../../../../core/runtime/capability-helpers.js";
+import { createAdapterActionCapability, createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import { createCookieLoginOptions, resolveCookieLoginInput } from "../../../shared/cookie-login.js";
 import { tiktokAdapter } from "../adapter.js";
 
@@ -10,4 +10,9 @@ export const tiktokLoginCapability = createAdapterActionCapability({
   successMessage: "TikTok session saved.",
   options: createCookieLoginOptions(),
   action: ({ options }) => tiktokAdapter.login(resolveCookieLoginInput(options)),
+});
+
+export const tiktokStatusCapability = createAdapterStatusCapability({
+  adapter: tiktokAdapter,
+  subject: "session",
 });

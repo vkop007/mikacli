@@ -60,6 +60,19 @@ Options:
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 - `--site <url>`: Confluence site URL, like https://your-workspace.atlassian.net/wiki
 
+### `status`
+
+Usage:
+```bash
+autocli developer confluence status [options]
+```
+
+Show the saved Confluence session status
+
+Options:
+
+- `--account <name>`: Optional saved Confluence session name to inspect
+
 ### `me`
 
 Usage:

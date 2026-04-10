@@ -55,6 +55,19 @@ Options:
 - `--token <token>`: Slack bot token to save
 - `--name <botName>`: Optional bot name to save instead of the detected Slack identity
 
+### `status`
+
+Usage:
+```bash
+autocli bot slackbot status [options]
+```
+
+Show the saved Slack bot connection status
+
+Options:
+
+- `--bot <name>`: Optional saved Slack bot name to use
+
 ### `me`
 
 Usage:

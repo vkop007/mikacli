@@ -60,6 +60,19 @@ Options:
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 - `--site <url>`: Jira site URL, like https://your-workspace.atlassian.net
 
+### `status`
+
+Usage:
+```bash
+autocli developer jira status [options]
+```
+
+Show the saved Jira session status
+
+Options:
+
+- `--account <name>`: Optional saved Jira session name to inspect
+
 ### `me`
 
 Usage:

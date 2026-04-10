@@ -59,6 +59,19 @@ Options:
 - `--browser`: Open a real browser, wait for manual login, then save the extracted session (default when no cookie flags are provided)
 - `--browser-timeout <seconds>`: Maximum seconds to wait for manual browser login (default: 600)
 
+### `status`
+
+Usage:
+```bash
+autocli developer trello status [options]
+```
+
+Show the saved Trello session status
+
+Options:
+
+- `--account <name>`: Optional saved Trello session name to inspect
+
 ### `me`
 
 Usage:

@@ -5,11 +5,13 @@ import { createGitLabMeCapability } from "./me.js";
 import { createGitLabMergeRequestCapability, createGitLabMergeRequestsCapability } from "./merge-requests.js";
 import { createGitLabProjectCapability, createGitLabProjectsCapability, createGitLabSearchProjectsCapability } from "./projects.js";
 
+import { createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import type { PlatformCapability } from "../../../../core/runtime/platform-definition.js";
 
 export function createGitLabCapabilities(adapter: GitLabAdapter): readonly PlatformCapability[] {
   return [
     createGitLabLoginCapability(adapter),
+    createAdapterStatusCapability({ adapter, subject: "session" }),
     createGitLabMeCapability(adapter),
     createGitLabProjectsCapability(adapter),
     createGitLabProjectCapability(adapter),
@@ -23,4 +25,3 @@ export function createGitLabCapabilities(adapter: GitLabAdapter): readonly Platf
 }
 
 export const gitlabCapabilities: readonly PlatformCapability[] = createGitLabCapabilities(gitlabAdapter);
-

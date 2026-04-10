@@ -9,11 +9,16 @@ import { createGitHubRepoCapability, createGitHubReposCapability, createGitHubSe
 import { createGitHubStarCapability, createGitHubUnstarCapability } from "./stars.js";
 import { createGitHubUserCapability } from "./users.js";
 
+import { createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import type { PlatformCapability } from "../../../../core/runtime/platform-definition.js";
 
 export function createGitHubCapabilities(adapter: GitHubAdapter): readonly PlatformCapability[] {
   return [
     createGitHubLoginCapability(adapter),
+    createAdapterStatusCapability({
+      adapter,
+      subject: adapter.authMode === "cookies" ? "session" : "connection",
+    }),
     createGitHubMeCapability(adapter),
     createGitHubUserCapability(adapter),
     createGitHubReposCapability(adapter),

@@ -1,4 +1,4 @@
-import { createAdapterActionCapability } from "../../../../core/runtime/capability-helpers.js";
+import { createAdapterActionCapability, createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import { discordBotAdapter } from "../adapter.js";
 import { printDiscordIdentityResult } from "../output.js";
 
@@ -18,4 +18,13 @@ export const discordBotLoginCapability = createAdapterActionCapability({
       account: options.name as string | undefined,
     }),
   onSuccess: printDiscordIdentityResult,
+});
+
+export const discordBotStatusCapability = createAdapterStatusCapability({
+  adapter: discordBotAdapter,
+  accountOption: {
+    key: "bot",
+    flags: "--bot <name>",
+    description: "Optional saved Discord bot name to inspect",
+  },
 });

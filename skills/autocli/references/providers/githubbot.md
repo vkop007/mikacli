@@ -55,6 +55,19 @@ Options:
 - `--token <token>`: GitHub Bot token
 - `--account <name>`: Optional saved alias instead of the detected GitHub account
 
+### `status`
+
+Usage:
+```bash
+autocli bot githubbot status [options]
+```
+
+Show the saved GitHub Bot connection status
+
+Options:
+
+- `--account <name>`: Optional saved GitHub Bot connection name to inspect
+
 ### `me`
 
 Usage:

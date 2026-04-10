@@ -1,4 +1,4 @@
-import { createAdapterActionCapability } from "../../../../core/runtime/capability-helpers.js";
+import { createAdapterActionCapability, createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import { createCookieLoginOptions, resolveCookieLoginInput } from "../../../shared/cookie-login.js";
 import { linkedinAdapter } from "../adapter.js";
 
@@ -10,4 +10,9 @@ export const linkedinLoginCapability = createAdapterActionCapability({
   successMessage: "LinkedIn session saved.",
   options: createCookieLoginOptions(),
   action: ({ options }) => linkedinAdapter.login(resolveCookieLoginInput(options)),
+});
+
+export const linkedinStatusCapability = createAdapterStatusCapability({
+  adapter: linkedinAdapter,
+  subject: "session",
 });

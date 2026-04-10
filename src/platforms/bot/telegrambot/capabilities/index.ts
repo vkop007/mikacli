@@ -1,5 +1,5 @@
 import { telegrambotChatsCapability, telegrambotGetChatCapability, telegrambotMeCapability, telegrambotUpdatesCapability } from "./me.js";
-import { telegrambotLoginCapability } from "./login.js";
+import { telegrambotLoginCapability, telegrambotStatusCapability } from "./login.js";
 import { telegrambotDeleteCapability, telegrambotEditCapability } from "./messages.js";
 import {
   telegrambotSendAudioCapability,
@@ -14,6 +14,7 @@ import type { PlatformCapability } from "../../../../core/runtime/platform-defin
 
 export const telegrambotCapabilities: readonly PlatformCapability[] = [
   telegrambotLoginCapability,
+  telegrambotStatusCapability,
   telegrambotMeCapability,
   telegrambotGetChatCapability,
   telegrambotChatsCapability,

@@ -4,11 +4,13 @@ import { createTrelloCardCapability, createTrelloCardsCapability, createTrelloCr
 import { createTrelloLoginCapability } from "./login.js";
 import { createTrelloMeCapability } from "./me.js";
 
+import { createAdapterStatusCapability } from "../../../../core/runtime/capability-helpers.js";
 import type { PlatformCapability } from "../../../../core/runtime/platform-definition.js";
 
 export function createTrelloCapabilities(adapter: TrelloAdapter): readonly PlatformCapability[] {
   return [
     createTrelloLoginCapability(adapter),
+    createAdapterStatusCapability({ adapter, subject: "session" }),
     createTrelloMeCapability(adapter),
     createTrelloBoardsCapability(adapter),
     createTrelloBoardCapability(adapter),
