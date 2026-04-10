@@ -101,6 +101,7 @@ Typical commands:
 ```bash
 autocli status
 autocli sessions validate
+autocli sessions repair
 autocli search "youtube download"
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli developer github login --browser
@@ -200,6 +201,16 @@ Examples:
 autocli sessions validate
 autocli sessions validate x
 autocli sessions validate youtube default --json
+```
+
+Use `autocli sessions repair` when you want AutoCLI to validate first, then replay safe login paths like stored tokens or browser-assisted cookie repair.
+
+Examples:
+
+```bash
+autocli sessions repair
+autocli sessions repair x --browser
+autocli sessions repair discordbot default --json
 ```
 
 ## Cross-Site Transcripts

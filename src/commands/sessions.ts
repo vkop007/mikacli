@@ -9,12 +9,13 @@ import { buildPlatformCommandPrefix } from "../core/runtime/platform-command-pre
 import { AutoCliError } from "../errors.js";
 import { getPlatformDisplayName, isPlatform } from "../platforms/config.js";
 import { getPlatformDefinition } from "../platforms/index.js";
+import { parseBrowserTimeoutSeconds } from "../platforms/shared/cookie-login.js";
 import { resolveCommandContext } from "../utils/cli.js";
-import { printJson, printSessionsTable, printStatusTable } from "../utils/output.js";
+import { printJson, printSessionRepairTable, printSessionsTable, printStatusTable } from "../utils/output.js";
 import { refreshConnectionStatusEntry } from "./status.js";
 
 import type { ConnectionRecord } from "../core/auth/auth-types.js";
-import type { Platform } from "../types.js";
+import type { AdapterActionResult, Platform } from "../types.js";
 
 type SessionEntry = {
   platform: Platform;
@@ -57,6 +58,41 @@ type SessionValidationSummary = {
   updated: number;
 };
 
+type SessionRepairEntry = SessionValidationEntry & {
+  outcome: "healthy" | "repaired" | "manual" | "failed";
+  repairAttempted: boolean;
+  repairMessage?: string;
+  repairAction?: string;
+};
+
+type SessionRepairSummary = {
+  total: number;
+  healthy: number;
+  repaired: number;
+  manual: number;
+  failed: number;
+  active: number;
+  expired: number;
+  unknown: number;
+};
+
+type LoginCapableAdapter = {
+  login(input: Record<string, unknown>): Promise<AdapterActionResult>;
+};
+
+type TelegramStoredMetadata = {
+  apiId?: number | string;
+  apiHash?: string;
+  sessionString?: string;
+  loginMode?: "session-string" | "phone" | "qr";
+  phone?: string;
+};
+
+type WhatsAppStoredMetadata = {
+  loginMode?: "qr" | "pairing-code";
+  phone?: string;
+};
+
 const REDACTED_METADATA_VALUE = "[redacted]";
 
 export function createSessionsCommand(): Command {
@@ -73,6 +109,8 @@ Examples:
   autocli sessions --platform x
   autocli sessions validate
   autocli sessions validate x default
+  autocli sessions repair
+  autocli sessions repair x --browser
   autocli sessions show x cookie-check
   autocli sessions remove spotify default
 `,
@@ -98,6 +136,21 @@ Examples:
     .argument("[account]", "Optional saved account name; when omitted, all accounts for the platform are validated")
     .action(async function sessionsValidateAction(this: Command, platform?: string, account?: string) {
       await handleSessionsValidate(this, platform, account);
+    });
+
+  command
+    .command("repair")
+    .description("Validate saved sessions, then attempt safe automatic repair where possible")
+    .argument("[platform]", "Optional platform id")
+    .argument("[account]", "Optional saved account name; when omitted, all accounts for the platform are repaired")
+    .option("--browser", "Use browser-assisted login for cookie-backed providers that need manual re-auth")
+    .option("--browser-timeout <seconds>", "Maximum seconds to wait for manual browser repair login (default: 600)", parseBrowserTimeoutSeconds)
+    .action(async function sessionsRepairAction(this: Command, platform?: string, account?: string) {
+      const options = this.optsWithGlobals<{ browser?: boolean; browserTimeout?: number }>();
+      await handleSessionsRepair(this, platform, account, {
+        browser: Boolean(options.browser),
+        browserTimeoutSeconds: options.browserTimeout,
+      });
     });
 
   command
@@ -216,11 +269,13 @@ export async function loadSessionEntry(platform: Platform, account?: string, con
   return toSessionEntry(loaded.connection, loaded.path);
 }
 
-export async function validateSessionEntries(input: {
-  platform?: string;
-  account?: string;
-  connectionStore?: Pick<ConnectionStore, "listConnections" | "saveConnection">;
-}): Promise<SessionValidationEntry[]> {
+async function listTargetConnections(
+  input: {
+    platform?: string;
+    account?: string;
+    connectionStore?: Pick<ConnectionStore, "listConnections">;
+  },
+): Promise<Array<{ connection: ConnectionRecord; path: string }>> {
   const connectionStore = input.connectionStore ?? new ConnectionStore();
   const platform = input.platform ? requirePlatform(input.platform) : undefined;
   const account = input.account ? sanitizeAccountName(input.account) : undefined;
@@ -252,17 +307,44 @@ export async function validateSessionEntries(input: {
     );
   }
 
-  return Promise.all(
-    filtered.map(async (entry) => {
-      const refreshed = await refreshConnectionStatusEntry(entry);
-      if (refreshed.basis === "live") {
-        const updatedConnection = applyValidatedStatus(entry.connection, refreshed);
-        const savedPath = await connectionStore.saveConnection(updatedConnection);
-        return toValidatedSessionEntry(updatedConnection, savedPath, refreshed);
-      }
+  return filtered;
+}
 
-      return toValidatedSessionEntry(entry.connection, entry.path, refreshed);
-    }),
+export async function validateSessionEntries(input: {
+  platform?: string;
+  account?: string;
+  connectionStore?: Pick<ConnectionStore, "listConnections" | "saveConnection">;
+}): Promise<SessionValidationEntry[]> {
+  const connectionStore = input.connectionStore ?? new ConnectionStore();
+  const filtered = await listTargetConnections({
+    platform: input.platform,
+    account: input.account,
+    connectionStore,
+  });
+
+  return Promise.all(filtered.map((entry) => validateListedConnection(entry, connectionStore)));
+}
+
+export async function repairSessionEntries(input: {
+  platform?: string;
+  account?: string;
+  browser?: boolean;
+  browserTimeoutSeconds?: number;
+  connectionStore?: Pick<ConnectionStore, "listConnections" | "saveConnection" | "loadConnection">;
+}): Promise<SessionRepairEntry[]> {
+  const connectionStore = input.connectionStore ?? new ConnectionStore();
+  const filtered = await listTargetConnections({
+    platform: input.platform,
+    account: input.account,
+    connectionStore,
+  });
+
+  return Promise.all(
+    filtered.map((entry) =>
+      repairListedConnection(entry, connectionStore, {
+        browser: Boolean(input.browser),
+        browserTimeoutSeconds: input.browserTimeoutSeconds,
+      })),
   );
 }
 
@@ -311,6 +393,26 @@ export function summarizeValidatedSessionEntries(entries: readonly SessionValida
     } else {
       summary.refreshFailed += 1;
     }
+  }
+
+  return summary;
+}
+
+export function summarizeRepairedSessionEntries(entries: readonly SessionRepairEntry[]): SessionRepairSummary {
+  const summary: SessionRepairSummary = {
+    total: entries.length,
+    healthy: 0,
+    repaired: 0,
+    manual: 0,
+    failed: 0,
+    active: 0,
+    expired: 0,
+    unknown: 0,
+  };
+
+  for (const entry of entries) {
+    summary[entry.outcome] += 1;
+    summary[entry.status] += 1;
   }
 
   return summary;
@@ -384,6 +486,61 @@ async function handleSessionsValidate(command: Command, platform?: string, accou
   }
 }
 
+async function handleSessionsRepair(
+  command: Command,
+  platform: string | undefined,
+  account: string | undefined,
+  options: {
+    browser: boolean;
+    browserTimeoutSeconds?: number;
+  },
+): Promise<void> {
+  const ctx = resolveCommandContext(command);
+  const entries = await repairSessionEntries({
+    platform,
+    account,
+    browser: options.browser,
+    browserTimeoutSeconds: options.browserTimeoutSeconds,
+  });
+  const summary = summarizeRepairedSessionEntries(entries);
+
+  if (ctx.json) {
+    printJson({
+      ok: true,
+      repaired: summary.repaired,
+      summary,
+      sessions: entries,
+    });
+    return;
+  }
+
+  console.log(
+    `Processed ${summary.total} saved record${summary.total === 1 ? "" : "s"}. ${summary.healthy} healthy, ${summary.repaired} repaired, ${summary.manual} manual, ${summary.failed} failed.`,
+  );
+
+  printSessionRepairTable(
+    entries.map((entry) => ({
+      platform: entry.platform,
+      account: entry.account,
+      outcome: entry.outcome,
+      status: entry.status,
+      message: entry.message,
+    })),
+  );
+
+  const nextCommands = Array.from(
+    new Set(entries.map((entry) => entry.next).filter((value): value is string => typeof value === "string" && value.length > 0)),
+  );
+
+  if (nextCommands.length > 0) {
+    console.log("");
+    console.log("next:");
+    for (const next of nextCommands) {
+      console.log(`- ${next}`);
+    }
+  }
+}
+
 function toSessionEntry(connection: ConnectionRecord, path: string): SessionEntry {
   return {
     platform: connection.platform,
@@ -405,6 +562,79 @@ function toSessionEntry(connection: ConnectionRecord, path: string): SessionEntr
     path,
     metadata: sanitizeSessionMetadata(connection.metadata),
   };
+}
+
+async function validateListedConnection(
+  entry: { connection: ConnectionRecord; path: string },
+  connectionStore: Pick<ConnectionStore, "saveConnection">,
+): Promise<SessionValidationEntry> {
+  const refreshed = await refreshConnectionStatusEntry(entry);
+  if (refreshed.basis === "live") {
+    const updatedConnection = applyValidatedStatus(entry.connection, refreshed);
+    const savedPath = await connectionStore.saveConnection(updatedConnection);
+    return toValidatedSessionEntry(updatedConnection, savedPath, refreshed);
+  }
+
+  return toValidatedSessionEntry(entry.connection, entry.path, refreshed);
+}
+
+async function repairListedConnection(
+  entry: { connection: ConnectionRecord; path: string },
+  connectionStore: Pick<ConnectionStore, "saveConnection" | "loadConnection">,
+  options: {
+    browser: boolean;
+    browserTimeoutSeconds?: number;
+  },
+): Promise<SessionRepairEntry> {
+  const validated = await validateListedConnection(entry, connectionStore);
+  if (validated.status === "active") {
+    return {
+      ...validated,
+      outcome: "healthy",
+      repairAttempted: false,
+      repairMessage: "No repair needed.",
+    };
+  }
+
+  const plan = buildRepairPlan(entry.connection, options);
+  if (plan.kind === "manual") {
+    return {
+      ...validated,
+      outcome: "manual",
+      repairAttempted: false,
+      repairMessage: plan.message,
+      message: plan.message,
+      next: plan.next ?? validated.next,
+      ...(plan.repairAction ? { repairAction: plan.repairAction } : {}),
+    };
+  }
+
+  try {
+    const result = await plan.adapter.login(plan.input);
+    const repaired = await connectionStore.loadConnection(entry.connection.platform, result.account);
+    const repairedEntry = toSessionEntry(repaired.connection, repaired.path);
+    return {
+      ...repairedEntry,
+      connected: repaired.connection.status.state === "active",
+      basis: "live",
+      outcome: "repaired",
+      repairAttempted: true,
+      repairMessage: result.message,
+      repairAction: plan.repairAction,
+      message: result.message,
+    };
+  } catch (error) {
+    const message = error instanceof Error && error.message.trim().length > 0 ? error.message : "Automatic repair failed.";
+    return {
+      ...validated,
+      outcome: "failed",
+      repairAttempted: true,
+      repairMessage: message,
+      repairAction: plan.repairAction,
+      message: `Repair failed: ${message}`,
+      next: validated.next ?? buildProviderLoginCommand(entry.connection.platform, entry.connection.account),
+    };
+  }
 }
 
 function toValidatedSessionEntry(
@@ -450,6 +680,141 @@ function buildProviderLoginCommand(platform: Platform, account: string): string 
 
   const base = `${buildPlatformCommandPrefix(definition)} login`;
   return account === "default" ? base : `${base} --account ${account}`;
+}
+
+function buildRepairPlan(
+  connection: ConnectionRecord,
+  options: {
+    browser: boolean;
+    browserTimeoutSeconds?: number;
+  },
+):
+  | {
+      kind: "manual";
+      message: string;
+      next?: string;
+      repairAction?: string;
+    }
+  | {
+      kind: "auto";
+      adapter: LoginCapableAdapter;
+      input: Record<string, unknown>;
+      repairAction: string;
+    } {
+  const definition = getPlatformDefinition(connection.platform);
+  const adapter = definition?.adapter;
+
+  if (!isLoginCapableAdapter(adapter)) {
+    return {
+      kind: "manual",
+      message: "This provider does not expose an automatic repair login path yet.",
+      next: buildProviderLoginCommand(connection.platform, connection.account),
+    };
+  }
+
+  switch (connection.auth.kind) {
+    case "apiKey":
+    case "botToken":
+      return {
+        kind: "auto",
+        adapter,
+        input: {
+          account: connection.account,
+          token: connection.auth.token,
+        },
+        repairAction: "token-replay",
+      };
+    case "cookies":
+      if (!options.browser) {
+        return {
+          kind: "manual",
+          message: "Cookie-backed repair needs `--browser` so AutoCLI can refresh the saved web session safely.",
+          next: buildProviderLoginCommand(connection.platform, connection.account),
+          repairAction: "browser-login",
+        };
+      }
+
+      return {
+        kind: "auto",
+        adapter,
+        input: {
+          account: connection.account,
+          browser: true,
+          browserTimeoutSeconds: options.browserTimeoutSeconds,
+        },
+        repairAction: "browser-login",
+      };
+    case "session":
+      return buildSessionRepairPlan(connection, adapter);
+    default:
+      return {
+        kind: "manual",
+        message: "Automatic repair is not available for this auth type yet.",
+        next: buildProviderLoginCommand(connection.platform, connection.account),
+      };
+  }
+}
+
+function buildSessionRepairPlan(
+  connection: ConnectionRecord,
+  adapter: LoginCapableAdapter,
+):
+  | {
+      kind: "manual";
+      message: string;
+      next?: string;
+      repairAction?: string;
+    }
+  | {
+      kind: "auto";
+      adapter: LoginCapableAdapter;
+      input: Record<string, unknown>;
+      repairAction: string;
+    } {
+  if (connection.platform === "telegram") {
+    const metadata = connection.metadata as TelegramStoredMetadata | undefined;
+    const apiId = metadata?.apiId;
+    const apiHash = typeof metadata?.apiHash === "string" ? metadata.apiHash : undefined;
+    const sessionString = typeof metadata?.sessionString === "string" ? metadata.sessionString : undefined;
+    if ((typeof apiId === "number" || typeof apiId === "string") && apiHash) {
+      return {
+        kind: "auto",
+        adapter,
+        input: {
+          account: connection.account,
+          apiId,
+          apiHash,
+          ...(sessionString ? { sessionString } : {}),
+          ...(!sessionString && metadata?.loginMode === "qr" ? { qr: true } : {}),
+          ...(!sessionString && metadata?.phone ? { phone: metadata.phone } : {}),
+        },
+        repairAction: sessionString ? "telegram-session-replay" : "telegram-interactive-login",
+      };
+    }
+  }
+
+  if (connection.platform === "whatsapp") {
+    const metadata = connection.metadata as WhatsAppStoredMetadata | undefined;
+    return {
+      kind: "auto",
+      adapter,
+      input: {
+        account: connection.account,
+        ...(metadata?.phone ? { phone: metadata.phone } : {}),
+      },
+      repairAction: metadata?.phone ? "whatsapp-pairing-code" : "whatsapp-qr-login",
+    };
+  }
+
+  return {
+    kind: "manual",
+    message: "Automatic repair is not available for this session-based provider yet.",
+    next: buildProviderLoginCommand(connection.platform, connection.account),
+  };
+}
+
+function isLoginCapableAdapter(value: unknown): value is LoginCapableAdapter {
+  return Boolean(value) && typeof (value as { login?: unknown }).login === "function";
 }
 
 function sanitizeSessionMetadata(metadata: Record<string, unknown> | undefined): Record<string, unknown> | undefined {

@@ -123,6 +123,59 @@ export function printSessionsTable(
   }
 }
 
+export function printSessionRepairTable(
+  rows: Array<{
+    platform: string;
+    account: string;
+    outcome: string;
+    status: string;
+    message?: string;
+  }>,
+): void {
+  if (rows.length === 0) {
+    console.log(pc.dim("No saved sessions or connections found."));
+    return;
+  }
+
+  const widths = {
+    platform: Math.max(...rows.map((row) => row.platform.length), "platform".length),
+    account: Math.max(...rows.map((row) => row.account.length), "account".length),
+    outcome: Math.max(...rows.map((row) => row.outcome.length), "outcome".length),
+    status: Math.max(...rows.map((row) => row.status.length), "status".length),
+  };
+
+  const header = [
+    "platform".padEnd(widths.platform),
+    "account".padEnd(widths.account),
+    "outcome".padEnd(widths.outcome),
+    "status".padEnd(widths.status),
+    "message",
+  ].join("  ");
+
+  console.log(pc.bold(header));
+  console.log(
+    [
+      "-".repeat(widths.platform),
+      "-".repeat(widths.account),
+      "-".repeat(widths.outcome),
+      "-".repeat(widths.status),
+      "-".repeat(20),
+    ].join("  "),
+  );
+
+  for (const row of rows) {
+    console.log(
+      [
+        row.platform.padEnd(widths.platform),
+        row.account.padEnd(widths.account),
+        padAnsi(colorizeRepairOutcome(row.outcome), widths.outcome),
+        padAnsi(colorizeStatus(row.status), widths.status),
+        row.message ?? "",
+      ].join("  "),
+    );
+  }
+}
+
 export function printDoctorTable(
   rows: Array<{
     check: string;
@@ -168,6 +221,20 @@ function colorizeDoctorStatus(status: "pass" | "warn" | "fail"): string {
       return pc.yellow(status);
     case "fail":
       return pc.red(status);
+  }
+}
+
+function colorizeRepairOutcome(outcome: string): string {
+  switch (outcome) {
+    case "healthy":
+    case "repaired":
+      return pc.green(outcome);
+    case "manual":
+      return pc.yellow(outcome);
+    case "failed":
+      return pc.red(outcome);
+    default:
+      return outcome;
   }
 }
 

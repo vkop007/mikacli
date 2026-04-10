@@ -66,6 +66,8 @@ const ROOT_SEARCH_COMMANDS: readonly RootSearchCommand[] = [
       "autocli sessions",
       "autocli sessions validate",
       "autocli sessions validate x default",
+      "autocli sessions repair",
+      "autocli sessions repair x --browser",
       "autocli sessions show x default",
       "autocli sessions remove spotify default",
     ],
