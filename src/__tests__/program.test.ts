@@ -8,6 +8,7 @@ describe("root program routing", () => {
     const program = createProgram();
     expect(program.commands.map((command) => command.name())).toEqual([
       "login",
+      "logout",
       "search",
       "status",
       "doctor",
@@ -65,6 +66,7 @@ describe("root program routing", () => {
 
   test("allows category-based invocations", () => {
     expect(() => assertCategoryOnlyInvocation(["login", "--browser"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["logout", "x", "default"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["search", "github"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["llm", "chatgpt", "text", "Hello"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["editor", "image", "info", "./photo.png"])).not.toThrow();

@@ -10,6 +10,7 @@ import { resolveCommandContext } from "../utils/cli.js";
 import { printJson } from "../utils/output.js";
 import { createDoctorCommand } from "./doctor.js";
 import { createLoginCommand } from "./login.js";
+import { createLogoutCommand } from "./logout.js";
 import { createSessionsCommand } from "./sessions.js";
 import { createStatusCommand } from "./status.js";
 
@@ -47,6 +48,14 @@ const ROOT_SEARCH_COMMANDS: readonly RootSearchCommand[] = [
     examples: [
       "autocli login --browser",
       "autocli login --url https://accounts.google.com/",
+    ],
+  },
+  {
+    builder: createLogoutCommand,
+    examples: [
+      "autocli logout",
+      "autocli logout x default",
+      "autocli logout --browser",
     ],
   },
   {
