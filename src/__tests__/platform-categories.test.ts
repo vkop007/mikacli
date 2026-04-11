@@ -74,6 +74,7 @@ describe("platform category routing", () => {
       "sheets",
       "calendar",
       "docs",
+      "forms",
     ]);
   });
 

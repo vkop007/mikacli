@@ -125,7 +125,7 @@ Current examples:
 - Bot platforms: `src/platforms/bot/discordbot/`, `src/platforms/bot/githubbot/`, `src/platforms/bot/slackbot/`, `src/platforms/bot/telegrambot/`
 - Active browserless LLM platforms: `src/platforms/llm/chatgpt/`, `src/platforms/llm/claude/`, `src/platforms/llm/deepseek/`, `src/platforms/llm/gemini/`, `src/platforms/llm/grok/`, `src/platforms/llm/mistral/`, `src/platforms/llm/perplexity/`, `src/platforms/llm/qwen/`, `src/platforms/llm/zai/`
 - Finance platforms: `src/platforms/finance/crypto/`, `src/platforms/finance/currency/`, `src/platforms/finance/stocks/`
-- Google platforms: `src/platforms/google/calendar/`, `src/platforms/google/docs/`, `src/platforms/google/gmail/`, `src/platforms/google/drive/`, `src/platforms/google/sheets/`
+- Google platforms: `src/platforms/google/calendar/`, `src/platforms/google/docs/`, `src/platforms/google/forms/`, `src/platforms/google/gmail/`, `src/platforms/google/drive/`, `src/platforms/google/sheets/`
 - Maps platforms: `src/platforms/maps/geo/`, `src/platforms/maps/openstreetmap/`, `src/platforms/maps/osrm/`
 - Movie platforms: `src/platforms/movie/anilist/`, `src/platforms/movie/imdb/`, `src/platforms/movie/justwatch/`, `src/platforms/movie/kitsu/`, `src/platforms/movie/letterboxd/`, `src/platforms/movie/myanimelist/`, `src/platforms/movie/tmdb/`, `src/platforms/movie/tvmaze/`
 - News platforms: `src/platforms/news/news/`

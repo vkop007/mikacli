@@ -28,6 +28,7 @@ const ROOT_EXAMPLES = [
   "autocli google gmail labels",
   "autocli google calendar today",
   "autocli google docs documents",
+  "autocli google forms forms",
   'autocli maps openstreetmap search "Mumbai"',
   'autocli movie imdb search "inception"',
   'autocli news top "AI"',

@@ -7,6 +7,7 @@ const CUSTOM_CAPABILITY_IDS: Partial<Record<PlatformDefinition["id"], readonly s
   calendar: ["auth-url", "login", "status", "me", "calendars", "calendar", "events", "today", "event", "create-event", "update-event", "delete-event"],
   docs: ["auth-url", "login", "status", "me", "documents", "document", "content", "create", "append-text", "replace-text"],
   drive: ["auth-url", "login", "status", "me", "files", "file", "create-folder", "upload", "download", "delete"],
+  forms: ["auth-url", "login", "status", "me", "forms", "form", "responses", "response", "create", "update-info", "add-text-question", "add-choice-question", "delete-item", "publish", "delete"],
   gmail: ["auth-url", "login", "status", "me", "labels", "messages", "message", "send"],
   sheets: ["auth-url", "login", "status", "me", "create", "spreadsheet", "values", "append", "update", "clear"],
   telegram: ["login", "status", "me", "chats", "history", "send"],

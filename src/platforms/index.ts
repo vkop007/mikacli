@@ -12,6 +12,7 @@ import { yamlPlatformDefinition } from "./data/yaml/manifest.js";
 import { calendarPlatformDefinition } from "./google/calendar/manifest.js";
 import { docsPlatformDefinition } from "./google/docs/manifest.js";
 import { drivePlatformDefinition } from "./google/drive/manifest.js";
+import { formsPlatformDefinition } from "./google/forms/manifest.js";
 import { gmailPlatformDefinition } from "./google/gmail/manifest.js";
 import { sheetsPlatformDefinition } from "./google/sheets/manifest.js";
 import { confluencePlatformDefinition } from "./developer/confluence/manifest.js";
@@ -151,6 +152,7 @@ const definitions: readonly PlatformDefinition[] = [
   sheetsPlatformDefinition,
   calendarPlatformDefinition,
   docsPlatformDefinition,
+  formsPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
   openStreetMapPlatformDefinition,

@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-113-blue)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-114-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-15-6f42c1)](#category-overview)
 
 AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
@@ -18,7 +18,7 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 
 ## Why It Matters
 
-- One command surface across `113` providers.
+- One command surface across `114` providers.
 - Shared browser login means less manual cookie exporting for cookie-backed platforms.
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
 - Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli google ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
@@ -60,7 +60,7 @@ autocli llm qwen text "Summarize this changelog"
 | --- | --- |
 | Package | `@vk007/autocli` |
 | CLI command | `autocli` |
-| Providers | `113` |
+| Providers | `114` |
 | Categories | `15` |
 | npm install | `npm install -g @vk007/autocli` |
 | bun install | `bun install -g @vk007/autocli` |
@@ -121,6 +121,7 @@ autocli devops render services --json
 autocli google gmail labels --json
 autocli google calendar today --json
 autocli google docs documents --json
+autocli google forms forms --json
 autocli google drive files --json
 autocli google sheets values google-sheet-id-example Sheet1!A1:B5 --json
 autocli tools page-links https://example.com --json
@@ -168,6 +169,7 @@ autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli google gmail labels
 autocli google calendar today
 autocli google docs documents
+autocli google forms forms
 autocli google drive files
 autocli google sheets values google-sheet-id-example Sheet1!A1:B10
 autocli social x post "Shipping AutoCLI today"
@@ -197,6 +199,7 @@ Common APIs to enable:
 - Gmail API
 - Google Calendar API
 - Google Docs API
+- Google Forms API
 - Google Drive API
 - Google Sheets API
 
@@ -206,6 +209,7 @@ Typical login flow:
 autocli google gmail login --client-id <id> --client-secret <secret>
 autocli google calendar login --client-id <id> --client-secret <secret>
 autocli google docs login --client-id <id> --client-secret <secret>
+autocli google forms login --client-id <id> --client-secret <secret>
 autocli google drive login --client-id <id> --client-secret <secret>
 autocli google sheets login --client-id <id> --client-secret <secret>
 ```
@@ -219,6 +223,18 @@ autocli google docs content google-doc-id-example --json
 autocli google docs create "Launch Notes" --text "Hello from AutoCLI" --json
 autocli google docs append-text google-doc-id-example "More text from AutoCLI" --json
 autocli google docs replace-text google-doc-id-example --search "draft" --replace "published" --json
+```
+
+Forms examples:
+
+```bash
+autocli google forms forms --limit 10 --json
+autocli google forms form google-form-id-example --json
+autocli google forms create "Launch Survey" --description "Tell us what you think" --json
+autocli google forms add-text-question google-form-id-example --title "What should we improve?" --paragraph --required --json
+autocli google forms add-choice-question google-form-id-example --title "How did we do?" --options "Great|Good|Okay|Needs work" --type RADIO --json
+autocli google forms responses google-form-id-example --limit 20 --json
+autocli google forms publish google-form-id-example --published true --accepting-responses true --json
 ```
 
 Calendar examples:
@@ -527,6 +543,7 @@ autocli bot discordbot send 123456789012345678 "nightly deploy complete"
 autocli google gmail labels --json
 autocli google calendar today --calendar primary --json
 autocli google docs documents --limit 10 --json
+autocli google forms forms --limit 10 --json
 autocli google drive files --limit 10 --json
 autocli google sheets values google-sheet-id-example Sheet1!A1:B10 --json
 ```

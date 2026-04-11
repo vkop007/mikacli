@@ -48,6 +48,7 @@ Use these files when the main `$autocli` skill already knows the provider and ne
 - [Google Calendar](./calendar.md)
 - [Google Docs](./docs.md)
 - [Google Drive](./drive.md)
+- [Google Forms](./forms.md)
 - [Gmail](./gmail.md)
 - [Google Sheets](./sheets.md)
 

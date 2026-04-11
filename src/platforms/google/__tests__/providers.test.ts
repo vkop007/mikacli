@@ -6,6 +6,8 @@ import { DocsAdapter } from "../docs/adapter.js";
 import { docsPlatformDefinition } from "../docs/manifest.js";
 import { DriveAdapter } from "../drive/adapter.js";
 import { drivePlatformDefinition } from "../drive/manifest.js";
+import { FormsAdapter } from "../forms/adapter.js";
+import { formsPlatformDefinition } from "../forms/manifest.js";
 import { GmailAdapter } from "../gmail/adapter.js";
 import { gmailPlatformDefinition } from "../gmail/manifest.js";
 import { sheetsPlatformDefinition } from "../sheets/manifest.js";
@@ -122,6 +124,13 @@ describe("google provider command trees", () => {
     );
   });
 
+  test("forms exposes the expected commands", () => {
+    const command = formsPlatformDefinition.buildCommand?.();
+    expect(command?.commands.map((item) => item.name())).toEqual(
+      expect.arrayContaining(["auth-url", "login", "status", "me", "forms", "form", "responses", "response", "create", "update-info", "add-text-question", "add-choice-question", "delete-item", "publish", "delete"]),
+    );
+  });
+
   test("sheets exposes the expected commands", () => {
     const command = sheetsPlatformDefinition.buildCommand?.();
     expect(command?.commands.map((item) => item.name())).toEqual(
@@ -206,6 +215,45 @@ describe("google adapter flows", () => {
       expect.objectContaining({
         id: "google-doc-id-example",
         title: "Launch Notes",
+      }),
+    ]);
+    expect(connectionStore.saveCalls.length).toBe(1);
+  });
+
+  test("forms lists saved Google Forms files from an active oauth connection", async () => {
+    const connectionStore = createConnectionStoreMock();
+    const adapter = new FormsAdapter({
+      connectionStore: connectionStore.store as any,
+      fetchImpl: createFetchMock([
+        {
+          body: {
+            sub: "google-user-id-example",
+            email: "person@example.com",
+            email_verified: true,
+            name: "Example Person",
+          },
+        },
+        {
+          body: {
+            files: [
+              {
+                id: "google-form-id-example",
+                name: "Launch Survey",
+                modifiedTime: "2026-04-12T10:00:00.000Z",
+                webViewLink: "https://docs.google.com/forms/d/google-form-id-example/edit",
+              },
+            ],
+          },
+        },
+      ]),
+    });
+
+    const result = await adapter.forms({ account: "default", limit: 10 });
+
+    expect(result.data?.forms).toEqual([
+      expect.objectContaining({
+        id: "google-form-id-example",
+        title: "Launch Survey",
       }),
     ]);
     expect(connectionStore.saveCalls.length).toBe(1);

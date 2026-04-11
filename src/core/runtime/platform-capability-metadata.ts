@@ -177,6 +177,11 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     stability: "stable",
     notes: ["Uses Google's OAuth2 flow for Google Docs listing, content reads, document creation, and text edits."],
   },
+  forms: {
+    mutation: "supported",
+    stability: "stable",
+    notes: ["Uses Google's OAuth2 flow plus Drive-backed listing and deletion for Google Forms CRUD, responses, and publish settings."],
+  },
   drive: {
     mutation: "supported",
     stability: "stable",
