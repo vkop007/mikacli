@@ -46,6 +46,9 @@ const CAPABILITY_PRIORITY = [
 ] as const;
 
 const CUSTOM_CAPABILITY_IDS: Partial<Record<Platform, readonly string[]>> = {
+  drive: ["auth-url", "login", "status", "me", "files", "file", "create-folder", "upload", "download", "delete"],
+  gmail: ["auth-url", "login", "status", "me", "labels", "messages", "message", "send"],
+  sheets: ["auth-url", "login", "status", "me", "create", "spreadsheet", "values", "append", "update", "clear"],
   telegram: ["login", "status", "me", "chats", "history", "send"],
   whatsapp: ["login", "status", "me", "chats", "history", "send"],
   http: ["inspect", "capture", "request", "cookies", "storage", "download", "graphql"],

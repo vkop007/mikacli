@@ -4,6 +4,9 @@ import { resolvePlatformCapabilityMetadata } from "./platform-capability-metadat
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "./platform-definition.js";
 
 const CUSTOM_CAPABILITY_IDS: Partial<Record<PlatformDefinition["id"], readonly string[]>> = {
+  drive: ["auth-url", "login", "status", "me", "files", "file", "create-folder", "upload", "download", "delete"],
+  gmail: ["auth-url", "login", "status", "me", "labels", "messages", "message", "send"],
+  sheets: ["auth-url", "login", "status", "me", "create", "spreadsheet", "values", "append", "update", "clear"],
   telegram: ["login", "status", "me", "chats", "history", "send"],
   whatsapp: ["login", "status", "me", "chats", "history", "send"],
   http: ["inspect", "capture", "request", "cookies", "storage", "download", "graphql"],
@@ -37,6 +40,7 @@ const PLATFORM_CATEGORY_PREFIXES = [
   "editor",
   "finance",
   "data",
+  "google",
   "maps",
   "movie",
   "news",
@@ -137,7 +141,11 @@ function buildLoginQuickStartCommand(
     return `${prefix} login --token <token>`;
   }
 
-  if (definition.authStrategies.includes("session") || definition.authStrategies.includes("oauth2")) {
+  if (definition.authStrategies.includes("oauth2")) {
+    return `${prefix} login --client-id <id> --client-secret <secret>`;
+  }
+
+  if (definition.authStrategies.includes("session")) {
     return `${prefix} login`;
   }
 

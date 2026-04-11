@@ -17,6 +17,7 @@ If the user intent is already concrete, read [recipes.md](recipes.md) first and 
 | Category | Use it for | Representative providers | Typical commands |
 | --- | --- | --- | --- |
 | `llm` | prompting and generation | `chatgpt`, `gemini`, `grok`, `mistral`, `perplexity`, `qwen` | `login`, `status`, `text`, `image`, `video` |
+| `google` | Google workspace and account APIs | `gmail`, `drive`, `sheets` | `auth-url`, `login`, `me`, `files`, `labels`, `values`, `append` |
 | `social` | posting, profile lookup, messaging, public social reads | `x`, `instagram`, `reddit`, `bluesky`, `mastodon`, `telegram`, `whatsapp`, `youtube` | `login`, `me`, `profile`, `posts`, `thread`, `post`, `comment`, `send` |
 | `developer` | code hosting, docs, issues, workspace tools | `github`, `gitlab`, `jira`, `linear`, `trello`, `confluence`, `notion` | `login`, `me`, `projects`, `issues`, `page`, `search` |
 | `devops` | infrastructure, deploys, DNS, monitoring, and platform operations | `cloudflare`, `vercel`, `supabase`, `render`, `railway`, `netlify`, `digitalocean`, `fly`, `uptimerobot` | `login`, `me`, `zones`, `projects`, `services`, `apps`, `deployments`, `monitors` |
@@ -39,6 +40,7 @@ If the user intent is already concrete, read [recipes.md](recipes.md) first and 
 | `cookies` | Use `login` for the default browser flow, or `login --cookies ...` to import a saved web session directly |
 | `cookies + local token` | Cookie-backed session plus a token stored in site storage |
 | `session` | Do one interactive login once, then reuse the saved user session |
+| `oauth2` | Generate a consent URL, exchange an auth code or refresh token once, then reuse the saved OAuth connection |
 | `api token` | Save a personal or service token once with `login --token ...` |
 | `bot token` | Save a bot token once with `login --token ...` |
 | `local tools` | Requires binaries like `ffmpeg`, `qpdf`, or `tesseract` |

@@ -66,6 +66,15 @@ describe("platform category routing", () => {
     ]);
   });
 
+  test("includes the google category and providers", () => {
+    expect(getPlatformCategories()).toContain("google");
+    expect(getPlatformDefinitionsByCategory("google").map((definition) => definition.id)).toEqual([
+      "gmail",
+      "drive",
+      "sheets",
+    ]);
+  });
+
   test("includes the maps category and providers", () => {
     expect(getPlatformCategories()).toContain("maps");
     expect(getPlatformDefinitionsByCategory("maps").map((definition) => definition.id)).toEqual([

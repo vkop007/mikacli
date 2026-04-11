@@ -24,6 +24,9 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   finance: {
     description: "Public market, crypto, and forex lookup tools",
   },
+  google: {
+    description: "Google workspace and account surfaces like Gmail, Drive, and Sheets",
+  },
   data: {
     description: "Structured data cleanup, conversion, querying, and extraction tools",
   },

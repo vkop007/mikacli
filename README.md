@@ -2,8 +2,8 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-108-blue)](#category-overview)
-[![categories](https://img.shields.io/badge/categories-14-6f42c1)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-111-blue)](#category-overview)
+[![categories](https://img.shields.io/badge/categories-15-6f42c1)](#category-overview)
 
 AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
 
@@ -18,10 +18,10 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 
 ## Why It Matters
 
-- One command surface across `108` providers.
+- One command surface across `111` providers.
 - Shared browser login means less manual cookie exporting for cookie-backed platforms.
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
-- Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
+- Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli google ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
 - Every provider is designed to be script-friendly, with strong `--json` support.
 - Provider capability metadata helps agents see auth type, stability, browser support, and read/write boundaries before they guess.
 - Shared result normalization adds stable JSON aliases like `data.items`, `data.entity`, and `data.guidance`.
@@ -60,8 +60,8 @@ autocli llm qwen text "Summarize this changelog"
 | --- | --- |
 | Package | `@vk007/autocli` |
 | CLI command | `autocli` |
-| Providers | `108` |
-| Categories | `14` |
+| Providers | `111` |
+| Categories | `15` |
 | npm install | `npm install -g @vk007/autocli` |
 | bun install | `bun install -g @vk007/autocli` |
 | Local setup | `bun install` |
@@ -118,6 +118,9 @@ autocli developer github me --json
 autocli developer github capabilities --json
 autocli devops cloudflare zones --json
 autocli devops render services --json
+autocli google gmail labels --json
+autocli google drive files --json
+autocli google sheets values google-sheet-id-example Sheet1!A1:B5 --json
 autocli tools page-links https://example.com --json
 autocli tools http github inspect --json
 ```
@@ -143,6 +146,8 @@ AutoCLI is category-only. Provider commands never live at the root.
 - `autocli llm ...`
 - `autocli editor ...`
 - `autocli finance ...`
+- `autocli data ...`
+- `autocli google ...`
 - `autocli maps ...`
 - `autocli movie ...`
 - `autocli news ...`
@@ -158,6 +163,9 @@ Examples:
 
 ```bash
 autocli llm chatgpt text "Write release notes for AutoCLI"
+autocli google gmail labels
+autocli google drive files
+autocli google sheets values google-sheet-id-example Sheet1!A1:B10
 autocli social x post "Shipping AutoCLI today"
 autocli developer confluence search "release process"
 autocli developer github me
@@ -197,6 +205,7 @@ Examples:
 autocli search github
 autocli search "youtube download"
 autocli search uptime --category devops
+autocli search gmail --category google
 autocli search transcript --json
 ```
 

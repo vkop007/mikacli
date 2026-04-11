@@ -13,6 +13,12 @@ export interface OAuth2ConnectionAuth {
   kind: "oauth2";
   provider?: string;
   scopes?: string[];
+  clientId?: string;
+  clientSecret?: string;
+  refreshToken?: string;
+  accessToken?: string;
+  expiresAt?: string;
+  tokenType?: string;
 }
 
 export interface ApiKeyConnectionAuth {

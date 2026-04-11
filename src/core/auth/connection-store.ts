@@ -14,7 +14,13 @@ import { isPlatform } from "../../platforms/config.js";
 import { CookieManager } from "../../utils/cookie-manager.js";
 
 import type { Platform, PlatformSession, SessionStatus, SessionUser } from "../../types.js";
-import type { ApiKeyConnectionAuth, BotTokenConnectionAuth, ConnectionRecord, SessionConnectionAuth } from "./auth-types.js";
+import type {
+  ApiKeyConnectionAuth,
+  BotTokenConnectionAuth,
+  ConnectionRecord,
+  OAuth2ConnectionAuth,
+  SessionConnectionAuth,
+} from "./auth-types.js";
 
 const ConnectionRecordSchema = {
   parse(input: unknown): ConnectionRecord {
@@ -46,6 +52,14 @@ const ConnectionRecordSchema = {
 
     if (record.auth.kind === "apiKey" && typeof (record.auth as { token?: unknown }).token !== "string") {
       throw new AutoCliError("INVALID_CONNECTION_FILE", "API token connection is missing its token.");
+    }
+
+    if (
+      record.auth.kind === "oauth2" &&
+      typeof (record.auth as { refreshToken?: unknown }).refreshToken !== "string" &&
+      typeof (record.auth as { accessToken?: unknown }).accessToken !== "string"
+    ) {
+      throw new AutoCliError("INVALID_CONNECTION_FILE", "OAuth2 connection is missing both refresh and access tokens.");
     }
 
     return record as ConnectionRecord;
@@ -229,6 +243,60 @@ export class ConnectionStore {
     });
   }
 
+  async saveOAuth2Connection(input: {
+    platform: Platform;
+    account: string;
+    provider?: string;
+    scopes?: string[];
+    clientId?: string;
+    clientSecret?: string;
+    refreshToken?: string;
+    accessToken?: string;
+    expiresAt?: string;
+    tokenType?: string;
+    user?: SessionUser;
+    status?: SessionStatus;
+    metadata?: Record<string, unknown>;
+  }): Promise<string> {
+    const now = new Date().toISOString();
+    let createdAt = now;
+
+    try {
+      const existing = await this.loadStoredConnection(input.platform, input.account);
+      createdAt = existing.connection.createdAt;
+    } catch (error) {
+      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+        throw error;
+      }
+    }
+
+    return this.saveConnection({
+      version: 1,
+      platform: input.platform,
+      account: sanitizeAccountName(input.account),
+      createdAt,
+      updatedAt: now,
+      auth: {
+        kind: "oauth2",
+        provider: input.provider,
+        scopes: input.scopes,
+        clientId: input.clientId,
+        clientSecret: input.clientSecret,
+        refreshToken: input.refreshToken,
+        accessToken: input.accessToken,
+        expiresAt: input.expiresAt,
+        tokenType: input.tokenType,
+      },
+      status: input.status ?? {
+        state: "unknown",
+        message: "OAuth2 connection saved.",
+        lastValidatedAt: now,
+      },
+      user: input.user,
+      metadata: input.metadata,
+    });
+  }
+
   async loadBotTokenConnection(
     platform: Platform,
     account?: string,
@@ -290,6 +358,32 @@ export class ConnectionStore {
       throw new AutoCliError(
         "INVALID_CONNECTION_AUTH",
         `The saved ${platform} connection does not use a session auth strategy.`,
+        {
+          details: {
+            platform,
+            account: loaded.connection.account,
+            authKind: loaded.connection.auth.kind,
+            connectionPath: loaded.path,
+          },
+        },
+      );
+    }
+
+    return {
+      ...loaded,
+      auth: loaded.connection.auth,
+    };
+  }
+
+  async loadOAuth2Connection(
+    platform: Platform,
+    account?: string,
+  ): Promise<{ connection: ConnectionRecord; path: string; auth: OAuth2ConnectionAuth }> {
+    const loaded = await this.loadConnection(platform, account);
+    if (loaded.connection.auth.kind !== "oauth2") {
+      throw new AutoCliError(
+        "INVALID_CONNECTION_AUTH",
+        `The saved ${platform} connection does not use an OAuth2 auth strategy.`,
         {
           details: {
             platform,

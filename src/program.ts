@@ -13,7 +13,7 @@ import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
 import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
 
 const HELP_FRAME = `${pc.bold(pc.cyan("AutoCLI"))}
-${pc.dim("Terminal automation across LLMs, editors, finance, maps, movies, news, socials, shopping, developer platforms, devops, bots, and tools")}
+${pc.dim("Terminal automation across LLMs, editors, finance, data, Google apps, maps, movies, news, socials, shopping, developer platforms, devops, bots, and tools")}
 `;
 
 const ROOT_EXAMPLES = [
@@ -25,6 +25,7 @@ const ROOT_EXAMPLES = [
   "autocli sessions",
   'autocli editor image resize ./photo.png --width 1200',
   'autocli finance stocks AAPL',
+  "autocli google gmail labels",
   'autocli maps openstreetmap search "Mumbai"',
   'autocli movie imdb search "inception"',
   'autocli news top "AI"',
@@ -43,7 +44,7 @@ export function createProgram(): Command {
   program
     .name("autocli")
     .description(
-      "Automate platforms from the terminal using category-based commands for llm, editor, finance, data, maps, movie, news, music, social, shopping, developer, devops, bot, and tools.",
+      "Automate platforms from the terminal using category-based commands for llm, editor, finance, data, google, maps, movie, news, music, social, shopping, developer, devops, bot, and tools.",
     )
     .version(packageJson.version, "-v, --version", "Show the installed version")
     .option("--json", "Emit machine-readable JSON output")

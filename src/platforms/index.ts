@@ -9,6 +9,9 @@ import { markdownPlatformDefinition } from "./data/markdown/manifest.js";
 import { textPlatformDefinition } from "./data/text/manifest.js";
 import { xmlPlatformDefinition } from "./data/xml/manifest.js";
 import { yamlPlatformDefinition } from "./data/yaml/manifest.js";
+import { drivePlatformDefinition } from "./google/drive/manifest.js";
+import { gmailPlatformDefinition } from "./google/gmail/manifest.js";
+import { sheetsPlatformDefinition } from "./google/sheets/manifest.js";
 import { confluencePlatformDefinition } from "./developer/confluence/manifest.js";
 import { cloudflarePlatformDefinition } from "./devops/cloudflare/manifest.js";
 import { digitalOceanPlatformDefinition } from "./devops/digitalocean/manifest.js";
@@ -141,6 +144,9 @@ const definitions: readonly PlatformDefinition[] = [
   facebookPlatformDefinition,
   flipkartPlatformDefinition,
   flyPlatformDefinition,
+  gmailPlatformDefinition,
+  drivePlatformDefinition,
+  sheetsPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
   openStreetMapPlatformDefinition,
@@ -237,7 +243,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "data", "maps", "movie", "news", "music", "social", "shopping", "developer", "devops", "bot", "tools", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "data", "google", "maps", "movie", "news", "music", "social", "shopping", "developer", "devops", "bot", "tools", "forum"];
   return order.filter((category) =>
     definitions.some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];

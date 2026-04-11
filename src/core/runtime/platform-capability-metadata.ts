@@ -41,6 +41,11 @@ const CATEGORY_DEFAULTS: Partial<Record<PlatformCategory, PlatformCapabilityMeta
     mutation: "unsupported",
     stability: "stable",
   },
+  google: {
+    discovery: "supported",
+    mutation: "supported",
+    stability: "stable",
+  },
   data: {
     discovery: "supported",
     mutation: "supported",
@@ -156,6 +161,21 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     browserLogin: "supported",
     stability: "stable",
     notes: ["Uses a saved GitHub web session for browserless repository automation."],
+  },
+  gmail: {
+    mutation: "supported",
+    stability: "stable",
+    notes: ["Uses Google's OAuth2 flow and stores refresh tokens locally for headless reuse."],
+  },
+  drive: {
+    mutation: "supported",
+    stability: "stable",
+    notes: ["Uses Google's OAuth2 flow and supports Drive file listing, uploads, downloads, and deletes."],
+  },
+  sheets: {
+    mutation: "supported",
+    stability: "stable",
+    notes: ["Uses Google's OAuth2 flow for spreadsheet reads and writes."],
   },
   gitlab: {
     mutation: "supported",

@@ -8,6 +8,7 @@ export type PlatformCategory =
   | "editor"
   | "finance"
   | "data"
+  | "google"
   | "maps"
   | "movie"
   | "news"

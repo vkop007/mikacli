@@ -43,6 +43,12 @@ Use these files when the main `$autocli` skill already knows the provider and ne
 - [XML](./xml.md)
 - [YAML](./yaml.md)
 
+## google
+
+- [Google Drive](./drive.md)
+- [Gmail](./gmail.md)
+- [Google Sheets](./sheets.md)
+
 ## maps
 
 - [Geo](./geo.md)
