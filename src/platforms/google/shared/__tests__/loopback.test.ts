@@ -53,6 +53,25 @@ describe("Google loopback authorization", () => {
 
     await flow.close();
   });
+
+  test("ignores a plain callback hit before the real Google redirect arrives", async () => {
+    const flow = await startGoogleLoopbackAuthorization({
+      clientId: "google-client-id-example",
+      scopes: ["openid", "email", "profile"],
+      redirectUri: "http://127.0.0.1/callback",
+      buildAuthUrl: ({ redirectUri, state }) =>
+        `https://accounts.google.com/o/oauth2/v2/auth?redirect_uri=${encodeURIComponent(redirectUri)}&state=${encodeURIComponent(state)}`,
+    });
+
+    const strayResponse = await fetch(flow.redirectUri);
+    expect(strayResponse.status).toBe(400);
+
+    const callbackResponse = await fetch(`${flow.redirectUri}?code=google-auth-code-example&state=${flow.state}`);
+    expect(callbackResponse.status).toBe(200);
+    await expect(flow.waitForCode()).resolves.toBe("google-auth-code-example");
+
+    await flow.close();
+  });
 });
 
 async function probeLoopbackAvailability(): Promise<boolean> {
