@@ -109,7 +109,8 @@ export class GoogleApiClient {
 }
 
 function buildUrl(baseUrl: string, pathOrUrl: string, query?: Record<string, QueryValue>): string {
-  const url = /^https?:\/\//u.test(pathOrUrl) ? new URL(pathOrUrl) : new URL(pathOrUrl, withTrailingSlash(baseUrl));
+  const relativePath = /^https?:\/\//u.test(pathOrUrl) ? pathOrUrl : normalizeRelativePath(pathOrUrl);
+  const url = /^https?:\/\//u.test(relativePath) ? new URL(relativePath) : new URL(relativePath, withTrailingSlash(baseUrl));
   for (const [key, value] of Object.entries(query ?? {})) {
     if (value === undefined) {
       continue;
@@ -123,6 +124,10 @@ function buildUrl(baseUrl: string, pathOrUrl: string, query?: Record<string, Que
 
 function withTrailingSlash(input: string): string {
   return input.endsWith("/") ? input : `${input}/`;
+}
+
+function normalizeRelativePath(pathOrUrl: string): string {
+  return pathOrUrl.replace(/^\/+/u, "");
 }
 
 function normalizeBody(

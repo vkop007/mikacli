@@ -242,6 +242,13 @@ async function handleLoopbackRequest(input: {
   }
 
   const state = url.searchParams.get("state");
+  const code = url.searchParams.get("code");
+  if (!state && !code) {
+    input.response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
+    input.response.end(ERROR_HTML);
+    return;
+  }
+
   if (state !== input.expectedState) {
     input.response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
     input.response.end(ERROR_HTML);
@@ -249,7 +256,6 @@ async function handleLoopbackRequest(input: {
     return;
   }
 
-  const code = url.searchParams.get("code");
   if (!code) {
     input.response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
     input.response.end(ERROR_HTML);
