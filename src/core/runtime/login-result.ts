@@ -46,6 +46,7 @@ const CAPABILITY_PRIORITY = [
 ] as const;
 
 const CUSTOM_CAPABILITY_IDS: Partial<Record<Platform, readonly string[]>> = {
+  calendar: ["auth-url", "login", "status", "me", "calendars", "calendar", "events", "today", "event", "create-event", "update-event", "delete-event"],
   drive: ["auth-url", "login", "status", "me", "files", "file", "create-folder", "upload", "download", "delete"],
   gmail: ["auth-url", "login", "status", "me", "labels", "messages", "message", "send"],
   sheets: ["auth-url", "login", "status", "me", "create", "spreadsheet", "values", "append", "update", "clear"],
@@ -92,6 +93,7 @@ const LIST_ALIAS_KEYS = [
   "boards",
   "lists",
   "cards",
+  "calendars",
   "services",
   "zones",
   "functions",
@@ -103,6 +105,7 @@ const LIST_ALIAS_KEYS = [
   "tasks",
   "chats",
   "messages",
+  "events",
   "episodes",
   "spaces",
   "children",
@@ -151,12 +154,14 @@ const ENTITY_ALIAS_KEYS = [
   "show",
   "title",
   "post",
+  "event",
   "thread",
   "site",
   "service",
   "app",
   "zone",
   "board",
+  "calendar",
   "card",
   "list",
   "monitor",

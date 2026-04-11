@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-111-blue)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-112-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-15-6f42c1)](#category-overview)
 
 AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
@@ -18,7 +18,7 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 
 ## Why It Matters
 
-- One command surface across `111` providers.
+- One command surface across `112` providers.
 - Shared browser login means less manual cookie exporting for cookie-backed platforms.
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
 - Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli google ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
@@ -60,7 +60,7 @@ autocli llm qwen text "Summarize this changelog"
 | --- | --- |
 | Package | `@vk007/autocli` |
 | CLI command | `autocli` |
-| Providers | `111` |
+| Providers | `112` |
 | Categories | `15` |
 | npm install | `npm install -g @vk007/autocli` |
 | bun install | `bun install -g @vk007/autocli` |
@@ -119,6 +119,7 @@ autocli developer github capabilities --json
 autocli devops cloudflare zones --json
 autocli devops render services --json
 autocli google gmail labels --json
+autocli google calendar today --json
 autocli google drive files --json
 autocli google sheets values google-sheet-id-example Sheet1!A1:B5 --json
 autocli tools page-links https://example.com --json
@@ -164,6 +165,7 @@ Examples:
 ```bash
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli google gmail labels
+autocli google calendar today
 autocli google drive files
 autocli google sheets values google-sheet-id-example Sheet1!A1:B10
 autocli social x post "Shipping AutoCLI today"

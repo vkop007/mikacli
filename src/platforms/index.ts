@@ -9,6 +9,7 @@ import { markdownPlatformDefinition } from "./data/markdown/manifest.js";
 import { textPlatformDefinition } from "./data/text/manifest.js";
 import { xmlPlatformDefinition } from "./data/xml/manifest.js";
 import { yamlPlatformDefinition } from "./data/yaml/manifest.js";
+import { calendarPlatformDefinition } from "./google/calendar/manifest.js";
 import { drivePlatformDefinition } from "./google/drive/manifest.js";
 import { gmailPlatformDefinition } from "./google/gmail/manifest.js";
 import { sheetsPlatformDefinition } from "./google/sheets/manifest.js";
@@ -147,6 +148,7 @@ const definitions: readonly PlatformDefinition[] = [
   gmailPlatformDefinition,
   drivePlatformDefinition,
   sheetsPlatformDefinition,
+  calendarPlatformDefinition,
   geminiPlatformDefinition,
   grokPlatformDefinition,
   openStreetMapPlatformDefinition,

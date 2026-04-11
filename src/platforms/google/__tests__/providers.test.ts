@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
+import { CalendarAdapter } from "../calendar/adapter.js";
+import { calendarPlatformDefinition } from "../calendar/manifest.js";
 import { DriveAdapter } from "../drive/adapter.js";
 import { drivePlatformDefinition } from "../drive/manifest.js";
 import { GmailAdapter } from "../gmail/adapter.js";
@@ -90,6 +92,13 @@ function createFetchMock(
 }
 
 describe("google provider command trees", () => {
+  test("calendar exposes the expected commands", () => {
+    const command = calendarPlatformDefinition.buildCommand?.();
+    expect(command?.commands.map((item) => item.name())).toEqual(
+      expect.arrayContaining(["auth-url", "login", "status", "me", "calendars", "calendar", "events", "today", "event", "create-event", "update-event", "delete-event"]),
+    );
+  });
+
   test("gmail exposes the expected commands", () => {
     const command = gmailPlatformDefinition.buildCommand?.();
     expect(command?.commands.map((item) => item.name())).toEqual(
@@ -113,6 +122,47 @@ describe("google provider command trees", () => {
 });
 
 describe("google adapter flows", () => {
+  test("calendar calendars lists saved calendars from an active oauth connection", async () => {
+    const connectionStore = createConnectionStoreMock();
+    const adapter = new CalendarAdapter({
+      connectionStore: connectionStore.store as any,
+      fetchImpl: createFetchMock([
+        {
+          body: {
+            sub: "google-user-id-example",
+            email: "person@example.com",
+            email_verified: true,
+            name: "Example Person",
+          },
+        },
+        {
+          body: {
+            items: [
+              {
+                id: "primary",
+                summary: "Work",
+                primary: true,
+                accessRole: "owner",
+                timeZone: "Asia/Kolkata",
+              },
+            ],
+          },
+        },
+      ]),
+    });
+
+    const result = await adapter.calendars({ account: "default", limit: 10 });
+
+    expect(result.data?.calendars).toEqual([
+      expect.objectContaining({
+        id: "primary",
+        summary: "Work",
+        primary: true,
+      }),
+    ]);
+    expect(connectionStore.saveCalls.length).toBe(1);
+  });
+
   test("gmail login saves an oauth2 connection with refresh credentials", async () => {
     const connectionStore = createConnectionStoreMock();
     const adapter = new GmailAdapter({

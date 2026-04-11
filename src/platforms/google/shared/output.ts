@@ -61,8 +61,13 @@ function printEntity(record: PrintableRecord): void {
     "username",
     "name",
     "title",
+    "summary",
     "id",
     "subject",
+    "start",
+    "end",
+    "timeZone",
+    "accessRole",
     "range",
     "mimeType",
     "size",
@@ -82,12 +87,14 @@ function printEntity(record: PrintableRecord): void {
 }
 
 function printItem(index: number, record: PrintableRecord): void {
-  const title = firstString(record, ["name", "title", "subject", "email", "id"]) ?? `Item ${index}`;
+  const title = firstString(record, ["name", "title", "summary", "subject", "email", "id"]) ?? `Item ${index}`;
   console.log(`${index}. ${title}`);
 
   const meta = [
     prefixed(record, "id"),
     prefixed(record, "email"),
+    prefixed(record, "start"),
+    prefixed(record, "end"),
     prefixed(record, "mimeType"),
     prefixed(record, "range"),
     prefixed(record, "size"),

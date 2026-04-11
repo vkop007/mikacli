@@ -72,6 +72,7 @@ describe("platform category routing", () => {
       "gmail",
       "drive",
       "sheets",
+      "calendar",
     ]);
   });
 

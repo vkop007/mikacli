@@ -167,6 +167,11 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     stability: "stable",
     notes: ["Uses Google's OAuth2 flow and stores refresh tokens locally for headless reuse."],
   },
+  calendar: {
+    mutation: "supported",
+    stability: "stable",
+    notes: ["Uses Google's OAuth2 flow for calendar listing plus Google Calendar event reads and writes."],
+  },
   drive: {
     mutation: "supported",
     stability: "stable",

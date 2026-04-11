@@ -5,6 +5,7 @@ export const PLATFORM_NAMES = [
   "amazon",
   "bandcamp",
   "bluesky",
+  "calendar",
   "cheat",
   "chatgpt",
   "claude",
@@ -166,6 +167,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://public.api.bsky.app",
     homeUrl: "https://bsky.app/",
     cookieDomain: "bsky.app",
+    authCookieNames: [],
+  },
+  calendar: {
+    displayName: "Google Calendar",
+    origin: "https://www.googleapis.com/calendar/v3",
+    homeUrl: "https://calendar.google.com/",
+    cookieDomain: "google.com",
     authCookieNames: [],
   },
   cheat: {

@@ -26,6 +26,7 @@ const ROOT_EXAMPLES = [
   'autocli editor image resize ./photo.png --width 1200',
   'autocli finance stocks AAPL',
   "autocli google gmail labels",
+  "autocli google calendar today",
   'autocli maps openstreetmap search "Mumbai"',
   'autocli movie imdb search "inception"',
   'autocli news top "AI"',
