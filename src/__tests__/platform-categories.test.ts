@@ -73,6 +73,7 @@ describe("platform category routing", () => {
       "drive",
       "sheets",
       "calendar",
+      "docs",
     ]);
   });
 

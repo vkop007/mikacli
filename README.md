@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-112-blue)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-113-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-15-6f42c1)](#category-overview)
 
 AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
@@ -18,7 +18,7 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 
 ## Why It Matters
 
-- One command surface across `112` providers.
+- One command surface across `113` providers.
 - Shared browser login means less manual cookie exporting for cookie-backed platforms.
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
 - Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli google ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
@@ -60,7 +60,7 @@ autocli llm qwen text "Summarize this changelog"
 | --- | --- |
 | Package | `@vk007/autocli` |
 | CLI command | `autocli` |
-| Providers | `112` |
+| Providers | `113` |
 | Categories | `15` |
 | npm install | `npm install -g @vk007/autocli` |
 | bun install | `bun install -g @vk007/autocli` |
@@ -120,6 +120,7 @@ autocli devops cloudflare zones --json
 autocli devops render services --json
 autocli google gmail labels --json
 autocli google calendar today --json
+autocli google docs documents --json
 autocli google drive files --json
 autocli google sheets values google-sheet-id-example Sheet1!A1:B5 --json
 autocli tools page-links https://example.com --json
@@ -166,6 +167,7 @@ Examples:
 autocli llm chatgpt text "Write release notes for AutoCLI"
 autocli google gmail labels
 autocli google calendar today
+autocli google docs documents
 autocli google drive files
 autocli google sheets values google-sheet-id-example Sheet1!A1:B10
 autocli social x post "Shipping AutoCLI today"
@@ -180,6 +182,54 @@ autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
 autocli tools http github request GET /settings/profile
 autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ
 autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ
+```
+
+## Google Workspace
+
+Google providers share the same OAuth2 flow. Enable the APIs you need in Google Cloud, create an OAuth client, and register the localhost callback URI:
+
+```text
+http://127.0.0.1:3333/callback
+```
+
+Common APIs to enable:
+
+- Gmail API
+- Google Calendar API
+- Google Docs API
+- Google Drive API
+- Google Sheets API
+
+Typical login flow:
+
+```bash
+autocli google gmail login --client-id <id> --client-secret <secret>
+autocli google calendar login --client-id <id> --client-secret <secret>
+autocli google docs login --client-id <id> --client-secret <secret>
+autocli google drive login --client-id <id> --client-secret <secret>
+autocli google sheets login --client-id <id> --client-secret <secret>
+```
+
+Docs examples:
+
+```bash
+autocli google docs documents --limit 10 --json
+autocli google docs document google-doc-id-example --json
+autocli google docs content google-doc-id-example --json
+autocli google docs create "Launch Notes" --text "Hello from AutoCLI" --json
+autocli google docs append-text google-doc-id-example "More text from AutoCLI" --json
+autocli google docs replace-text google-doc-id-example --search "draft" --replace "published" --json
+```
+
+Calendar examples:
+
+```bash
+autocli google calendar calendars --json
+autocli google calendar today --calendar primary --json
+autocli google calendar events --calendar primary --time-min 2026-04-12T00:00:00+05:30 --time-max 2026-04-12T23:59:59+05:30 --json
+autocli google calendar create-event --calendar primary --summary "Launch review" --start 2026-04-12T10:00:00+05:30 --end 2026-04-12T10:30:00+05:30 --json
+autocli google calendar update-event google-event-id-example --calendar primary --location "Zoom" --json
+autocli google calendar delete-event google-event-id-example --calendar primary --json
 ```
 
 ## Cross-Site Downloads
@@ -469,6 +519,16 @@ autocli devops fly apps --org personal
 autocli devops digitalocean apps
 autocli bot telegrambot send 123456789 "Build finished"
 autocli bot discordbot send 123456789012345678 "nightly deploy complete"
+```
+
+### Google workspace automation
+
+```bash
+autocli google gmail labels --json
+autocli google calendar today --calendar primary --json
+autocli google docs documents --limit 10 --json
+autocli google drive files --limit 10 --json
+autocli google sheets values google-sheet-id-example Sheet1!A1:B10 --json
 ```
 
 ### Session-backed messaging

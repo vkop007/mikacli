@@ -20,6 +20,7 @@ export const PLATFORM_NAMES = [
   "csv",
   "download",
   "dns",
+  "docs",
   "drive",
   "discordbot",
   "archive",
@@ -274,6 +275,13 @@ export const PLATFORM_CONFIG: Record<PlatformName, PlatformConfig> = {
     origin: "https://dns.google",
     homeUrl: "https://dns.google/",
     cookieDomain: "dns.google",
+    authCookieNames: [],
+  },
+  docs: {
+    displayName: "Google Docs",
+    origin: "https://docs.googleapis.com/v1",
+    homeUrl: "https://docs.google.com/document/",
+    cookieDomain: "google.com",
     authCookieNames: [],
   },
   drive: {

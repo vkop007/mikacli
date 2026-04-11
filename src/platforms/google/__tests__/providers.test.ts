@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 
 import { CalendarAdapter } from "../calendar/adapter.js";
 import { calendarPlatformDefinition } from "../calendar/manifest.js";
+import { DocsAdapter } from "../docs/adapter.js";
+import { docsPlatformDefinition } from "../docs/manifest.js";
 import { DriveAdapter } from "../drive/adapter.js";
 import { drivePlatformDefinition } from "../drive/manifest.js";
 import { GmailAdapter } from "../gmail/adapter.js";
@@ -99,6 +101,13 @@ describe("google provider command trees", () => {
     );
   });
 
+  test("docs exposes the expected commands", () => {
+    const command = docsPlatformDefinition.buildCommand?.();
+    expect(command?.commands.map((item) => item.name())).toEqual(
+      expect.arrayContaining(["auth-url", "login", "status", "me", "documents", "document", "content", "create", "append-text", "replace-text"]),
+    );
+  });
+
   test("gmail exposes the expected commands", () => {
     const command = gmailPlatformDefinition.buildCommand?.();
     expect(command?.commands.map((item) => item.name())).toEqual(
@@ -158,6 +167,45 @@ describe("google adapter flows", () => {
         id: "primary",
         summary: "Work",
         primary: true,
+      }),
+    ]);
+    expect(connectionStore.saveCalls.length).toBe(1);
+  });
+
+  test("docs documents lists saved Google Docs files from an active oauth connection", async () => {
+    const connectionStore = createConnectionStoreMock();
+    const adapter = new DocsAdapter({
+      connectionStore: connectionStore.store as any,
+      fetchImpl: createFetchMock([
+        {
+          body: {
+            sub: "google-user-id-example",
+            email: "person@example.com",
+            email_verified: true,
+            name: "Example Person",
+          },
+        },
+        {
+          body: {
+            files: [
+              {
+                id: "google-doc-id-example",
+                name: "Launch Notes",
+                modifiedTime: "2026-04-12T10:00:00.000Z",
+                webViewLink: "https://docs.google.com/document/d/google-doc-id-example/edit",
+              },
+            ],
+          },
+        },
+      ]),
+    });
+
+    const result = await adapter.documents({ account: "default", limit: 10 });
+
+    expect(result.data?.documents).toEqual([
+      expect.objectContaining({
+        id: "google-doc-id-example",
+        title: "Launch Notes",
       }),
     ]);
     expect(connectionStore.saveCalls.length).toBe(1);

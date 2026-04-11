@@ -12,6 +12,7 @@ export function printGoogleResult(result: AdapterActionResult, json: boolean): v
 
   const entity = toRecord(result.data?.entity)
     ?? toRecord(result.data?.profile)
+    ?? toRecord(result.data?.document)
     ?? toRecord(result.data?.file)
     ?? toRecord(result.data?.message)
     ?? toRecord(result.data?.spreadsheet);

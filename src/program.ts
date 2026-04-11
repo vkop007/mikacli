@@ -27,6 +27,7 @@ const ROOT_EXAMPLES = [
   'autocli finance stocks AAPL',
   "autocli google gmail labels",
   "autocli google calendar today",
+  "autocli google docs documents",
   'autocli maps openstreetmap search "Mumbai"',
   'autocli movie imdb search "inception"',
   'autocli news top "AI"',
