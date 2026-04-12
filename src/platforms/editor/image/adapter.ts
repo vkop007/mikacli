@@ -18,6 +18,23 @@ type ImageInfoInput = {
   inputPath: string;
 };
 
+type ImageCollageInput = {
+  inputPaths: string[];
+  layout?: string;
+  gap?: number | string;
+  output?: string;
+};
+
+type ImagePaletteInput = {
+  inputPath: string;
+  colors?: number | string;
+  output?: string;
+};
+
+type ImageExifInput = {
+  inputPath: string;
+};
+
 type ImageResizeInput = {
   inputPath: string;
   width?: number | string;
@@ -27,10 +44,12 @@ type ImageResizeInput = {
 
 type ImageCropInput = {
   inputPath: string;
-  width: number | string;
-  height: number | string;
+  width?: number | string;
+  height?: number | string;
   x?: number | string;
   y?: number | string;
+  aspect?: string;
+  gravity?: string;
   output?: string;
 };
 
@@ -74,6 +93,8 @@ type ImageThumbnailInput = {
 type ImageUpscaleInput = {
   inputPath: string;
   factor?: number | string;
+  scale?: number | string;
+  model?: string;
   width?: number | string;
   height?: number | string;
   output?: string;
@@ -162,21 +183,45 @@ export class ImageEditorAdapter {
   }
 
   async crop(input: ImageCropInput): Promise<AdapterActionResult> {
-    const width = requirePositiveInteger(input.width, "width");
-    const height = requirePositiveInteger(input.height, "height");
-    const x = input.x !== undefined ? requireNonNegativeInteger(input.x, "x") : 0;
-    const y = input.y !== undefined ? requireNonNegativeInteger(input.y, "y") : 0;
-
     const outputPath = resolveEditorOutputPath({
       inputPath: input.inputPath,
       output: input.output,
       suffix: "cropped",
     });
 
+    let cropFilter = "";
+    let effectiveWidth: number | string | null = null;
+    let effectiveHeight: number | string | null = null;
+
+    if (input.aspect) {
+      const parts = input.aspect.split(":");
+      const asW = toNumber(parts[0]);
+      const asH = toNumber(parts[1]);
+      if (!asW || !asH) {
+        throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Aspect must be in format W:H, e.g. 16:9");
+      }
+      
+      let xExp = "0";
+      let yExp = "0";
+      const gravity = input.gravity?.toLowerCase() ?? "center";
+      if (gravity === "center") {
+          xExp = "(iw-ow)/2";
+          yExp = "(ih-oh)/2";
+      }
+      
+      cropFilter = `crop='if(gt(iw/ih,${asW}/${asH}),ih*(${asW}/${asH}),iw)':'if(gt(iw/ih,${asW}/${asH}),ih,iw/(${asW}/${asH}))':${xExp}:${yExp}`;
+    } else {
+      effectiveWidth = requirePositiveInteger(input.width ?? 0, "width");
+      effectiveHeight = requirePositiveInteger(input.height ?? 0, "height");
+      const x = input.x !== undefined ? requireNonNegativeInteger(input.x, "x") : 0;
+      const y = input.y !== undefined ? requireNonNegativeInteger(input.y, "y") : 0;
+      cropFilter = `crop=${effectiveWidth}:${effectiveHeight}:${x}:${y}`;
+    }
+
     const resolvedOutput = await runFfmpegEdit({
       inputPath: input.inputPath,
       outputPath,
-      args: ["-i", "{input}", "-vf", `crop=${width}:${height}:${x}:${y}`, "{output}"],
+      args: ["-i", "{input}", "-vf", cropFilter, "{output}"],
     });
 
     return this.buildResult({
@@ -185,10 +230,10 @@ export class ImageEditorAdapter {
       data: {
         inputPath: input.inputPath,
         outputPath: resolvedOutput,
-        width,
-        height,
-        x,
-        y,
+        width: effectiveWidth,
+        height: effectiveHeight,
+        aspect: input.aspect ?? null,
+        gravity: input.gravity ?? null,
       },
     });
   }
@@ -402,7 +447,9 @@ export class ImageEditorAdapter {
 
     const requestedWidth = input.width !== undefined ? requirePositiveInteger(input.width, "width") : undefined;
     const requestedHeight = input.height !== undefined ? requirePositiveInteger(input.height, "height") : undefined;
-    const factor = clampNumber(toNumber(input.factor) ?? 2, 1, 8);
+    const pScale = toNumber(input.scale);
+    const pFactor = toNumber(input.factor);
+    const factor = clampNumber(pScale ?? pFactor ?? 2, 1, 8);
     const width = requestedWidth ?? Math.max(1, Math.round(stream.width * factor));
     const height = requestedHeight ?? Math.max(1, Math.round(stream.height * factor));
     const outputPath = resolveEditorOutputPath({
@@ -426,6 +473,7 @@ export class ImageEditorAdapter {
         width,
         height,
         factor: requestedWidth || requestedHeight ? null : factor,
+        model: input.model ?? null,
         sourceWidth: stream.width,
         sourceHeight: stream.height,
       },
@@ -525,6 +573,91 @@ export class ImageEditorAdapter {
         position,
         margin,
       },
+    });
+  }
+
+  async exif(input: ImageExifInput): Promise<AdapterActionResult> {
+    const probe = await runFfprobe(input.inputPath);
+    return this.buildResult({
+      action: "exif",
+      message: `Extracted EXIF metadata.`,
+      data: {
+        inputPath: input.inputPath,
+        tags: probe.format?.tags ?? {},
+      },
+    });
+  }
+
+  async palette(input: ImagePaletteInput): Promise<AdapterActionResult> {
+    const colors = clampNumber(toNumber(input.colors) ?? 5, 2, 256);
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "palette",
+      extension: "png",
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: ["-i", "{input}", "-vf", `palettegen=max_colors=${colors}`, "{output}"],
+    });
+
+    return this.buildResult({
+      action: "palette",
+      message: `Saved color palette to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+        colors,
+      },
+    });
+  }
+
+  async collage(input: ImageCollageInput): Promise<AdapterActionResult> {
+    if (input.inputPaths.length < 2) {
+      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Collage requires at least 2 image paths.");
+    }
+    const resolvedInputs = await Promise.all(input.inputPaths.map(p => assertLocalInputFile(p)));
+    const gap = clampNumber(toNumber(input.gap) ?? 0, 0, 500);
+    
+    const outputPath = resolveEditorOutputPath({
+      inputPath: resolvedInputs[0]!,
+      output: input.output,
+      suffix: "collage",
+      extension: "png",
+    });
+
+    const probes = await Promise.all(resolvedInputs.map(p => runFfprobe(p)));
+    const mainStream = (probes[0]?.streams ?? []).find(s => s.codec_type === "video");
+    const targetW = mainStream?.width ?? 500;
+    const targetH = mainStream?.height ?? 500;
+    
+    const filters = resolvedInputs.map((_, i) => `[${i}:v]scale=${targetW}:${targetH}:force_original_aspect_ratio=increase,crop=${targetW}:${targetH}[v${i}]`);
+    
+    const nCols = Math.ceil(Math.sqrt(resolvedInputs.length));
+    const layoutParts = [];
+    for (let i = 0; i < resolvedInputs.length; i++) {
+        const row = Math.floor(i / nCols);
+        const col = i % nCols;
+        const x = col * (targetW + gap);
+        const y = row * (targetH + gap);
+        layoutParts.push(`${x}_${y}`);
+    }
+    filters.push(`${resolvedInputs.map((_, i) => `[v${i}]`).join('')}xstack=inputs=${resolvedInputs.length}:layout=${layoutParts.join('|')}:fill=black[out]`);
+    
+    const args = [
+       ...resolvedInputs.flatMap(p => ["-i", p]),
+       "-filter_complex", filters.join(";"),
+       "-map", "[out]",
+       "{output}"
+    ];
+
+    const resolvedOutput = await runFfmpegEdit({ inputPath: resolvedInputs[0]!, outputPath, args });
+    return this.buildResult({
+      action: "collage",
+      message: `Saved collage to ${resolvedOutput}.`,
+      data: { inputPaths: resolvedInputs, outputPath: resolvedOutput, gap },
     });
   }
 

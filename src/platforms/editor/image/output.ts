@@ -20,6 +20,10 @@ export function printImageEditorResult(result: AdapterActionResult, json: boolea
   const factor = asNumber(data.factor);
   const sourceWidth = asNumber(data.sourceWidth);
   const sourceHeight = asNumber(data.sourceHeight);
+  const model = asString(data.model);
+  const aspect = asString(data.aspect);
+  const colors = asNumber(data.colors);
+  const gap = asNumber(data.gap);
 
   if (outputPath) {
     console.log(`file: ${outputPath}`);
@@ -43,6 +47,22 @@ export function printImageEditorResult(result: AdapterActionResult, json: boolea
 
   if (typeof sizeBytes === "number") {
     console.log(`bytes: ${sizeBytes}`);
+  }
+
+  if (model) {
+    console.log(`model: ${model}`);
+  }
+
+  if (aspect) {
+    console.log(`aspect: ${aspect}`);
+  }
+
+  if (typeof colors === "number") {
+    console.log(`colors: ${colors}`);
+  }
+
+  if (typeof gap === "number") {
+    console.log(`gap: ${gap}px`);
   }
 }
 

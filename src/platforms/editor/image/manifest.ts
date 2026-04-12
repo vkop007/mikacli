@@ -19,6 +19,11 @@ const EXAMPLES = [
   "autocli image grayscale ./photo.png",
   "autocli image background-remove ./portrait.png --color '#00ff00'",
   "autocli image watermark ./photo.png --watermark ./logo.png --position bottom-right",
+  "autocli image upscale ./photo.png --scale 4x --model realesrgan",
+  "autocli image collage ./a.png ./b.png ./c.png --layout grid --gap 10",
+  "autocli image palette ./photo.png --colors 5 --json",
+  "autocli image exif ./photo.jpg --json",
+  "autocli image crop ./photo.png --aspect 16:9 --gravity center",
 ] as const;
 
 function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -70,15 +75,17 @@ function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Com
     .command("crop")
     .description("Crop a local image")
     .argument("<inputPath>", "Input image path")
-    .requiredOption("--width <px>", "Crop width in pixels")
-    .requiredOption("--height <px>", "Crop height in pixels")
-    .option("--x <px>", "Left offset in pixels", "0")
-    .option("--y <px>", "Top offset in pixels", "0")
+    .option("--width <px>", "Crop width in pixels")
+    .option("--height <px>", "Crop height in pixels")
+    .option("--x <px>", "Left offset in pixels")
+    .option("--y <px>", "Top offset in pixels")
+    .option("--aspect <ratio>", "Aspect ratio, e.g. 16:9")
+    .option("--gravity <value>", "Gravity for aspect crop, e.g. center", "center")
     .option("--output <path>", "Exact output file path")
     .action(
       async (
         inputPath: string,
-        input: { width: string; height: string; x?: string; y?: string; output?: string },
+        input: { width?: string; height?: string; x?: string; y?: string; aspect?: string; gravity?: string; output?: string },
         cmd: Command,
       ) => {
         const ctx = resolveCommandContext(cmd);
@@ -94,6 +101,8 @@ function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Com
               height: input.height,
               x: input.x,
               y: input.y,
+              aspect: input.aspect,
+              gravity: input.gravity,
               output: input.output,
             }),
           onSuccess: (result) => printImageEditorResult(result, ctx.json),
@@ -152,13 +161,15 @@ function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Com
     .description("Upscale a local image with high-quality Lanczos resampling")
     .argument("<inputPath>", "Input image path")
     .option("--factor <value>", "Upscale factor from 1 to 8", "2")
+    .option("--scale <value>", "Alias for factor")
+    .option("--model <name>", "Model identifier (currently passed verbatim if needed)")
     .option("--width <px>", "Explicit output width in pixels")
     .option("--height <px>", "Explicit output height in pixels")
     .option("--output <path>", "Exact output file path")
     .action(
       async (
         inputPath: string,
-        input: { factor?: string; width?: string; height?: string; output?: string },
+        input: { factor?: string; scale?: string; model?: string; width?: string; height?: string; output?: string },
         cmd: Command,
       ) => {
         const ctx = resolveCommandContext(cmd);
@@ -171,6 +182,8 @@ function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Com
             imageEditorAdapter.upscale({
               inputPath,
               factor: input.factor,
+              scale: input.scale,
+              model: input.model,
               width: input.width,
               height: input.height,
               output: input.output,
@@ -373,6 +386,59 @@ function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Com
         });
       },
     );
+
+  command
+    .command("exif")
+    .description("Extract EXIF metadata from an image")
+    .argument("<inputPath>", "Input image path")
+    .action(async (inputPath: string, _input: Record<string, unknown>, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Extracting EXIF...");
+      await runCommandAction({
+        spinner,
+        successMessage: "EXIF extracted.",
+        action: () => imageEditorAdapter.exif({ inputPath }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("palette")
+    .description("Generate a color palette from an image")
+    .argument("<inputPath>", "Input image path")
+    .option("--colors <value>", "Number of colors to extract", "5")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { colors?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Generating palette...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Palette generated.",
+        action: () => imageEditorAdapter.palette({ inputPath, colors: input.colors, output: input.output }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("collage")
+    .description("Create a collage grid from multiple images")
+    .argument("<inputPaths...>", "Two or more input image paths")
+    .option("--layout <name>", "Collage layout: grid, horizontal, vertical", "grid")
+    .option("--gap <px>", "Gap between images in pixels", "0")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPaths: string[], input: { layout?: string; gap?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Creating collage...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Collage generated.",
+        action: () => imageEditorAdapter.collage({ inputPaths, layout: input.layout, gap: input.gap, output: input.output }),
+        onSuccess: (result) => printImageEditorResult(result, ctx.json),
+      });
+    });
 
   return command;
 }
