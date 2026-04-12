@@ -121,6 +121,8 @@ type VideoGifInput = {
 
 type VideoConcatInput = {
   inputPaths: string[];
+  transition?: string;
+  duration?: string | number;
   output?: string;
 };
 
@@ -1132,6 +1134,77 @@ export class VideoEditorAdapter {
       suffix: "concat",
       extension: format,
     });
+
+    if (input.transition) {
+      const transitionDuration = toNumber(input.duration) ?? 1;
+      const probes = await Promise.all(resolvedInputs.map((p) => runFfprobe(p)));
+      
+      const mainProbe = probes[0]!;
+      const mainVideoStream = (mainProbe.streams ?? []).find((entry) => entry.codec_type === "video");
+      const w = mainVideoStream?.width ?? 1920;
+      const h = mainVideoStream?.height ?? 1080;
+      const fpsParsed = parseRate(mainVideoStream?.r_frame_rate) ?? 30;
+      const fps = Number.isFinite(fpsParsed) ? fpsParsed : 30;
+
+      const videoOffsets: number[] = [];
+      let currentOffset = 0;
+
+      for (let i = 0; i < probes.length; i++) {
+         const probe = probes[i];
+         const videoStream = (probe?.streams ?? []).find((entry) => entry.codec_type === "video");
+         const duration = toNumber(probe?.format?.duration) ?? toNumber(videoStream?.duration);
+         if (!duration) {
+             throw new AutoCliError("VIDEO_INFO_UNAVAILABLE", `Cannot determine duration for ${resolvedInputs[i]} needed for transition offset calculation.`);
+         }
+         
+         if (i === 0) {
+            currentOffset = duration - transitionDuration;
+         } else {
+            videoOffsets.push(currentOffset);
+            currentOffset = currentOffset + duration - transitionDuration;
+         }
+      }
+
+      const filters = resolvedInputs.map((_, i) => `[${i}:v]scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=${fps}[v${i}]`);
+      
+      let currentV = "[v0]";
+      const vFades = [];
+      for (let i = 1; i < resolvedInputs.length; i++) {
+         const out = i === resolvedInputs.length - 1 ? "[vout]" : `[vf${i}]`;
+         vFades.push(`${currentV}[v${i}]xfade=transition=${input.transition}:duration=${transitionDuration}:offset=${videoOffsets[i-1]}${out}`);
+         currentV = `[vf${i}]`;
+      }
+      
+      const hasAudio = probes.every(p => (p.streams ?? []).some(s => s.codec_type === "audio"));
+      const aFades = [];
+      if (hasAudio) {
+         filters.push(...resolvedInputs.map((_, i) => `[${i}:a]aformat=sample_fmts=fltp:channel_layouts=stereo,aresample=44100[a${i}]`));
+         let currentA = "[a0]";
+         for (let i = 1; i < resolvedInputs.length; i++) {
+             const out = i === resolvedInputs.length - 1 ? "[aout]" : `[af${i}]`;
+             aFades.push(`${currentA}[a${i}]acrossfade=d=${transitionDuration}${out}`);
+             currentA = `[af${i}]`;
+         }
+      }
+
+      const filterComplex = [...filters, ...vFades, ...aFades].join(";");
+      const args = [
+         ...resolvedInputs.flatMap(p => ["-i", p]),
+         "-filter_complex", filterComplex,
+         "-map", "[vout]",
+         ...(hasAudio ? ["-map", "[aout]"] : []),
+         ...buildVideoCodecArgs(format, 21, "medium"),
+         "{output}"
+      ];
+
+      const resolvedOutput = await runFfmpegEdit({ inputPath: resolvedInputs[0]!, outputPath, args });
+      return this.buildResult({
+        action: "concat",
+        message: `Saved transitioned video to ${resolvedOutput}.`,
+        data: { inputPaths: resolvedInputs, outputPath: resolvedOutput, transition: input.transition, transitionDuration },
+      });
+    }
+
     const tempDir = await mkdtemp(join(tmpdir(), "autocli-editor-concat-"));
     const listPath = join(tempDir, "inputs.txt");
 

@@ -28,6 +28,16 @@ export function printVideoEditorResult(result: AdapterActionResult, json: boolea
     : [];
   const sceneChanges = asSceneChanges(data.sceneChanges);
   const sceneSegments = asSceneSegments(data.sceneSegments);
+  const transition = asString(data.transition);
+  const transitionDuration = asNumber(data.transitionDuration);
+
+  if (transition) {
+    console.log(`transition: ${transition}`);
+  }
+
+  if (typeof transitionDuration === "number") {
+    console.log(`transition-duration: ${transitionDuration}s`);
+  }
 
   if (outputPath) {
     console.log(`file: ${outputPath}`);

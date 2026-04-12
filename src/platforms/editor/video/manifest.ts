@@ -25,7 +25,10 @@ const EXAMPLES = [
   "autocli video frame-extract ./clip.mp4 --fps 2 --output-dir ./frames",
   "autocli video thumbnail ./clip.mp4 --at 00:00:03",
   "autocli video extract-audio ./clip.mp4 --to mp3",
-  "autocli video gif ./clip.mp4 --start 00:00:01 --duration 2",
+  "autocli video to-gif ./clip.mp4 --start 10 --duration 3",
+  "autocli video concat ./a.mp4 ./b.mp4 --transition fade --duration 1",
+  "autocli video watermark ./clip.mp4 --image ./logo.png --position bottom-right",
+  "autocli video embed-subs ./video.mp4 --srt ./captions.srt",
 ] as const;
 
 function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -287,7 +290,8 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
 
   command
     .command("overlay-image")
-    .description("Overlay an image on top of a video")
+    .alias("watermark")
+    .description("Overlay an image (or watermark) on top of a video")
     .argument("<inputPath>", "Input video path")
     .requiredOption("--overlay <path>", "Overlay image path")
     .option("--position <value>", "Overlay position: top-left, top-right, bottom-left, bottom-right, center")
@@ -375,6 +379,7 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
 
   command
     .command("audio-replace")
+    .alias("replace-audio")
     .description("Replace the audio track in a local video")
     .argument("<inputPath>", "Input video path")
     .requiredOption("--audio <path>", "Replacement audio path")
@@ -565,6 +570,7 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
 
   command
     .command("gif")
+    .alias("to-gif")
     .description("Create a GIF from a video segment")
     .argument("<inputPath>", "Input video path")
     .option("--start <time>", "GIF start time, e.g. 00:00:01")
@@ -600,23 +606,26 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
 
   command
     .command("concat")
-    .description("Concatenate multiple videos in order")
+    .description("Concatenate multiple videos in order (supports transitions)")
     .argument("<inputPaths...>", "Two or more input video paths")
+    .option("--transition <name>", "Transition effect (e.g. fade, wipeleft, wiperight, slideleft, slideright)")
+    .option("--duration <seconds>", "Duration of the transition in seconds", "1")
     .option("--output <path>", "Exact output file path")
-    .action(async (inputPaths: string[], input: { output?: string }, cmd: Command) => {
+    .action(async (inputPaths: string[], input: { transition?: string, duration?: string, output?: string }, cmd: Command) => {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
       const spinner = logger.spinner("Concatenating videos...");
       await runCommandAction({
         spinner,
         successMessage: "Videos concatenated.",
-        action: () => videoEditorAdapter.concat({ inputPaths, output: input.output }),
+        action: () => videoEditorAdapter.concat({ inputPaths, transition: input.transition, duration: input.duration, output: input.output }),
         onSuccess: (result) => printVideoEditorResult(result, ctx.json),
       });
     });
 
   command
     .command("subtitle-burn")
+    .alias("embed-subs")
     .description("Burn a subtitle file into a video")
     .argument("<inputPath>", "Input video path")
     .requiredOption("--subtitle <path>", "Subtitle file path")
