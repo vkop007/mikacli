@@ -30,8 +30,60 @@ export function printAudioResult(result: AdapterActionResult, json: boolean): vo
   const outputThresholdLufs = asNumber(data.outputThresholdLufs);
   const targetOffsetDb = asNumber(data.targetOffsetDb);
 
+  const bgVolumeDb = asNumber(data.bgVolumeDb);
+  const rate = asNumber(data.rate);
+  const everySeconds = asNumber(data.everySeconds);
+  const backgroundPath = asString(data.backgroundPath);
+  const outputPathPattern = asString(data.outputPathPattern);
+
+  const crossfadeSeconds = asNumber(data.crossfadeSeconds);
+  const bass = asNumber(data.bass);
+  const treble = asNumber(data.treble);
+  const title = asString(data.title);
+  const artist = asString(data.artist);
+
+  if (outputPathPattern) {
+    console.log(`output-pattern: ${outputPathPattern}`);
+  }
+
   if (outputPath) {
     console.log(`file: ${outputPath}`);
+  }
+
+  if (backgroundPath) {
+    console.log(`background: ${backgroundPath}`);
+  }
+
+  if (typeof bgVolumeDb === "number") {
+    console.log(`bg-volume: ${bgVolumeDb} dB`);
+  }
+
+  if (typeof crossfadeSeconds === "number") {
+    console.log(`crossfade: ${crossfadeSeconds}s`);
+  }
+
+  if (typeof bass === "number") {
+    console.log(`bass: ${bass > 0 ? '+' : ''}${bass} dB`);
+  }
+
+  if (typeof treble === "number") {
+    console.log(`treble: ${treble > 0 ? '+' : ''}${treble} dB`);
+  }
+
+  if (title) {
+    console.log(`title: ${title}`);
+  }
+
+  if (artist) {
+    console.log(`artist: ${artist}`);
+  }
+
+  if (typeof rate === "number") {
+    console.log(`rate: ${rate}x`);
+  }
+
+  if (typeof everySeconds === "number") {
+    console.log(`every: ${everySeconds}s`);
   }
 
   if (format) {
