@@ -30,8 +30,34 @@ export function printAudioResult(result: AdapterActionResult, json: boolean): vo
   const outputThresholdLufs = asNumber(data.outputThresholdLufs);
   const targetOffsetDb = asNumber(data.targetOffsetDb);
 
+  const bgVolumeDb = asNumber(data.bgVolumeDb);
+  const rate = asNumber(data.rate);
+  const everySeconds = asNumber(data.everySeconds);
+  const backgroundPath = asString(data.backgroundPath);
+  const outputPathPattern = asString(data.outputPathPattern);
+
+  if (outputPathPattern) {
+    console.log(`output-pattern: ${outputPathPattern}`);
+  }
+
   if (outputPath) {
     console.log(`file: ${outputPath}`);
+  }
+
+  if (backgroundPath) {
+    console.log(`background: ${backgroundPath}`);
+  }
+
+  if (typeof bgVolumeDb === "number") {
+    console.log(`bg-volume: ${bgVolumeDb} dB`);
+  }
+
+  if (typeof rate === "number") {
+    console.log(`rate: ${rate}x`);
+  }
+
+  if (typeof everySeconds === "number") {
+    console.log(`every: ${everySeconds}s`);
   }
 
   if (format) {

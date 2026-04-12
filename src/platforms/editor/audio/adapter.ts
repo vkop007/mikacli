@@ -97,6 +97,25 @@ type AudioDenoiseInput = {
   output?: string;
 };
 
+type AudioSplitInput = {
+  inputPath: string;
+  every?: number | string;
+  outputDir?: string;
+};
+
+type AudioMixInput = {
+  inputPath: string;
+  background: string;
+  bgVolume?: number | string;
+  output?: string;
+};
+
+type AudioSpeedInput = {
+  inputPath: string;
+  rate?: number | string;
+  output?: string;
+};
+
 type AudioFormat = "mp3" | "m4a" | "aac" | "wav" | "flac" | "ogg" | "opus";
 
 export class AudioEditorAdapter {
@@ -697,6 +716,132 @@ export class AudioEditorAdapter {
         outputPath: resolvedOutput,
         width,
         height,
+      },
+    });
+  }
+
+  async split(input: AudioSplitInput): Promise<AdapterActionResult> {
+    const every = Math.max(0.1, toNumber(input.every) ?? 30);
+    const format = resolvePreferredAudioFormat(input.inputPath);
+
+    const { parse, join, resolve } = await import("node:path");
+    
+    let outputPathTemplate: string;
+    if (input.outputDir) {
+      outputPathTemplate = join(resolve(input.outputDir), `segment_%03d.${format}`);
+    } else {
+      const parsed = parse(await assertLocalInputFile(input.inputPath));
+      outputPathTemplate = join(parsed.dir, `${parsed.name}_split`, `segment_%03d.${format}`);
+    }
+
+    await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath: outputPathTemplate,
+      args: [
+        "-i",
+        "{input}",
+        "-f",
+        "segment",
+        "-segment_time",
+        `${every}`,
+        "-c:a",
+        chooseAudioCodec(format),
+        ...buildAudioBitrateArgs(format, 192),
+        "{output}",
+      ],
+    });
+
+    return this.buildResult({
+      action: "split",
+      message: `Split audio into ${every}s segments at ${outputPathTemplate}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPathPattern: outputPathTemplate,
+        format,
+        everySeconds: every,
+      },
+    });
+  }
+
+  async mix(input: AudioMixInput): Promise<AdapterActionResult> {
+    const backgroundPath = await assertLocalInputFile(input.background);
+    const bgVolumeDb = toNumber(input.bgVolume) ?? -12;
+    const format = resolvePreferredAudioFormat(input.inputPath);
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "mixed",
+      extension: format,
+    });
+
+    const filterComplex = [
+      `[0:a]aformat=sample_fmts=fltp:channel_layouts=stereo,aresample=44100[a0]`,
+      `[1:a]volume=${bgVolumeDb}dB,aformat=sample_fmts=fltp:channel_layouts=stereo,aresample=44100[a1]`,
+      `[a0][a1]amix=inputs=2:duration=first:dropout_transition=2[aout]`,
+    ].join(";");
+
+    await runAudioCommand([
+      "-i",
+      await assertLocalInputFile(input.inputPath),
+      "-i",
+      backgroundPath,
+      "-filter_complex",
+      filterComplex,
+      "-map",
+      "[aout]",
+      "-c:a",
+      chooseAudioCodec(format),
+      ...buildAudioBitrateArgs(format, 192),
+      outputPath,
+    ]);
+
+    return this.buildResult({
+      action: "mix",
+      message: `Mixed audio and saved to ${outputPath}.`,
+      data: {
+        inputPath: input.inputPath,
+        backgroundPath,
+        outputPath,
+        format,
+        bgVolumeDb,
+      },
+    });
+  }
+
+  async speed(input: AudioSpeedInput): Promise<AdapterActionResult> {
+    const rate = clampNumber(toNumber(input.rate) ?? 1.5, 0.5, 100.0);
+    const format = resolvePreferredAudioFormat(input.inputPath);
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "speed",
+      extension: format,
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: [
+        "-i",
+        "{input}",
+        "-vn",
+        "-af",
+        `atempo=${rate}`,
+        "-c:a",
+        chooseAudioCodec(format),
+        ...buildAudioBitrateArgs(format, 192),
+        "{output}",
+      ],
+    });
+
+    return this.buildResult({
+      action: "speed",
+      message: `Adjusted audio speed and saved to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+        format,
+        rate,
       },
     });
   }

@@ -23,6 +23,9 @@ const EXAMPLES = [
   "autocli audio normalize ./song.mp3 --loudness 16",
   "autocli audio volume ./song.mp3 --db -3",
   "autocli audio denoise ./voice.wav --reduction 20 --noise-floor -55",
+  "autocli audio split ./podcast.mp3 --every 600",
+  "autocli audio mix ./voice.wav --background ./music.mp3 --bg-volume -12",
+  "autocli audio speed ./lecture.mp3 --rate 1.5",
 ] as const;
 
 function buildAudioCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -389,6 +392,77 @@ function buildAudioCommand(options: PlatformCommandBuildOptions = {}): Command {
             inputPath,
             width: input.width,
             height: input.height,
+            output: input.output,
+          }),
+        onSuccess: (result) => printAudioResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("split")
+    .description("Split an audio file into segments")
+    .argument("<inputPath>", "Input audio path")
+    .option("--every <seconds>", "Duration of each segment in seconds", "30")
+    .option("--output-dir <path>", "Directory to save the segments in")
+    .action(async (inputPath: string, input: { every?: string; outputDir?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Splitting audio...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Audio split.",
+        action: () =>
+          audioEditorAdapter.split({
+            inputPath,
+            every: input.every,
+            outputDir: input.outputDir,
+          }),
+        onSuccess: (result) => printAudioResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("mix")
+    .description("Overlay background audio on top of the main audio")
+    .argument("<inputPath>", "Main input audio path (e.g. voice)")
+    .requiredOption("--background <path>", "Background audio path (e.g. music)")
+    .option("--bg-volume <db>", "Background audio volume in decibels", "-12")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { background: string; bgVolume?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Mixing audio...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Audio mixed.",
+        action: () =>
+          audioEditorAdapter.mix({
+            inputPath,
+            background: input.background,
+            bgVolume: input.bgVolume,
+            output: input.output,
+          }),
+        onSuccess: (result) => printAudioResult(result, ctx.json),
+      });
+    });
+
+  command
+    .command("speed")
+    .description("Change audio playback speed without altering pitch")
+    .argument("<inputPath>", "Input audio path")
+    .option("--rate <multiplier>", "Playback speed multiplier (e.g. 1.5)", "1.5")
+    .option("--output <path>", "Exact output file path")
+    .action(async (inputPath: string, input: { rate?: string; output?: string }, cmd: Command) => {
+      const ctx = resolveCommandContext(cmd);
+      const logger = new Logger(ctx);
+      const spinner = logger.spinner("Adjusting audio speed...");
+      await runCommandAction({
+        spinner,
+        successMessage: "Audio speed adjusted.",
+        action: () =>
+          audioEditorAdapter.speed({
+            inputPath,
+            rate: input.rate,
             output: input.output,
           }),
         onSuccess: (result) => printAudioResult(result, ctx.json),
