@@ -608,7 +608,7 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
     .command("concat")
     .description("Concatenate multiple videos in order (supports transitions)")
     .argument("<inputPaths...>", "Two or more input video paths")
-    .option("--transition <name>", "Transition effect (e.g. fade, wipeleft, wiperight, slideleft, slideright)")
+    .option("--transition <name>", "Transition effect (e.g. fade, wipeleft, slideleft, circlecrop, pixelize, radial)")
     .option("--duration <seconds>", "Duration of the transition in seconds", "1")
     .option("--output <path>", "Exact output file path")
     .action(async (inputPaths: string[], input: { transition?: string, duration?: string, output?: string }, cmd: Command) => {
