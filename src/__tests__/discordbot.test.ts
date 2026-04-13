@@ -58,6 +58,7 @@ describe("discordbot helpers", () => {
     expect(command.name()).toBe("discordbot");
     expect(command.commands.map((subcommand: Command) => subcommand.name())).toEqual([
       "login",
+      "status",
       "me",
       "guilds",
       "channels",

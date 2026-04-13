@@ -9,6 +9,7 @@ describe("root program routing", () => {
     expect(program.commands.map((command) => command.name())).toEqual([
       "login",
       "logout",
+      "upgrade",
       "search",
       "status",
       "doctor",
