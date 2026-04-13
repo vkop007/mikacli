@@ -99,7 +99,8 @@ src/platforms/
 
 Rules:
 
-- Register every platform in `src/platforms/index.ts`.
+- Put the platform under `src/platforms/<category>/<provider>/manifest.ts`; the generated registry discovers it automatically.
+- Run `bun run generate:platform-registry` if you want to refresh the committed registry file manually. Common scripts such as `build`, `test`, `typecheck`, and `generate:skill-providers` do this automatically.
 - Put shared platform metadata in `src/platforms/config.ts`.
 - Keep root CLI wiring out of `src/index.ts`; the root only loads platform definitions.
 - Use `manifest.ts` as the single entrypoint for a platform.

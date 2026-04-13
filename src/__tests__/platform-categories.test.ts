@@ -69,12 +69,12 @@ describe("platform category routing", () => {
   test("includes the google category and providers", () => {
     expect(getPlatformCategories()).toContain("google");
     expect(getPlatformDefinitionsByCategory("google").map((definition) => definition.id)).toEqual([
-      "gmail",
-      "drive",
-      "sheets",
       "calendar",
       "docs",
+      "drive",
       "forms",
+      "gmail",
+      "sheets",
     ]);
   });
 

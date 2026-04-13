@@ -447,6 +447,16 @@ This refreshes the generated files under [`skills/autocli/references/providers`]
 
 `npm publish` now runs this automatically through `prepublishOnly`, so release builds regenerate and sync the skill docs before typecheck, tests, and build.
 
+### Platform Registry Sync
+
+Platform manifests are auto-discovered into a generated registry file, so new providers no longer need a manual import/edit pass in `src/platforms/index.ts`.
+
+```bash
+bun run generate:platform-registry
+```
+
+Common scripts such as `dev`, `start`, `typecheck`, `test`, `build`, and `generate:skill-providers` refresh the generated registry automatically.
+
 ## Open Source Project Files
 
 - [LICENSE](./LICENSE)
