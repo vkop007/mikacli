@@ -5,6 +5,8 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, test } from "bun:test";
 
 import { getPlatformDefinitions } from "../platforms/index.js";
+import { GENERATED_PLATFORM_DISPLAY_NAMES, GENERATED_PLATFORM_NAMES } from "../platforms/generated-metadata.js";
+import { getPlatformDisplayName } from "../platforms/config.js";
 
 import type { PlatformDefinition } from "../core/runtime/platform-definition.js";
 
@@ -20,6 +22,15 @@ describe("generated platform registry", () => {
     discovered.sort((left, right) => left.localeCompare(right));
 
     expect(generated).toEqual(discovered);
+  });
+
+  test("keeps generated platform names and display names in sync with definitions", () => {
+    expect([...GENERATED_PLATFORM_NAMES]).toEqual(getPlatformDefinitions().map((definition) => definition.id));
+
+    for (const definition of getPlatformDefinitions()) {
+      expect(GENERATED_PLATFORM_DISPLAY_NAMES[definition.id]).toBe(definition.displayName);
+      expect(getPlatformDisplayName(definition.id)).toBe(definition.displayName);
+    }
   });
 });
 
