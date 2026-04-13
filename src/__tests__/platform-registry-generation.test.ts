@@ -1,14 +1,16 @@
+import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { describe, expect, test } from "bun:test";
 
 import { getPlatformDefinitions } from "../platforms/index.js";
 import { GENERATED_PLATFORM_DISPLAY_NAMES, GENERATED_PLATFORM_NAMES } from "../platforms/generated-metadata.js";
-import { getPlatformDisplayName } from "../platforms/config.js";
+import { getPlatformDisplayName, PLATFORM_CONFIG } from "../platforms/config.js";
 
 import type { PlatformDefinition } from "../core/runtime/platform-definition.js";
+import type { PlatformConfig } from "../platforms/config.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const platformRoot = join(repoRoot, "src", "platforms");
@@ -31,6 +33,27 @@ describe("generated platform registry", () => {
       expect(GENERATED_PLATFORM_DISPLAY_NAMES[definition.id]).toBe(definition.displayName);
       expect(getPlatformDisplayName(definition.id)).toBe(definition.displayName);
     }
+  });
+
+  test("keeps provider-local runtime metadata in sync with generated platform config", async () => {
+    const manifestPaths = await collectManifestPaths(platformRoot);
+    const runtimeIds: string[] = [];
+
+    for (const manifestPath of manifestPaths) {
+      const providerId = basename(dirname(manifestPath));
+      const runtimePath = join(dirname(manifestPath), "runtime.ts");
+
+      expect(existsSync(runtimePath), `Missing runtime.ts for ${relative(repoRoot, manifestPath)}`).toBe(true);
+
+      const module = await import(pathToFileURL(runtimePath).href);
+      expect(isPlatformConfig(module.runtimeConfig), `Invalid runtimeConfig export in ${relative(repoRoot, runtimePath)}`).toBe(true);
+      expect(PLATFORM_CONFIG[providerId as keyof typeof PLATFORM_CONFIG]).toEqual(module.runtimeConfig);
+      runtimeIds.push(providerId);
+    }
+
+    runtimeIds.sort((left, right) => left.localeCompare(right));
+    const generatedIds = Object.keys(PLATFORM_CONFIG).sort((left, right) => left.localeCompare(right));
+    expect(generatedIds).toEqual(runtimeIds);
   });
 });
 
@@ -87,5 +110,19 @@ function isPlatformDefinition(value: unknown): value is PlatformDefinition {
     && typeof candidate.displayName === "string"
     && typeof candidate.description === "string"
     && Array.isArray(candidate.authStrategies)
+  );
+}
+
+function isPlatformConfig(value: unknown): value is PlatformConfig {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Partial<PlatformConfig>;
+  return (
+    typeof candidate.origin === "string"
+    && typeof candidate.homeUrl === "string"
+    && typeof candidate.cookieDomain === "string"
+    && Array.isArray(candidate.authCookieNames)
   );
 }

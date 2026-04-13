@@ -449,7 +449,7 @@ This refreshes the generated files under [`skills/autocli/references/providers`]
 
 ### Platform Registry Sync
 
-Platform manifests are auto-discovered into a generated registry file, so new providers no longer need a manual import/edit pass in `src/platforms/index.ts`.
+Platform manifests and provider runtime metadata are auto-discovered into generated files, so new providers no longer need a manual import/edit pass in `src/platforms/index.ts` or a hand-edited central config entry.
 
 ```bash
 bun run generate:platform-registry

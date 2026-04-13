@@ -789,7 +789,9 @@ export class AudioEditorAdapter {
            duration: input.silenceDuration,
         });
 
-        const segments = detectResult.data.segments as Array<{ startSeconds: number; endSeconds: number | null }>;
+        const segments = Array.isArray(detectResult.data?.segments)
+          ? (detectResult.data.segments as Array<{ startSeconds: number; endSeconds: number | null }>)
+          : [];
         if (!segments || segments.length === 0) {
              throw new AutoCliError("EDITOR_COMMAND_FAILED", "No silence segments found to split by.", { details: { inputPath: input.inputPath } });
         }

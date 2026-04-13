@@ -30,10 +30,10 @@ export function createUpgradeCommand(): Command {
 
         child.on("close", (code) => {
           if (code === 0) {
-            spinner.succeed(pc.green("Successfully upgraded AutoCLI to the latest version."));
+            spinner?.succeed(pc.green("Successfully upgraded AutoCLI to the latest version."));
             resolve();
           } else {
-            spinner.fail(pc.red(`Upgrade failed with exit code ${code}. Try running manually:\n> ${commandStr} ${args.join(" ")}`));
+            spinner?.fail(pc.red(`Upgrade failed with exit code ${code}. Try running manually:\n> ${commandStr} ${args.join(" ")}`));
             
             // Resolve instead of throwing a hard uncaught error to gracefully exit the commander flow
             resolve();
@@ -41,7 +41,7 @@ export function createUpgradeCommand(): Command {
         });
 
         child.on("error", (error) => {
-          spinner.fail(pc.red(`Failed to trigger upgrade command: ${error.message}`));
+          spinner?.fail(pc.red(`Failed to trigger upgrade command: ${error.message}`));
           resolve();
         });
       });

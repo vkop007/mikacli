@@ -8,6 +8,7 @@ There are two supported patterns:
 - Use this when a platform already has a large custom command builder.
 - Required files:
   - `manifest.ts`
+  - `runtime.ts`
   - `command.ts`
   - `adapter.ts` if the platform uses a shared adapter instance
 
@@ -15,6 +16,7 @@ There are two supported patterns:
 - Use this for new platforms or when splitting an existing large platform.
 - Required files:
   - `manifest.ts`
+  - `runtime.ts`
   - `adapter.ts` when the platform has an adapter-backed implementation
   - `capabilities/*.ts`
 
@@ -26,66 +28,79 @@ src/platforms/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
     shared/
   editor/
     <name>/
       adapter.ts
       manifest.ts
       output.ts
+      runtime.ts
     shared/
   finance/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
   google/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
     shared/
   maps/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
     shared/
   news/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
   developer/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
   devops/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
   bot/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
   llm/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
   music/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
   shopping/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
   tools/
     <name>/
       adapter.ts
       manifest.ts
+      runtime.ts
       capabilities/
     shared/
   social/
@@ -93,6 +108,7 @@ src/platforms/
       adapter.ts
       command.ts
       manifest.ts
+      runtime.ts
       capabilities/
   shared/
 ```
@@ -100,8 +116,9 @@ src/platforms/
 Rules:
 
 - Put the platform under `src/platforms/<category>/<provider>/manifest.ts`; the generated registry discovers it automatically.
+- Put provider runtime metadata under `src/platforms/<category>/<provider>/runtime.ts`; the generated config map discovers it automatically.
 - Run `bun run generate:platform-registry` if you want to refresh the committed registry file manually. Common scripts such as `build`, `test`, `typecheck`, and `generate:skill-providers` do this automatically.
-- Put shared platform metadata in `src/platforms/config.ts`.
+- `src/platforms/config.ts` is now only a typed accessor layer over generated metadata; do not hand-edit provider entries there.
 - Keep root CLI wiring out of `src/index.ts`; the root only loads platform definitions.
 - Use `manifest.ts` as the single entrypoint for a platform.
 - Set `category` in every `PlatformDefinition`.

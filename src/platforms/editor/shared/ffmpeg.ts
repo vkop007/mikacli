@@ -26,6 +26,7 @@ export interface FfprobeFormat {
   duration?: string;
   size?: string;
   bit_rate?: string;
+  tags?: Record<string, string>;
 }
 
 export interface FfprobePayload {
