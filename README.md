@@ -595,6 +595,7 @@ autocli music soundcloud download "dandelions" --output-dir ./downloads
 ```bash
 autocli editor image resize ./photo.png --width 1200
 autocli editor video split ./clip.mp4 --every 30
+autocli editor video blur ./clip.mp4 --x 120 --y 80 --width 360 --height 200 --start 00:00:05 --duration 3 --corner-radius 24
 autocli editor audio loudness-report ./podcast.wav
 autocli editor pdf watermark ./deck.pdf --text "Internal"
 autocli editor subtitle burn ./video.mp4 --subtitle ./captions.srt

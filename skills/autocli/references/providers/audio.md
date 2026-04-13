@@ -72,15 +72,15 @@ Options:
 
 Usage:
 ```bash
-autocli editor audio convert [options] <inputPath>
+autocli editor audio convert [options] <inputPaths...>
 ```
 
-Convert a local audio file to another format
+Convert local audio files to another format
 
 Options:
 
 - `--to <format>`: Target format: mp3, m4a, aac, wav, flac, ogg, opus
-- `--output <path>`: Exact output file path
+- `--output <path>`: Exact output file path (only used if 1 input file)
 
 ### `compress`
 
@@ -107,6 +107,7 @@ Merge multiple audio files in order
 
 Options:
 
+- `--crossfade <seconds>`: Crossfade duration in seconds
 - `--output <path>`: Exact output file path
 
 ### `fade-in`
@@ -253,6 +254,152 @@ Options:
 
 - `--width <px>`: Output image width in pixels
 - `--height <px>`: Output image height in pixels
+- `--output <path>`: Exact output file path
+
+### `split`
+
+Usage:
+```bash
+autocli editor audio split [options] <inputPath>
+```
+
+Split an audio file into segments
+
+Options:
+
+- `--every <seconds>`: Duration of each segment in seconds
+- `--output-dir <path>`: Directory to save the segments in
+- `--by-silence`: Split audio by detecting silences
+- `--silence-threshold <value>`: Silence threshold, e.g. -45dB
+- `--silence-duration <seconds>`: Minimum silence duration
+
+### `mix`
+
+Usage:
+```bash
+autocli editor audio mix [options] <inputPath>
+```
+
+Overlay background audio on top of the main audio
+
+Options:
+
+- `--background <path>`: Background audio path (e.g. music)
+- `--bg-volume <db>`: Background audio volume in decibels
+- `--output <path>`: Exact output file path
+
+### `speed`
+
+Usage:
+```bash
+autocli editor audio speed [options] <inputPath>
+```
+
+Change audio playback speed without altering pitch
+
+Options:
+
+- `--rate <multiplier>`: Playback speed multiplier (e.g. 1.5)
+- `--output <path>`: Exact output file path
+
+### `extract`
+
+Usage:
+```bash
+autocli editor audio extract [options] <inputPath>
+```
+
+Extract a segment from an audio file (intuitive alias for trim)
+
+Options:
+
+- `--start <time>`: Extract start time (e.g. 00:10:00)
+- `--end <time>`: Extract end time (e.g. 00:15:00)
+- `--output <path>`: Exact output file path
+
+### `eq`
+
+Usage:
+```bash
+autocli editor audio eq [options] <inputPath>
+```
+
+Apply an equalizer to adjust bass and treble
+
+Options:
+
+- `--bass <db>`: Bass adjustment in dB
+- `--treble <db>`: Treble adjustment in dB
+- `--output <path>`: Exact output file path
+
+### `reverse`
+
+Usage:
+```bash
+autocli editor audio reverse [options] <inputPath>
+```
+
+Reverse an audio file
+
+Options:
+
+- `--output <path>`: Exact output file path
+
+### `mono`
+
+Usage:
+```bash
+autocli editor audio mono [options] <inputPath>
+```
+
+Mix audio down to a single mono channel
+
+Options:
+
+- `--output <path>`: Exact output file path
+
+### `stereo`
+
+Usage:
+```bash
+autocli editor audio stereo [options] <inputPath>
+```
+
+Convert audio to stereo channels
+
+Options:
+
+- `--output <path>`: Exact output file path
+
+### `resample`
+
+Usage:
+```bash
+autocli editor audio resample [options] <inputPath>
+```
+
+Change the sample rate of an audio file
+
+Options:
+
+- `--rate <hz>`: Target sample rate in Hz
+- `--output <path>`: Exact output file path
+
+### `tag`
+
+Usage:
+```bash
+autocli editor audio tag [options] <inputPath>
+```
+
+Edit ID3/metadata tags of an audio file
+
+Options:
+
+- `--title <text>`: Track title
+- `--artist <text>`: Track artist
+- `--album <text>`: Track album
+- `--year <text>`: Track release year
 - `--output <path>`: Exact output file path
 
 ### `capabilities`

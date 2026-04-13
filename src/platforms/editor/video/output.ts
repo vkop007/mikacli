@@ -30,6 +30,8 @@ export function printVideoEditorResult(result: AdapterActionResult, json: boolea
   const sceneSegments = asSceneSegments(data.sceneSegments);
   const transition = asString(data.transition);
   const transitionDuration = asNumber(data.transitionDuration);
+  const cornerRadius = asNumber(data.cornerRadius);
+  const feather = asNumber(data.feather);
 
   if (transition) {
     console.log(`transition: ${transition}`);
@@ -37,6 +39,14 @@ export function printVideoEditorResult(result: AdapterActionResult, json: boolea
 
   if (typeof transitionDuration === "number") {
     console.log(`transition-duration: ${transitionDuration}s`);
+  }
+
+  if (typeof cornerRadius === "number") {
+    console.log(`corner-radius: ${cornerRadius}px`);
+  }
+
+  if (typeof feather === "number") {
+    console.log(`feather: ${feather}px`);
   }
 
   if (outputPath) {

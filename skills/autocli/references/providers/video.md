@@ -192,7 +192,9 @@ Usage:
 autocli editor video overlay-image [options] <inputPath>
 ```
 
-Overlay an image on top of a video
+Aliases: `watermark`
+
+Overlay an image (or watermark) on top of a video
 
 Options:
 
@@ -222,12 +224,41 @@ Options:
 - `--no-box`: Disable the background box behind the text
 - `--output <path>`: Exact output file path
 
+### `blur`
+
+Usage:
+```bash
+autocli editor video blur [options] <inputPath>
+```
+
+Aliases: `blur-region`
+
+Blur a rectangular region in a local video
+
+Options:
+
+- `--width <px>`: Blur region width in pixels
+- `--height <px>`: Blur region height in pixels
+- `--x <px>`: Left offset in pixels
+- `--y <px>`: Top offset in pixels
+- `--start <time>`: When the blur should begin
+- `--end <time>`: When the blur should stop
+- `--duration <time>`: How long the blur should last
+- `--radius <value>`: Blur radius in pixels
+- `--power <value>`: Blur power multiplier from 1 to 5
+- `--corner-radius <px>`: Rounded corner radius for the blurred patch
+- `--border-radius <px>`: Alias for --corner-radius
+- `--feather <px>`: Soften the blur edge by this many pixels
+- `--output <path>`: Exact output file path
+
 ### `audio-replace`
 
 Usage:
 ```bash
 autocli editor video audio-replace [options] <inputPath>
 ```
+
+Aliases: `replace-audio`
 
 Replace the audio track in a local video
 
@@ -334,6 +365,8 @@ Usage:
 autocli editor video gif [options] <inputPath>
 ```
 
+Aliases: `to-gif`
+
 Create a GIF from a video segment
 
 Options:
@@ -351,10 +384,12 @@ Usage:
 autocli editor video concat [options] <inputPaths...>
 ```
 
-Concatenate multiple videos in order
+Concatenate multiple videos in order (supports transitions)
 
 Options:
 
+- `--transition <name>`: Transition effect (e.g. fade, wipeleft, slideleft, circlecrop, pixelize, radial)
+- `--duration <seconds>`: Duration of the transition in seconds
 - `--output <path>`: Exact output file path
 
 ### `subtitle-burn`
@@ -363,6 +398,8 @@ Usage:
 ```bash
 autocli editor video subtitle-burn [options] <inputPath>
 ```
+
+Aliases: `embed-subs`
 
 Burn a subtitle file into a video
 

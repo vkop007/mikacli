@@ -21,6 +21,7 @@ const EXAMPLES = [
   "autocli video boomerang ./clip.mp4",
   "autocli video overlay-image ./clip.mp4 --overlay ./logo.png --position bottom-right",
   'autocli video overlay-text ./clip.mp4 "Ship it" --position bottom-center',
+  "autocli video blur ./clip.mp4 --x 120 --y 80 --width 360 --height 200 --start 00:00:05 --duration 3 --corner-radius 24",
   "autocli video audio-replace ./clip.mp4 --audio ./music.mp3",
   "autocli video frame-extract ./clip.mp4 --fps 2 --output-dir ./frames",
   "autocli video thumbnail ./clip.mp4 --at 00:00:03",
@@ -370,6 +371,72 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
               box: input.box,
               boxColor: input.boxColor,
               boxOpacity: input.boxOpacity,
+              output: input.output,
+            }),
+          onSuccess: (result) => printVideoEditorResult(result, ctx.json),
+        });
+      },
+    );
+
+  command
+    .command("blur")
+    .alias("blur-region")
+    .description("Blur a rectangular region in a local video")
+    .argument("<inputPath>", "Input video path")
+    .requiredOption("--width <px>", "Blur region width in pixels")
+    .requiredOption("--height <px>", "Blur region height in pixels")
+    .option("--x <px>", "Left offset in pixels", "0")
+    .option("--y <px>", "Top offset in pixels", "0")
+    .option("--start <time>", "When the blur should begin")
+    .option("--end <time>", "When the blur should stop")
+    .option("--duration <time>", "How long the blur should last")
+    .option("--radius <value>", "Blur radius in pixels", "20")
+    .option("--power <value>", "Blur power multiplier from 1 to 5", "1")
+    .option("--corner-radius <px>", "Rounded corner radius for the blurred patch", "0")
+    .option("--border-radius <px>", "Alias for --corner-radius")
+    .option("--feather <px>", "Soften the blur edge by this many pixels")
+    .option("--output <path>", "Exact output file path")
+    .action(
+      async (
+        inputPath: string,
+        input: {
+          width: string;
+          height: string;
+          x?: string;
+          y?: string;
+          start?: string;
+          end?: string;
+          duration?: string;
+          radius?: string;
+          power?: string;
+          cornerRadius?: string;
+          borderRadius?: string;
+          feather?: string;
+          output?: string;
+        },
+        cmd: Command,
+      ) => {
+        const ctx = resolveCommandContext(cmd);
+        const logger = new Logger(ctx);
+        const spinner = logger.spinner("Blurring video region...");
+        await runCommandAction({
+          spinner,
+          successMessage: "Video region blurred.",
+          action: () =>
+            videoEditorAdapter.blurRegion({
+              inputPath,
+              width: input.width,
+              height: input.height,
+              x: input.x,
+              y: input.y,
+              start: input.start,
+              end: input.end,
+              duration: input.duration,
+              radius: input.radius,
+              power: input.power,
+              cornerRadius: input.cornerRadius,
+              borderRadius: input.borderRadius,
+              feather: input.feather,
               output: input.output,
             }),
           onSuccess: (result) => printVideoEditorResult(result, ctx.json),

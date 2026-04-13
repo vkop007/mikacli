@@ -99,6 +99,23 @@ type VideoCropInput = {
   output?: string;
 };
 
+type VideoBlurRegionInput = {
+  inputPath: string;
+  width: number | string;
+  height: number | string;
+  x?: number | string;
+  y?: number | string;
+  start?: string;
+  end?: string;
+  duration?: string;
+  radius?: number | string;
+  power?: number | string;
+  cornerRadius?: number | string;
+  borderRadius?: number | string;
+  feather?: number | string;
+  output?: string;
+};
+
 type VideoExtractAudioInput = {
   inputPath: string;
   to?: string;
@@ -1010,6 +1027,87 @@ export class VideoEditorAdapter {
     });
   }
 
+  async blurRegion(input: VideoBlurRegionInput): Promise<AdapterActionResult> {
+    if (input.end && input.duration) {
+      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Use either --end or --duration, not both.");
+    }
+
+    const width = requirePositiveInteger(input.width, "width");
+    const height = requirePositiveInteger(input.height, "height");
+    const x = input.x !== undefined ? requireNonNegativeInteger(input.x, "x") : 0;
+    const y = input.y !== undefined ? requireNonNegativeInteger(input.y, "y") : 0;
+    const radius = clampNumber(Math.round(requirePositiveNumber(input.radius ?? 20, "radius")), 1, 128);
+    const power = clampNumber(Math.round(requirePositiveNumber(input.power ?? 1, "power")), 1, 5);
+    const rawCornerRadius = input.cornerRadius ?? input.borderRadius;
+    const maxCornerRadius = Math.floor(Math.min(width, height) / 2);
+    const cornerRadius = rawCornerRadius !== undefined
+      ? clampNumber(requireNonNegativeInteger(rawCornerRadius, "cornerRadius"), 0, maxCornerRadius)
+      : 0;
+    const feather = input.feather !== undefined
+      ? clampNumber(requireNonNegativeInteger(input.feather, "feather"), 0, Math.max(width, height))
+      : (cornerRadius > 0 ? Math.min(4, cornerRadius) : 0);
+    const timeRange = normalizeVideoTimeRange({
+      start: input.start,
+      end: input.end,
+      duration: input.duration,
+    });
+    const format = normalizeVideoExtension(extname(input.inputPath).replace(/^\./, "") || "mp4");
+    const outputPath = resolveEditorOutputPath({
+      inputPath: input.inputPath,
+      output: input.output,
+      suffix: "blurred",
+      extension: format,
+    });
+    const filterComplex = buildBlurRegionFilter({
+      width,
+      height,
+      x,
+      y,
+      radius,
+      power,
+      cornerRadius,
+      feather,
+      enableExpression: timeRange.enableExpression,
+    });
+
+    const resolvedOutput = await runFfmpegEdit({
+      inputPath: input.inputPath,
+      outputPath,
+      args: [
+        "-i",
+        "{input}",
+        "-filter_complex",
+        filterComplex,
+        "-map",
+        "[v]",
+        "-map",
+        "0:a?",
+        ...buildVideoCodecArgs(format, 21, "medium"),
+        "{output}",
+      ],
+    });
+
+    return this.buildResult({
+      action: "blur-region",
+      message: `Saved blurred video to ${resolvedOutput}.`,
+      data: {
+        inputPath: input.inputPath,
+        outputPath: resolvedOutput,
+        width,
+        height,
+        x,
+        y,
+        radius,
+        power,
+        cornerRadius,
+        feather,
+        start: timeRange.startSeconds,
+        end: timeRange.endSeconds,
+        duration: timeRange.durationSeconds,
+      },
+    });
+  }
+
   async extractAudio(input: VideoExtractAudioInput): Promise<AdapterActionResult> {
     const format = normalizeAudioExtension(input.to || "mp3");
     const outputPath = resolveEditorOutputPath({
@@ -1580,6 +1678,44 @@ export function normalizeFrameFormat(value: string): "png" | "jpg" | "jpeg" | "w
   });
 }
 
+export function buildBlurRegionFilter(input: {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  radius: number;
+  power: number;
+  cornerRadius?: number;
+  feather?: number;
+  enableExpression?: string | null;
+}): string {
+  const cornerRadius = clampNumber(Math.round(input.cornerRadius ?? 0), 0, Math.floor(Math.min(input.width, input.height) / 2));
+  const feather = clampNumber(Math.round(input.feather ?? 0), 0, Math.max(input.width, input.height));
+  const blurSteps = [
+    `crop=${input.width}:${input.height}:${input.x}:${input.y}`,
+    `boxblur=luma_radius=${formatFilterNumber(input.radius)}:luma_power=${input.power}:chroma_radius=${formatFilterNumber(input.radius)}:chroma_power=${input.power}`,
+  ];
+
+  if (cornerRadius > 0 || feather > 0) {
+    blurSteps.push("format=rgba");
+    blurSteps.push(
+      `geq=r='r(X,Y)':g='g(X,Y)':b='b(X,Y)':a='${buildBlurRegionAlphaExpression(input.width, input.height, cornerRadius)}'`,
+    );
+
+    if (feather > 0) {
+      blurSteps.push(`boxblur=luma_power=0:chroma_power=0:alpha_radius=${formatFilterNumber(feather)}:alpha_power=1`);
+    }
+  }
+
+  const blurStage = `[region]${blurSteps.join(",")}[blurred]`;
+  const overlayStage =
+    `[base][blurred]overlay=${input.x}:${input.y}` +
+    (input.enableExpression ? `:enable='${input.enableExpression}'` : "") +
+    "[v]";
+
+  return `[0:v]split=2[base][region];${blurStage};${overlayStage}`;
+}
+
 function formatFilterNumber(value: number): string {
   return Number(value.toFixed(6)).toString();
 }
@@ -1591,6 +1727,64 @@ function formatSecondsForFfmpeg(value: number): string {
 function normalizePrefix(value: string): string {
   const normalized = value.trim().replace(/[^a-z0-9._-]+/gi, "-").replace(/^-+|-+$/g, "");
   return normalized || "frame";
+}
+
+function buildBlurRegionAlphaExpression(width: number, height: number, cornerRadius: number): string {
+  if (cornerRadius <= 0) {
+    return "255";
+  }
+
+  const radius = formatFilterNumber(cornerRadius);
+  const widthEdge = formatFilterNumber(width - cornerRadius);
+  const heightEdge = formatFilterNumber(height - cornerRadius);
+  return `if(lte(hypot(max(${radius}-X,0)+max(X-(${widthEdge}),0),max(${radius}-Y,0)+max(Y-(${heightEdge}),0)),${radius}),255,0)`;
+}
+
+function normalizeVideoTimeRange(input: {
+  start?: string;
+  end?: string;
+  duration?: string;
+}): {
+  startSeconds: number | null;
+  endSeconds: number | null;
+  durationSeconds: number | null;
+  enableExpression: string | null;
+} {
+  const startSeconds = input.start ? parseFlexibleDuration(input.start, "start") : null;
+  const endSeconds = input.end ? parseFlexibleDuration(input.end, "end") : null;
+  const durationSeconds = input.duration ? parseFlexibleDuration(input.duration, "duration") : null;
+
+  if (endSeconds !== null && startSeconds !== null && endSeconds <= startSeconds) {
+    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "--end must be greater than --start.", {
+      details: {
+        start: input.start,
+        end: input.end,
+      },
+    });
+  }
+
+  const effectiveStart = startSeconds ?? 0;
+  const effectiveEnd = endSeconds ?? (durationSeconds !== null ? effectiveStart + durationSeconds : null);
+
+  if (effectiveEnd !== null && effectiveEnd <= effectiveStart) {
+    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "The blur time range must be greater than zero.", {
+      details: {
+        start: input.start,
+        end: input.end,
+        duration: input.duration,
+      },
+    });
+  }
+
+  return {
+    startSeconds,
+    endSeconds: effectiveEnd,
+    durationSeconds,
+    enableExpression:
+      effectiveEnd === null
+        ? null
+        : `between(t,${formatFilterNumber(effectiveStart)},${formatFilterNumber(effectiveEnd)})`,
+  };
 }
 
 function normalizeAudioExtension(value: string): "mp3" | "wav" | "m4a" | "aac" | "flac" {

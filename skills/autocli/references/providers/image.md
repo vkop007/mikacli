@@ -82,6 +82,8 @@ Options:
 - `--height <px>`: Crop height in pixels
 - `--x <px>`: Left offset in pixels
 - `--y <px>`: Top offset in pixels
+- `--aspect <ratio>`: Aspect ratio, e.g. 16:9
+- `--gravity <value>`: Gravity for aspect crop, e.g. center
 - `--output <path>`: Exact output file path
 
 ### `convert`
@@ -124,6 +126,8 @@ Upscale a local image with high-quality Lanczos resampling
 Options:
 
 - `--factor <value>`: Upscale factor from 1 to 8
+- `--scale <value>`: Alias for factor
+- `--model <name>`: Model identifier (currently passed verbatim if needed)
 - `--width <px>`: Explicit output width in pixels
 - `--height <px>`: Explicit output height in pixels
 - `--output <path>`: Exact output file path
@@ -241,6 +245,46 @@ Options:
 - `--watermark <path>`: Watermark image path
 - `--position <value>`: Overlay position: top-left, top-right, bottom-left, bottom-right, center
 - `--margin <px>`: Overlay margin in pixels
+- `--output <path>`: Exact output file path
+
+### `exif`
+
+Usage:
+```bash
+autocli editor image exif [options] <inputPath>
+```
+
+Extract EXIF metadata from an image
+
+No command-specific options.
+
+### `palette`
+
+Usage:
+```bash
+autocli editor image palette [options] <inputPath>
+```
+
+Generate a color palette from an image
+
+Options:
+
+- `--colors <value>`: Number of colors to extract
+- `--output <path>`: Exact output file path
+
+### `collage`
+
+Usage:
+```bash
+autocli editor image collage [options] <inputPaths...>
+```
+
+Create a collage grid from multiple images
+
+Options:
+
+- `--layout <name>`: Collage layout: grid, horizontal, vertical
+- `--gap <px>`: Gap between images in pixels
 - `--output <path>`: Exact output file path
 
 ### `capabilities`
