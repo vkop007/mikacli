@@ -88,6 +88,8 @@ export interface CommandContext {
   json: boolean;
   verbose: boolean;
   commandPath?: string;
+  select?: string[];
+  filter?: string;
 }
 
 export interface AdapterActionResult {

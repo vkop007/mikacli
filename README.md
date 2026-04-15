@@ -327,7 +327,41 @@ autocli social reddit search "bun cli" --json
 autocli movie tmdb title 27205 --json
 autocli developer github capabilities --json
 ```
+## Output Filtering & Field Selection
 
+Use `--filter` and `--select` global flags to transform JSON results without external tools:
+
+### Filter by conditions
+
+```bash
+autocli developer github repos --json --filter 'stargazers_count > 100'
+autocli developer github repos --json --filter 'language = "TypeScript" AND stargazers_count > 1000'
+autocli social x posts --json --filter 'public_metrics.likes > 5000'
+```
+
+### Select specific fields
+
+```bash
+autocli developer github repos --json --select name,stargazers_count,language
+autocli social linkedin posts --json --select content,engagement_count,timestamp
+```
+
+### Combine filtering and selection
+
+```bash
+autocli developer github repos --json \
+  --filter 'stargazers_count > 100 AND language = "TypeScript"' \
+  --select name,stargazers_count,url
+```
+
+### Supported Operators
+
+- **Comparison**: `>`, `<`, `>=`, `<=`, `=`, `!=`
+- **Text**: `CONTAINS`, `STARTS_WITH`, `ENDS_WITH`
+- **Logic**: `AND`, `OR` with proper precedence
+- **Nested fields**: Access via dot notation, e.g., `public_metrics.like_count`
+
+For detailed examples and syntax reference, see [FILTERING_GUIDE.md](./FILTERING_GUIDE.md).
 ## Stability Levels
 
 - `stable`: ready for routine automation and the default choice when you have options

@@ -37,6 +37,20 @@ Use this file when the user intent is clear and you want the fastest correct Aut
 | Diagnose missing local tools | `autocli doctor --json` | none |
 | Inspect a logged-in GitHub web session | `autocli tools http github inspect --json` | `autocli login --browser` |
 | Capture logged-in traffic for a site | `autocli tools http <provider-or-domain> capture --summary --json` | `autocli login --browser` |
+| Filter results by field value | `autocli <category> <provider> <action> --json --filter '<condition>'` | none |
+| Select only specific fields | `autocli <category> <provider> <action> --json --select <field1,field2>` | none |
+| Filter and select together | `autocli <category> <provider> <action> --json --filter '<condition>' --select <fields>` | none |
+
+## Filtering & Selection Examples
+
+| User intent | Command |
+| --- | --- |
+| High-star TypeScript repos | `autocli developer github repos --json --filter 'stargazers_count > 1000 AND language = "TypeScript"' --select name,stargazers_count,url` |
+| Popular Reddit posts | `autocli social reddit search "ai" --json --filter 'score > 100' --select title,author,score,url` |
+| Production Vercel projects | `autocli devops vercel projects --json --filter 'production_environment != null' --select name,updated_at,environment` |
+| Recently updated Jira tickets | `autocli developer jira issues --json --filter 'updated_at >= today' --select key,summary,priority,assignee` |
+| High-engagement LinkedIn posts | `autocli social linkedin feed --json --filter 'engagement_count > 500' --select content,engagement_count,timestamp` |
+| Node.js packages on npm | `autocli tools npm search node --json --select name,version,downloads --filter 'downloads > 10000'` |
 
 ## Quick Recovery Rules
 

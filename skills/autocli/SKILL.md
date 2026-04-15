@@ -13,6 +13,8 @@ Use this skill when the task maps to an existing AutoCLI provider or when you ne
 - Do not start with `help`, `doctor`, `sessions`, `status`, or `capabilities` unless the direct command is unclear or fails.
 - Always use category-based commands: `autocli <category> <provider> ...`
 - Prefer `--json` for agent work unless the user explicitly wants human-readable output.
+- Use `--filter '<condition>'` to filter list results by field values instead of piping to jq or external tools.
+- Use `--select <field1,field2>` to extract and return only specific fields from results.
 - If the intent matches a known recipe, use that exact command first. Read [references/recipes.md](references/recipes.md).
 - If the category or provider is unclear, read [references/category-map.md](references/category-map.md).
 - If the provider is already known and you need its exact command surface, read [references/providers/index.md](references/providers/index.md) and then the matching provider file.
@@ -94,6 +96,9 @@ autocli social youtube upload ./video.mp4 --title "My upload" --visibility priva
 autocli tools download video https://www.instagram.com/reel/SHORTCODE/ --platform instagram --json
 autocli tools http github inspect --json
 autocli data json query '{"items":[{"title":"AutoCLI"}]}' 'items[0].title'
+autocli developer github repos --json --filter 'stargazers_count > 1000 AND language = "TypeScript"' --select name,stargazers_count,url
+autocli social reddit search "ai agents" --json --filter 'score > 100' --select title,author,url
+autocli devops vercel projects --json --select name,updated_at,environment --filter 'production_branch != null'
 ```
 
 ## When To Read More

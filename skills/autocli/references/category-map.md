@@ -11,6 +11,9 @@ If the user intent is already concrete, read [recipes.md](recipes.md) first and 
 - `doctor`: environment checks, saved sessions, and missing binaries
 - `sessions`: inspect or remove saved connections
 - `<category> <provider> capabilities`: machine-readable provider support metadata
+- `... --json --select <fields>`: extract only specific fields from results
+- `... --json --filter '<condition>'`: filter list results by conditions without external tools
+- `... --json --filter '<condition>' --select <fields>`: combine filtering and field selection
 
 ## Categories
 

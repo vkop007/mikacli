@@ -49,7 +49,7 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
         spinner,
         successMessage: "Video info loaded.",
         action: () => videoEditorAdapter.info({ inputPath }),
-        onSuccess: (result) => printVideoEditorResult(result, ctx.json),
+        onSuccess: (result) => printVideoEditorResult(result, ctx.json, ctx),
       });
     });
 

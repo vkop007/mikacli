@@ -1,15 +1,20 @@
 import { printActionResult } from "../../../utils/cli.js";
 import { printJson } from "../../../utils/output.js";
 
-import type { AdapterActionResult } from "../../../types.js";
+import type { AdapterActionResult, CommandContext } from "../../../types.js";
 
-export function printVideoEditorResult(result: AdapterActionResult, json: boolean): void {
+export function printVideoEditorResult(result: AdapterActionResult, json: boolean, context?: Partial<CommandContext>): void {
   if (json) {
-    printJson(result);
+    // Apply transforms if context has select/filter
+    if (context?.select || context?.filter) {
+      printActionResult(result, true, context);
+    } else {
+      printJson(result);
+    }
     return;
   }
 
-  printActionResult(result, false);
+  printActionResult(result, false, context);
 
   const data = result.data ?? {};
   const outputPath = asString(data.outputPath);
