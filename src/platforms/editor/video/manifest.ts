@@ -23,7 +23,8 @@ const EXAMPLES = [
   'autocli video overlay-text ./clip.mp4 "Ship it" --position bottom-center',
   "autocli video blur ./clip.mp4 --x 120 --y 80 --width 360 --height 200 --start 00:00:05 --duration 3 --corner-radius 24",
   "autocli video audio-replace ./clip.mp4 --audio ./music.mp3",
-  "autocli video frame-extract ./clip.mp4 --fps 2 --output-dir ./frames",
+  "autocli video frame-extract ./clip.mp4 --quality low --output-dir ./frames",
+  "autocli video frame-extract ./clip.mp4 --quality high --output-dir ./frames",
   "autocli video thumbnail ./clip.mp4 --at 00:00:03",
   "autocli video extract-audio ./clip.mp4 --to mp3",
   "autocli video to-gif ./clip.mp4 --start 10 --duration 3",
@@ -472,9 +473,10 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
     .command("frame-extract")
     .description("Extract a sequence of frames from a local video")
     .argument("<inputPath>", "Input video path")
+    .option("--quality <level>", "Frame extraction density: low (1 fps), medium (5 fps), high (24 fps)", "medium")
+    .option("--fps <value>", "Override frame rate (1-120). Overrides --quality if specified.")
     .option("--start <time>", "Extraction start time")
     .option("--duration <time>", "Extraction duration")
-    .option("--fps <value>", "Frames per second", "1")
     .option("--output-dir <path>", "Directory for extracted frames")
     .option("--prefix <name>", "Filename prefix for extracted frames")
     .option("--format <format>", "Frame image format: png, jpg, jpeg, webp", "png")
@@ -482,9 +484,10 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
       async (
         inputPath: string,
         input: {
+          quality?: string;
+          fps?: string;
           start?: string;
           duration?: string;
-          fps?: string;
           outputDir?: string;
           prefix?: string;
           format?: string;
@@ -503,6 +506,7 @@ function buildVideoEditorCommand(options: PlatformCommandBuildOptions = {}): Com
               start: input.start,
               duration: input.duration,
               fps: input.fps,
+              quality: input.quality,
               outputDir: input.outputDir,
               prefix: input.prefix,
               format: input.format,

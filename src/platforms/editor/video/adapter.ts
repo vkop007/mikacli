@@ -182,6 +182,7 @@ type VideoFrameExtractInput = {
   start?: string;
   duration?: string;
   fps?: number | string;
+  quality?: string;
   outputDir?: string;
   prefix?: string;
   format?: string;
@@ -873,7 +874,11 @@ export class VideoEditorAdapter {
   }
 
   async frameExtract(input: VideoFrameExtractInput): Promise<AdapterActionResult> {
-    const fps = clampNumber(Math.round(toNumber(input.fps) ?? 1), 1, 120);
+    const quality = normalizeFrameExtractQuality(input.quality);
+    const baseFps = toNumber(input.fps);
+    const fps = baseFps !== undefined
+      ? clampNumber(Math.round(baseFps), 1, 120)
+      : getFrameExtractFpsForQuality(quality);
     const format = normalizeFrameFormat(input.format ?? "png");
     const resolvedInput = await assertLocalInputFile(input.inputPath);
     const outputDir = resolve(input.outputDir ?? parse(resolvedInput).dir);
@@ -898,13 +903,14 @@ export class VideoEditorAdapter {
 
     return this.buildResult({
       action: "frame-extract",
-      message: `Extracted frames into ${outputDir}.`,
+      message: `Extracted frames (${quality} quality: ${fps} fps) into ${outputDir}.`,
       data: {
         inputPath: input.inputPath,
         outputDir,
         outputPattern: resolvedOutput,
         prefix,
         format,
+        quality,
         fps,
         start: input.start ?? null,
         duration: input.duration ?? null,
@@ -1676,6 +1682,33 @@ export function normalizeFrameFormat(value: string): "png" | "jpg" | "jpeg" | "w
       supportedFormats: ["png", "jpg", "jpeg", "webp"],
     },
   });
+}
+
+function normalizeFrameExtractQuality(value: string | undefined): "low" | "medium" | "high" {
+  const normalized = value?.trim().toLowerCase() ?? "medium";
+  if (normalized === "low" || normalized === "medium" || normalized === "high") {
+    return normalized;
+  }
+
+  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported frame extraction quality "${value}".`, {
+    details: {
+      supportedQualities: ["low", "medium", "high"],
+      description: "low extracts fewer frames, medium extracts moderate frames, high extracts many frames",
+    },
+  });
+}
+
+function getFrameExtractFpsForQuality(quality: "low" | "medium" | "high"): number {
+  switch (quality) {
+    case "low":
+      return 1; // 1 frame per second
+    case "medium":
+      return 5; // 5 frames per second
+    case "high":
+      return 24; // 24 frames per second (film standard)
+    default:
+      return 5;
+  }
 }
 
 export function buildBlurRegionFilter(input: {
