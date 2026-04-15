@@ -55,6 +55,8 @@ export function createProgram(): Command {
     .version(packageJson.version, "-v, --version", "Show the installed version")
     .option("--json", "Emit machine-readable JSON output")
     .option("--verbose", "Enable verbose logging")
+    .option("--select <fields>", "Select specific fields from results (comma-separated). Only works with --json")
+    .option("--filter <expression>", "Filter results by expression (e.g. 'stars > 100 AND language = \"TypeScript\"'). Only works with --json")
     .showHelpAfterError()
     .addHelpText("beforeAll", `${HELP_FRAME}\n`)
     .addHelpText(
@@ -62,6 +64,11 @@ export function createProgram(): Command {
       `
 Examples:
 ${ROOT_EXAMPLES.map((example) => `  ${example}`).join("\n")}
+
+Filtering & Selection:
+  autocli developer github repos --json --select name,stargazers_count,language
+  autocli social x posts --json --filter 'public_metrics.like_count > 1000'
+  autocli developer github repos --json --select name,stars --filter 'stargazers_count > 100 AND language = "TypeScript"'
 `,
     )
     .addCommand(createLoginCommand())

@@ -6,21 +6,68 @@ import { errorToJson, isAutoCliError } from "../errors.js";
 import { printJson } from "./output.js";
 import { setInteractiveProgressHandler } from "./interactive-progress.js";
 import { appendActionLog, buildActionLogCommandLabel, markActionLogCaptured } from "./action-log.js";
+import { transformOutput, validateSelectFields } from "../core/output/output-transform.js";
+import { AutoCliError } from "../errors.js";
 
 let currentCommandPath: string | undefined;
 
 export function resolveCommandContext(command: Command): CommandContext {
-  const options = command.optsWithGlobals<{ json?: boolean; verbose?: boolean }>();
+  const options = command.optsWithGlobals<{
+    json?: boolean;
+    verbose?: boolean;
+    select?: string;
+    filter?: string;
+  }>();
   const commandPath = buildCommanderCommandPath(command);
   currentCommandPath = commandPath;
+
+  // Parse --select comma-separated fields
+  const selectFields = options.select
+    ? options.select
+        .split(",")
+        .map((f) => f.trim())
+        .filter((f) => f.length > 0)
+    : undefined;
+
   return {
     json: Boolean(options.json),
     verbose: Boolean(options.verbose),
     commandPath,
+    select: selectFields,
+    filter: options.filter,
   };
 }
 
-export function printActionResult(result: AdapterActionResult, json: boolean): void {
+export function printActionResult(result: AdapterActionResult, json: boolean, context?: Partial<CommandContext>): void {
+  // Apply output transformations if requested
+  if (context?.select || context?.filter) {
+    if (!context.select && !context.filter) {
+      if (json) printJson(result);
+      return;
+    }
+
+    // Validate select fields first
+    if (context.select && result.data) {
+      const validation = validateSelectFields(result.data, context.select);
+      if (!validation.valid) {
+        throw new AutoCliError("INVALID_FIELD_SELECTION", `Field(s) not found in results: ${validation.missingFields?.join(", ")}`, {
+          details: {
+            requested_fields: context.select,
+            missing_fields: validation.missingFields,
+          },
+        });
+      }
+    }
+
+    // Apply transforms to the data section
+    if (result.data) {
+      result.data = transformOutput(result.data, {
+        select: context.select,
+        filter: context.filter,
+      }) as Record<string, unknown>;
+    }
+  }
+
   if (json) {
     printJson(result);
     return;

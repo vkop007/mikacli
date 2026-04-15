@@ -39,6 +39,8 @@ autocli --help
 - Update `README.md` when command surfaces or auth requirements change.
 - Prefer clear, structured `--json` output for anything an agent might consume.
 - Mark partial or experimental support honestly in manifests and docs.
+- List results should use the stable `data.items` alias to work with `--filter` and `--select` global flags.
+- When adding new output functions, pass the optional `context?: Partial<CommandContext>` parameter so filtering can be applied transparently.
 
 ## Auth, Sessions, and Test Fixtures
 
