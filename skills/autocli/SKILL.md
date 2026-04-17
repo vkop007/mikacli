@@ -1,6 +1,6 @@
 ---
 name: autocli
-description: Use when a task can be completed through the AutoCLI command line instead of custom scripts. Helps agents choose the right category and provider, prefer --json output, use shared browser login or saved sessions safely, inspect health only when needed, and use session-aware tools like tools http before inventing custom web automation.
+description: Use when a task can be completed through the AutoCLI command line instead of custom scripts. Helps agents choose the right category and provider, prefer --json output, use shared browser login or saved sessions safely, inspect health only when needed, and use session-aware tools like tools http before inventing custom web automation. Supports 116 providers across 16 categories including job search (Indeed, ZipRecruiter), social networks, developer platforms, LLMs, and utilities.
 ---
 
 # AutoCLI
