@@ -1,7 +1,22 @@
 import { AutoCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
+import { readFile } from "fs/promises";
 
 import { buildQrImageUrl, buildQrShareUrl, normalizeQrText, truncateQrText } from "./helpers.js";
+
+type DecodeInput = {
+  filePath: string;
+};
+
+type DecodeResult = {
+  text: string;
+  location?: {
+    topLeftCorner: { x: number; y: number };
+    topRightCorner: { x: number; y: number };
+    bottomRightCorner: { x: number; y: number };
+    bottomLeftCorner: { x: number; y: number };
+  };
+};
 
 export class QrAdapter {
   readonly platform = "qr" as unknown as Platform;
@@ -29,6 +44,70 @@ export class QrAdapter {
         ascii: ascii ? truncateQrText(ascii) : undefined,
       },
     });
+  }
+
+  async decode(input: DecodeInput): Promise<AdapterActionResult> {
+    try {
+      const fileBuffer = await readFile(input.filePath);
+      const result = await this.decodeQrFromBuffer(fileBuffer);
+
+      if (!result) {
+        throw new AutoCliError("QR_DECODE_FAILED", "No QR code found in the image.");
+      }
+
+      return this.buildDecodeResult({
+        action: "decode",
+        message: "Decoded QR code.",
+        data: {
+          text: result.text,
+          location: result.location,
+        },
+      });
+    } catch (error) {
+      if (error instanceof AutoCliError) {
+        throw error;
+      }
+      throw new AutoCliError("QR_DECODE_ERROR", "Failed to decode QR code from image.", {
+        cause: error,
+        details: { filePath: input.filePath },
+      });
+    }
+  }
+
+  private async decodeQrFromBuffer(buffer: Buffer): Promise<DecodeResult | null> {
+    try {
+      // Dynamic import for jsQR to avoid adding it as a static dependency initially
+      const jsQR = (await import("jsqr")).default;
+      const Jimp = (await import("jimp")).default;
+
+      const image = await Jimp.read(buffer);
+      const width = image.bitmap.width;
+      const height = image.bitmap.height;
+      const imageData = {
+        data: new Uint8ClampedArray(image.bitmap.data),
+        width,
+        height,
+      };
+
+      const result = jsQR(imageData.data, width, height);
+
+      if (!result) {
+        return null;
+      }
+
+      return {
+        text: result.data,
+        location: result.location,
+      };
+    } catch (error) {
+      // Fallback: try to provide helpful error message
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        throw new AutoCliError("FILE_NOT_FOUND", `File not found: ${(error as NodeJS.ErrnoException).path}`, {
+          cause: error,
+        });
+      }
+      throw error;
+    }
   }
 
   private async tryFetchAsciiQr(url: string): Promise<string | undefined> {
@@ -71,6 +150,21 @@ export class QrAdapter {
       action: input.action,
       message: input.message,
       url: input.url,
+      data: input.data,
+    };
+  }
+
+  private buildDecodeResult(input: {
+    action: string;
+    message: string;
+    data: Record<string, unknown>;
+  }): AdapterActionResult {
+    return {
+      ok: true,
+      platform: this.platform,
+      account: "public",
+      action: input.action,
+      message: input.message,
       data: input.data,
     };
   }

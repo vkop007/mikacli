@@ -22,9 +22,12 @@ describe("public qr provider", () => {
     expect(normalizeQrText("  hello world  ")).toBe("hello world");
   });
 
-  test("builds a command with the qr capability", () => {
+  test("builds a command with encode and decode subcommands", () => {
     const command = buildPlatformCommand(qrPlatformDefinition);
     expect(command.name()).toBe("qr");
-    expect(command.commands.map((subcommand: Command) => subcommand.name())).toEqual(["capabilities"]);
+    const subcommandNames = command.commands.map((subcommand: Command) => subcommand.name());
+    expect(subcommandNames).toContain("encode");
+    expect(subcommandNames).toContain("decode");
+    expect(subcommandNames).toContain("capabilities");
   });
 });

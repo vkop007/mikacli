@@ -65,6 +65,8 @@
     "csv-stringify": "^6.7.0",
     "fast-xml-parser": "^5.5.9",
     "fetch-cookie": "^3.2.0",
+    "jimp": "^0.16.7",
+    "jsqr": "^1.4.0",
     "libsignal": "^2.0.1",
     "marked": "^17.0.5",
     "open-location-code": "^1.0.3",
