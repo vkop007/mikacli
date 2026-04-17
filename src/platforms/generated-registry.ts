@@ -68,56 +68,58 @@ import { twitchPlatformDefinition as platformDefinition60 } from "./social/twitc
 import { whatsappPlatformDefinition as platformDefinition61 } from "./social/whatsapp/manifest.js";
 import { xPlatformDefinition as platformDefinition62 } from "./social/x/manifest.js";
 import { youtubePlatformDefinition as platformDefinition63 } from "./social/youtube/manifest.js";
-import { amazonPlatformDefinition as platformDefinition64 } from "./shopping/amazon/manifest.js";
-import { ebayPlatformDefinition as platformDefinition65 } from "./shopping/ebay/manifest.js";
-import { etsyPlatformDefinition as platformDefinition66 } from "./shopping/etsy/manifest.js";
-import { flipkartPlatformDefinition as platformDefinition67 } from "./shopping/flipkart/manifest.js";
-import { confluencePlatformDefinition as platformDefinition68 } from "./developer/confluence/manifest.js";
-import { githubPlatformDefinition as platformDefinition69 } from "./developer/github/manifest.js";
-import { gitlabPlatformDefinition as platformDefinition70 } from "./developer/gitlab/manifest.js";
-import { jiraPlatformDefinition as platformDefinition71 } from "./developer/jira/manifest.js";
-import { linearPlatformDefinition as platformDefinition72 } from "./developer/linear/manifest.js";
-import { notionPlatformDefinition as platformDefinition73 } from "./developer/notion/manifest.js";
-import { trelloPlatformDefinition as platformDefinition74 } from "./developer/trello/manifest.js";
-import { cloudflarePlatformDefinition as platformDefinition75 } from "./devops/cloudflare/manifest.js";
-import { digitalOceanPlatformDefinition as platformDefinition76 } from "./devops/digitalocean/manifest.js";
-import { flyPlatformDefinition as platformDefinition77 } from "./devops/fly/manifest.js";
-import { netlifyPlatformDefinition as platformDefinition78 } from "./devops/netlify/manifest.js";
-import { railwayPlatformDefinition as platformDefinition79 } from "./devops/railway/manifest.js";
-import { renderPlatformDefinition as platformDefinition80 } from "./devops/render/manifest.js";
-import { supabasePlatformDefinition as platformDefinition81 } from "./devops/supabase/manifest.js";
-import { uptimeRobotPlatformDefinition as platformDefinition82 } from "./devops/uptimerobot/manifest.js";
-import { vercelPlatformDefinition as platformDefinition83 } from "./devops/vercel/manifest.js";
-import { discordBotPlatformDefinition as platformDefinition84 } from "./bot/discordbot/manifest.js";
-import { githubbotPlatformDefinition as platformDefinition85 } from "./bot/githubbot/manifest.js";
-import { slackbotPlatformDefinition as platformDefinition86 } from "./bot/slackbot/manifest.js";
-import { telegrambotPlatformDefinition as platformDefinition87 } from "./bot/telegrambot/manifest.js";
-import { cheatPlatformDefinition as platformDefinition88 } from "./tools/cheat/manifest.js";
-import { dnsPlatformDefinition as platformDefinition89 } from "./tools/dns/manifest.js";
-import { downloadPlatformDefinition as platformDefinition90 } from "./tools/download/manifest.js";
-import { faviconPlatformDefinition as platformDefinition91 } from "./tools/favicon/manifest.js";
-import { headersPlatformDefinition as platformDefinition92 } from "./tools/headers/manifest.js";
-import { httpPlatformDefinition as platformDefinition93 } from "./tools/http/manifest.js";
-import { ipPlatformDefinition as platformDefinition94 } from "./tools/ip/manifest.js";
-import { markdownFetchPlatformDefinition as platformDefinition95 } from "./tools/markdown-fetch/manifest.js";
-import { metadataPlatformDefinition as platformDefinition96 } from "./tools/metadata/manifest.js";
-import { oEmbedPlatformDefinition as platformDefinition97 } from "./tools/oembed/manifest.js";
-import { pageLinksPlatformDefinition as platformDefinition98 } from "./tools/page-links/manifest.js";
-import { qrPlatformDefinition as platformDefinition99 } from "./tools/qr/manifest.js";
-import { redirectPlatformDefinition as platformDefinition100 } from "./tools/redirect/manifest.js";
-import { robotsPlatformDefinition as platformDefinition101 } from "./tools/robots/manifest.js";
-import { rssPlatformDefinition as platformDefinition102 } from "./tools/rss/manifest.js";
-import { screenshotPlatformDefinition as platformDefinition103 } from "./tools/screenshot/manifest.js";
-import { sitemapPlatformDefinition as platformDefinition104 } from "./tools/sitemap/manifest.js";
-import { sslPlatformDefinition as platformDefinition105 } from "./tools/ssl/manifest.js";
-import { timePlatformDefinition as platformDefinition106 } from "./tools/time/manifest.js";
-import { timezonePlatformDefinition as platformDefinition107 } from "./tools/timezone/manifest.js";
-import { transcriptPlatformDefinition as platformDefinition108 } from "./tools/transcript/manifest.js";
-import { translatePlatformDefinition as platformDefinition109 } from "./tools/translate/manifest.js";
-import { uptimePlatformDefinition as platformDefinition110 } from "./tools/uptime/manifest.js";
-import { weatherPlatformDefinition as platformDefinition111 } from "./tools/weather/manifest.js";
-import { webSearchPlatformDefinition as platformDefinition112 } from "./tools/websearch/manifest.js";
-import { whoisPlatformDefinition as platformDefinition113 } from "./tools/whois/manifest.js";
+import { indeedPlatformDefinition as platformDefinition64 } from "./careers/indeed/manifest.js";
+import { ziprecruiterPlatformDefinition as platformDefinition65 } from "./careers/ziprecruiter/manifest.js";
+import { amazonPlatformDefinition as platformDefinition66 } from "./shopping/amazon/manifest.js";
+import { ebayPlatformDefinition as platformDefinition67 } from "./shopping/ebay/manifest.js";
+import { etsyPlatformDefinition as platformDefinition68 } from "./shopping/etsy/manifest.js";
+import { flipkartPlatformDefinition as platformDefinition69 } from "./shopping/flipkart/manifest.js";
+import { confluencePlatformDefinition as platformDefinition70 } from "./developer/confluence/manifest.js";
+import { githubPlatformDefinition as platformDefinition71 } from "./developer/github/manifest.js";
+import { gitlabPlatformDefinition as platformDefinition72 } from "./developer/gitlab/manifest.js";
+import { jiraPlatformDefinition as platformDefinition73 } from "./developer/jira/manifest.js";
+import { linearPlatformDefinition as platformDefinition74 } from "./developer/linear/manifest.js";
+import { notionPlatformDefinition as platformDefinition75 } from "./developer/notion/manifest.js";
+import { trelloPlatformDefinition as platformDefinition76 } from "./developer/trello/manifest.js";
+import { cloudflarePlatformDefinition as platformDefinition77 } from "./devops/cloudflare/manifest.js";
+import { digitalOceanPlatformDefinition as platformDefinition78 } from "./devops/digitalocean/manifest.js";
+import { flyPlatformDefinition as platformDefinition79 } from "./devops/fly/manifest.js";
+import { netlifyPlatformDefinition as platformDefinition80 } from "./devops/netlify/manifest.js";
+import { railwayPlatformDefinition as platformDefinition81 } from "./devops/railway/manifest.js";
+import { renderPlatformDefinition as platformDefinition82 } from "./devops/render/manifest.js";
+import { supabasePlatformDefinition as platformDefinition83 } from "./devops/supabase/manifest.js";
+import { uptimeRobotPlatformDefinition as platformDefinition84 } from "./devops/uptimerobot/manifest.js";
+import { vercelPlatformDefinition as platformDefinition85 } from "./devops/vercel/manifest.js";
+import { discordBotPlatformDefinition as platformDefinition86 } from "./bot/discordbot/manifest.js";
+import { githubbotPlatformDefinition as platformDefinition87 } from "./bot/githubbot/manifest.js";
+import { slackbotPlatformDefinition as platformDefinition88 } from "./bot/slackbot/manifest.js";
+import { telegrambotPlatformDefinition as platformDefinition89 } from "./bot/telegrambot/manifest.js";
+import { cheatPlatformDefinition as platformDefinition90 } from "./tools/cheat/manifest.js";
+import { dnsPlatformDefinition as platformDefinition91 } from "./tools/dns/manifest.js";
+import { downloadPlatformDefinition as platformDefinition92 } from "./tools/download/manifest.js";
+import { faviconPlatformDefinition as platformDefinition93 } from "./tools/favicon/manifest.js";
+import { headersPlatformDefinition as platformDefinition94 } from "./tools/headers/manifest.js";
+import { httpPlatformDefinition as platformDefinition95 } from "./tools/http/manifest.js";
+import { ipPlatformDefinition as platformDefinition96 } from "./tools/ip/manifest.js";
+import { markdownFetchPlatformDefinition as platformDefinition97 } from "./tools/markdown-fetch/manifest.js";
+import { metadataPlatformDefinition as platformDefinition98 } from "./tools/metadata/manifest.js";
+import { oEmbedPlatformDefinition as platformDefinition99 } from "./tools/oembed/manifest.js";
+import { pageLinksPlatformDefinition as platformDefinition100 } from "./tools/page-links/manifest.js";
+import { qrPlatformDefinition as platformDefinition101 } from "./tools/qr/manifest.js";
+import { redirectPlatformDefinition as platformDefinition102 } from "./tools/redirect/manifest.js";
+import { robotsPlatformDefinition as platformDefinition103 } from "./tools/robots/manifest.js";
+import { rssPlatformDefinition as platformDefinition104 } from "./tools/rss/manifest.js";
+import { screenshotPlatformDefinition as platformDefinition105 } from "./tools/screenshot/manifest.js";
+import { sitemapPlatformDefinition as platformDefinition106 } from "./tools/sitemap/manifest.js";
+import { sslPlatformDefinition as platformDefinition107 } from "./tools/ssl/manifest.js";
+import { timePlatformDefinition as platformDefinition108 } from "./tools/time/manifest.js";
+import { timezonePlatformDefinition as platformDefinition109 } from "./tools/timezone/manifest.js";
+import { transcriptPlatformDefinition as platformDefinition110 } from "./tools/transcript/manifest.js";
+import { translatePlatformDefinition as platformDefinition111 } from "./tools/translate/manifest.js";
+import { uptimePlatformDefinition as platformDefinition112 } from "./tools/uptime/manifest.js";
+import { weatherPlatformDefinition as platformDefinition113 } from "./tools/weather/manifest.js";
+import { webSearchPlatformDefinition as platformDefinition114 } from "./tools/websearch/manifest.js";
+import { whoisPlatformDefinition as platformDefinition115 } from "./tools/whois/manifest.js";
 
 export function getGeneratedPlatformDefinitions(): readonly PlatformDefinition[] {
   return [
@@ -235,5 +237,7 @@ export function getGeneratedPlatformDefinitions(): readonly PlatformDefinition[]
   platformDefinition111,
   platformDefinition112,
   platformDefinition113,
+  platformDefinition114,
+  platformDefinition115,
   ];
 }

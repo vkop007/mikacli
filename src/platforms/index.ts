@@ -32,7 +32,7 @@ export function getPlatformDefinitionsByCategory(category: PlatformCategory): re
 }
 
 export function getPlatformCategories(): readonly PlatformCategory[] {
-  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "data", "google", "maps", "movie", "news", "music", "social", "shopping", "developer", "devops", "bot", "tools", "forum"];
+  const order: readonly PlatformCategory[] = ["llm", "editor", "finance", "data", "google", "maps", "movie", "news", "music", "social", "careers", "shopping", "developer", "devops", "bot", "tools", "forum"];
   return order.filter((category) =>
     getPlatformDefinitions().some((definition) => {
       const categories = definition.commandCategories ?? [definition.category];
