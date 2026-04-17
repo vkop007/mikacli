@@ -7,17 +7,14 @@ type TranslateInput = {
   to?: string;
 };
 
-type GoogleTranslateSentence = [string?, string?, unknown?, unknown?, unknown?];
-
-type GoogleTranslateResponse = [
-  GoogleTranslateSentence[]?,
-  unknown?,
-  string?,
-  unknown?,
-  unknown?,
-  unknown?,
-  number?,
-];
+type MyMemoryResponse = {
+  responseStatus: number;
+  responseDetails?: string;
+  responseData: {
+    translatedText: string;
+    match?: number;
+  };
+};
 
 type TranslationResult = {
   provider: string;
@@ -38,7 +35,7 @@ export class TranslateAdapter {
     const text = normalizeText(input.text);
     const from = normalizeLanguageCode(input.from ?? "auto");
     const to = normalizeLanguageCode(input.to ?? "en");
-    const translation = await this.lookupGoogleTranslate({ text, from, to });
+    const translation = await this.lookupMyMemory({ text, from, to });
 
     const sourceLabel = from === "auto" ? `${translation.sourceLanguage} (detected)` : from;
 
@@ -58,8 +55,11 @@ export class TranslateAdapter {
     });
   }
 
-  private async lookupGoogleTranslate(input: { text: string; from: string; to: string }): Promise<TranslationResult> {
-    const sourceUrl = buildGoogleTranslateUrl(input);
+  private async lookupMyMemory(input: { text: string; from: string; to: string }): Promise<TranslationResult> {
+    // MyMemory doesn't support auto-detection in the same way as Google Translate
+    // Use "en" as default when auto is requested
+    const sourceLanguage = input.from === "auto" ? "en" : input.from;
+    const sourceUrl = buildMyMemoryUrl({ ...input, from: sourceLanguage });
 
     let response: Response;
     try {
@@ -71,7 +71,7 @@ export class TranslateAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("TRANSLATE_REQUEST_FAILED", "Unable to reach Google Translate's public endpoint.", {
+      throw new AutoCliError("TRANSLATE_REQUEST_FAILED", "Unable to reach MyMemory translation service.", {
         cause: error,
         details: {
           sourceUrl,
@@ -82,7 +82,7 @@ export class TranslateAdapter {
     if (!response.ok) {
       throw new AutoCliError(
         "TRANSLATE_REQUEST_FAILED",
-        `Google Translate returned HTTP ${response.status} ${response.statusText}.`,
+        `MyMemory returned HTTP ${response.status} ${response.statusText}.`,
         {
           details: {
             sourceUrl,
@@ -97,7 +97,7 @@ export class TranslateAdapter {
     try {
       payload = await response.json();
     } catch (error) {
-      throw new AutoCliError("TRANSLATE_RESPONSE_INVALID", "Google Translate returned invalid JSON.", {
+      throw new AutoCliError("TRANSLATE_RESPONSE_INVALID", "MyMemory returned invalid JSON.", {
         cause: error,
         details: {
           sourceUrl,
@@ -105,9 +105,9 @@ export class TranslateAdapter {
       });
     }
 
-    const parsed = parseGoogleTranslateResponse(payload);
+    const parsed = parseMyMemoryResponse(payload);
     if (!parsed.translatedText) {
-      throw new AutoCliError("TRANSLATE_RESPONSE_INVALID", "Google Translate response did not include translated text.", {
+      throw new AutoCliError("TRANSLATE_RESPONSE_INVALID", "MyMemory response did not include translated text.", {
         details: {
           sourceUrl,
         },
@@ -115,11 +115,11 @@ export class TranslateAdapter {
     }
 
     return {
-      provider: "google-translate",
+      provider: "mymemory",
       sourceUrl,
       inputText: input.text,
       translatedText: parsed.translatedText,
-      sourceLanguage: parsed.sourceLanguage ?? input.from,
+      sourceLanguage: sourceLanguage,
       requestedSourceLanguage: input.from,
       targetLanguage: input.to,
       confidence: parsed.confidence,
@@ -144,54 +144,50 @@ export class TranslateAdapter {
 
 export const translateAdapter = new TranslateAdapter();
 
-export function parseGoogleTranslateResponse(payload: unknown): {
+export function parseMyMemoryResponse(payload: unknown): {
   translatedText: string;
   sourceLanguage?: string;
   confidence?: number;
 } {
-  if (!Array.isArray(payload)) {
+  if (typeof payload !== "object" || payload === null) {
     return { translatedText: "" };
   }
 
-  const sentences = Array.isArray(payload[0]) ? payload[0] : [];
-  const translatedText = sentences
-    .flatMap((entry) => (Array.isArray(entry) && typeof entry[0] === "string" ? [entry[0]] : []))
-    .join("")
-    .trim();
-  const sourceLanguage = typeof payload[2] === "string" && payload[2].trim().length > 0 ? payload[2].trim() : undefined;
-  const confidence = typeof payload[6] === "number" && Number.isFinite(payload[6]) ? payload[6] : undefined;
+  const data = payload as Record<string, unknown>;
+  
+  if (data.responseStatus !== 200 || typeof data.responseData !== "object" || data.responseData === null) {
+    return { translatedText: "" };
+  }
+
+  const responseData = data.responseData as Record<string, unknown>;
+  const translatedText = typeof responseData.translatedText === "string" ? responseData.translatedText.trim() : "";
+  const confidence = typeof responseData.match === "number" && Number.isFinite(responseData.match) ? responseData.match : undefined;
 
   return {
     translatedText,
-    sourceLanguage,
     confidence,
   };
 }
 
 export function buildTranslateUrl(input: { text: string; from: string; to: string }): string {
-  return buildGoogleTranslateUrl(input);
+  return buildMyMemoryUrl(input);
 }
 
 export function parseTranslateResponse(payload: unknown): {
   translatedText: string;
   detectedSourceLanguage?: string;
 } {
-  const parsed = parseGoogleTranslateResponse(payload);
+  const parsed = parseMyMemoryResponse(payload);
   return {
     translatedText: parsed.translatedText,
     detectedSourceLanguage: parsed.sourceLanguage,
   };
 }
 
-function buildGoogleTranslateUrl(input: { text: string; from: string; to: string }): string {
-  const url = new URL("https://translate.googleapis.com/translate_a/single");
-  url.searchParams.set("client", "gtx");
-  url.searchParams.set("sl", input.from);
-  url.searchParams.set("tl", input.to);
-  url.searchParams.set("dt", "t");
-  url.searchParams.set("ie", "UTF-8");
-  url.searchParams.set("oe", "UTF-8");
+function buildMyMemoryUrl(input: { text: string; from: string; to: string }): string {
+  const url = new URL("https://api.mymemory.translated.net/get");
   url.searchParams.set("q", input.text);
+  url.searchParams.set("langpair", `${input.from}|${input.to}`);
   return url.toString();
 }
 

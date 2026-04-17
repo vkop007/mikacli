@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 
-import { parseGoogleTranslateResponse, translateAdapter } from "../adapter.js";
+import { parseMyMemoryResponse, translateAdapter } from "../adapter.js";
 
 const originalFetch = globalThis.fetch;
 
@@ -9,30 +9,36 @@ afterEach(() => {
 });
 
 describe("translate adapter", () => {
-  test("parses a google translate response payload", () => {
-    const parsed = parseGoogleTranslateResponse([
-      [["hola mundo", "hello world", null, null, 10]],
-      null,
-      "en",
-      null,
-      null,
-      null,
-      0.91,
-    ]);
+  test("parses a mymemory translate response payload", () => {
+    const parsed = parseMyMemoryResponse({
+      responseStatus: 200,
+      responseData: {
+        translatedText: "हैलो वर्ल्ड",
+        match: 0.91,
+      },
+    });
 
     expect(parsed).toEqual({
-      translatedText: "hola mundo",
-      sourceLanguage: "en",
+      translatedText: "हैलो वर्ल्ड",
       confidence: 0.91,
     });
   });
 
-  test("translates text using the public google endpoint", async () => {
+  test("translates text using the mymemory endpoint", async () => {
     globalThis.fetch = (async () =>
-      new Response(JSON.stringify([[["हैलो वर्ल्ड", "hello world"]], null, "en", null, null, null, 0.763]), {
-        status: 200,
-        headers: { "content-type": "application/json" },
-      })) as unknown as typeof globalThis.fetch;
+      new Response(
+        JSON.stringify({
+          responseStatus: 200,
+          responseData: {
+            translatedText: "हैलो वर्ल्ड",
+            match: 0.91,
+          },
+        }),
+        {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        },
+      )) as unknown as typeof globalThis.fetch;
 
     const result = await translateAdapter.translate({
       text: "hello world",
@@ -43,7 +49,6 @@ describe("translate adapter", () => {
     expect(result.ok).toBe(true);
     expect(String(result.platform)).toBe("translate");
     expect(result.data?.translatedText).toBe("हैलो वर्ल्ड");
-    expect(result.data?.sourceLanguage).toBe("en");
     expect(result.data?.targetLanguage).toBe("hi");
   });
 });
