@@ -96,8 +96,10 @@ describe("action log store", () => {
     expect(buildActionLogCommandLabel({ platform: "x", action: "post" })).toBe("x/post");
     expect(buildActionLogCommandLabel({ platform: "translate", action: "translate" })).toBe("translate");
     expect(buildActionLogCommandLabel({ commandPath: "autocli logs show" })).toBe("logs/show");
+    expect(buildActionLogCommandLabel({ commandPath: "autocli jobs download" })).toBe("jobs/download");
     expect(summarizeCommandPath("autocli social youtube upload")).toBe("youtube/upload");
     expect(inferSafeCommandPath(["social", "x", "post", "very secret text", "--json"])).toBe("autocli social x post");
     expect(inferSafeCommandPath(["search", "very secret text", "--json"])).toBe("autocli search");
+    expect(inferSafeCommandPath(["jobs", "download", "job-secret-id"])).toBe("autocli jobs download");
   });
 });

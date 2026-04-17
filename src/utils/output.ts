@@ -181,6 +181,69 @@ export function printActionLogTable(
   }
 }
 
+export function printMediaJobsTable(
+  rows: Array<{
+    platform: string;
+    account: string;
+    kind: string;
+    status: string;
+    updated: string;
+    jobId: string;
+    message?: string;
+  }>,
+): void {
+  if (rows.length === 0) {
+    console.log(pc.dim("No saved jobs found."));
+    return;
+  }
+
+  const widths = {
+    platform: Math.max(...rows.map((row) => row.platform.length), "platform".length),
+    account: Math.max(...rows.map((row) => row.account.length), "account".length),
+    kind: Math.max(...rows.map((row) => row.kind.length), "kind".length),
+    status: Math.max(...rows.map((row) => row.status.length), "status".length),
+    updated: Math.max(...rows.map((row) => row.updated.length), "updated".length),
+    jobId: Math.max(...rows.map((row) => row.jobId.length), "job".length),
+  };
+
+  const header = [
+    "platform".padEnd(widths.platform),
+    "account".padEnd(widths.account),
+    "kind".padEnd(widths.kind),
+    "status".padEnd(widths.status),
+    "updated".padEnd(widths.updated),
+    "job".padEnd(widths.jobId),
+    "message",
+  ].join("  ");
+
+  console.log(pc.bold(header));
+  console.log(
+    [
+      "-".repeat(widths.platform),
+      "-".repeat(widths.account),
+      "-".repeat(widths.kind),
+      "-".repeat(widths.status),
+      "-".repeat(widths.updated),
+      "-".repeat(widths.jobId),
+      "-".repeat(20),
+    ].join("  "),
+  );
+
+  for (const row of rows) {
+    console.log(
+      [
+        row.platform.padEnd(widths.platform),
+        row.account.padEnd(widths.account),
+        row.kind.padEnd(widths.kind),
+        padAnsi(colorizeMediaJobStatus(row.status), widths.status),
+        row.updated.padEnd(widths.updated),
+        row.jobId.padEnd(widths.jobId),
+        row.message ?? "",
+      ].join("  "),
+    );
+  }
+}
+
 export function printSessionRepairTable(
   rows: Array<{
     platform: string;
@@ -288,6 +351,21 @@ function colorizeActionLogStatus(status: "success" | "failed"): string {
       return pc.green(status);
     case "failed":
       return pc.red(status);
+    default:
+      return status;
+  }
+}
+
+function colorizeMediaJobStatus(status: string): string {
+  switch (status) {
+    case "completed":
+      return pc.green(status);
+    case "failed":
+    case "canceled":
+      return pc.red(status);
+    case "queued":
+    case "processing":
+      return pc.yellow(status);
     default:
       return status;
   }

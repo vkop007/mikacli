@@ -14,6 +14,7 @@ describe("search command", () => {
     expect(index.some((entry) => entry.command === "autocli tools download")).toBe(true);
     expect(index.some((entry) => entry.command === "autocli tools download video")).toBe(true);
     expect(index.some((entry) => entry.command === "autocli login")).toBe(true);
+    expect(index.some((entry) => entry.command === "autocli jobs")).toBe(true);
   });
 
   test("finds provider matches by display name and category words", () => {

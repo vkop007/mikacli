@@ -72,15 +72,14 @@ export async function startGoogleLoopbackAuthorization(
   const timeoutMs = Math.max(1, Math.floor(input.timeoutSeconds ?? DEFAULT_TIMEOUT_SECONDS)) * 1000;
   const state = input.state?.trim() || randomBytes(16).toString("hex");
 
-  let settle: ((code: string) => void) | null = null;
-  let rejectWait: ((error: unknown) => void) | null = null;
   let settled = false;
   let timeout: ReturnType<typeof setTimeout> | null = null;
-
-  const waitForCode = new Promise<string>((resolve, reject) => {
-    settle = resolve;
-    rejectWait = reject;
-  });
+  let resolvedCode: string | null = null;
+  let rejectedError: unknown;
+  const waiters: Array<{
+    resolve: (code: string) => void;
+    reject: (error: unknown) => void;
+  }> = [];
 
   const server = createServer((request, response) => {
     void handleLoopbackRequest({
@@ -95,10 +94,13 @@ export async function startGoogleLoopbackAuthorization(
         }
 
         settled = true;
+        resolvedCode = code;
         clearLoopbackTimeout(timeout);
         timeout = null;
         void closeServer(server);
-        settle?.(code);
+        for (const waiter of waiters.splice(0)) {
+          waiter.resolve(code);
+        }
       },
       onError: (error) => {
         if (settled) {
@@ -106,10 +108,13 @@ export async function startGoogleLoopbackAuthorization(
         }
 
         settled = true;
+        rejectedError = error;
         clearLoopbackTimeout(timeout);
         timeout = null;
         void closeServer(server);
-        rejectWait?.(error);
+        for (const waiter of waiters.splice(0)) {
+          waiter.reject(error);
+        }
       },
     });
   });
@@ -149,26 +154,38 @@ export async function startGoogleLoopbackAuthorization(
     }
 
     settled = true;
-    void closeServer(server);
-    rejectWait?.(
-      new AutoCliError(
-        "GOOGLE_OAUTH_CALLBACK_TIMEOUT",
-        `Timed out waiting for the Google OAuth callback on ${redirectUri}.`,
-        {
-          details: {
-            redirectUri,
-            timeoutSeconds: timeoutMs / 1000,
-          },
+    rejectedError = new AutoCliError(
+      "GOOGLE_OAUTH_CALLBACK_TIMEOUT",
+      `Timed out waiting for the Google OAuth callback on ${redirectUri}.`,
+      {
+        details: {
+          redirectUri,
+          timeoutSeconds: timeoutMs / 1000,
         },
-      ),
+      },
     );
+    void closeServer(server);
+    for (const waiter of waiters.splice(0)) {
+      waiter.reject(rejectedError);
+    }
   }, timeoutMs);
 
   return {
     redirectUri,
     authUrl,
     state,
-    waitForCode: () => waitForCode,
+    waitForCode: async () => {
+      if (resolvedCode) {
+        return resolvedCode;
+      }
+      if (rejectedError) {
+        throw rejectedError;
+      }
+
+      return await new Promise<string>((resolve, reject) => {
+        waiters.push({ resolve, reject });
+      });
+    },
     close: async () => {
       if (settled) {
         return;

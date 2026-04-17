@@ -110,6 +110,7 @@ Typical commands:
 autocli status
 autocli sessions validate
 autocli sessions repair
+autocli jobs
 autocli logout x default
 autocli search "youtube download"
 autocli llm chatgpt text "Write release notes for AutoCLI"
@@ -118,6 +119,7 @@ autocli developer github me --json
 autocli developer github capabilities --json
 autocli devops cloudflare zones --json
 autocli devops render services --json
+autocli jobs show job-id-example
 autocli google gmail labels --json
 autocli google calendar today --json
 autocli google docs documents --json
@@ -297,6 +299,21 @@ Examples:
 autocli sessions repair
 autocli sessions repair x --browser
 autocli sessions repair discordbot default --json
+```
+
+## Saved Jobs
+
+Use `autocli jobs` to inspect saved media and async jobs across providers, then reopen, watch, download, or cancel them from one root command surface.
+
+Examples:
+
+```bash
+autocli jobs
+autocli jobs --platform grok
+autocli jobs show job-id-example
+autocli jobs watch job-id-example
+autocli jobs download job-id-example --output-dir ./renders
+autocli jobs cancel job-id-example --platform grok
 ```
 
 ## Cross-Site Transcripts

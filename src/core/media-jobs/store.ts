@@ -1,12 +1,11 @@
 import { access, readFile, readdir, writeFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { randomUUID } from "node:crypto";
+import { join } from "node:path";
 
 import {
-  ensureJobDirectory,
+  JOBS_DIR,
   ensureParentDirectory,
-  getJobPath,
-  getPlatformJobDir,
   sanitizeAccountName,
 } from "../../config.js";
 import { AutoCliError } from "../../errors.js";
@@ -113,15 +112,17 @@ export function createMediaJobRecord(input: {
 }
 
 export class MediaJobStore {
+  constructor(private readonly jobsRoot = JOBS_DIR) {}
+
   async saveJob(job: MediaJobRecord): Promise<string> {
-    const jobPath = getJobPath(job.platform, job.jobId);
+    const jobPath = this.getJobPath(job.platform, job.jobId);
     await ensureParentDirectory(jobPath);
     await writeFile(jobPath, `${JSON.stringify(job, null, 2)}\n`, "utf8");
     return jobPath;
   }
 
   async loadJob(platform: Platform, jobId: string): Promise<{ job: MediaJobRecord; path: string }> {
-    const path = getJobPath(platform, jobId);
+    const path = this.getJobPath(platform, jobId);
     await access(path, constants.R_OK).catch(() => {
       throw new AutoCliError("MEDIA_JOB_NOT_FOUND", `No saved ${platform} job was found for ${jobId}.`, {
         details: {
@@ -161,7 +162,7 @@ export class MediaJobStore {
     }
 
     const jobs = await this.listJobs(platform, input);
-    return jobs.find(({ job }) => matchesJobTarget(job, normalizedTarget));
+    return jobs.find(({ job }) => matchesMediaJobTarget(job, normalizedTarget));
   }
 
   async listJobs(
@@ -171,9 +172,14 @@ export class MediaJobStore {
       account?: string;
     } = {},
   ): Promise<Array<{ job: MediaJobRecord; path: string }>> {
-    await ensureJobDirectory(platform);
-    const directory = getPlatformJobDir(platform);
-    const entries = await readdir(directory, { withFileTypes: true });
+    const directory = this.getPlatformJobDir(platform);
+    const entries = await readdir(directory, { withFileTypes: true }).catch((error) => {
+      if (isMissingFileError(error)) {
+        return [];
+      }
+
+      throw error;
+    });
     const files = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".json"));
 
     const jobs = await Promise.all(
@@ -199,9 +205,17 @@ export class MediaJobStore {
       })
       .sort((left, right) => right.job.updatedAt.localeCompare(left.job.updatedAt));
   }
+
+  private getPlatformJobDir(platform: Platform): string {
+    return join(this.jobsRoot, platform);
+  }
+
+  private getJobPath(platform: Platform, jobId: string): string {
+    return join(this.getPlatformJobDir(platform), `${sanitizeAccountName(jobId)}.json`);
+  }
 }
 
-function matchesJobTarget(job: MediaJobRecord, target: string): boolean {
+export function matchesMediaJobTarget(job: MediaJobRecord, target: string): boolean {
   return (
     job.jobId === target ||
     job.providerJobId === target ||
@@ -225,4 +239,12 @@ function dedupeStrings(values: readonly string[]): string[] | undefined {
   }
 
   return deduped.length > 0 ? deduped : undefined;
+}
+
+function isMissingFileError(error: unknown): boolean {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  return "code" in error && (error as { code?: unknown }).code === "ENOENT";
 }

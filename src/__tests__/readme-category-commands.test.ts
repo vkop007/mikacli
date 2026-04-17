@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 
 import { getPlatformCategories } from "../platforms/index.js";
 
-const ALLOWED_ROOT_COMMANDS = new Set<string>(["login", "logout", "search", "status", "doctor", "sessions", "help", "-h", "--help", "-v", "--version", ...getPlatformCategories()]);
+const ALLOWED_ROOT_COMMANDS = new Set<string>(["login", "logout", "search", "status", "doctor", "sessions", "jobs", "help", "-h", "--help", "-v", "--version", ...getPlatformCategories()]);
 
 describe("README command examples", () => {
   test("use category-based routing for provider commands", async () => {

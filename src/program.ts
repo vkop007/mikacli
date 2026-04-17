@@ -10,6 +10,7 @@ import { createSearchCommand } from "./commands/search.js";
 import { createSessionsCommand } from "./commands/sessions.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createLogsCommand } from "./commands/logs.js";
+import { createJobsCommand } from "./commands/jobs.js";
 import { AutoCliError } from "./errors.js";
 import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
 import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
@@ -26,6 +27,7 @@ const ROOT_EXAMPLES = [
   "autocli doctor",
   "autocli sessions",
   "autocli logs --status failed --since 1h",
+  "autocli jobs",
   'autocli editor image resize ./photo.png --width 1200',
   'autocli finance stocks AAPL',
   "autocli google gmail labels",
@@ -84,7 +86,8 @@ Format Transformations (with or without --json):
     .addCommand(createStatusCommand())
     .addCommand(createDoctorCommand())
     .addCommand(createSessionsCommand())
-    .addCommand(createLogsCommand());
+    .addCommand(createLogsCommand())
+    .addCommand(createJobsCommand());
 
   for (const category of getPlatformCategories()) {
     const definitions = getPlatformDefinitionsByCategory(category);
@@ -126,7 +129,7 @@ function findLegacyDirectProviderInvocation(argv: readonly string[]): {
     return undefined;
   }
 
-  const reserved = new Set<string>(["help", "login", "logout", "upgrade", "search", "status", "doctor", "sessions", "logs", ...getPlatformCategories()]);
+  const reserved = new Set<string>(["help", "login", "logout", "upgrade", "search", "status", "doctor", "sessions", "logs", "jobs", ...getPlatformCategories()]);
   const isHelpRequest = positionals[0] === "help";
   const candidate = isHelpRequest ? positionals[1] : positionals[0];
   if (!candidate || reserved.has(candidate)) {

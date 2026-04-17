@@ -14,6 +14,7 @@ import { createLogoutCommand } from "./logout.js";
 import { createSessionsCommand } from "./sessions.js";
 import { createStatusCommand } from "./status.js";
 import { createLogsCommand } from "./logs.js";
+import { createJobsCommand } from "./jobs.js";
 
 import type { PlatformCategory, PlatformDefinition } from "../core/runtime/platform-definition.js";
 import type { Argument, Option } from "commander";
@@ -90,6 +91,15 @@ const ROOT_SEARCH_COMMANDS: readonly RootSearchCommand[] = [
       "autocli logs --status failed --since 1h",
       "autocli logs show 123e4567-e89b-12d3-a456-426614174000",
       "autocli logs clear",
+    ],
+  },
+  {
+    builder: createJobsCommand,
+    examples: [
+      "autocli jobs",
+      "autocli jobs show job_ab12",
+      "autocli jobs watch job_ab12",
+      "autocli jobs download job_ab12 --output-dir ./renders",
     ],
   },
 ] as const;

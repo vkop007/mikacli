@@ -15,6 +15,7 @@ describe("root program routing", () => {
       "doctor",
       "sessions",
       "logs",
+      "jobs",
       "llm",
       "editor",
       "finance",
@@ -71,6 +72,7 @@ describe("root program routing", () => {
     expect(() => assertCategoryOnlyInvocation(["login", "--browser"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["logout", "x", "default"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["search", "github"])).not.toThrow();
+    expect(() => assertCategoryOnlyInvocation(["jobs", "show", "job_ab12"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["llm", "chatgpt", "text", "Hello"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["editor", "image", "info", "./photo.png"])).not.toThrow();
     expect(() => assertCategoryOnlyInvocation(["finance", "stocks", "AAPL"])).not.toThrow();

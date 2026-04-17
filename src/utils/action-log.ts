@@ -52,6 +52,7 @@ const CATEGORY_COMMANDS = new Set([
 ]);
 const ROOT_SUBCOMMANDS: Record<string, Set<string>> = {
   logs: new Set(["show", "clear"]),
+  jobs: new Set(["list", "show", "watch", "download", "cancel"]),
   sessions: new Set(["validate", "repair", "show", "remove"]),
 };
 

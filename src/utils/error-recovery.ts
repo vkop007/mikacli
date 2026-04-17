@@ -103,6 +103,22 @@ export function resolveErrorRecovery(error: unknown): {
     };
   }
 
+  if (error.code === "MEDIA_JOB_DOWNLOAD_UNSUPPORTED" || error.code === "MEDIA_JOB_CANCEL_UNSUPPORTED") {
+    const nextCommand = typeof error.details?.nextCommand === "string" ? error.details.nextCommand : undefined;
+    return {
+      hint: "Retry the provider-native job command for this platform, or inspect the saved job details first.",
+      nextCommand,
+    };
+  }
+
+  if (error.code === "MEDIA_JOB_TIMEOUT") {
+    const jobId = typeof error.details?.jobId === "string" ? error.details.jobId : undefined;
+    return {
+      hint: "Retry with a longer `jobs watch --timeout` value, or inspect the saved job state directly.",
+      nextCommand: jobId ? `autocli jobs show ${jobId}` : undefined,
+    };
+  }
+
   return {};
 }
 
