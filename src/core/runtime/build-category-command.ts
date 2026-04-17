@@ -12,6 +12,9 @@ const PLATFORM_CATEGORY_DEFINITIONS: Record<PlatformCategory, PlatformCategoryDe
   bot: {
     description: "Bot-token providers like Telegram, Discord, and Slack",
   },
+  careers: {
+    description: "Job search platforms like Indeed and ZipRecruiter",
+  },
   developer: {
     description: "Developer platforms like GitHub, GitLab, Linear, and Notion",
   },

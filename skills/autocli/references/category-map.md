@@ -23,6 +23,7 @@ If the user intent is already concrete, read [recipes.md](recipes.md) first and 
 | `llm` | prompting and generation | `chatgpt`, `gemini`, `grok`, `mistral`, `perplexity`, `qwen` | `login`, `status`, `text`, `image`, `video` |
 | `google` | Google workspace and account APIs | `calendar`, `docs`, `forms`, `gmail`, `drive`, `sheets` | `auth-url`, `login`, `me`, `calendars`, `documents`, `forms`, `events`, `files`, `labels`, `values`, `append` |
 | `social` | posting, profile lookup, messaging, public social reads | `x`, `instagram`, `reddit`, `bluesky`, `mastodon`, `telegram`, `whatsapp`, `youtube` | `login`, `me`, `profile`, `posts`, `thread`, `post`, `comment`, `send` |
+| `careers` | job search and discovery | `indeed`, `ziprecruiter` | `search` |
 | `developer` | code hosting, docs, issues, workspace tools | `github`, `gitlab`, `jira`, `linear`, `trello`, `confluence`, `notion` | `login`, `me`, `projects`, `issues`, `page`, `search` |
 | `devops` | infrastructure, deploys, DNS, monitoring, and platform operations | `cloudflare`, `vercel`, `supabase`, `render`, `railway`, `netlify`, `digitalocean`, `fly`, `uptimerobot` | `login`, `me`, `zones`, `projects`, `services`, `apps`, `deployments`, `monitors` |
 | `editor` | local file and media editing | `image`, `video`, `audio`, `pdf`, `document`, `subtitle`, `gif`, `archive` | `info`, `convert`, `resize`, `split`, `watermark`, `ocr` |

@@ -98,6 +98,11 @@ Use these files when the main `$autocli` skill already knows the provider and ne
 - [X](./x.md)
 - [YouTube](./youtube.md)
 
+## careers
+
+- [Indeed](./indeed.md)
+- [ZipRecruiter](./ziprecruiter.md)
+
 ## shopping
 
 - [Amazon](./amazon.md)

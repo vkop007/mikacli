@@ -2,8 +2,8 @@
 
 [![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
 [![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-114-blue)](#category-overview)
-[![categories](https://img.shields.io/badge/categories-15-6f42c1)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-116-blue)](#category-overview)
+[![categories](https://img.shields.io/badge/categories-16-6f42c1)](#category-overview)
 
 AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
 
@@ -60,8 +60,8 @@ autocli llm qwen text "Summarize this changelog"
 | --- | --- |
 | Package | `@vk007/autocli` |
 | CLI command | `autocli` |
-| Providers | `114` |
-| Categories | `15` |
+| Providers | `116` |
+| Categories | `16` |
 | npm install | `npm install -g @vk007/autocli` |
 | bun install | `bun install -g @vk007/autocli` |
 | Local setup | `bun install` |
@@ -139,7 +139,7 @@ Every provider help page now includes:
 ## Why Use AutoCLI
 
 - Sign into real web apps once, then reuse the saved session from the terminal.
-- Use the same CLI for LLMs, socials, developer tools, devops platforms, editors, and public utilities.
+- Use the same CLI for LLMs, socials, job search, developer tools, devops platforms, editors, and public utilities.
 - Keep auth local to your machine instead of scattering cookies and tokens across one-off scripts.
 - Give agents and scripts a stable command model with consistent JSON output.
 - Reach protected web surfaces that are awkward to automate with plain APIs alone.
@@ -158,6 +158,7 @@ AutoCLI is category-only. Provider commands never live at the root.
 - `autocli news ...`
 - `autocli music ...`
 - `autocli social ...`
+- `autocli careers ...`
 - `autocli shopping ...`
 - `autocli developer ...`
 - `autocli devops ...`
@@ -455,13 +456,14 @@ autocli devops railway capabilities --json
 | `news` | News | 1 | none | Public headline discovery, source search, and feed aggregation | `autocli news ...` |
 | `music` | Bandcamp, Deezer, SoundCloud, Spotify, YouTube Music | 5 | none or cookies | Public music discovery plus session-backed playback and library workflows | `autocli music <provider> ...` |
 | `social` | Bluesky, Facebook, Instagram, LinkedIn, Mastodon, Pinterest, Reddit, Telegram, Threads, TikTok, Twitch, WhatsApp, X, YouTube | 14 | none, cookies, or session | Public profile/thread lookup plus cookie-backed posting, Reddit discovery and write automation, Twitch creator discovery, federated discovery, MTProto messaging, and QR/session-backed chat control where supported | `autocli social <provider> ...` |
+| `careers` | Indeed, ZipRecruiter | 2 | none | Job search and discovery across major job boards | `autocli careers <provider> ...` |
 | `shopping` | Amazon, eBay, Etsy, Flipkart | 4 | none or cookies | Product discovery plus account/cart/order surfaces where supported | `autocli shopping <provider> ...` |
 | `developer` | Confluence, GitHub, GitLab, Jira, Linear, Notion, Trello | 7 | cookies | Developer and workspace automation | `autocli developer <provider> ...` |
 | `devops` | Cloudflare, DigitalOcean, Fly.io, Netlify, Railway, Render, Supabase, UptimeRobot, Vercel | 9 | api token | Infrastructure, deployment, DNS, platform, backend, and uptime-monitoring automation | `autocli devops <provider> ...` |
 | `bot` | Discord Bot, GitHub Bot, Slack Bot, Telegram Bot | 4 | bot token or app token | Notifications, chat ops, bot messaging | `autocli bot <provider> ...` |
 | `tools` | Cheat, DNS, Download, Favicon, Headers, HTTP Toolkit, IP, Markdown Fetch, Metadata, oEmbed, Page Links, QR, Redirect, Robots, RSS, Screenshot, Sitemap, SSL, Time, Timezone, Transcript, Translate, Uptime, Weather, Web Search, Whois | 26 | none or cookies | Public utilities, cross-site downloads, transcript extraction, session-aware request inspection, and zero-setup helpers | `autocli tools <provider> ...` |
 
-AutoCLI currently exposes `108` providers across `14` active command groups.
+AutoCLI currently exposes `110` providers across `15` active command groups.
 
 ## Access Modes
 

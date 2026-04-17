@@ -21,6 +21,7 @@ const CATEGORY_ORDER: readonly PlatformCategory[] = [
   "news",
   "music",
   "social",
+  "careers",
   "shopping",
   "developer",
   "devops",
