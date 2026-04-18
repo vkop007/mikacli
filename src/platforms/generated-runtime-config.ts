@@ -113,14 +113,15 @@ import { runtimeConfig as platformRuntimeConfig104 } from "./tools/rss/runtime.j
 import { runtimeConfig as platformRuntimeConfig105 } from "./tools/screenshot/runtime.js";
 import { runtimeConfig as platformRuntimeConfig106 } from "./tools/sitemap/runtime.js";
 import { runtimeConfig as platformRuntimeConfig107 } from "./tools/ssl/runtime.js";
-import { runtimeConfig as platformRuntimeConfig108 } from "./tools/time/runtime.js";
-import { runtimeConfig as platformRuntimeConfig109 } from "./tools/timezone/runtime.js";
-import { runtimeConfig as platformRuntimeConfig110 } from "./tools/transcript/runtime.js";
-import { runtimeConfig as platformRuntimeConfig111 } from "./tools/translate/runtime.js";
-import { runtimeConfig as platformRuntimeConfig112 } from "./tools/uptime/runtime.js";
-import { runtimeConfig as platformRuntimeConfig113 } from "./tools/weather/runtime.js";
-import { runtimeConfig as platformRuntimeConfig114 } from "./tools/websearch/runtime.js";
-import { runtimeConfig as platformRuntimeConfig115 } from "./tools/whois/runtime.js";
+import { runtimeConfig as platformRuntimeConfig108 } from "./tools/tempmail/runtime.js";
+import { runtimeConfig as platformRuntimeConfig109 } from "./tools/time/runtime.js";
+import { runtimeConfig as platformRuntimeConfig110 } from "./tools/timezone/runtime.js";
+import { runtimeConfig as platformRuntimeConfig111 } from "./tools/transcript/runtime.js";
+import { runtimeConfig as platformRuntimeConfig112 } from "./tools/translate/runtime.js";
+import { runtimeConfig as platformRuntimeConfig113 } from "./tools/uptime/runtime.js";
+import { runtimeConfig as platformRuntimeConfig114 } from "./tools/weather/runtime.js";
+import { runtimeConfig as platformRuntimeConfig115 } from "./tools/websearch/runtime.js";
+import { runtimeConfig as platformRuntimeConfig116 } from "./tools/whois/runtime.js";
 
 export function getGeneratedPlatformConfig(): Record<GeneratedPlatformName, PlatformConfig> {
   return {
@@ -232,13 +233,14 @@ export function getGeneratedPlatformConfig(): Record<GeneratedPlatformName, Plat
   "screenshot": platformRuntimeConfig105,
   "sitemap": platformRuntimeConfig106,
   "ssl": platformRuntimeConfig107,
-  "time": platformRuntimeConfig108,
-  "timezone": platformRuntimeConfig109,
-  "transcript": platformRuntimeConfig110,
-  "translate": platformRuntimeConfig111,
-  "uptime": platformRuntimeConfig112,
-  "weather": platformRuntimeConfig113,
-  "websearch": platformRuntimeConfig114,
-  "whois": platformRuntimeConfig115,
+  "tempmail": platformRuntimeConfig108,
+  "time": platformRuntimeConfig109,
+  "timezone": platformRuntimeConfig110,
+  "transcript": platformRuntimeConfig111,
+  "translate": platformRuntimeConfig112,
+  "uptime": platformRuntimeConfig113,
+  "weather": platformRuntimeConfig114,
+  "websearch": platformRuntimeConfig115,
+  "whois": platformRuntimeConfig116,
   };
 }

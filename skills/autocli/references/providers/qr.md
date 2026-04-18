@@ -16,7 +16,7 @@ Generated from the real AutoCLI provider definition and command tree.
 
 ## Description
 
-Generate shareable QR codes without any account setup
+Generate QR codes and decode QR images without any account setup
 
 ## Notes
 
@@ -24,16 +24,16 @@ Generate shareable QR codes without any account setup
 
 ## Fast Start
 
-- `autocli tools qr "https://example.com"`
-- `autocli tools qr "https://example.com" --size 8 --margin 4`
-- `autocli tools qr "hello world" --url`
+- `autocli tools qr encode "https://example.com"`
+- `autocli tools qr encode "https://example.com" --size 8 --margin 4`
+- `autocli tools qr decode ./qr-image.png --json`
 - `autocli tools qr capabilities --json`
 
 ## Default Command
 
 Usage:
 ```bash
-autocli tools qr [options] [command] <text...>
+autocli tools qr [options] [command] [text...]
 ```
 
 Options:
@@ -44,6 +44,32 @@ Options:
 
 
 ## Commands
+
+### `encode`
+
+Usage:
+```bash
+autocli tools qr encode [options] <text...>
+```
+
+Generate a QR code from text
+
+Options:
+
+- `--size <number>`: QR image size hint
+- `--margin <number>`: QR image margin in modules
+- `--url`: Print a public image URL too
+
+### `decode`
+
+Usage:
+```bash
+autocli tools qr decode [options] <filePath>
+```
+
+Decode a QR code from an image file
+
+No command-specific options.
 
 ### `capabilities`
 

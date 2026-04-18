@@ -278,9 +278,10 @@ Extract a sequence of frames from a local video
 
 Options:
 
+- `--quality <level>`: Frame extraction density: low (1 fps), medium (5 fps), high (24 fps)
+- `--fps <value>`: Override frame rate (1-120). Overrides --quality if specified.
 - `--start <time>`: Extraction start time
 - `--duration <time>`: Extraction duration
-- `--fps <value>`: Frames per second
 - `--output-dir <path>`: Directory for extracted frames
 - `--prefix <name>`: Filename prefix for extracted frames
 - `--format <format>`: Frame image format: png, jpg, jpeg, webp

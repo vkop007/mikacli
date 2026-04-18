@@ -42,6 +42,7 @@ export class IndeedAdapter {
       return {
         ok: true,
         platform: this.platform,
+        account: "public",
         action: "search",
         message: `Found ${jobs.length} job listings on Indeed for "${query}".`,
         data: {
@@ -113,6 +114,7 @@ export class IndeedAdapter {
     return {
       ok: true,
       platform: this.platform,
+      account: "public",
       ...result,
     } as AdapterActionResult;
   }

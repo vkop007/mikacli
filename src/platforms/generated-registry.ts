@@ -112,14 +112,15 @@ import { rssPlatformDefinition as platformDefinition104 } from "./tools/rss/mani
 import { screenshotPlatformDefinition as platformDefinition105 } from "./tools/screenshot/manifest.js";
 import { sitemapPlatformDefinition as platformDefinition106 } from "./tools/sitemap/manifest.js";
 import { sslPlatformDefinition as platformDefinition107 } from "./tools/ssl/manifest.js";
-import { timePlatformDefinition as platformDefinition108 } from "./tools/time/manifest.js";
-import { timezonePlatformDefinition as platformDefinition109 } from "./tools/timezone/manifest.js";
-import { transcriptPlatformDefinition as platformDefinition110 } from "./tools/transcript/manifest.js";
-import { translatePlatformDefinition as platformDefinition111 } from "./tools/translate/manifest.js";
-import { uptimePlatformDefinition as platformDefinition112 } from "./tools/uptime/manifest.js";
-import { weatherPlatformDefinition as platformDefinition113 } from "./tools/weather/manifest.js";
-import { webSearchPlatformDefinition as platformDefinition114 } from "./tools/websearch/manifest.js";
-import { whoisPlatformDefinition as platformDefinition115 } from "./tools/whois/manifest.js";
+import { tempMailPlatformDefinition as platformDefinition108 } from "./tools/tempmail/manifest.js";
+import { timePlatformDefinition as platformDefinition109 } from "./tools/time/manifest.js";
+import { timezonePlatformDefinition as platformDefinition110 } from "./tools/timezone/manifest.js";
+import { transcriptPlatformDefinition as platformDefinition111 } from "./tools/transcript/manifest.js";
+import { translatePlatformDefinition as platformDefinition112 } from "./tools/translate/manifest.js";
+import { uptimePlatformDefinition as platformDefinition113 } from "./tools/uptime/manifest.js";
+import { weatherPlatformDefinition as platformDefinition114 } from "./tools/weather/manifest.js";
+import { webSearchPlatformDefinition as platformDefinition115 } from "./tools/websearch/manifest.js";
+import { whoisPlatformDefinition as platformDefinition116 } from "./tools/whois/manifest.js";
 
 export function getGeneratedPlatformDefinitions(): readonly PlatformDefinition[] {
   return [
@@ -239,5 +240,6 @@ export function getGeneratedPlatformDefinitions(): readonly PlatformDefinition[]
   platformDefinition113,
   platformDefinition114,
   platformDefinition115,
+  platformDefinition116,
   ];
 }

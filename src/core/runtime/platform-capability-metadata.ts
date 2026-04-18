@@ -391,6 +391,11 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     stability: "stable",
     notes: ["Best used with saved sessions or the shared browser profile for authenticated request inspection and replay."],
   },
+  tempmail: {
+    mutation: "supported",
+    stability: "stable",
+    notes: ["Uses Mail.tm's free disposable inbox API and stores the mailbox session locally for reuse."],
+  },
   news: {
     stability: "stable",
   },

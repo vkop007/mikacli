@@ -14,6 +14,7 @@ export type PlatformCategory =
   | "news"
   | "music"
   | "social"
+  | "careers"
   | "shopping"
   | "devops"
   | "bot"

@@ -18,6 +18,11 @@ type DecodeResult = {
   };
 };
 
+type JsQrResult = {
+  data: string;
+  location?: DecodeResult["location"];
+};
+
 export class QrAdapter {
   readonly platform = "qr" as unknown as Platform;
   readonly displayName = "QR";
@@ -77,7 +82,12 @@ export class QrAdapter {
   private async decodeQrFromBuffer(buffer: Buffer): Promise<DecodeResult | null> {
     try {
       // Dynamic import for jsQR to avoid adding it as a static dependency initially
-      const jsQR = (await import("jsqr")).default;
+      const jsQrModule = await import("jsqr");
+      const jsQR = ((jsQrModule as unknown as { default?: unknown }).default ?? jsQrModule) as (
+        data: Uint8ClampedArray,
+        width: number,
+        height: number,
+      ) => JsQrResult | null;
       const Jimp = (await import("jimp")).default;
 
       const image = await Jimp.read(buffer);

@@ -41,6 +41,7 @@ export class ZipRecruiterAdapter {
       return {
         ok: true,
         platform: this.platform,
+        account: "public",
         action: "search",
         message: `Found ${jobs.length} job listings on ZipRecruiter for "${query}".`,
         data: {
@@ -115,6 +116,7 @@ export class ZipRecruiterAdapter {
     return {
       ok: true,
       platform: this.platform,
+      account: "public",
       ...result,
     } as AdapterActionResult;
   }

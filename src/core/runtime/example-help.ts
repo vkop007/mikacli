@@ -10,6 +10,7 @@ const CUSTOM_CAPABILITY_IDS: Partial<Record<PlatformDefinition["id"], readonly s
   forms: ["auth-url", "login", "status", "me", "forms", "form", "responses", "response", "create", "update-info", "add-text-question", "add-choice-question", "delete-item", "publish", "delete"],
   gmail: ["auth-url", "login", "status", "me", "labels", "messages", "message", "send"],
   sheets: ["auth-url", "login", "status", "me", "create", "spreadsheet", "values", "append", "update", "clear"],
+  tempmail: ["domains", "create", "login", "status", "me", "inbox", "message", "wait", "mark-read", "delete-message", "delete-inbox"],
   telegram: ["login", "status", "me", "chats", "history", "send"],
   whatsapp: ["login", "status", "me", "chats", "history", "send"],
   http: ["inspect", "capture", "request", "cookies", "storage", "download", "graphql"],

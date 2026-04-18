@@ -159,6 +159,7 @@ Use these files when the main `$autocli` skill already knows the provider and ne
 - [Screenshot](./screenshot.md)
 - [Sitemap](./sitemap.md)
 - [SSL](./ssl.md)
+- [Temp Mail](./tempmail.md)
 - [Time](./time.md)
 - [Timezone](./timezone.md)
 - [Transcript](./transcript.md)

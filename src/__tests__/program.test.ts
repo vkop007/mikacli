@@ -26,6 +26,7 @@ describe("root program routing", () => {
       "news",
       "music",
       "social",
+      "careers",
       "shopping",
       "developer",
       "devops",
