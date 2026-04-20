@@ -6,7 +6,7 @@ import { Command } from "commander";
 
 import { MediaJobStore, matchesMediaJobTarget, type MediaJobRecord, type MediaJobState } from "../core/media-jobs/store.js";
 import { normalizeActionResult } from "../core/runtime/login-result.js";
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { Logger } from "../logger.js";
 import { isPlatform, PLATFORM_NAMES } from "../platforms/config.js";
 import { getPlatformDefinition, getPlatformDefinitions } from "../platforms/index.js";
@@ -93,12 +93,12 @@ export function createJobsCommand(): Command {
       "after",
       `
 Examples:
-  autocli jobs
-  autocli jobs --platform grok
-  autocli jobs show job_ab12
-  autocli jobs watch job_ab12
-  autocli jobs download job_ab12 --output-dir ./renders
-  autocli jobs cancel job_ab12 --platform grok
+  mikacli jobs
+  mikacli jobs --platform grok
+  mikacli jobs show job_ab12
+  mikacli jobs watch job_ab12
+  mikacli jobs download job_ab12 --output-dir ./renders
+  mikacli jobs cancel job_ab12 --platform grok
 `,
     )
     .action(async function jobsListAction(this: Command) {
@@ -402,7 +402,7 @@ export async function findSavedMediaJob(input: {
 }): Promise<SavedMediaJob> {
   const target = input.target.trim();
   if (!target) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a saved job id or provider job target.");
+    throw new MikaCliError("INVALID_TARGET", "Expected a saved job id or provider job target.");
   }
 
   const entries = await listSavedMediaJobs({
@@ -416,7 +416,7 @@ export async function findSavedMediaJob(input: {
   const preferred = exactJobIdMatches.length > 0 ? exactJobIdMatches : matches;
 
   if (preferred.length === 0) {
-    throw new AutoCliError("MEDIA_JOB_NOT_FOUND", `No saved job was found for "${target}".`, {
+    throw new MikaCliError("MEDIA_JOB_NOT_FOUND", `No saved job was found for "${target}".`, {
       details: {
         target,
         ...(input.platform ? { platform: input.platform } : {}),
@@ -425,7 +425,7 @@ export async function findSavedMediaJob(input: {
   }
 
   if (preferred.length > 1) {
-    throw new AutoCliError("MEDIA_JOB_AMBIGUOUS", `Multiple saved jobs matched "${target}". Re-run with --platform.`, {
+    throw new MikaCliError("MEDIA_JOB_AMBIGUOUS", `Multiple saved jobs matched "${target}". Re-run with --platform.`, {
       details: {
         target,
         matches: preferred.map((entry) => ({
@@ -463,7 +463,7 @@ export async function waitForStoredMediaJob(input: {
     }
 
     if (Date.now() >= deadline) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "MEDIA_JOB_TIMEOUT",
         `Timed out waiting for saved ${entry.displayName} ${entry.job.kind} job ${entry.job.jobId}.`,
         {
@@ -661,7 +661,7 @@ function normalizeJobPlatform(value: string | undefined): Platform | undefined {
   }
 
   if (!isPlatform(normalized)) {
-    throw new AutoCliError("INVALID_PLATFORM", `Expected a valid platform id, received "${value}".`);
+    throw new MikaCliError("INVALID_PLATFORM", `Expected a valid platform id, received "${value}".`);
   }
 
   return normalized;
@@ -684,7 +684,7 @@ function normalizeMediaJobState(value: string | undefined): MediaJobState | unde
     return normalized;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "INVALID_JOB_STATUS",
     `Expected job status to be queued, processing, completed, failed, canceled, or unknown, received "${value}".`,
   );
@@ -698,7 +698,7 @@ function normalizeJobKind(value: string | undefined): string | undefined {
 function parsePositiveInteger(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new AutoCliError("INVALID_JOB_LIMIT", `Expected a positive integer, received "${value}".`);
+    throw new MikaCliError("INVALID_JOB_LIMIT", `Expected a positive integer, received "${value}".`);
   }
 
   return parsed;
@@ -741,11 +741,11 @@ function hasVideoCancelAdapter(value: unknown): value is VideoCancelCapableAdapt
   return Boolean(value) && typeof (value as { videoCancel?: unknown }).videoCancel === "function";
 }
 
-function unsupportedJobActionError(entry: SavedMediaJob, action: "download" | "cancel"): AutoCliError {
+function unsupportedJobActionError(entry: SavedMediaJob, action: "download" | "cancel"): MikaCliError {
   const definition = getPlatformDefinition(entry.job.platform);
   const prefix = definition
     ? buildPlatformCommandPrefix(definition)
-    : `autocli ${entry.job.platform}`;
+    : `mikacli ${entry.job.platform}`;
   const providerHint =
     action === "download"
       ? entry.job.kind === "image"
@@ -753,7 +753,7 @@ function unsupportedJobActionError(entry: SavedMediaJob, action: "download" | "c
         : `${prefix} video-download ${entry.job.jobId}`
       : `${prefix} video-cancel ${entry.job.jobId}`;
 
-  return new AutoCliError(
+  return new MikaCliError(
     action === "download" ? "MEDIA_JOB_DOWNLOAD_UNSUPPORTED" : "MEDIA_JOB_CANCEL_UNSUPPORTED",
     `${entry.displayName} does not support root job ${action} for saved ${entry.job.kind} jobs.`,
     {
@@ -769,7 +769,7 @@ function unsupportedJobActionError(entry: SavedMediaJob, action: "download" | "c
 
 function buildPlatformCommandPrefix(definition: Pick<PlatformDefinition, "id" | "category" | "commandCategories">): string {
   const category = definition.commandCategories?.[0] ?? definition.category;
-  return `autocli ${category} ${definition.id}`;
+  return `mikacli ${category} ${definition.id}`;
 }
 
 function readStringMetadata(metadata: Record<string, unknown> | undefined, key: string): string | undefined {

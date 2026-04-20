@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { buildNotionPageUrl } from "./helpers.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 
@@ -194,7 +194,7 @@ export class NotionWebClient {
       Object.keys(users)[0];
 
     if (!userId || !users[userId]?.value) {
-      throw new AutoCliError("NOTION_SESSION_INVALID", "Notion did not return an authenticated user for the imported session.");
+      throw new MikaCliError("NOTION_SESSION_INVALID", "Notion did not return an authenticated user for the imported session.");
     }
 
     const user = users[userId].value;
@@ -470,7 +470,7 @@ export class NotionWebClient {
     });
     const record = response.results?.[0];
     if (!record?.value) {
-      throw new AutoCliError("NOTION_NOT_FOUND", "Notion could not find that resource or the session cannot access it.", {
+      throw new MikaCliError("NOTION_NOT_FOUND", "Notion could not find that resource or the session cannot access it.", {
         details: {
           table,
           id,
@@ -501,13 +501,13 @@ export class NotionWebClient {
     }
   }
 
-  private toNotionError(error: unknown, path: string): AutoCliError {
-    if (error instanceof AutoCliError && error.code === "HTTP_REQUEST_FAILED") {
+  private toNotionError(error: unknown, path: string): MikaCliError {
+    if (error instanceof MikaCliError && error.code === "HTTP_REQUEST_FAILED") {
       const status = typeof error.details?.status === "number" ? error.details.status : undefined;
       const body = typeof error.details?.body === "string" ? error.details.body : undefined;
 
       if (status === 401 || status === 403) {
-        return new AutoCliError("NOTION_SESSION_INVALID", "Notion rejected the saved web session. Re-import fresh cookies.", {
+        return new MikaCliError("NOTION_SESSION_INVALID", "Notion rejected the saved web session. Re-import fresh cookies.", {
           details: {
             path,
             status,
@@ -517,7 +517,7 @@ export class NotionWebClient {
       }
 
       if (status === 404) {
-        return new AutoCliError("NOTION_NOT_FOUND", "Notion could not find that resource or the session cannot access it.", {
+        return new MikaCliError("NOTION_NOT_FOUND", "Notion could not find that resource or the session cannot access it.", {
           details: {
             path,
             status,
@@ -527,7 +527,7 @@ export class NotionWebClient {
       }
 
       if (status === 429) {
-        return new AutoCliError("NOTION_RATE_LIMITED", "Notion rate limited the request. Try again in a moment.", {
+        return new MikaCliError("NOTION_RATE_LIMITED", "Notion rate limited the request. Try again in a moment.", {
           details: {
             path,
             status,
@@ -536,7 +536,7 @@ export class NotionWebClient {
         });
       }
 
-      return new AutoCliError("NOTION_WEB_REQUEST_FAILED", `Notion web request failed on ${path}.`, {
+      return new MikaCliError("NOTION_WEB_REQUEST_FAILED", `Notion web request failed on ${path}.`, {
         details: {
           path,
           status,
@@ -546,11 +546,11 @@ export class NotionWebClient {
       });
     }
 
-    if (error instanceof AutoCliError) {
+    if (error instanceof MikaCliError) {
       return error;
     }
 
-    return new AutoCliError("NOTION_WEB_REQUEST_FAILED", `Notion web request failed on ${path}.`, {
+    return new MikaCliError("NOTION_WEB_REQUEST_FAILED", `Notion web request failed on ${path}.`, {
       details: {
         path,
         message: error instanceof Error ? error.message : String(error),

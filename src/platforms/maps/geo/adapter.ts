@@ -1,6 +1,6 @@
 import openLocationCodeModule from "open-location-code";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -133,7 +133,7 @@ export class GeoAdapter {
   async plusCodeDecode(input: GeoPlusCodeDecodeInput): Promise<AdapterActionResult> {
     const code = normalizePlusCode(input.code);
     if (!openLocationCode.isValid(code)) {
-      throw new AutoCliError("PLUSCODE_INVALID", `Invalid plus code "${input.code}".`);
+      throw new MikaCliError("PLUSCODE_INVALID", `Invalid plus code "${input.code}".`);
     }
 
     const decoded = openLocationCode.decode(code);
@@ -175,11 +175,11 @@ export class GeoAdapter {
         signal: AbortSignal.timeout(15000),
         headers: {
           accept: "application/json",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("GEO_ELEVATION_REQUEST_FAILED", "Unable to reach the public elevation service.", {
+      throw new MikaCliError("GEO_ELEVATION_REQUEST_FAILED", "Unable to reach the public elevation service.", {
         cause: error,
         details: {
           url: url.toString(),
@@ -188,7 +188,7 @@ export class GeoAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("GEO_ELEVATION_REQUEST_FAILED", `Elevation request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("GEO_ELEVATION_REQUEST_FAILED", `Elevation request failed with ${response.status} ${response.statusText}.`, {
         details: {
           url: url.toString(),
           status: response.status,
@@ -207,7 +207,7 @@ export class GeoAdapter {
     };
     const result = Array.isArray(payload.results) ? payload.results[0] : undefined;
     if (!result || typeof result.elevation !== "number") {
-      throw new AutoCliError("GEO_ELEVATION_NOT_FOUND", "The public elevation service did not return an elevation for that coordinate.", {
+      throw new MikaCliError("GEO_ELEVATION_NOT_FOUND", "The public elevation service did not return an elevation for that coordinate.", {
         details: {
           dataset,
           url: url.toString(),
@@ -239,7 +239,7 @@ export const geoAdapter = new GeoAdapter();
 function parseLatLon(value: string, label: "from" | "to"): Coordinate {
   const parts = value.trim().split(",").map((part) => part.trim());
   if (parts.length !== 2) {
-    throw new AutoCliError("GEO_COORDINATES_INVALID", `Invalid ${label} coordinates "${value}". Use "lat,lon".`);
+    throw new MikaCliError("GEO_COORDINATES_INVALID", `Invalid ${label} coordinates "${value}". Use "lat,lon".`);
   }
 
   return {
@@ -251,7 +251,7 @@ function parseLatLon(value: string, label: "from" | "to"): Coordinate {
 function normalizeLatitude(value: string | number): number {
   const parsed = typeof value === "number" ? value : Number.parseFloat(value);
   if (!Number.isFinite(parsed) || parsed < -90 || parsed > 90) {
-    throw new AutoCliError("GEO_COORDINATES_INVALID", `Invalid latitude "${value}".`);
+    throw new MikaCliError("GEO_COORDINATES_INVALID", `Invalid latitude "${value}".`);
   }
 
   return round(parsed, 8);
@@ -260,7 +260,7 @@ function normalizeLatitude(value: string | number): number {
 function normalizeLongitude(value: string | number): number {
   const parsed = typeof value === "number" ? value : Number.parseFloat(value);
   if (!Number.isFinite(parsed) || parsed < -180 || parsed > 180) {
-    throw new AutoCliError("GEO_COORDINATES_INVALID", `Invalid longitude "${value}".`);
+    throw new MikaCliError("GEO_COORDINATES_INVALID", `Invalid longitude "${value}".`);
   }
 
   return round(parsed, 8);
@@ -272,13 +272,13 @@ function normalizeUnit(value?: string): DistanceUnit {
     return normalized;
   }
 
-  throw new AutoCliError("GEO_UNIT_INVALID", `Invalid unit "${value}". Use km, miles, or meters.`);
+  throw new MikaCliError("GEO_UNIT_INVALID", `Invalid unit "${value}". Use km, miles, or meters.`);
 }
 
 function normalizeCodeLength(value?: number): number {
   const length = value ?? 10;
   if (!Number.isFinite(length) || length < 6 || length > 15) {
-    throw new AutoCliError("PLUSCODE_LENGTH_INVALID", `Invalid plus code length "${value}". Use an integer between 6 and 15.`);
+    throw new MikaCliError("PLUSCODE_LENGTH_INVALID", `Invalid plus code length "${value}". Use an integer between 6 and 15.`);
   }
 
   return Math.floor(length);
@@ -287,7 +287,7 @@ function normalizeCodeLength(value?: number): number {
 function normalizePlusCode(value: string): string {
   const normalized = value.trim().toUpperCase();
   if (!normalized) {
-    throw new AutoCliError("PLUSCODE_REQUIRED", "Plus code cannot be empty.");
+    throw new MikaCliError("PLUSCODE_REQUIRED", "Plus code cannot be empty.");
   }
 
   return normalized;
@@ -296,7 +296,7 @@ function normalizePlusCode(value: string): string {
 function normalizeElevationDataset(value: string | undefined): string {
   const normalized = value?.trim().toLowerCase() || "mapzen";
   if (!/^[a-z0-9-]+$/.test(normalized)) {
-    throw new AutoCliError("GEO_ELEVATION_DATASET_INVALID", `Invalid elevation dataset "${value}".`);
+    throw new MikaCliError("GEO_ELEVATION_DATASET_INVALID", `Invalid elevation dataset "${value}".`);
   }
 
   return normalized;

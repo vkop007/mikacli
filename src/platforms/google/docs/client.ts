@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { GoogleApiClient } from "../shared/client.js";
 
 export interface GoogleDocSummary {
@@ -136,7 +136,7 @@ export class DocsApiClient {
 
     const documentId = created.documentId?.trim();
     if (!documentId) {
-      throw new AutoCliError("GOOGLE_DOC_ID_MISSING", "Google Docs did not return a document id.");
+      throw new MikaCliError("GOOGLE_DOC_ID_MISSING", "Google Docs did not return a document id.");
     }
 
     const text = input.text?.trim();

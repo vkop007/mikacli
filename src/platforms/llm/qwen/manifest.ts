@@ -12,10 +12,10 @@ export const qwenPlatformDefinition: PlatformDefinition = {
   adapter: qwenAdapter,
   capabilities: createQwenCapabilities(qwenAdapter),
   examples: [
-    "autocli qwen login",
-    "autocli qwen login --cookies ./qwen.cookies.json",
-    "autocli qwen login --cookies ./qwen.cookies.json --token <bearerToken>",
-    'autocli qwen text "Explain retrieval-augmented generation"',
-    'autocli qwen text "Draft a concise launch tweet"',
+    "mikacli qwen login",
+    "mikacli qwen login --cookies ./qwen.cookies.json",
+    "mikacli qwen login --cookies ./qwen.cookies.json --token <bearerToken>",
+    'mikacli qwen text "Explain retrieval-augmented generation"',
+    'mikacli qwen text "Draft a concise launch tweet"',
   ],
 };

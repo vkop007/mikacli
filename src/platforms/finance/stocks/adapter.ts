@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 export type StockLookupInput = {
@@ -47,7 +47,7 @@ export const stocksAdapter = new StocksAdapter();
 export function normalizeStockSymbol(symbol: string, market?: string): string {
   const cleaned = symbol.trim().toLowerCase();
   if (!cleaned) {
-    throw new AutoCliError("STOCK_SYMBOL_REQUIRED", "Stock symbol cannot be empty.");
+    throw new MikaCliError("STOCK_SYMBOL_REQUIRED", "Stock symbol cannot be empty.");
   }
 
   if (cleaned.includes(".")) {
@@ -75,7 +75,7 @@ export function parseStockQuote(csv: string): StockQuote {
     .filter(Boolean);
 
   if (lines.length < 1) {
-    throw new AutoCliError("STOCK_RESPONSE_INVALID", "Stock quote response did not include a data row.");
+    throw new MikaCliError("STOCK_RESPONSE_INVALID", "Stock quote response did not include a data row.");
   }
 
   const firstFields = (lines[0] ?? "").split(",").map((value) => value.trim().toLowerCase());
@@ -88,7 +88,7 @@ export function parseStockQuote(csv: string): StockQuote {
 
   const symbol = asString(row.symbol) || "";
   if (!symbol || symbol.toUpperCase() === "N/D") {
-    throw new AutoCliError("STOCK_NOT_FOUND", "The stock symbol could not be resolved.");
+    throw new MikaCliError("STOCK_NOT_FOUND", "The stock symbol could not be resolved.");
   }
 
   return {
@@ -110,18 +110,18 @@ async function fetchStockCsv(url: string): Promise<string> {
       signal: AbortSignal.timeout(12000),
       headers: {
         accept: "text/csv,text/plain,*/*",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("STOCK_LOOKUP_FAILED", "Unable to reach the stock quote service.", {
+    throw new MikaCliError("STOCK_LOOKUP_FAILED", "Unable to reach the stock quote service.", {
       cause: error,
       details: { url },
     });
   }
 
   if (!response.ok) {
-    throw new AutoCliError("STOCK_LOOKUP_FAILED", `Stock quote lookup failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("STOCK_LOOKUP_FAILED", `Stock quote lookup failed with ${response.status} ${response.statusText}.`, {
       details: {
         url,
         status: response.status,

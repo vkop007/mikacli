@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { decodeHtml, trimSummary } from "../shared/helpers.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -72,7 +72,7 @@ export class AniListAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("ANILIST_QUERY_REQUIRED", "Provide an anime query to search AniList.");
+      throw new MikaCliError("ANILIST_QUERY_REQUIRED", "Provide an anime query to search AniList.");
     }
 
     const perPage = normalizeLimit(input.limit, 5, 10);
@@ -122,7 +122,7 @@ export class AniListAdapter {
   async titleInfo(input: { target: string }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("ANILIST_TARGET_REQUIRED", "Provide an AniList anime URL, anime ID, or search query.");
+      throw new MikaCliError("ANILIST_TARGET_REQUIRED", "Provide an AniList anime URL, anime ID, or search query.");
     }
 
     const media = await this.resolveMedia(target);
@@ -189,7 +189,7 @@ export class AniListAdapter {
   async recommendations(input: { target: string; limit?: number }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("ANILIST_TARGET_REQUIRED", "Provide an AniList anime URL, anime ID, or query.");
+      throw new MikaCliError("ANILIST_TARGET_REQUIRED", "Provide an AniList anime URL, anime ID, or query.");
     }
 
     const id = extractAniListId(target);
@@ -234,7 +234,7 @@ export class AniListAdapter {
     );
 
     if (!data.Media) {
-      throw new AutoCliError("ANILIST_TITLE_NOT_FOUND", "AniList could not find a matching anime.", {
+      throw new MikaCliError("ANILIST_TITLE_NOT_FOUND", "AniList could not find a matching anime.", {
         details: {
           target,
         },
@@ -297,7 +297,7 @@ export class AniListAdapter {
     );
 
     if (!data.Media) {
-      throw new AutoCliError("ANILIST_TITLE_NOT_FOUND", "AniList could not find a matching anime.", {
+      throw new MikaCliError("ANILIST_TITLE_NOT_FOUND", "AniList could not find a matching anime.", {
         details: {
           target,
         },
@@ -313,14 +313,14 @@ export class AniListAdapter {
       headers: {
         "content-type": "application/json",
         accept: "application/json",
-        "user-agent": "AutoCLI/1.0 (+https://anilist.co)",
+        "user-agent": "MikaCLI/1.0 (+https://anilist.co)",
       },
       body: JSON.stringify({ query, variables }),
     });
 
     const payload = (await response.json()) as AniListGraphqlResponse<T>;
     if (!response.ok || payload.errors?.length) {
-      throw new AutoCliError("ANILIST_REQUEST_FAILED", "AniList request failed.", {
+      throw new MikaCliError("ANILIST_REQUEST_FAILED", "AniList request failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -330,7 +330,7 @@ export class AniListAdapter {
     }
 
     if (!payload.data) {
-      throw new AutoCliError("ANILIST_REQUEST_FAILED", "AniList returned an empty response payload.");
+      throw new MikaCliError("ANILIST_REQUEST_FAILED", "AniList returned an empty response payload.");
     }
 
     return payload.data;

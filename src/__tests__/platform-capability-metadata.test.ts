@@ -48,11 +48,11 @@ describe("platform capability metadata", () => {
     const stabilityGuide = buildStabilityGuideHelpText();
 
     expect(githubHelp).toContain("Quick Start:");
-    expect(githubHelp).toContain("autocli developer github login --browser");
+    expect(githubHelp).toContain("mikacli developer github login --browser");
     expect(newsSupportHelp).toContain("Support Profile:");
     expect(stabilityGuide).toContain("Stability Guide:");
 
-    expect(newsSupportHelp).toContain("autocli news capabilities --json");
-    expect(githubHelp).not.toContain("autocli news login");
+    expect(newsSupportHelp).toContain("mikacli news capabilities --json");
+    expect(githubHelp).not.toContain("mikacli news login");
   });
 });

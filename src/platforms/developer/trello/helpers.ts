@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 const BOARD_PATH_REGEX = /\/b\/([^/]+)/iu;
 const CARD_PATH_REGEX = /\/c\/([^/]+)/iu;
@@ -6,14 +6,14 @@ const CARD_PATH_REGEX = /\/c\/([^/]+)/iu;
 export function normalizeTrelloBoardTarget(target: string): string {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("TRELLO_BOARD_TARGET_INVALID", "Trello board target cannot be empty.");
+    throw new MikaCliError("TRELLO_BOARD_TARGET_INVALID", "Trello board target cannot be empty.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
     const url = new URL(trimmed);
     const match = url.pathname.match(BOARD_PATH_REGEX)?.[1];
     if (!match) {
-      throw new AutoCliError("TRELLO_BOARD_TARGET_INVALID", `Could not resolve a Trello board from "${target}".`);
+      throw new MikaCliError("TRELLO_BOARD_TARGET_INVALID", `Could not resolve a Trello board from "${target}".`);
     }
     return decodeURIComponent(match);
   }
@@ -24,14 +24,14 @@ export function normalizeTrelloBoardTarget(target: string): string {
 export function normalizeTrelloCardTarget(target: string): string {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("TRELLO_CARD_TARGET_INVALID", "Trello card target cannot be empty.");
+    throw new MikaCliError("TRELLO_CARD_TARGET_INVALID", "Trello card target cannot be empty.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
     const url = new URL(trimmed);
     const match = url.pathname.match(CARD_PATH_REGEX)?.[1];
     if (!match) {
-      throw new AutoCliError("TRELLO_CARD_TARGET_INVALID", `Could not resolve a Trello card from "${target}".`);
+      throw new MikaCliError("TRELLO_CARD_TARGET_INVALID", `Could not resolve a Trello card from "${target}".`);
     }
     return decodeURIComponent(match);
   }

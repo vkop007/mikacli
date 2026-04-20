@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { parseSrt, parseVtt, serializeSubtitleDocument } from "../../editor/subtitle/adapter.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
@@ -74,11 +74,11 @@ export class TranscriptAdapter {
       ]);
       info = parseYtDlpTranscriptInfo(stdout);
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         throw error;
       }
 
-      throw new AutoCliError("TRANSCRIPT_INFO_FAILED", "Failed to inspect transcript metadata with yt-dlp.", {
+      throw new MikaCliError("TRANSCRIPT_INFO_FAILED", "Failed to inspect transcript metadata with yt-dlp.", {
         cause: error,
         details: { target },
       });
@@ -154,7 +154,7 @@ export class TranscriptAdapter {
         "code" in error.cause &&
         error.cause.code === "ENOENT"
       ) {
-        throw new AutoCliError(errorCode, errorMessage, {
+        throw new MikaCliError(errorCode, errorMessage, {
           details: { command },
           cause: error,
         });
@@ -192,7 +192,7 @@ export class TranscriptAdapter {
         }
 
         rejectPromise(
-          new AutoCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
+          new MikaCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
             details: {
               command,
               args,
@@ -214,7 +214,7 @@ export function normalizeTranscriptFormat(value?: string): TranscriptFormat {
     return normalized;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "TRANSCRIPT_FORMAT_INVALID",
     `Invalid transcript format "${value}". Use txt, vtt, srt, or json.`,
   );
@@ -267,7 +267,7 @@ export function selectTranscriptTrack(
   };
 
   if (requestedLanguage) {
-    throw new AutoCliError("TRANSCRIPT_LANGUAGE_UNAVAILABLE", `No subtitles found for language "${requestedLanguage}".`, {
+    throw new MikaCliError("TRANSCRIPT_LANGUAGE_UNAVAILABLE", `No subtitles found for language "${requestedLanguage}".`, {
       details: {
         requestedLanguage,
         availableLanguages,
@@ -275,7 +275,7 @@ export function selectTranscriptTrack(
     });
   }
 
-  throw new AutoCliError("TRANSCRIPT_UNAVAILABLE", "No subtitles or captions were found for this URL.", {
+  throw new MikaCliError("TRANSCRIPT_UNAVAILABLE", "No subtitles or captions were found for this URL.", {
     details: {
       availableLanguages,
     },
@@ -289,7 +289,7 @@ export function buildTranscriptPayload(
 ): TranscriptPayload {
   const cues = parseTranscriptSource(rawContent, sourceFormat);
   if (cues.length === 0) {
-    throw new AutoCliError("TRANSCRIPT_EMPTY", "The selected transcript track did not contain any cues.");
+    throw new MikaCliError("TRANSCRIPT_EMPTY", "The selected transcript track did not contain any cues.");
   }
 
   const transcript = renderTranscriptText(cues);
@@ -344,7 +344,7 @@ export function parseJson3Transcript(content: string): SubtitleCue[] {
   try {
     parsed = JSON.parse(content) as { events?: unknown };
   } catch (error) {
-    throw new AutoCliError("TRANSCRIPT_JSON3_PARSE_FAILED", "Failed to parse json3 transcript data.", {
+    throw new MikaCliError("TRANSCRIPT_JSON3_PARSE_FAILED", "Failed to parse json3 transcript data.", {
       cause: error,
     });
   }
@@ -550,11 +550,11 @@ async function fetchTranscriptTrack(trackUrl: string, timeoutMs: number, target:
         "accept-language": "en-US,en;q=0.9",
         "cache-control": "no-cache",
         pragma: "no-cache",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("TRANSCRIPT_FETCH_FAILED", "Unable to fetch the selected transcript track.", {
+    throw new MikaCliError("TRANSCRIPT_FETCH_FAILED", "Unable to fetch the selected transcript track.", {
       cause: error,
       details: {
         target,
@@ -564,7 +564,7 @@ async function fetchTranscriptTrack(trackUrl: string, timeoutMs: number, target:
   }
 
   if (!response.ok) {
-    throw new AutoCliError("TRANSCRIPT_FETCH_FAILED", `Transcript request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("TRANSCRIPT_FETCH_FAILED", `Transcript request failed with ${response.status} ${response.statusText}.`, {
       details: {
         target,
         trackUrl,
@@ -581,7 +581,7 @@ function parseYtDlpTranscriptInfo(stdout: string): YtDlpTranscriptInfo {
   try {
     return JSON.parse(stdout) as YtDlpTranscriptInfo;
   } catch (error) {
-    throw new AutoCliError("TRANSCRIPT_INFO_PARSE_FAILED", "yt-dlp did not return valid transcript metadata.", {
+    throw new MikaCliError("TRANSCRIPT_INFO_PARSE_FAILED", "yt-dlp did not return valid transcript metadata.", {
       cause: error,
     });
   }

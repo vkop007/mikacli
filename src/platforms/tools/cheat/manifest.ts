@@ -10,9 +10,9 @@ import { printCheatResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli cheat git status",
-  "autocli cheat --shell bash reverse list",
-  "autocli cheat --lang python list comprehension",
+  "mikacli cheat git status",
+  "mikacli cheat --shell bash reverse list",
+  "mikacli cheat --lang python list comprehension",
 ] as const;
 
 function buildCheatCommand(options: PlatformCommandBuildOptions = {}): Command {

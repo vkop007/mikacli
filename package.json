@@ -1,16 +1,16 @@
 {
-  "name": "@vk007/autocli",
+  "name": "@vk007/mikacli",
   "version": "0.1.3",
   "description": "Terminal automation toolkit for developers and AI agents across LLMs, social platforms, developer tools, editors, data tools, and public utilities.",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vkop007/autocli.git"
+    "url": "git+https://github.com/vkop007/mikacli.git"
   },
-  "homepage": "https://github.com/vkop007/autocli#readme",
+  "homepage": "https://github.com/vkop007/mikacli#readme",
   "bugs": {
-    "url": "https://github.com/vkop007/autocli/issues"
+    "url": "https://github.com/vkop007/mikacli/issues"
   },
   "packageManager": "bun@1.3.6",
   "keywords": [
@@ -22,7 +22,7 @@
     "x"
   ],
   "bin": {
-    "autocli": "./dist/index.js"
+    "mikacli": "./dist/index.js"
   },
   "files": [
     "dist",
@@ -58,7 +58,7 @@
     "typecheck": "tsc --noEmit",
     "pretest": "bun run generate:platform-registry",
     "build": "bun build --target=node --format=esm --external tlsclientwrapper --external playwright-core --outdir dist ./src/index.ts",
-    "build:bin": "bun build --compile --target=bun --external playwright-core --outfile bin/autocli ./src/index.ts",
+    "build:bin": "bun build --compile --target=bun --external playwright-core --outfile bin/mikacli ./src/index.ts",
     "test": "bun test"
   },
   "dependencies": {

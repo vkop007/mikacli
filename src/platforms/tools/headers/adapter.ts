@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -61,11 +61,11 @@ async function requestHeaders(target: string, method: HeadersMethod, timeoutMs: 
         accept: "*/*",
         "cache-control": "no-cache",
         pragma: "no-cache",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("HEADERS_REQUEST_FAILED", "Unable to reach the target URL.", {
+    throw new MikaCliError("HEADERS_REQUEST_FAILED", "Unable to reach the target URL.", {
       cause: error,
       details: {
         target,
@@ -99,7 +99,7 @@ function normalizeMethod(value: string | undefined): HeadersMethod {
     return normalized;
   }
 
-  throw new AutoCliError("HEADERS_METHOD_INVALID", `Unsupported headers method "${value}". Use HEAD or GET.`);
+  throw new MikaCliError("HEADERS_METHOD_INVALID", `Unsupported headers method "${value}". Use HEAD or GET.`);
 }
 
 function shouldRetryWithGet(status: number): boolean {

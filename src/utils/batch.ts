@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 export async function readBatchTargets(inputFile: string): Promise<{ inputPath: string; targets: string[] }> {
   const inputPath = resolve(inputFile);
@@ -10,7 +10,7 @@ export async function readBatchTargets(inputFile: string): Promise<{ inputPath: 
   try {
     raw = await readFile(inputPath, "utf8");
   } catch (error) {
-    throw new AutoCliError("BATCH_INPUT_NOT_FOUND", `Could not read batch input file at ${inputPath}.`, {
+    throw new MikaCliError("BATCH_INPUT_NOT_FOUND", `Could not read batch input file at ${inputPath}.`, {
       cause: error,
       details: {
         inputFile,
@@ -27,7 +27,7 @@ export async function readBatchTargets(inputFile: string): Promise<{ inputPath: 
     try {
       parsed = JSON.parse(trimmed);
     } catch (error) {
-      throw new AutoCliError("INVALID_BATCH_INPUT", "Batch input JSON could not be parsed.", {
+      throw new MikaCliError("INVALID_BATCH_INPUT", "Batch input JSON could not be parsed.", {
         cause: error,
         details: {
           inputPath,
@@ -36,7 +36,7 @@ export async function readBatchTargets(inputFile: string): Promise<{ inputPath: 
     }
 
     if (!Array.isArray(parsed) || parsed.some((value) => typeof value !== "string")) {
-      throw new AutoCliError("INVALID_BATCH_INPUT", "Batch input JSON must be an array of strings.", {
+      throw new MikaCliError("INVALID_BATCH_INPUT", "Batch input JSON must be an array of strings.", {
         details: {
           inputPath,
         },
@@ -53,7 +53,7 @@ export async function readBatchTargets(inputFile: string): Promise<{ inputPath: 
 
   const dedupedTargets = [...new Set(targets.map((value) => value.trim()).filter(Boolean))];
   if (dedupedTargets.length === 0) {
-    throw new AutoCliError("EMPTY_BATCH_INPUT", "Batch input file does not contain any targets.", {
+    throw new MikaCliError("EMPTY_BATCH_INPUT", "Batch input file does not contain any targets.", {
       details: {
         inputPath,
       },

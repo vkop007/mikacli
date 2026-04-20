@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { collapseWhitespace } from "../../shopping/shared/helpers.js";
 import { normalizeSocialLimit } from "../shared/options.js";
 
@@ -41,7 +41,7 @@ export class PinterestAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("PINTEREST_QUERY_REQUIRED", "Provide a Pinterest query to search.");
+      throw new MikaCliError("PINTEREST_QUERY_REQUIRED", "Provide a Pinterest query to search.");
     }
 
     const limit = normalizeSocialLimit(input.limit, 5, 25);
@@ -145,7 +145,7 @@ export class PinterestAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("PINTEREST_REQUEST_FAILED", "Failed to load Pinterest's public page.", {
+      throw new MikaCliError("PINTEREST_REQUEST_FAILED", "Failed to load Pinterest's public page.", {
         cause: error,
         details: {
           sourceUrl,
@@ -155,7 +155,7 @@ export class PinterestAdapter {
 
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("PINTEREST_REQUEST_FAILED", "Failed to load Pinterest's public page.", {
+      throw new MikaCliError("PINTEREST_REQUEST_FAILED", "Failed to load Pinterest's public page.", {
         details: {
           sourceUrl,
           status: response.status,
@@ -171,7 +171,7 @@ export class PinterestAdapter {
 function parsePinterestProfileTarget(target: string): { username: string } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a Pinterest profile URL, @username, or username.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Pinterest profile URL, @username, or username.", {
       details: { target },
     });
   }
@@ -190,7 +190,7 @@ function parsePinterestProfileTarget(target: string): { username: string } {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Pinterest profile URL, @username, or username.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Pinterest profile URL, @username, or username.", {
     details: { target },
   });
 }
@@ -210,7 +210,7 @@ function parsePinterestPinTarget(target: string): { pinId: string } {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Pinterest pin URL or numeric pin ID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Pinterest pin URL or numeric pin ID.", {
     details: { target },
   });
 }

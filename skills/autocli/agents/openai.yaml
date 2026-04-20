@@ -1,7 +1,0 @@
-interface:
-  display_name: "AutoCLI"
-  short_description: "Use AutoCLI providers, browser login, and session-aware tools correctly"
-  default_prompt: "Use $autocli with a direct-command-first strategy: prefer one exact `autocli <category> <provider> ... --json` command from the recipe library when possible, avoid help/doctor/sessions/capabilities unless the direct command is unclear or fails, use shared browser login or saved sessions safely, use --filter and --select for transforming results without external tools, and fall back to tools http only when a logged-in web action is not fully modeled yet."
-
-policy:
-  allow_implicit_invocation: true

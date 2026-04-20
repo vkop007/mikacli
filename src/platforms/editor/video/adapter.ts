@@ -14,11 +14,11 @@ import {
   runFfprobe,
   toNumber,
 } from "../shared/ffmpeg.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
-const FFMPEG_COMMAND = process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg";
+const FFMPEG_COMMAND = process.env.MIKACLI_FFMPEG_BIN || "ffmpeg";
 
 type VideoInfoInput = {
   inputPath: string;
@@ -206,7 +206,7 @@ export class VideoEditorAdapter {
     const audioStream = (probe.streams ?? []).find((entry) => entry.codec_type === "audio");
 
     if (!videoStream) {
-      throw new AutoCliError("VIDEO_INFO_UNAVAILABLE", "Could not read video stream information from the file.", {
+      throw new MikaCliError("VIDEO_INFO_UNAVAILABLE", "Could not read video stream information from the file.", {
         details: {
           inputPath: input.inputPath,
         },
@@ -232,10 +232,10 @@ export class VideoEditorAdapter {
 
   async trim(input: VideoTrimInput): Promise<AdapterActionResult> {
     if (!input.start && !input.end && !input.duration) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Trim needs at least one of --start, --end, or --duration.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Trim needs at least one of --start, --end, or --duration.");
     }
     if (input.end && input.duration) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Use either --end or --duration, not both.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Use either --end or --duration, not both.");
     }
 
     const extension = normalizeVideoExtension(extname(input.inputPath).replace(/^\./, "") || "mp4");
@@ -281,7 +281,7 @@ export class VideoEditorAdapter {
     const videoStream = (probe.streams ?? []).find((entry) => entry.codec_type === "video");
 
     if (!videoStream) {
-      throw new AutoCliError("VIDEO_INFO_UNAVAILABLE", "Could not read video stream information from the file.", {
+      throw new MikaCliError("VIDEO_INFO_UNAVAILABLE", "Could not read video stream information from the file.", {
         details: {
           inputPath: resolvedInput,
         },
@@ -349,7 +349,7 @@ export class VideoEditorAdapter {
     if (method === "auto" || method === "vidstab") {
       const supportsVidstab = await ffmpegSupportsFilters(["vidstabdetect", "vidstabtransform"]);
       if (supportsVidstab) {
-        const tempDir = await mkdtemp(join(tmpdir(), "autocli-video-stabilize-"));
+        const tempDir = await mkdtemp(join(tmpdir(), "mikacli-video-stabilize-"));
         const transformPath = join(tempDir, "transforms.trf");
 
         try {
@@ -411,7 +411,7 @@ export class VideoEditorAdapter {
       }
 
       if (method === "vidstab") {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "VIDEO_STABILIZE_FILTER_MISSING",
           "ffmpeg on this machine does not include the vidstab stabilization filters.",
           {
@@ -461,7 +461,7 @@ export class VideoEditorAdapter {
       ?? toNumber((probe.streams ?? []).find((entry) => entry.codec_type === "video")?.duration);
 
     if (totalDuration === undefined || !Number.isFinite(totalDuration) || totalDuration <= 0) {
-      throw new AutoCliError("VIDEO_INFO_UNAVAILABLE", "Could not determine the total video duration for splitting.", {
+      throw new MikaCliError("VIDEO_INFO_UNAVAILABLE", "Could not determine the total video duration for splitting.", {
         details: {
           inputPath: resolvedInput,
         },
@@ -957,7 +957,7 @@ export class VideoEditorAdapter {
     const width = input.width !== undefined ? requirePositiveInteger(input.width, "width") : undefined;
     const height = input.height !== undefined ? requirePositiveInteger(input.height, "height") : undefined;
     if (!width && !height) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Resize needs at least one of --width or --height.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Resize needs at least one of --width or --height.");
     }
 
     const format = normalizeVideoExtension(extname(input.inputPath).replace(/^\./, "") || "mp4");
@@ -1035,7 +1035,7 @@ export class VideoEditorAdapter {
 
   async blurRegion(input: VideoBlurRegionInput): Promise<AdapterActionResult> {
     if (input.end && input.duration) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Use either --end or --duration, not both.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Use either --end or --duration, not both.");
     }
 
     const width = requirePositiveInteger(input.width, "width");
@@ -1223,7 +1223,7 @@ export class VideoEditorAdapter {
 
   async concat(input: VideoConcatInput): Promise<AdapterActionResult> {
     if (input.inputPaths.length < 2) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Concat needs at least two input video paths.", {
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Concat needs at least two input video paths.", {
         details: {
           inputCount: input.inputPaths.length,
         },
@@ -1258,7 +1258,7 @@ export class VideoEditorAdapter {
          const videoStream = (probe?.streams ?? []).find((entry) => entry.codec_type === "video");
          const duration = toNumber(probe?.format?.duration) ?? toNumber(videoStream?.duration);
          if (!duration) {
-             throw new AutoCliError("VIDEO_INFO_UNAVAILABLE", `Cannot determine duration for ${resolvedInputs[i]} needed for transition offset calculation.`);
+             throw new MikaCliError("VIDEO_INFO_UNAVAILABLE", `Cannot determine duration for ${resolvedInputs[i]} needed for transition offset calculation.`);
          }
          
          if (i === 0) {
@@ -1309,7 +1309,7 @@ export class VideoEditorAdapter {
       });
     }
 
-    const tempDir = await mkdtemp(join(tmpdir(), "autocli-editor-concat-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "mikacli-editor-concat-"));
     const listPath = join(tempDir, "inputs.txt");
 
     try {
@@ -1401,7 +1401,7 @@ function normalizeVideoExtension(value: string): "mp4" | "mov" | "webm" {
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported video format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported video format "${value}".`, {
     details: {
       supportedFormats: ["mp4", "mov", "webm"],
     },
@@ -1412,7 +1412,7 @@ function normalizePreset(value: string | undefined): string {
   const normalized = value?.trim().toLowerCase() ?? "medium";
   const supported = new Set(["ultrafast", "superfast", "veryfast", "faster", "fast", "medium", "slow", "slower"]);
   if (!supported.has(normalized)) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported preset "${value}".`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported preset "${value}".`, {
       details: {
         supportedPresets: [...supported],
       },
@@ -1429,7 +1429,7 @@ function clampCrf(value: number): number {
 function parseFlexibleDuration(value: string, label: string): number {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} is required.`);
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} is required.`);
   }
 
   const numeric = Number(trimmed);
@@ -1439,7 +1439,7 @@ function parseFlexibleDuration(value: string, label: string): number {
 
   const match = /^(?:(\d+):)?(\d{1,2}):(\d{1,2}(?:\.\d+)?)$/.exec(trimmed);
   if (!match) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} must be seconds or HH:MM:SS(.ms).`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} must be seconds or HH:MM:SS(.ms).`, {
       details: {
         label,
         value,
@@ -1452,7 +1452,7 @@ function parseFlexibleDuration(value: string, label: string): number {
   const seconds = Number(match[3] ?? "0");
   const total = (hours * 3600) + (minutes * 60) + seconds;
   if (!Number.isFinite(total) || total <= 0) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} must be greater than zero.`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} must be greater than zero.`, {
       details: {
         label,
         value,
@@ -1466,7 +1466,7 @@ function parseFlexibleDuration(value: string, label: string): number {
 function requirePositiveNumber(value: number | string, label: string): number {
   const parsed = toNumber(value);
   if (parsed === undefined || !Number.isFinite(parsed) || parsed <= 0) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a positive number.`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a positive number.`, {
       details: {
         label,
         value,
@@ -1556,7 +1556,7 @@ function normalizeOverlayPosition(value: string | undefined): "top-left" | "top-
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported overlay position "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported overlay position "${value}".`, {
     details: {
       supportedPositions: ["top-left", "top-right", "bottom-left", "bottom-right", "center"],
     },
@@ -1579,7 +1579,7 @@ function normalizeTextOverlayPosition(
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported text position "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported text position "${value}".`, {
     details: {
       supportedPositions: [
         "top-left",
@@ -1664,7 +1664,7 @@ function normalizeFfmpegColor(value: string | undefined, fallback: string): stri
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported color value "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported color value "${value}".`, {
     details: {
       supportedFormats: ["#RRGGBB", "0xRRGGBB", "white", "black", "yellow"],
     },
@@ -1677,7 +1677,7 @@ export function normalizeFrameFormat(value: string): "png" | "jpg" | "jpeg" | "w
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported frame format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported frame format "${value}".`, {
     details: {
       supportedFormats: ["png", "jpg", "jpeg", "webp"],
     },
@@ -1690,7 +1690,7 @@ function normalizeFrameExtractQuality(value: string | undefined): "low" | "mediu
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported frame extraction quality "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported frame extraction quality "${value}".`, {
     details: {
       supportedQualities: ["low", "medium", "high"],
       description: "low extracts fewer frames, medium extracts moderate frames, high extracts many frames",
@@ -1788,7 +1788,7 @@ function normalizeVideoTimeRange(input: {
   const durationSeconds = input.duration ? parseFlexibleDuration(input.duration, "duration") : null;
 
   if (endSeconds !== null && startSeconds !== null && endSeconds <= startSeconds) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "--end must be greater than --start.", {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "--end must be greater than --start.", {
       details: {
         start: input.start,
         end: input.end,
@@ -1800,7 +1800,7 @@ function normalizeVideoTimeRange(input: {
   const effectiveEnd = endSeconds ?? (durationSeconds !== null ? effectiveStart + durationSeconds : null);
 
   if (effectiveEnd !== null && effectiveEnd <= effectiveStart) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "The blur time range must be greater than zero.", {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "The blur time range must be greater than zero.", {
       details: {
         start: input.start,
         end: input.end,
@@ -1826,7 +1826,7 @@ function normalizeAudioExtension(value: string): "mp3" | "wav" | "m4a" | "aac" |
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported audio format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported audio format "${value}".`, {
     details: {
       supportedFormats: ["mp3", "wav", "m4a", "aac", "flac"],
     },
@@ -1864,7 +1864,7 @@ async function runVideoAnalysis(input: {
   const resolvedInput = await assertLocalInputFile(input.inputPath);
 
   return new Promise<string>((resolvePromise, rejectPromise) => {
-    const child = spawn(process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg", ["-hide_banner", "-nostats", "-loglevel", "info", "-i", resolvedInput, ...input.args], {
+    const child = spawn(process.env.MIKACLI_FFMPEG_BIN || "ffmpeg", ["-hide_banner", "-nostats", "-loglevel", "info", "-i", resolvedInput, ...input.args], {
       env: process.env,
       stdio: ["ignore", "pipe", "pipe"],
     });
@@ -1877,9 +1877,9 @@ async function runVideoAnalysis(input: {
 
     child.on("error", (error) => {
       rejectPromise(
-        new AutoCliError("FFMPEG_NOT_AVAILABLE", "ffmpeg is not installed or not available in PATH.", {
+        new MikaCliError("FFMPEG_NOT_AVAILABLE", "ffmpeg is not installed or not available in PATH.", {
           details: {
-            command: process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg",
+            command: process.env.MIKACLI_FFMPEG_BIN || "ffmpeg",
           },
           cause: error,
         }),
@@ -1893,9 +1893,9 @@ async function runVideoAnalysis(input: {
       }
 
       rejectPromise(
-        new AutoCliError("EDITOR_COMMAND_FAILED", `ffmpeg exited with code ${code}.`, {
+        new MikaCliError("EDITOR_COMMAND_FAILED", `ffmpeg exited with code ${code}.`, {
           details: {
-            command: process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg",
+            command: process.env.MIKACLI_FFMPEG_BIN || "ffmpeg",
             args: input.args,
             stderr: stderr.trim() || null,
           },
@@ -1945,7 +1945,7 @@ async function runFfmpegCommand(args: string[], failureCode: string, failureMess
 
     child.on("error", (error) => {
       rejectPromise(
-        new AutoCliError("FFMPEG_NOT_AVAILABLE", "ffmpeg is not installed or not available in PATH.", {
+        new MikaCliError("FFMPEG_NOT_AVAILABLE", "ffmpeg is not installed or not available in PATH.", {
           details: {
             command: FFMPEG_COMMAND,
           },
@@ -1961,7 +1961,7 @@ async function runFfmpegCommand(args: string[], failureCode: string, failureMess
       }
 
       rejectPromise(
-        new AutoCliError(failureCode, failureMessage, {
+        new MikaCliError(failureCode, failureMessage, {
           details: {
             command: FFMPEG_COMMAND,
             args,
@@ -1980,7 +1980,7 @@ function normalizeStabilizeMethod(value: string | undefined): "auto" | "vidstab"
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported stabilize method "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported stabilize method "${value}".`, {
     details: {
       supportedMethods: ["auto", "vidstab", "deshake"],
     },

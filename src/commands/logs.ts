@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import {
   clearActionLogs,
   getActionLog,
@@ -21,7 +21,7 @@ type LogsListOptions = {
 
 export function createLogsCommand(): Command {
   const command = new Command("logs")
-    .description("Inspect recent AutoCLI action logs")
+    .description("Inspect recent MikaCLI action logs")
     .option("--provider <platform>", "Filter to one provider/platform, for example x or youtube")
     .option("--platform <platform>", "Alias for --provider")
     .option("--status <status>", "Filter by status: success or failed")
@@ -31,12 +31,12 @@ export function createLogsCommand(): Command {
       "after",
       `
 Examples:
-  autocli logs
-  autocli logs --provider x
-  autocli logs --status failed --since 1h
-  autocli logs --limit 50 --json
-  autocli logs show 123e4567-e89b-12d3-a456-426614174000
-  autocli logs clear
+  mikacli logs
+  mikacli logs --provider x
+  mikacli logs --status failed --since 1h
+  mikacli logs --limit 50 --json
+  mikacli logs show 123e4567-e89b-12d3-a456-426614174000
+  mikacli logs clear
 `,
     )
     .action(async function logsAction(this: Command, options: LogsListOptions) {
@@ -63,7 +63,7 @@ Examples:
       const ctx = resolveCommandContext(this);
       const entry = await getActionLog(id);
       if (!entry) {
-        throw new AutoCliError("ACTION_LOG_NOT_FOUND", `No action log entry found for id "${id}".`);
+        throw new MikaCliError("ACTION_LOG_NOT_FOUND", `No action log entry found for id "${id}".`);
       }
 
       if (ctx.json) {
@@ -123,7 +123,7 @@ export function normalizeActionLogStatus(value: string | undefined): ActionLogSt
     return normalized;
   }
 
-  throw new AutoCliError("INVALID_LOG_STATUS", `Expected log status to be "success" or "failed", received "${value}".`);
+  throw new MikaCliError("INVALID_LOG_STATUS", `Expected log status to be "success" or "failed", received "${value}".`);
 }
 
 export function parseSinceWindow(value: string | undefined, now = new Date()): Date | undefined {
@@ -134,7 +134,7 @@ export function parseSinceWindow(value: string | undefined, now = new Date()): D
   const trimmed = value.trim().toLowerCase();
   const match = trimmed.match(/^(\d+)([smhdw])$/u);
   if (!match) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "INVALID_LOG_WINDOW",
       `Expected --since to look like 15m, 2h, or 7d, received "${value}".`,
     );
@@ -165,7 +165,7 @@ function normalizeProviderFilter(value: string | undefined): string | undefined 
 function parsePositiveInteger(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new AutoCliError("INVALID_LOG_LIMIT", `Expected a positive integer limit, received "${value}".`);
+    throw new MikaCliError("INVALID_LOG_LIMIT", `Expected a positive integer limit, received "${value}".`);
   }
 
   return parsed;

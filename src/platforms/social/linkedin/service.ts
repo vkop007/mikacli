@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { getPlatformOrigin } from "../../config.js";
 import { parseLinkedInTarget } from "../../../utils/targets.js";
 import { BasePlatformAdapter } from "../../shared/base-platform-adapter.js";
@@ -116,7 +116,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "LinkedIn session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "LinkedIn session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -151,9 +151,9 @@ export class LinkedInAdapter extends BasePlatformAdapter {
   }
 
   async postMedia(_input: PostMediaInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "UNSUPPORTED_ACTION",
-      "LinkedIn media upload is not implemented yet. Use `autocli social linkedin post \"text\"` for now.",
+      "LinkedIn media upload is not implemented yet. Use `mikacli social linkedin post \"text\"` for now.",
     );
   }
 
@@ -180,7 +180,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
 
     const entityUrn = this.extractCreatePostUrn(result.data, result.response);
     if (!entityUrn) {
-      throw new AutoCliError("LINKEDIN_RESPONSE_INVALID", "LinkedIn created the post but did not return a post URN.");
+      throw new MikaCliError("LINKEDIN_RESPONSE_INVALID", "LinkedIn created the post but did not return a post URN.");
     }
 
     const url = entityUrn ? this.entityUrnToUrl(entityUrn) : undefined;
@@ -242,7 +242,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
     const target = parseLinkedInTarget(input.target);
     const threadUrn = this.normalizeThreadUrn(target.entityUrns[0]);
     if (!threadUrn) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_TARGET",
         "LinkedIn comments require an activity, ugcPost, or feed update target.",
         { details: { target: input.target } },
@@ -307,7 +307,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
     await this.persistSessionState(session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "LinkedIn session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "LinkedIn session has expired.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -340,7 +340,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       return {
         status: {
           state: "expired",
-          message: "Missing required LinkedIn session cookies. Re-login with `autocli social linkedin login --browser` or import fresh cookies.",
+          message: "Missing required LinkedIn session cookies. Re-login with `mikacli social linkedin login --browser` or import fresh cookies.",
           lastValidatedAt: new Date().toISOString(),
           lastErrorCode: "COOKIE_MISSING",
         },
@@ -370,7 +370,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       return {
         status: {
           state: "expired",
-          message: "Missing required LinkedIn session cookies. Re-login with `autocli social linkedin login --browser` or import fresh cookies.",
+          message: "Missing required LinkedIn session cookies. Re-login with `mikacli social linkedin login --browser` or import fresh cookies.",
           lastValidatedAt: new Date().toISOString(),
           lastErrorCode: "COOKIE_MISSING",
         },
@@ -401,7 +401,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
         return {
           status: {
             state: "expired",
-            message: "LinkedIn rejected the saved session. Re-login with `autocli social linkedin login --browser` or import fresh cookies.",
+            message: "LinkedIn rejected the saved session. Re-login with `mikacli social linkedin login --browser` or import fresh cookies.",
             lastValidatedAt: new Date().toISOString(),
             lastErrorCode: "AUTH_FAILED",
           },
@@ -450,7 +450,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
   ): Promise<Record<string, string>> {
     const csrfToken = this.extractCsrfToken(await client.getCookieValue("JSESSIONID", LINKEDIN_FEED));
     if (!csrfToken) {
-      throw new AutoCliError("SESSION_EXPIRED", "LinkedIn CSRF token is missing. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "LinkedIn CSRF token is missing. Re-import cookies.txt.");
     }
 
     return {
@@ -667,7 +667,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
   }
 
   private isAuthFailure(error: unknown): boolean {
-    if (!isAutoCliError(error)) {
+    if (!isMikaCliError(error)) {
       return false;
     }
 
@@ -710,11 +710,11 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       }
     }
 
-    if (isAutoCliError(lastError) && lastError.code === "HTTP_REQUEST_FAILED") {
+    if (isMikaCliError(lastError) && lastError.code === "HTTP_REQUEST_FAILED") {
       const status = typeof lastError.details?.status === "number" ? lastError.details.status : undefined;
 
       if (status === 404) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "LINKEDIN_ENDPOINT_CHANGED",
           "LinkedIn's current web write endpoint changed. The LinkedIn adapter needs a refresh before posting/liking/commenting will work reliably.",
           {
@@ -725,10 +725,10 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       }
     }
 
-    throw new AutoCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
+    throw new MikaCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
       cause: lastError,
       details:
-        isAutoCliError(lastError) && lastError.details
+        isMikaCliError(lastError) && lastError.details
           ? lastError.details
           : lastError instanceof Error
             ? { message: lastError.message }
@@ -736,12 +736,12 @@ export class LinkedInAdapter extends BasePlatformAdapter {
     });
   }
 
-  private mapLinkedInWriteError(error: unknown, fallbackMessage: string): AutoCliError {
-    if (isAutoCliError(error) && error.code === "HTTP_REQUEST_FAILED") {
+  private mapLinkedInWriteError(error: unknown, fallbackMessage: string): MikaCliError {
+    if (isMikaCliError(error) && error.code === "HTTP_REQUEST_FAILED") {
       const status = typeof error.details?.status === "number" ? error.details.status : undefined;
 
       if (status === 404) {
-        return new AutoCliError(
+        return new MikaCliError(
           "LINKEDIN_ENDPOINT_CHANGED",
           "LinkedIn's current web write endpoint changed. The LinkedIn adapter needs a refresh before posting/liking/commenting will work reliably.",
           {
@@ -752,7 +752,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       }
 
       if (status === 401 || status === 403) {
-        return new AutoCliError(
+        return new MikaCliError(
           "SESSION_EXPIRED",
           "LinkedIn rejected the saved session for this action. Re-export cookies from an active browser session.",
           {
@@ -763,7 +763,7 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       }
 
       if (status === 409) {
-        return new AutoCliError(
+        return new MikaCliError(
           "LINKEDIN_POST_CONFLICT",
           "LinkedIn rejected this post with 409 Conflict. This usually means the content is duplicated or otherwise conflicts with a recent post. Change the text and retry.",
           {
@@ -774,10 +774,10 @@ export class LinkedInAdapter extends BasePlatformAdapter {
       }
     }
 
-    return new AutoCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details:
-        isAutoCliError(error) && error.details
+        isMikaCliError(error) && error.details
           ? error.details
           : error instanceof Error
             ? { message: error.message }

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../errors.js";
+import { MikaCliError } from "../../errors.js";
 import { getPlatformDisplayName } from "../../platforms/config.js";
 import {
   runBrowserActionPlan,
@@ -156,16 +156,16 @@ export function normalizeBrowserActionRuntimeError<T>(
   input: BrowserActionRuntimeInput<T>,
   error: unknown,
 ): unknown {
-  if (!(error instanceof AutoCliError)) {
+  if (!(error instanceof MikaCliError)) {
     return error;
   }
 
   if (error.code === "BROWSER_NOT_RUNNING") {
     const displayName = getPlatformDisplayName(input.platform);
     const actionLabel = input.actionLabel ?? input.action;
-    return new AutoCliError(
+    return new MikaCliError(
       "BROWSER_ACTION_SHARED_REQUIRED",
-      `${displayName} ${actionLabel} requires the shared AutoCLI browser to already be open. Run \`autocli login --browser\` first and keep that browser window open.`,
+      `${displayName} ${actionLabel} requires the shared MikaCLI browser to already be open. Run \`mikacli login --browser\` first and keep that browser window open.`,
       {
         cause: error,
         details: {
@@ -181,9 +181,9 @@ export function normalizeBrowserActionRuntimeError<T>(
   if (error.code === "BROWSER_PROFILE_IN_USE") {
     const displayName = getPlatformDisplayName(input.platform);
     const actionLabel = input.actionLabel ?? input.action;
-    return new AutoCliError(
+    return new MikaCliError(
       "BROWSER_ACTION_PROFILE_BUSY",
-      `${displayName} ${actionLabel} could not start its invisible browser runtime because the shared AutoCLI browser profile is already open.`,
+      `${displayName} ${actionLabel} could not start its invisible browser runtime because the shared MikaCLI browser profile is already open.`,
       {
         cause: error,
         details: {

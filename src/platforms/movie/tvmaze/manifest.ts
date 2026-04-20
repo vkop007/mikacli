@@ -16,9 +16,9 @@ export const tvMazePlatformDefinition: PlatformDefinition = {
     episodesDescription: "Load TVMaze episode details for a show",
   }),
   examples: [
-    'autocli tvmaze search "naruto"',
-    "autocli tvmaze title 82",
-    "autocli tvmaze episodes 82 --season 1",
-    "autocli tvmaze info https://www.tvmaze.com/shows/82/game-of-thrones",
+    'mikacli tvmaze search "naruto"',
+    "mikacli tvmaze title 82",
+    "mikacli tvmaze episodes 82 --season 1",
+    "mikacli tvmaze info https://www.tvmaze.com/shows/82/game-of-thrones",
   ],
 };

@@ -8,7 +8,7 @@ import { openSharedBrowserProfile } from "../utils/browser-cookie-login.js";
 
 export function createLoginCommand(): Command {
   return new Command("login")
-    .description("Open the shared AutoCLI browser profile so future provider logins can reuse your SSO and browser sessions")
+    .description("Open the shared MikaCLI browser profile so future provider logins can reuse your SSO and browser sessions")
     .option("--browser", "Open the shared browser profile for manual sign-in")
     .option("--url <url>", "Optional start URL for the shared browser profile")
     .option("--browser-timeout <seconds>", "Maximum seconds to keep the shared browser open before timing out (default: 600)", parseBrowserTimeoutSeconds)
@@ -16,10 +16,10 @@ export function createLoginCommand(): Command {
       "after",
       `
 Examples:
-  autocli login
-  autocli login --browser
-  autocli login --url https://accounts.google.com/
-  autocli login --browser --url https://accounts.google.com/ --browser-timeout 900
+  mikacli login
+  mikacli login --browser
+  mikacli login --url https://accounts.google.com/
+  mikacli login --browser --url https://accounts.google.com/ --browser-timeout 900
 `,
     )
     .action(async function loginAction(this: Command) {
@@ -46,15 +46,15 @@ Examples:
         detector: result.detector,
         finalUrl: result.finalUrl,
         nextSteps: [
-          "autocli developer github login --browser",
-          "autocli social reddit login --browser",
-          "autocli llm chatgpt login --browser",
+          "mikacli developer github login --browser",
+          "mikacli social reddit login --browser",
+          "mikacli llm chatgpt login --browser",
         ],
         message: result.detected
-          ? `Shared AutoCLI browser profile auto-detected a ready ${result.detector ?? "browser"} login and saved it at ${result.browserProfilePath}.`
+          ? `Shared MikaCLI browser profile auto-detected a ready ${result.detector ?? "browser"} login and saved it at ${result.browserProfilePath}.`
           : result.timedOut
-            ? `Shared AutoCLI browser profile stayed open for the full timeout. Profile remains saved at ${getBrowserProfileDir()}.`
-            : `Shared AutoCLI browser profile is ready for reuse at ${result.browserProfilePath}.`,
+            ? `Shared MikaCLI browser profile stayed open for the full timeout. Profile remains saved at ${getBrowserProfileDir()}.`
+            : `Shared MikaCLI browser profile is ready for reuse at ${result.browserProfilePath}.`,
       };
 
       if (ctx.json) {

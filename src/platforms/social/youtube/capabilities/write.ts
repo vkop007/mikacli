@@ -68,7 +68,7 @@ export const youtubeDeleteCapability = createAdapterActionCapability({
   successMessage: "YouTube community post deleted.",
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved YouTube session" },
-    { flags: "--browser", description: "Force the delete through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    { flags: "--browser", description: "Force the delete through the shared MikaCLI browser profile instead of the invisible browser-backed path" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",

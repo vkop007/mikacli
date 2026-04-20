@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { basename, extname, join, parse, resolve } from "node:path";
 
 import { ensureParentDirectory } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { assertLocalInputFile, normalizeOutputExtension, resolveEditorOutputPath } from "../shared/ffmpeg.js";
 import { runEditorBinary } from "../shared/process.js";
 
@@ -38,12 +38,12 @@ type DocumentOcrInput = {
 
 type DocumentFormat = "txt" | "rtf" | "rtfd" | "html" | "doc" | "docx" | "odt" | "wordml" | "webarchive" | "md";
 
-const TEXTUTIL_BIN = process.env.AUTOCLI_TEXTUTIL_BIN || "textutil";
-const MDLS_BIN = process.env.AUTOCLI_MDLS_BIN || "mdls";
-const PDFTOTEXT_BIN = process.env.AUTOCLI_PDFTOTEXT_BIN || "pdftotext";
-const TESSERACT_BIN = process.env.AUTOCLI_TESSERACT_BIN || "tesseract";
-const QLMANAGE_BIN = process.env.AUTOCLI_QLMANAGE_BIN || "qlmanage";
-const SIPS_BIN = process.env.AUTOCLI_SIPS_BIN || "sips";
+const TEXTUTIL_BIN = process.env.MIKACLI_TEXTUTIL_BIN || "textutil";
+const MDLS_BIN = process.env.MIKACLI_MDLS_BIN || "mdls";
+const PDFTOTEXT_BIN = process.env.MIKACLI_PDFTOTEXT_BIN || "pdftotext";
+const TESSERACT_BIN = process.env.MIKACLI_TESSERACT_BIN || "tesseract";
+const QLMANAGE_BIN = process.env.MIKACLI_QLMANAGE_BIN || "qlmanage";
+const SIPS_BIN = process.env.MIKACLI_SIPS_BIN || "sips";
 
 export class DocumentEditorAdapter {
   readonly platform: Platform = "document" as unknown as Platform;
@@ -235,7 +235,7 @@ export function normalizeDocumentFormat(value: string): DocumentFormat {
     return normalized as DocumentFormat;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported document format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported document format "${value}".`, {
     details: {
       supportedFormats: ["txt", "rtf", "rtfd", "html", "doc", "docx", "odt", "wordml", "webarchive", "md"],
     },
@@ -278,8 +278,8 @@ async function extractPdfText(inputPath: string): Promise<string> {
     });
     return stdout;
   } catch (error) {
-    if (error instanceof AutoCliError && error.code === "DOCUMENT_PDF_TEXT_UNAVAILABLE") {
-      throw new AutoCliError(
+    if (error instanceof MikaCliError && error.code === "DOCUMENT_PDF_TEXT_UNAVAILABLE") {
+      throw new MikaCliError(
         "DOCUMENT_PDF_TEXT_UNAVAILABLE",
         "PDF text extraction needs `pdftotext`. Install it or convert the PDF separately first.",
         { cause: error },
@@ -343,7 +343,7 @@ function looksLikeTextDocument(extension: string): boolean {
 function normalizeOcrLanguage(value: string | undefined): string {
   const normalized = value?.trim() || "eng";
   if (!/^[A-Za-z0-9+_-]+$/.test(normalized)) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Invalid OCR language "${value}".`);
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Invalid OCR language "${value}".`);
   }
 
   return normalized;
@@ -356,7 +356,7 @@ function normalizePageSegmentationMode(value: number | string | undefined): numb
 
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0 || parsed > 13) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Invalid OCR page segmentation mode "${value}". Use an integer from 0 to 13.`);
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Invalid OCR page segmentation mode "${value}". Use an integer from 0 to 13.`);
   }
 
   return parsed;
@@ -368,7 +368,7 @@ async function prepareOcrInput(inputPath: string): Promise<string> {
     return inputPath;
   }
 
-  const tempDir = await mkdtemp(join(tmpdir(), "autocli-document-ocr-"));
+  const tempDir = await mkdtemp(join(tmpdir(), "mikacli-document-ocr-"));
   const outputPath = join(tempDir, `${parse(inputPath).name}.preview.png`);
   await renderDocumentPreview(inputPath, outputPath);
   return outputPath;
@@ -376,7 +376,7 @@ async function prepareOcrInput(inputPath: string): Promise<string> {
 
 async function renderDocumentPreview(inputPath: string, outputPath: string): Promise<void> {
   if (await commandExists(QLMANAGE_BIN)) {
-    const tempDir = await mkdtemp(join(tmpdir(), "autocli-document-preview-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "mikacli-document-preview-"));
     const previewPath = join(tempDir, `${parse(inputPath).base}.png`);
 
     try {
@@ -428,7 +428,7 @@ async function runTesseract(inputPath: string, language: string, psm: number): P
 
     child.on("error", (error) => {
       rejectPromise(
-        new AutoCliError("DOCUMENT_OCR_UNAVAILABLE", "tesseract is not installed or not available in PATH.", {
+        new MikaCliError("DOCUMENT_OCR_UNAVAILABLE", "tesseract is not installed or not available in PATH.", {
           details: {
             command: TESSERACT_BIN,
           },
@@ -444,7 +444,7 @@ async function runTesseract(inputPath: string, language: string, psm: number): P
       }
 
       rejectPromise(
-        new AutoCliError("DOCUMENT_OCR_FAILED", "Failed to run OCR on the document preview.", {
+        new MikaCliError("DOCUMENT_OCR_FAILED", "Failed to run OCR on the document preview.", {
           details: {
             command: TESSERACT_BIN,
             args: ["stdin", "stdout", "-l", language, "--psm", String(psm)],

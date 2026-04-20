@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -129,7 +129,7 @@ interface OsrmMatchResponse {
 }
 
 const OSRM_BASE_URL = "https://router.project-osrm.org";
-const OSRM_USER_AGENT = "AutoCLI/1.0 (+https://github.com/)";
+const OSRM_USER_AGENT = "MikaCLI/1.0 (+https://github.com/)";
 
 export class OsrmAdapter {
   readonly platform: Platform = "osrm" as Platform;
@@ -146,7 +146,7 @@ export class OsrmAdapter {
 
     const payload = await fetchOsrmJson<OsrmRouteResponse>(url, "OSRM_ROUTE_FAILED");
     if (payload.code !== "Ok") {
-      throw new AutoCliError("OSRM_ROUTE_FAILED", payload.message ?? "OSRM could not build a route for those coordinates.", {
+      throw new MikaCliError("OSRM_ROUTE_FAILED", payload.message ?? "OSRM could not build a route for those coordinates.", {
         details: {
           url: url.toString(),
           code: payload.code,
@@ -156,7 +156,7 @@ export class OsrmAdapter {
 
     const route = payload.routes?.[0];
     if (!route) {
-      throw new AutoCliError("OSRM_ROUTE_FAILED", "OSRM did not return any route.");
+      throw new MikaCliError("OSRM_ROUTE_FAILED", "OSRM did not return any route.");
     }
 
     return {
@@ -369,7 +369,7 @@ async function fetchOsrmJson<T>(url: URL, errorCode: string): Promise<T> {
     });
     responseText = await response.text();
   } catch (error) {
-    throw new AutoCliError(errorCode, "Unable to reach the public OSRM routing service.", {
+    throw new MikaCliError(errorCode, "Unable to reach the public OSRM routing service.", {
       cause: error,
       details: {
         url: url.toString(),
@@ -384,7 +384,7 @@ async function fetchOsrmJson<T>(url: URL, errorCode: string): Promise<T> {
   try {
     return JSON.parse(responseText) as T;
   } catch (error) {
-    throw new AutoCliError("OSRM_RESPONSE_INVALID", "OSRM returned invalid JSON.", {
+    throw new MikaCliError("OSRM_RESPONSE_INVALID", "OSRM returned invalid JSON.", {
       cause: error,
       details: {
         url: url.toString(),
@@ -401,13 +401,13 @@ function parseCoordinatePair(value: string, label: string): { lat: number; lon: 
   const trimmed = value.trim();
   const parts = trimmed.split(",").map((part) => part.trim());
   if (parts.length !== 2) {
-    throw new AutoCliError("OSRM_COORDINATES_INVALID", `Invalid ${label} coordinates "${value}". Use "lat,lon".`);
+    throw new MikaCliError("OSRM_COORDINATES_INVALID", `Invalid ${label} coordinates "${value}". Use "lat,lon".`);
   }
 
   const lat = Number.parseFloat(parts[0] ?? "");
   const lon = Number.parseFloat(parts[1] ?? "");
   if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180) {
-    throw new AutoCliError("OSRM_COORDINATES_INVALID", `Invalid ${label} coordinates "${value}". Use "lat,lon".`);
+    throw new MikaCliError("OSRM_COORDINATES_INVALID", `Invalid ${label} coordinates "${value}". Use "lat,lon".`);
   }
 
   return {
@@ -423,7 +423,7 @@ function normalizeProfile(value?: string): OsrmProfile {
     return normalized;
   }
 
-  throw new AutoCliError("OSRM_PROFILE_INVALID", `Invalid OSRM profile "${value}". Use driving, walking, or cycling.`);
+  throw new MikaCliError("OSRM_PROFILE_INVALID", `Invalid OSRM profile "${value}". Use driving, walking, or cycling.`);
 }
 
 function normalizeAnnotations(value?: string): string {
@@ -459,7 +459,7 @@ function parseCoordinateList(values: string[]): Array<{ lat: number; lon: number
   );
 
   if (flattened.length < 2) {
-    throw new AutoCliError("OSRM_COORDINATES_REQUIRED", "Provide at least two coordinates in \"lat,lon\" form.");
+    throw new MikaCliError("OSRM_COORDINATES_REQUIRED", "Provide at least two coordinates in \"lat,lon\" form.");
   }
 
   return flattened.map((entry, index) => parseCoordinatePair(entry, `coordinate ${index + 1}`));
@@ -480,8 +480,8 @@ function maybeSetParam(url: URL, key: string, value: string | undefined): void {
   }
 }
 
-function buildOsrmRequestError(errorCode: string, url: URL, status: number, statusText: string, body?: string): AutoCliError {
-  return new AutoCliError(errorCode, `OSRM request failed with ${status} ${statusText}.`, {
+function buildOsrmRequestError(errorCode: string, url: URL, status: number, statusText: string, body?: string): MikaCliError {
+  return new MikaCliError(errorCode, `OSRM request failed with ${status} ${statusText}.`, {
     details: {
       url: url.toString(),
       status,
@@ -491,8 +491,8 @@ function buildOsrmRequestError(errorCode: string, url: URL, status: number, stat
   });
 }
 
-function osrmError(code: string, message: string, url: URL, upstreamCode?: string): AutoCliError {
-  return new AutoCliError(code, message, {
+function osrmError(code: string, message: string, url: URL, upstreamCode?: string): MikaCliError {
+  return new MikaCliError(code, message, {
     details: {
       url: url.toString(),
       code: upstreamCode,

@@ -122,7 +122,7 @@ Rules:
 - Keep root CLI wiring out of `src/index.ts`; the root only loads platform definitions.
 - Use `manifest.ts` as the single entrypoint for a platform.
 - Set `category` in every `PlatformDefinition`.
-- Category commands are mounted automatically as `autocli <category> <platform>`.
+- Category commands are mounted automatically as `mikacli <category> <platform>`.
 - Prefer `capabilities` for new work.
 - Keep `src/commands/*` only for true root/global commands such as `status`, `doctor`, and `sessions`.
 - Use the shared connection layer in `src/core/auth/connection-store.ts`.

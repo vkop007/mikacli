@@ -1,10 +1,10 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export function parseGitHubRepoTarget(target: string): { owner: string; repo: string; fullName: string } {
   const trimmed = target.trim().replace(/^https?:\/\/github\.com\//i, "").replace(/\/+$/, "");
   const [owner, repo] = trimmed.split("/", 2).map((value) => value?.trim());
   if (!owner || !repo) {
-    throw new AutoCliError("GITHUB_REPO_TARGET_INVALID", `Invalid GitHub repository target "${target}". Expected owner/repo or a GitHub repository URL.`, {
+    throw new MikaCliError("GITHUB_REPO_TARGET_INVALID", `Invalid GitHub repository target "${target}". Expected owner/repo or a GitHub repository URL.`, {
       details: {
         target,
       },
@@ -21,7 +21,7 @@ export function parseGitHubRepoTarget(target: string): { owner: string; repo: st
 export function normalizeGitHubToken(token: string): string {
   const normalized = token.trim();
   if (!normalized) {
-    throw new AutoCliError("GITHUB_TOKEN_INVALID", "GitHub token cannot be empty.");
+    throw new MikaCliError("GITHUB_TOKEN_INVALID", "GitHub token cannot be empty.");
   }
 
   return normalized;

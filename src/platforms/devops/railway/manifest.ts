@@ -12,10 +12,10 @@ export const railwayPlatformDefinition: PlatformDefinition = {
   adapter: railwayAdapter,
   capabilities: railwayCapabilities,
   examples: [
-    "autocli railway login --token $RAILWAY_TOKEN",
-    "autocli railway me",
-    "autocli railway projects",
-    "autocli railway project <project-id>",
-    "autocli railway service <service-id>",
+    "mikacli railway login --token $RAILWAY_TOKEN",
+    "mikacli railway me",
+    "mikacli railway projects",
+    "mikacli railway project <project-id>",
+    "mikacli railway service <service-id>",
   ],
 };

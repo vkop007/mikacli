@@ -6,7 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { execFile } from "node:child_process";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { emitInteractiveProgress } from "./interactive-progress.js";
 import {
   DEFAULT_BROWSER_PROFILE,
@@ -211,7 +211,7 @@ export async function captureBrowserLogin(
 
   const managed = await ensureManagedBrowser({
     browserUrl: startUrl,
-    announceLabel: `Opening shared AutoCLI browser profile for ${displayName} login: ${startUrl}`,
+    announceLabel: `Opening shared MikaCLI browser profile for ${displayName} login: ${startUrl}`,
   });
 
   let connected: ConnectedBrowser | null = null;
@@ -220,7 +220,7 @@ export async function captureBrowserLogin(
     let page: BrowserPageLike | null = null;
     let announcedFallback = false;
 
-    announceBrowserLogin(`Browser opened for ${displayName}. Complete the sign-in flow there and AutoCLI will save the session automatically once login is detected.`);
+    announceBrowserLogin(`Browser opened for ${displayName}. Complete the sign-in flow there and MikaCLI will save the session automatically once login is detected.`);
 
     while (Date.now() < deadline) {
       if (!connected) {
@@ -229,7 +229,7 @@ export async function captureBrowserLogin(
           page = await openOrReusePage(connected.context, startUrl, Math.min(timeoutMs, 15_000));
         } else if (!announcedFallback) {
           announceBrowserLogin(
-            `Still waiting to attach to the opened ${displayName} browser window. Keep signing in normally. If AutoCLI is still waiting after you finish, close that browser window and it will import the saved session from the shared profile.`,
+            `Still waiting to attach to the opened ${displayName} browser window. Keep signing in normally. If MikaCLI is still waiting after you finish, close that browser window and it will import the saved session from the shared profile.`,
           );
           announcedFallback = true;
         }
@@ -267,11 +267,11 @@ export async function captureBrowserLogin(
       browserProfilePath: managed.state.browserProfilePath,
     });
   } catch (error) {
-    if (error instanceof AutoCliError) {
+    if (error instanceof MikaCliError) {
       throw error;
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "BROWSER_LOGIN_FAILED",
       `Failed to start browser login for ${displayName}.`,
       {
@@ -312,10 +312,10 @@ export async function openSharedBrowserProfile(
 
   const managed = await ensureManagedBrowser({
     browserUrl: startUrl,
-    announceLabel: `Opening shared AutoCLI browser profile: ${startUrl}`,
+    announceLabel: `Opening shared MikaCLI browser profile: ${startUrl}`,
   });
 
-  announceBrowserLogin("Sign into Google or any other identity provider you want AutoCLI to reuse later. Close the browser window when you are done.");
+  announceBrowserLogin("Sign into Google or any other identity provider you want MikaCLI to reuse later. Close the browser window when you are done.");
   const detector = resolveSharedBrowserBootstrapDetector(startUrl);
   if (!detector) {
     const finished = await waitForManagedBrowserCloseOrTimeout(managed.state, timeoutMs);
@@ -407,7 +407,7 @@ export async function inspectSharedBrowserTarget(input: {
 }): Promise<BrowserTargetInspection> {
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
   const managed = await requireManagedBrowser({
-    announceLabel: `Attaching to the shared AutoCLI browser profile for inspection: ${input.targetUrl}`,
+    announceLabel: `Attaching to the shared MikaCLI browser profile for inspection: ${input.targetUrl}`,
   });
 
   let connected: ConnectedBrowser | null = null;
@@ -446,7 +446,7 @@ export async function captureSharedBrowserNetwork(input: {
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
   const limit = Math.max(1, Math.min(200, input.limit ?? 25));
   const managed = await requireManagedBrowser({
-    announceLabel: `Attaching to the shared AutoCLI browser profile for capture: ${input.targetUrl}`,
+    announceLabel: `Attaching to the shared MikaCLI browser profile for capture: ${input.targetUrl}`,
   });
 
   let connected: ConnectedBrowser | null = null;
@@ -458,7 +458,7 @@ export async function captureSharedBrowserNetwork(input: {
       filterText: input.filterText,
     });
 
-    announceBrowserLogin("Interact in the opened browser window. AutoCLI is capturing network requests now.");
+    announceBrowserLogin("Interact in the opened browser window. MikaCLI is capturing network requests now.");
     await navigatePage(page, input.targetUrl, Math.min(timeoutMs, 10_000));
 
     const deadline = Date.now() + timeoutMs;
@@ -492,7 +492,7 @@ export async function runSharedBrowserAction<T>(input: SharedBrowserActionInput<
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
   const managed = await ensureManagedBrowser({
     browserUrl: input.targetUrl,
-    announceLabel: input.announceLabel ?? `Opening shared AutoCLI browser profile: ${input.targetUrl}`,
+    announceLabel: input.announceLabel ?? `Opening shared MikaCLI browser profile: ${input.targetUrl}`,
   });
 
   let connected: ConnectedBrowser | null = null;
@@ -551,9 +551,9 @@ export async function runBackgroundBrowserProfileAction<T>(input: BackgroundBrow
 
   const existing = await readManagedBrowserState(profile);
   if (existing && await isManagedBrowserReachable(existing)) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "BROWSER_PROFILE_IN_USE",
-      "The shared AutoCLI browser profile is currently open. Close it before running this invisible browser action.",
+      "The shared MikaCLI browser profile is currently open. Close it before running this invisible browser action.",
       {
         details: {
           profile,
@@ -627,7 +627,7 @@ export async function runBrowserActionPlan<T>(input: BrowserActionPlanInput<T>):
 
   throw lastError instanceof Error
     ? lastError
-    : new AutoCliError("BROWSER_ACTION_FAILED", "Browser action plan failed before completing the requested operation.");
+    : new MikaCliError("BROWSER_ACTION_FAILED", "Browser action plan failed before completing the requested operation.");
 }
 
 export function hasDetectedAuthenticatedState(
@@ -740,8 +740,8 @@ async function ensureManagedBrowser(input: {
   announceLabel: string;
   profile?: string;
 }): Promise<ManagedBrowserHandle> {
-  if (process.versions.bun && process.env.AUTOCLI_NODE_BROWSER_REEXEC !== "1") {
-    throw new AutoCliError(
+  if (process.versions.bun && process.env.MIKACLI_NODE_BROWSER_REEXEC !== "1") {
+    throw new MikaCliError(
       BROWSER_NODE_REEXEC_ERROR_CODE,
       "Shared-browser actions need the Node runtime because Bun cannot reliably attach to Chrome over CDP on this machine.",
     );
@@ -827,7 +827,7 @@ async function connectToManagedBrowser(cdpUrl: string): Promise<ConnectedBrowser
     return connected;
   }
 
-  throw new AutoCliError("BROWSER_LOGIN_FAILED", "Managed browser started, but AutoCLI could not attach over CDP in time.", {
+  throw new MikaCliError("BROWSER_LOGIN_FAILED", "Managed browser started, but MikaCLI could not attach over CDP in time.", {
     details: {
       cdpUrl,
     },
@@ -849,7 +849,7 @@ async function tryConnectToManagedBrowser(cdpUrl: string, timeoutMs: number): Pr
       const context = browser.contexts()[0];
       if (!context) {
         await browser.close().catch(() => {});
-        throw new AutoCliError("BROWSER_LOGIN_FAILED", "Managed browser started, but no reusable browser context was available.");
+        throw new MikaCliError("BROWSER_LOGIN_FAILED", "Managed browser started, but no reusable browser context was available.");
       }
 
       return { browser, context };
@@ -859,7 +859,7 @@ async function tryConnectToManagedBrowser(cdpUrl: string, timeoutMs: number): Pr
     }
   }
 
-  if (lastError && process.env.AUTOCLI_VERBOSE_BROWSER_ATTACH === "1") {
+  if (lastError && process.env.MIKACLI_VERBOSE_BROWSER_ATTACH === "1") {
     console.error(lastError);
   }
 
@@ -891,9 +891,9 @@ async function extractBrowserLoginFromProfile(input: {
     const cookies = await context.cookies();
     const storage = await readStorage(page);
     if (!hasDetectedAuthenticatedState(cookies, authCookieNames, authStorageKeys, expectedDomain, storage, browserReadyCookieNames)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "BROWSER_LOGIN_FAILED",
-        `AutoCLI reopened the saved browser profile, but no authenticated ${getPlatformDisplayName(input.platform)} session was detected after login.`,
+        `MikaCLI reopened the saved browser profile, but no authenticated ${getPlatformDisplayName(input.platform)} session was detected after login.`,
         {
           details: {
             platform: input.platform,
@@ -921,8 +921,8 @@ function buildBrowserLoginTimeoutError(input: {
   startUrl: string;
   timeoutMs: number;
   browserProfilePath: string;
-}): AutoCliError {
-  return new AutoCliError(
+}): MikaCliError {
+  return new MikaCliError(
     "BROWSER_LOGIN_TIMEOUT",
     `Timed out waiting for ${input.displayName} browser login. Complete the sign-in flow within ${Math.round(input.timeoutMs / 1000)} seconds and try again.`,
     {
@@ -940,8 +940,8 @@ async function requireManagedBrowser(input: {
   announceLabel: string;
   profile?: string;
 }): Promise<ManagedBrowserHandle> {
-  if (process.versions.bun && process.env.AUTOCLI_NODE_BROWSER_REEXEC !== "1") {
-    throw new AutoCliError(
+  if (process.versions.bun && process.env.MIKACLI_NODE_BROWSER_REEXEC !== "1") {
+    throw new MikaCliError(
       BROWSER_NODE_REEXEC_ERROR_CODE,
       "Shared-browser actions need the Node runtime because Bun cannot reliably attach to Chrome over CDP on this machine.",
     );
@@ -973,9 +973,9 @@ async function requireManagedBrowser(input: {
     };
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "BROWSER_NOT_RUNNING",
-    "No usable shared AutoCLI browser profile is running. Start it first with `autocli login --browser` and keep that browser window open.",
+    "No usable shared MikaCLI browser profile is running. Start it first with `mikacli login --browser` and keep that browser window open.",
     {
       details: {
         profile,
@@ -1165,13 +1165,13 @@ async function waitForManagedBrowserReady(
       return;
     }
 
-    lastError = new AutoCliError("BROWSER_LOGIN_FAILED", "The managed browser responded on its debugging port, but Playwright still could not attach.");
+    lastError = new MikaCliError("BROWSER_LOGIN_FAILED", "The managed browser responded on its debugging port, but Playwright still could not attach.");
     await sleep(250);
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "BROWSER_LOGIN_FAILED",
-    "Chrome launched, but AutoCLI could not attach to the shared browser profile in time.",
+    "Chrome launched, but MikaCLI could not attach to the shared browser profile in time.",
     {
       details: {
         cdpUrl: state.cdpUrl,
@@ -1340,7 +1340,7 @@ async function cleanupStaleAutomatedBrowserProcesses(browserProfilePath: string)
 }
 
 export async function probeBrowserExecutable(): Promise<BrowserExecutableProbe> {
-  const override = process.env.AUTOCLI_BROWSER_PATH?.trim();
+  const override = process.env.MIKACLI_BROWSER_PATH?.trim();
   if (override) {
     try {
       await access(override, constants.X_OK);
@@ -1354,7 +1354,7 @@ export async function probeBrowserExecutable(): Promise<BrowserExecutableProbe> 
         available: false,
         path: override,
         source: "env",
-        error: `AUTOCLI_BROWSER_PATH points to a browser that is not executable: ${override}`,
+        error: `MIKACLI_BROWSER_PATH points to a browser that is not executable: ${override}`,
       };
     }
   }
@@ -1401,7 +1401,7 @@ export async function probeBrowserExecutable(): Promise<BrowserExecutableProbe> 
     available: false,
     source: "system",
     candidates,
-    error: "Could not find a Chrome or Chromium executable. Install Chrome/Chromium or set AUTOCLI_BROWSER_PATH to the browser binary.",
+    error: "Could not find a Chrome or Chromium executable. Install Chrome/Chromium or set MIKACLI_BROWSER_PATH to the browser binary.",
   };
 }
 
@@ -1411,7 +1411,7 @@ async function resolveBrowserExecutable(): Promise<string> {
     return probe.path;
   }
 
-  throw new AutoCliError("BROWSER_NOT_FOUND", probe.error ?? "Could not find a Chrome or Chromium executable.");
+  throw new MikaCliError("BROWSER_NOT_FOUND", probe.error ?? "Could not find a Chrome or Chromium executable.");
 }
 
 async function readStorage(page: BrowserPageLike): Promise<{ localStorage: Record<string, string>; sessionStorage: Record<string, string> }> {

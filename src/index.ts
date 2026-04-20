@@ -2,7 +2,7 @@
 
 import pc from "picocolors";
 
-import { AutoCliError } from "./errors.js";
+import { MikaCliError } from "./errors.js";
 import { assertCategoryOnlyInvocation, createProgram } from "./program.js";
 import { printJson } from "./utils/output.js";
 import { serializeCliError } from "./utils/error-recovery.js";
@@ -20,7 +20,7 @@ async function main(): Promise<void> {
     try {
       if (
         process.versions.bun &&
-        process.env.AUTOCLI_NODE_BROWSER_REEXEC !== "1" &&
+        process.env.MIKACLI_NODE_BROWSER_REEXEC !== "1" &&
         isBrowserNodeReexecRequired(error)
       ) {
         process.exitCode = await reexecBrowserCommandInNode(import.meta.url, process.argv);
@@ -81,7 +81,7 @@ async function main(): Promise<void> {
 await main();
 
 function readErrorDetail(error: unknown, key: "platform" | "action" | "account"): string | undefined {
-  if (!(error instanceof AutoCliError)) {
+  if (!(error instanceof MikaCliError)) {
     return undefined;
   }
 

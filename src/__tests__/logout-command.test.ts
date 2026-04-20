@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { logoutSavedState } from "../commands/logout.js";
 
 import type { ConnectionRecord } from "../core/auth/auth-types.js";
@@ -78,7 +78,7 @@ describe("logout command helpers", () => {
 
     const result = await logoutSavedState({
       browser: true,
-      browserProfilePath: "/tmp/autocli-browser/default",
+      browserProfilePath: "/tmp/mikacli-browser/default",
       connectionStore: {
         async listConnections() {
           return [];
@@ -91,14 +91,14 @@ describe("logout command helpers", () => {
       },
     });
 
-    expect(browserPaths).toEqual(["/tmp/autocli-browser/default"]);
+    expect(browserPaths).toEqual(["/tmp/mikacli-browser/default"]);
     expect(result).toEqual({
       ok: true,
       scope: "all",
       browserCleared: true,
       removedAccounts: 0,
       removedArtifacts: 1,
-      removed: [{ kind: "browser-profile", path: "/tmp/autocli-browser/default" }],
+      removed: [{ kind: "browser-profile", path: "/tmp/mikacli-browser/default" }],
       message: "Saved provider login state cleared. No saved provider sessions were present. Shared browser profile cleared too.",
     });
   });
@@ -116,7 +116,7 @@ describe("logout command helpers", () => {
       }),
     ).rejects.toMatchObject({
       code: "SESSION_NOT_FOUND",
-    } satisfies Partial<AutoCliError>);
+    } satisfies Partial<MikaCliError>);
   });
 });
 

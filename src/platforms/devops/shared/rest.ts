@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export class BearerJsonClient {
   constructor(
@@ -17,7 +17,7 @@ export class BearerJsonClient {
     headers.set("authorization", `Bearer ${this.options.token}`);
     headers.set("accept", "application/json");
     headers.set("content-type", "application/json");
-    headers.set("user-agent", "AutoCLI/0.1 (+https://github.com/vkop007/autocli)");
+    headers.set("user-agent", "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)");
 
     for (const [key, value] of Object.entries(this.options.headers ?? {})) {
       headers.set(key, value);
@@ -32,7 +32,7 @@ export class BearerJsonClient {
     const payload = text.length > 0 ? safeJsonParse(text) : undefined;
 
     if (!response.ok) {
-      throw new AutoCliError(this.options.errorCode, extractErrorMessage(payload, response.status), {
+      throw new MikaCliError(this.options.errorCode, extractErrorMessage(payload, response.status), {
         details: {
           status: response.status,
           path,
@@ -41,7 +41,7 @@ export class BearerJsonClient {
     }
 
     if (payload === undefined) {
-      throw new AutoCliError(this.options.errorCode, "The remote API returned an empty response.", {
+      throw new MikaCliError(this.options.errorCode, "The remote API returned an empty response.", {
         details: { path },
       });
     }

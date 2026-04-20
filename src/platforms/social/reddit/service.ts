@@ -1,5 +1,5 @@
 import { sanitizeAccountName } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   runFirstClassBrowserAction,
   withBrowserActionMetadata,
@@ -35,7 +35,7 @@ import type {
 
 const REDDIT_ORIGIN = "https://www.reddit.com";
 const OLD_REDDIT_ORIGIN = "https://old.reddit.com";
-const REDDIT_USER_AGENT = "AutoCLI/0.1 (+https://github.com/vkop007/autocli)";
+const REDDIT_USER_AGENT = "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)";
 const REDDIT_BROWSER_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36";
 
 type RedditListingChild<T> = {
@@ -186,7 +186,7 @@ export class RedditAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Reddit rejected the saved web session.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Reddit rejected the saved web session.", {
         details: {
           platform: this.platform,
           account,
@@ -271,7 +271,7 @@ export class RedditAdapter extends BasePlatformAdapter {
   async search(input: { query: string; limit?: number; subreddit?: string }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("REDDIT_QUERY_REQUIRED", "Provide a Reddit query to search.");
+      throw new MikaCliError("REDDIT_QUERY_REQUIRED", "Provide a Reddit query to search.");
     }
 
     const limit = normalizeSocialLimit(input.limit, 5, 25);
@@ -316,7 +316,7 @@ export class RedditAdapter extends BasePlatformAdapter {
     );
     const profile = response.data;
     if (!profile?.name) {
-      throw new AutoCliError("REDDIT_PROFILE_NOT_FOUND", `Reddit could not find user "${resolved.username}".`);
+      throw new MikaCliError("REDDIT_PROFILE_NOT_FOUND", `Reddit could not find user "${resolved.username}".`);
     }
 
     return {
@@ -373,7 +373,7 @@ export class RedditAdapter extends BasePlatformAdapter {
     const postData = response[0]?.data?.children?.[0]?.data;
     const thread = mapRedditPost(postData);
     if (!thread) {
-      throw new AutoCliError("REDDIT_THREAD_NOT_FOUND", "Reddit could not load the requested thread.");
+      throw new MikaCliError("REDDIT_THREAD_NOT_FOUND", "Reddit could not load the requested thread.");
     }
 
     const replies = collectRedditComments(response[1]?.data?.children ?? [], limit);
@@ -395,14 +395,14 @@ export class RedditAdapter extends BasePlatformAdapter {
   async submitPost(input: RedditSubmitInput): Promise<AdapterActionResult> {
     const title = input.title.trim();
     if (!title) {
-      throw new AutoCliError("REDDIT_POST_TITLE_REQUIRED", "Provide a title for the Reddit post.");
+      throw new MikaCliError("REDDIT_POST_TITLE_REQUIRED", "Provide a title for the Reddit post.");
     }
 
     const subreddit = normalizeRedditSubredditTarget(input.subreddit);
     const isLinkPost = typeof input.url === "string" && input.url.trim().length > 0;
     const text = input.text?.trim();
     if (!isLinkPost && !text) {
-      throw new AutoCliError("REDDIT_POST_TEXT_REQUIRED", "Provide post text or use --url for a link post.");
+      throw new MikaCliError("REDDIT_POST_TEXT_REQUIRED", "Provide post text or use --url for a link post.");
     }
 
     if (input.browser) {
@@ -435,7 +435,7 @@ export class RedditAdapter extends BasePlatformAdapter {
   async commentOnThread(input: RedditCommentActionInput): Promise<AdapterActionResult> {
     const text = input.text.trim();
     if (!text) {
-      throw new AutoCliError("REDDIT_COMMENT_TEXT_REQUIRED", "Provide comment text.");
+      throw new MikaCliError("REDDIT_COMMENT_TEXT_REQUIRED", "Provide comment text.");
     }
 
     if (input.browser) {
@@ -471,11 +471,11 @@ export class RedditAdapter extends BasePlatformAdapter {
   }
 
   override async postText(_input: TextPostInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Use `autocli social reddit post <subreddit> <title> <text...>` to submit a Reddit post.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Use `mikacli social reddit post <subreddit> <title> <text...>` to submit a Reddit post.");
   }
 
   override async postMedia(_input: PostMediaInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Reddit media upload is not implemented yet. Use link or text posts for now.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Reddit media upload is not implemented yet. Use link or text posts for now.");
   }
 
   private async httpSubmitPost(input: RedditSubmitInput): Promise<AdapterActionResult> {
@@ -697,7 +697,7 @@ export class RedditAdapter extends BasePlatformAdapter {
       timeoutSeconds: input.browserTimeoutSeconds ?? 60,
       initialCookies: loaded.session.cookieJar.cookies,
       strategy: "shared-only",
-      announceLabel: `Opening shared AutoCLI browser profile for Reddit commenting: ${targetUrl}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Reddit commenting: ${targetUrl}`,
       mode: "required",
       actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
@@ -749,7 +749,7 @@ export class RedditAdapter extends BasePlatformAdapter {
       timeoutSeconds: input.browserTimeoutSeconds ?? 60,
       initialCookies: loaded.session.cookieJar.cookies,
       strategy: "shared-only",
-      announceLabel: `Opening shared AutoCLI browser profile for Reddit voting: ${targetUrl}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Reddit voting: ${targetUrl}`,
       mode: "required",
       actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
@@ -792,7 +792,7 @@ export class RedditAdapter extends BasePlatformAdapter {
       timeoutSeconds: input.browserTimeoutSeconds ?? 60,
       initialCookies: loaded.session.cookieJar.cookies,
       strategy: "shared-only",
-      announceLabel: `Opening shared AutoCLI browser profile for Reddit save: ${targetUrl}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Reddit save: ${targetUrl}`,
       mode: "required",
       actionFn: async (page) => {
         await this.ensureBrowserAuthenticated(page);
@@ -834,15 +834,15 @@ export class RedditAdapter extends BasePlatformAdapter {
       return firstVisibleLocator(page, [".thing.link", ".thing"]);
     }
 
-    throw new AutoCliError("REDDIT_BROWSER_TARGET_NOT_FOUND", `Could not find Reddit item ${fullname} in the shared browser page.`);
+    throw new MikaCliError("REDDIT_BROWSER_TARGET_NOT_FOUND", `Could not find Reddit item ${fullname} in the shared browser page.`);
   }
 
   private async ensureBrowserAuthenticated(page: PlaywrightPage): Promise<void> {
     const currentUrl = page.url();
     if (/\/login\/?/iu.test(currentUrl)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "REDDIT_BROWSER_NOT_LOGGED_IN",
-        "The shared browser profile is not logged into Reddit. Run `autocli social reddit login --browser` first.",
+        "The shared browser profile is not logged into Reddit. Run `mikacli social reddit login --browser` first.",
       );
     }
 
@@ -850,9 +850,9 @@ export class RedditAdapter extends BasePlatformAdapter {
     if (await loginFields.count()) {
       for (let index = 0; index < Math.min(await loginFields.count(), 3); index += 1) {
         if (await loginFields.nth(index).isVisible().catch(() => false)) {
-          throw new AutoCliError(
+          throw new MikaCliError(
             "REDDIT_BROWSER_NOT_LOGGED_IN",
-            "The shared browser profile is not logged into Reddit. Run `autocli social reddit login --browser` first.",
+            "The shared browser profile is not logged into Reddit. Run `mikacli social reddit login --browser` first.",
           );
         }
       }
@@ -862,7 +862,7 @@ export class RedditAdapter extends BasePlatformAdapter {
   private async throwIfBrowserBlocked(page: PlaywrightPage): Promise<void> {
     const bodyText = normalizeWhitespace(await page.locator("body").textContent().catch(() => "") || "");
     if (/blocked by network security/i.test(bodyText)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "REDDIT_BROWSER_BLOCKED",
         "Reddit blocked the shared browser session with a network security page.",
         {
@@ -885,7 +885,7 @@ export class RedditAdapter extends BasePlatformAdapter {
 
       const text = normalizeWhitespace(await block.textContent().catch(() => "") || "");
       if (text) {
-        throw new AutoCliError("REDDIT_BROWSER_ACTION_FAILED", text);
+        throw new MikaCliError("REDDIT_BROWSER_ACTION_FAILED", text);
       }
     }
 
@@ -895,7 +895,7 @@ export class RedditAdapter extends BasePlatformAdapter {
 
     const bodyText = normalizeWhitespace(await page.locator("body").textContent().catch(() => "") || "");
     if (/sorry, this post was removed/i.test(bodyText) || /you are doing that too much/i.test(bodyText)) {
-      throw new AutoCliError("REDDIT_BROWSER_ACTION_FAILED", fallbackMessage, {
+      throw new MikaCliError("REDDIT_BROWSER_ACTION_FAILED", fallbackMessage, {
         details: {
           url: page.url(),
         },
@@ -918,7 +918,7 @@ export class RedditAdapter extends BasePlatformAdapter {
     for (const pattern of knownErrors) {
       const match = bodyText.match(pattern);
       if (match) {
-        throw new AutoCliError("REDDIT_BROWSER_ACTION_FAILED", match[0], {
+        throw new MikaCliError("REDDIT_BROWSER_ACTION_FAILED", match[0], {
           details: {
             url: page.url(),
           },
@@ -927,7 +927,7 @@ export class RedditAdapter extends BasePlatformAdapter {
     }
 
     if (isRedditSubmitPath(page.url())) {
-      throw new AutoCliError("REDDIT_BROWSER_ACTION_FAILED", fallbackMessage, {
+      throw new MikaCliError("REDDIT_BROWSER_ACTION_FAILED", fallbackMessage, {
         details: {
           url: page.url(),
         },
@@ -962,9 +962,9 @@ export class RedditAdapter extends BasePlatformAdapter {
     const loaded = await this.ensureAvailableSession(account);
     const modhash = loaded.probe.metadata?.modhash;
     if (typeof modhash !== "string" || modhash.length === 0) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "REDDIT_MODHASH_MISSING",
-        "Reddit write actions need a fresh logged-in session. Re-login with `autocli social reddit login --browser` or import fresher cookies.",
+        "Reddit write actions need a fresh logged-in session. Re-login with `mikacli social reddit login --browser` or import fresher cookies.",
       );
     }
 
@@ -996,7 +996,7 @@ export class RedditAdapter extends BasePlatformAdapter {
           ...(loaded.probe.metadata ?? {}),
         },
       });
-      throw new AutoCliError("SESSION_EXPIRED", status.message ?? "Reddit rejected the saved web session.", {
+      throw new MikaCliError("SESSION_EXPIRED", status.message ?? "Reddit rejected the saved web session.", {
         details: {
           platform: this.platform,
           account: loaded.session.account,
@@ -1041,7 +1041,7 @@ export class RedditAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Reddit rejected the saved web session.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Reddit rejected the saved web session.", {
         details: {
           platform: this.platform,
           account: loaded.session.account,
@@ -1093,7 +1093,7 @@ export class RedditAdapter extends BasePlatformAdapter {
         headers: this.buildRequestHeaders(),
       });
     } catch (error) {
-      throw new AutoCliError("REDDIT_REQUEST_FAILED", "Failed to load Reddit's public response.", {
+      throw new MikaCliError("REDDIT_REQUEST_FAILED", "Failed to load Reddit's public response.", {
         cause: error,
         details: {
           url,
@@ -1103,7 +1103,7 @@ export class RedditAdapter extends BasePlatformAdapter {
 
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("REDDIT_REQUEST_FAILED", `Reddit request failed with HTTP ${response.status}.`, {
+      throw new MikaCliError("REDDIT_REQUEST_FAILED", `Reddit request failed with HTTP ${response.status}.`, {
         details: {
           url,
           status: response.status,
@@ -1141,10 +1141,10 @@ export class RedditAdapter extends BasePlatformAdapter {
 
     const first = errors[0];
     if (Array.isArray(first) && first.length >= 2) {
-      throw new AutoCliError("REDDIT_WRITE_FAILED", `${String(first[0])}: ${String(first[1])}`);
+      throw new MikaCliError("REDDIT_WRITE_FAILED", `${String(first[0])}: ${String(first[1])}`);
     }
 
-    throw new AutoCliError("REDDIT_WRITE_FAILED", "Reddit rejected the requested write action.", {
+    throw new MikaCliError("REDDIT_WRITE_FAILED", "Reddit rejected the requested write action.", {
       details: {
         errors,
       },
@@ -1328,7 +1328,7 @@ function safeJsonParse<T>(value: string): T {
   try {
     return JSON.parse(value) as T;
   } catch (error) {
-    throw new AutoCliError("REDDIT_INVALID_JSON", "Reddit returned an unreadable response.", {
+    throw new MikaCliError("REDDIT_INVALID_JSON", "Reddit returned an unreadable response.", {
       cause: error,
       details: {
         preview: value.slice(0, 400),
@@ -1349,7 +1349,7 @@ async function firstVisibleLocator(page: PlaywrightPage, selectors: readonly str
     }
   }
 
-  throw new AutoCliError("REDDIT_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Reddit browser element for selectors: ${selectors.join(", ")}`);
+  throw new MikaCliError("REDDIT_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Reddit browser element for selectors: ${selectors.join(", ")}`);
 }
 
 async function firstVisibleLocatorWithin(scope: { locator(selector: string): ReturnType<PlaywrightPage["locator"]> }, selectors: readonly string[]) {
@@ -1364,7 +1364,7 @@ async function firstVisibleLocatorWithin(scope: { locator(selector: string): Ret
     }
   }
 
-  throw new AutoCliError("REDDIT_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Reddit browser element for selectors: ${selectors.join(", ")}`);
+  throw new MikaCliError("REDDIT_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Reddit browser element for selectors: ${selectors.join(", ")}`);
 }
 
 async function checkIfPresent(page: PlaywrightPage, selectors: readonly string[]): Promise<void> {

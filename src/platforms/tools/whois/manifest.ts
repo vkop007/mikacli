@@ -9,7 +9,7 @@ import { printWhoisResult } from "./output.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-const EXAMPLES = ["autocli whois openai.com", "autocli whois 8.8.8.8"] as const;
+const EXAMPLES = ["mikacli whois openai.com", "mikacli whois 8.8.8.8"] as const;
 
 function buildWhoisCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("whois").description("Load WHOIS / RDAP data for a domain or IP address");

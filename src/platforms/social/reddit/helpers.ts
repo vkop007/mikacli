@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 const REDDIT_ORIGIN = "https://www.reddit.com";
 
@@ -21,7 +21,7 @@ export interface RedditThingTarget extends RedditThreadTarget {
 export function normalizeRedditUsernameTarget(target: string): RedditProfileTarget {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("REDDIT_TARGET_INVALID", "Expected a Reddit username, u/username, or profile URL.");
+    throw new MikaCliError("REDDIT_TARGET_INVALID", "Expected a Reddit username, u/username, or profile URL.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
@@ -43,13 +43,13 @@ export function normalizeRedditUsernameTarget(target: string): RedditProfileTarg
     };
   }
 
-  throw new AutoCliError("REDDIT_TARGET_INVALID", "Expected a Reddit username, u/username, or profile URL.");
+  throw new MikaCliError("REDDIT_TARGET_INVALID", "Expected a Reddit username, u/username, or profile URL.");
 }
 
 export function normalizeRedditSubredditTarget(target: string): string {
   const normalized = target.trim().replace(/^r\//iu, "").replace(/^\/+|\/+$/gu, "");
   if (!/^[A-Za-z0-9_]+$/u.test(normalized)) {
-    throw new AutoCliError("REDDIT_SUBREDDIT_INVALID", "Expected a subreddit like r/programming or programming.");
+    throw new MikaCliError("REDDIT_SUBREDDIT_INVALID", "Expected a subreddit like r/programming or programming.");
   }
   return normalized;
 }
@@ -57,7 +57,7 @@ export function normalizeRedditSubredditTarget(target: string): string {
 export function normalizeRedditThreadTarget(target: string): RedditThreadTarget {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("REDDIT_THREAD_INVALID", "Expected a Reddit post URL, shortlink, or post ID.");
+    throw new MikaCliError("REDDIT_THREAD_INVALID", "Expected a Reddit post URL, shortlink, or post ID.");
   }
 
   if (/^t3_[A-Za-z0-9]+$/u.test(trimmed)) {
@@ -104,7 +104,7 @@ export function normalizeRedditThreadTarget(target: string): RedditThreadTarget 
     }
   }
 
-  throw new AutoCliError("REDDIT_THREAD_INVALID", "Expected a Reddit post URL, shortlink, or post ID.");
+  throw new MikaCliError("REDDIT_THREAD_INVALID", "Expected a Reddit post URL, shortlink, or post ID.");
 }
 
 export function normalizeRedditThingTarget(target: string): RedditThingTarget {

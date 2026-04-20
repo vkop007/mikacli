@@ -1,4 +1,4 @@
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import type { SessionHttpClient } from "../../../utils/http-client.js";
 import type { SessionStatus, SessionUser } from "../../../types.js";
 import { DeepSeekPowSolver, type DeepSeekPowChallenge } from "./pow.js";
@@ -114,7 +114,7 @@ export class DeepSeekWebClient {
         defaultModel: DEEPSEEK_DEFAULT_MODEL,
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return mapDeepSeekSessionInspectionError(error);
       }
 
@@ -163,7 +163,7 @@ export class DeepSeekWebClient {
 
       const parsed = parseDeepSeekCompletionStream(stream);
       if (!parsed.outputText) {
-        throw new AutoCliError("DEEPSEEK_EMPTY_RESPONSE", "DeepSeek returned an empty response.");
+        throw new MikaCliError("DEEPSEEK_EMPTY_RESPONSE", "DeepSeek returned an empty response.");
       }
 
       return {
@@ -190,7 +190,7 @@ export class DeepSeekWebClient {
 
     const chatSessionId = response.data?.biz_data?.id;
     if (typeof chatSessionId !== "string" || chatSessionId.length === 0) {
-      throw new AutoCliError("DEEPSEEK_CHAT_SESSION_CREATE_FAILED", "DeepSeek did not return a chat session id.");
+      throw new MikaCliError("DEEPSEEK_CHAT_SESSION_CREATE_FAILED", "DeepSeek did not return a chat session id.");
     }
 
     return chatSessionId;
@@ -208,7 +208,7 @@ export class DeepSeekWebClient {
 
     const challenge = response.data?.biz_data?.challenge;
     if (!challenge) {
-      throw new AutoCliError("DEEPSEEK_POW_CHALLENGE_MISSING", "DeepSeek did not return a PoW challenge.");
+      throw new MikaCliError("DEEPSEEK_POW_CHALLENGE_MISSING", "DeepSeek did not return a PoW challenge.");
     }
 
     return this.powSolver.solve(challenge);
@@ -229,7 +229,7 @@ export class DeepSeekWebClient {
     const parsed = parseDeepSeekJson(raw);
 
     if (!parsed || typeof parsed !== "object") {
-      throw new AutoCliError("DEEPSEEK_INVALID_RESPONSE", "DeepSeek returned a non-JSON response.", {
+      throw new MikaCliError("DEEPSEEK_INVALID_RESPONSE", "DeepSeek returned a non-JSON response.", {
         details: {
           url: `${DEEPSEEK_API_URL}${path}`,
           preview: raw.slice(0, 200),
@@ -287,7 +287,7 @@ export async function extractDeepSeekAuthToken(client: SessionHttpClient): Promi
     }
   }
 
-  throw new AutoCliError("DEEPSEEK_AUTH_TOKEN_MISSING", "DeepSeek session is missing an auth token cookie. Re-export cookies from a logged-in browser session.", {
+  throw new MikaCliError("DEEPSEEK_AUTH_TOKEN_MISSING", "DeepSeek session is missing an auth token cookie. Re-export cookies from a logged-in browser session.", {
     details: {
       expectedCookieNames: DEEPSEEK_AUTH_COOKIE_NAMES,
       cookieNames: cookies.map((cookie) => cookie.key),
@@ -298,7 +298,7 @@ export async function extractDeepSeekAuthToken(client: SessionHttpClient): Promi
 export function normalizeDeepSeekAuthToken(token: string): string {
   const trimmed = token.trim();
   if (!trimmed) {
-    throw new AutoCliError("DEEPSEEK_AUTH_TOKEN_MISSING", "DeepSeek auth token is empty.");
+    throw new MikaCliError("DEEPSEEK_AUTH_TOKEN_MISSING", "DeepSeek auth token is empty.");
   }
 
   return trimmed.replace(/^Bearer\s+/iu, "").trim().replace(/^"|"$/gu, "");
@@ -402,10 +402,10 @@ export function parseDeepSeekCompletionStream(stream: string): DeepSeekCompletio
   };
 }
 
-export function mapDeepSeekError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+export function mapDeepSeekError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     if (error.code === "DEEPSEEK_AUTH_TOKEN_MISSING") {
-      return new AutoCliError(
+      return new MikaCliError(
         "DEEPSEEK_SESSION_EXPIRED",
         "DeepSeek needs the browser localStorage `userToken`, not just cookies. Export the token from a logged-in session and pass it with `--token`.",
         {
@@ -417,13 +417,13 @@ export function mapDeepSeekError(error: unknown, fallbackMessage: string): AutoC
     if (error.code === "HTTP_REQUEST_FAILED") {
       const status = Number(error.details?.status);
       if (status === 401 || status === 403) {
-        return new AutoCliError("DEEPSEEK_SESSION_EXPIRED", "DeepSeek session expired. Re-import cookies.", {
+        return new MikaCliError("DEEPSEEK_SESSION_EXPIRED", "DeepSeek session expired. Re-import cookies.", {
           details: error.details,
         });
       }
 
       if (status === 429) {
-        return new AutoCliError("DEEPSEEK_RATE_LIMITED", "DeepSeek rate limit reached. Try again later.", {
+        return new MikaCliError("DEEPSEEK_RATE_LIMITED", "DeepSeek rate limit reached. Try again later.", {
           details: error.details,
         });
       }
@@ -432,13 +432,13 @@ export function mapDeepSeekError(error: unknown, fallbackMessage: string): AutoC
     if (error.code === "DEEPSEEK_API_REQUEST_FAILED") {
       const code = Number(error.details?.code);
       if (code === 40002 || code === 40003) {
-        return new AutoCliError("DEEPSEEK_SESSION_EXPIRED", "DeepSeek session expired. Re-import cookies.", {
+        return new MikaCliError("DEEPSEEK_SESSION_EXPIRED", "DeepSeek session expired. Re-import cookies.", {
           details: error.details,
         });
       }
 
       if (code === 429) {
-        return new AutoCliError("DEEPSEEK_RATE_LIMITED", "DeepSeek rate limit reached. Try again later.", {
+        return new MikaCliError("DEEPSEEK_RATE_LIMITED", "DeepSeek rate limit reached. Try again later.", {
           details: error.details,
         });
       }
@@ -448,7 +448,7 @@ export function mapDeepSeekError(error: unknown, fallbackMessage: string): AutoC
   }
 
   if (error instanceof Error) {
-    return new AutoCliError("DEEPSEEK_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("DEEPSEEK_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details: {
         message: error.message,
@@ -456,7 +456,7 @@ export function mapDeepSeekError(error: unknown, fallbackMessage: string): AutoC
     });
   }
 
-  return new AutoCliError("DEEPSEEK_REQUEST_FAILED", fallbackMessage);
+  return new MikaCliError("DEEPSEEK_REQUEST_FAILED", fallbackMessage);
 }
 
 function buildDeepSeekHeaders(input: {
@@ -532,7 +532,7 @@ function extractDeepSeekSessionUser(response: DeepSeekCurrentUserResponse): Sess
   return undefined;
 }
 
-function mapDeepSeekSessionInspectionError(error: AutoCliError): DeepSeekInspectionResult {
+function mapDeepSeekSessionInspectionError(error: MikaCliError): DeepSeekInspectionResult {
   if (error.code === "DEEPSEEK_AUTH_TOKEN_MISSING" || error.code === "DEEPSEEK_SESSION_EXPIRED") {
     return {
       status: {
@@ -581,11 +581,11 @@ function isDeepSeekLogicalError(parsed: DeepSeekApiEnvelope | null): parsed is D
   return Boolean(parsed && typeof parsed === "object" && typeof parsed.code === "number" && parsed.code !== 0);
 }
 
-function toDeepSeekRequestError(parsed: DeepSeekApiEnvelope, url: string): AutoCliError {
+function toDeepSeekRequestError(parsed: DeepSeekApiEnvelope, url: string): MikaCliError {
   const code = Number(parsed.code);
   const message = parsed.msg || `DeepSeek request failed with code ${code}.`;
 
-  return new AutoCliError("DEEPSEEK_API_REQUEST_FAILED", message, {
+  return new MikaCliError("DEEPSEEK_API_REQUEST_FAILED", message, {
     details: {
       url,
       code,

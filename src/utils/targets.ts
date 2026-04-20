@@ -1,4 +1,4 @@
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 const INSTAGRAM_SHORTCODE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
@@ -45,7 +45,7 @@ export function parseFacebookTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Facebook post URL or numeric object ID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Facebook post URL or numeric object ID.", {
     details: { target },
   });
 }
@@ -70,7 +70,7 @@ export function parseAmazonProductTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected an Amazon product URL or 10-character ASIN.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected an Amazon product URL or 10-character ASIN.", {
     details: { target },
   });
 }
@@ -95,7 +95,7 @@ export function parseFlipkartProductTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Flipkart product URL or raw PID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Flipkart product URL or raw PID.", {
     details: { target },
   });
 }
@@ -115,7 +115,7 @@ export function parseInstagramTarget(target: string): {
   const shortcode = urlMatch?.[1] ?? (/^[A-Za-z0-9_-]+$/.test(trimmed) ? trimmed : undefined);
 
   if (!shortcode) {
-    throw new AutoCliError("INVALID_TARGET", "Expected an Instagram URL, shortcode, or numeric media ID.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected an Instagram URL, shortcode, or numeric media ID.", {
       details: { target },
     });
   }
@@ -155,7 +155,7 @@ export function parseInstagramProfileTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected an Instagram profile URL, @username, username, or numeric user ID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected an Instagram profile URL, @username, username, or numeric user ID.", {
     details: { target },
   });
 }
@@ -172,7 +172,7 @@ export function parseXTarget(target: string): {
 
   const match = trimmed.match(/status\/(\d+)/i);
   if (!match?.[1]) {
-    throw new AutoCliError("INVALID_TARGET", "Expected an X URL or numeric tweet ID.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected an X URL or numeric tweet ID.", {
       details: { target },
     });
   }
@@ -211,7 +211,7 @@ export function parseXProfileTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected an X profile URL, @handle, handle, or numeric user ID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected an X profile URL, @handle, handle, or numeric user ID.", {
     details: { target },
   });
 }
@@ -251,7 +251,7 @@ export function parseTwitchProfileTarget(target: string): {
   const trimmed = target.trim();
 
   if (!trimmed) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL, @handle, or channel login.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Twitch channel URL, @handle, or channel login.", {
       details: { target },
     });
   }
@@ -262,14 +262,14 @@ export function parseTwitchProfileTarget(target: string): {
     try {
       parsedUrl = new URL(trimmed);
     } catch {
-      throw new AutoCliError("INVALID_TARGET", "Expected a valid Twitch channel URL.", {
+      throw new MikaCliError("INVALID_TARGET", "Expected a valid Twitch channel URL.", {
         details: { target },
       });
     }
 
     const hostname = parsedUrl.hostname.replace(/^www\./i, "").toLowerCase();
     if (hostname !== "twitch.tv") {
-      throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL.", {
+      throw new MikaCliError("INVALID_TARGET", "Expected a Twitch channel URL.", {
         details: { target },
       });
     }
@@ -283,7 +283,7 @@ export function parseTwitchProfileTarget(target: string): {
       };
     }
 
-    throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Twitch channel URL.", {
       details: { target },
     });
   }
@@ -295,7 +295,7 @@ export function parseTwitchProfileTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Twitch channel URL, @handle, or channel login.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Twitch channel URL, @handle, or channel login.", {
     details: { target },
   });
 }
@@ -338,7 +338,7 @@ export function parseLinkedInTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a LinkedIn URL, urn:li target, or numeric activity ID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a LinkedIn URL, urn:li target, or numeric activity ID.", {
     details: { target },
   });
 }
@@ -361,7 +361,7 @@ export function parseTikTokTarget(target: string): {
     };
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "INVALID_TARGET",
     "Expected a TikTok URL in /@user/video/<id> form or a numeric item ID.",
     {
@@ -395,7 +395,7 @@ export function parseYouTubeTarget(target: string): {
     return { videoId: shortsMatch[1], url: trimmed };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a YouTube URL or 11-character video ID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a YouTube URL or 11-character video ID.", {
     details: { target },
   });
 }
@@ -442,7 +442,7 @@ export function parseYouTubeChannelTarget(target: string): {
     };
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "INVALID_TARGET",
     "Expected a YouTube channel URL, @handle, /channel/<id> URL, or raw UC... channel ID.",
     {
@@ -472,7 +472,7 @@ export function parseYouTubePlaylistTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a YouTube playlist URL or playlist ID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a YouTube playlist URL or playlist ID.", {
     details: { target },
   });
 }
@@ -483,7 +483,7 @@ export function parseBlueskyProfileTarget(target: string): {
 } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky profile URL, @handle, handle, or DID.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Bluesky profile URL, @handle, handle, or DID.", {
       details: { target },
     });
   }
@@ -507,7 +507,7 @@ export function parseBlueskyProfileTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky profile URL, @handle, handle, or DID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Bluesky profile URL, @handle, handle, or DID.", {
     details: { target },
   });
 }
@@ -520,7 +520,7 @@ export function parseBlueskyPostTarget(target: string): {
 } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky post URL or at:// post URI.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Bluesky post URL or at:// post URI.", {
       details: { target },
     });
   }
@@ -548,7 +548,7 @@ export function parseBlueskyPostTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Bluesky post URL or at:// post URI.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Bluesky post URL or at:// post URI.", {
     details: { target },
   });
 }
@@ -559,7 +559,7 @@ export function parseThreadsProfileTarget(target: string): {
 } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a Threads profile URL, @username, or username.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Threads profile URL, @username, or username.", {
       details: { target },
     });
   }
@@ -579,7 +579,7 @@ export function parseThreadsProfileTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Threads profile URL, @username, or username.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Threads profile URL, @username, or username.", {
     details: { target },
   });
 }
@@ -591,7 +591,7 @@ export function parseThreadsPostTarget(target: string): {
 } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a Threads post URL or @username/postId target.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Threads post URL or @username/postId target.", {
       details: { target },
     });
   }
@@ -613,7 +613,7 @@ export function parseThreadsPostTarget(target: string): {
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Threads post URL or @username/postId target.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Threads post URL or @username/postId target.", {
     details: { target },
   });
 }
@@ -675,7 +675,7 @@ export function parseYouTubeMusicBrowseTarget(
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", formatYouTubeMusicBrowseTargetError(type), {
+  throw new MikaCliError("INVALID_TARGET", formatYouTubeMusicBrowseTargetError(type), {
     details: { target, type },
   });
 }
@@ -718,7 +718,7 @@ export function parseSpotifyEntityTarget(
       };
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "INVALID_TARGET",
       "Expected a Spotify URL or spotify: URI so the target type is unambiguous.",
       {
@@ -730,7 +730,7 @@ export function parseSpotifyEntityTarget(
     );
   }
 
-  throw new AutoCliError("INVALID_TARGET", formatSpotifyTargetError(allowedTypes), {
+  throw new MikaCliError("INVALID_TARGET", formatSpotifyTargetError(allowedTypes), {
     details: { target, allowedTypes },
   });
 }
@@ -793,7 +793,7 @@ export function instagramShortcodeToMediaId(shortcode: string): string {
   for (const character of shortcode) {
     const index = INSTAGRAM_SHORTCODE_ALPHABET.indexOf(character);
     if (index === -1) {
-      throw new AutoCliError("INVALID_TARGET", "Instagram shortcode contains invalid characters.", {
+      throw new MikaCliError("INVALID_TARGET", "Instagram shortcode contains invalid characters.", {
         details: { shortcode },
       });
     }
@@ -807,7 +807,7 @@ export function instagramShortcodeToMediaId(shortcode: string): string {
 export function instagramMediaIdToShortcode(mediaId: string): string {
   const normalized = mediaId.trim();
   if (!/^\d+$/u.test(normalized)) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a numeric Instagram media ID.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a numeric Instagram media ID.", {
       details: { mediaId },
     });
   }
@@ -843,7 +843,7 @@ function buildSpotifyTarget(
   uri?: string;
 } {
   if (!allowedTypes.includes(type)) {
-    throw new AutoCliError("INVALID_TARGET", formatSpotifyTargetError(allowedTypes), {
+    throw new MikaCliError("INVALID_TARGET", formatSpotifyTargetError(allowedTypes), {
       details: {
         target,
         allowedTypes,

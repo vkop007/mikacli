@@ -1,6 +1,6 @@
 import tls from "node:tls";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -76,7 +76,7 @@ async function inspectTls(host: string, port: number, timeoutMs: number): Promis
     const timer = setTimeout(() => {
       socket.destroy();
       rejectPromise(
-        new AutoCliError("SSL_REQUEST_FAILED", `Timed out while opening a TLS connection to ${host}:${port}.`, {
+        new MikaCliError("SSL_REQUEST_FAILED", `Timed out while opening a TLS connection to ${host}:${port}.`, {
           details: {
             host,
             port,
@@ -89,7 +89,7 @@ async function inspectTls(host: string, port: number, timeoutMs: number): Promis
     socket.on("error", (error: Error) => {
       clearTimeout(timer);
       rejectPromise(
-        new AutoCliError("SSL_REQUEST_FAILED", `Unable to inspect TLS for ${host}:${port}.`, {
+        new MikaCliError("SSL_REQUEST_FAILED", `Unable to inspect TLS for ${host}:${port}.`, {
           cause: error,
           details: {
             host,

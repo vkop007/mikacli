@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { getPlatformHomeUrl, getPlatformOrigin } from "../../config.js";
 import { decodeHtml, trimSummary } from "../shared/helpers.js";
 import { BaseMovieAdapter } from "../shared/base-movie-adapter.js";
@@ -57,7 +57,7 @@ export class MyAnimeListAdapter extends BaseMovieAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("MAL_QUERY_REQUIRED", "Provide an anime query to search MyAnimeList.");
+      throw new MikaCliError("MAL_QUERY_REQUIRED", "Provide an anime query to search MyAnimeList.");
     }
 
     const html = await this.fetchPublicHtml(`https://myanimelist.net/anime.php?q=${encodeURIComponent(query)}&cat=anime`);
@@ -78,7 +78,7 @@ export class MyAnimeListAdapter extends BaseMovieAdapter {
   async titleInfo(input: { target: string }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("MAL_TARGET_REQUIRED", "Provide a MyAnimeList anime URL, anime ID, or search query.");
+      throw new MikaCliError("MAL_TARGET_REQUIRED", "Provide a MyAnimeList anime URL, anime ID, or search query.");
     }
 
     const animeId = await this.resolveAnimeId(target);
@@ -206,7 +206,7 @@ export class MyAnimeListAdapter extends BaseMovieAdapter {
     });
 
     if (!response.ok) {
-      throw new AutoCliError("MAL_REQUEST_FAILED", "MyAnimeList request failed.", {
+      throw new MikaCliError("MAL_REQUEST_FAILED", "MyAnimeList request failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -234,7 +234,7 @@ export class MyAnimeListAdapter extends BaseMovieAdapter {
       undefined;
 
     if (!first || typeof first.id !== "number") {
-      throw new AutoCliError("MAL_TITLE_NOT_FOUND", "MyAnimeList could not find a matching anime.", {
+      throw new MikaCliError("MAL_TITLE_NOT_FOUND", "MyAnimeList could not find a matching anime.", {
         details: {
           target,
         },
@@ -253,7 +253,7 @@ export class MyAnimeListAdapter extends BaseMovieAdapter {
     const loaded = await this.ensureAvailableSession(account);
     const fromProbe = loaded.probe.user?.username ?? loaded.session.user?.username;
     if (!fromProbe) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "MAL_USERNAME_REQUIRED",
         "Provide a username or import MyAnimeList cookies from a session where the profile editor validates cleanly.",
       );
@@ -312,7 +312,7 @@ function parseMalSearchResults(html: string): MalSearchResult[] {
 function parseMalTitlePage(html: string, animeId: number): MalTitleDetails {
   const title = decodeHtml(html.match(/class="title-name h1_bold_none"><strong>([^<]+)/)?.[1] ?? "");
   if (!title) {
-    throw new AutoCliError("MAL_TITLE_PARSE_FAILED", "MyAnimeList returned a title page, but the parser could not extract the title.", {
+    throw new MikaCliError("MAL_TITLE_PARSE_FAILED", "MyAnimeList returned a title page, but the parser could not extract the title.", {
       details: {
         animeId,
       },
@@ -340,7 +340,7 @@ function parseMalTitlePage(html: string, animeId: number): MalTitleDetails {
 function parseMalListEntries(html: string): MalListEntry[] {
   const match = html.match(/data-items="([^"]+)"/);
   if (!match?.[1]) {
-    throw new AutoCliError("MAL_LIST_PARSE_FAILED", "MyAnimeList list data was not present in the page.", {
+    throw new MikaCliError("MAL_LIST_PARSE_FAILED", "MyAnimeList list data was not present in the page.", {
       details: {
         reason: "missing_data_items",
       },
@@ -350,7 +350,7 @@ function parseMalListEntries(html: string): MalListEntry[] {
   try {
     return JSON.parse(decodeHtml(match[1])) as MalListEntry[];
   } catch (error) {
-    throw new AutoCliError("MAL_LIST_PARSE_FAILED", "Failed to parse the MyAnimeList embedded list payload.", {
+    throw new MikaCliError("MAL_LIST_PARSE_FAILED", "Failed to parse the MyAnimeList embedded list payload.", {
       cause: error,
     });
   }

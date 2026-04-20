@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -64,11 +64,11 @@ async function traceRedirects(target: string, method: RedirectMethod, timeoutMs:
           accept: "*/*",
           "cache-control": "no-cache",
           pragma: "no-cache",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("REDIRECT_REQUEST_FAILED", "Unable to reach the target URL.", {
+      throw new MikaCliError("REDIRECT_REQUEST_FAILED", "Unable to reach the target URL.", {
         cause: error,
         details: {
           url: currentUrl,
@@ -96,7 +96,7 @@ async function traceRedirects(target: string, method: RedirectMethod, timeoutMs:
     currentMethod = response.status === 303 ? "GET" : currentMethod;
   }
 
-  throw new AutoCliError("REDIRECT_TOO_MANY_HOPS", `Redirect chain exceeded ${maxHops} hops.`, {
+  throw new MikaCliError("REDIRECT_TOO_MANY_HOPS", `Redirect chain exceeded ${maxHops} hops.`, {
     details: {
       target,
       maxHops,
@@ -111,7 +111,7 @@ function normalizeMethod(value: string | undefined): RedirectMethod {
     return normalized;
   }
 
-  throw new AutoCliError("REDIRECT_METHOD_INVALID", `Unsupported redirect method "${value}". Use HEAD or GET.`);
+  throw new MikaCliError("REDIRECT_METHOD_INVALID", `Unsupported redirect method "${value}". Use HEAD or GET.`);
 }
 
 function isRedirectStatus(status: number): boolean {

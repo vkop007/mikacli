@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { assertCategoryOnlyInvocation, createProgram } from "../program.js";
 
 describe("root program routing", () => {
@@ -36,16 +36,16 @@ describe("root program routing", () => {
   });
 
   test("rejects legacy direct provider invocations with a category hint", () => {
-    expect(() => assertCategoryOnlyInvocation(["chatgpt", "text", "Hello"])).toThrow(AutoCliError);
+    expect(() => assertCategoryOnlyInvocation(["chatgpt", "text", "Hello"])).toThrow(MikaCliError);
 
     try {
       assertCategoryOnlyInvocation(["chatgpt", "text", "Hello"]);
       throw new Error("Expected category-only assertion to throw.");
     } catch (error) {
-      expect(error).toBeInstanceOf(AutoCliError);
-      expect((error as AutoCliError).code).toBe("CATEGORY_COMMAND_REQUIRED");
-      expect((error as AutoCliError).message).toContain('autocli llm chatgpt text Hello');
-      expect((error as AutoCliError).details?.suggestedCommand).toBe("autocli llm chatgpt text Hello");
+      expect(error).toBeInstanceOf(MikaCliError);
+      expect((error as MikaCliError).code).toBe("CATEGORY_COMMAND_REQUIRED");
+      expect((error as MikaCliError).message).toContain('mikacli llm chatgpt text Hello');
+      expect((error as MikaCliError).details?.suggestedCommand).toBe("mikacli llm chatgpt text Hello");
     }
   });
 
@@ -54,8 +54,8 @@ describe("root program routing", () => {
       assertCategoryOnlyInvocation(["help", "spotify"]);
       throw new Error("Expected help invocation to be redirected.");
     } catch (error) {
-      expect(error).toBeInstanceOf(AutoCliError);
-      expect((error as AutoCliError).message).toContain("autocli music spotify --help");
+      expect(error).toBeInstanceOf(MikaCliError);
+      expect((error as MikaCliError).message).toContain("mikacli music spotify --help");
     }
   });
 
@@ -64,8 +64,8 @@ describe("root program routing", () => {
       assertCategoryOnlyInvocation(["github", "me", "--json"]);
       throw new Error("Expected direct provider invocation to be redirected.");
     } catch (error) {
-      expect(error).toBeInstanceOf(AutoCliError);
-      expect((error as AutoCliError).details?.suggestedCommand).toBe("autocli developer github me --json");
+      expect(error).toBeInstanceOf(MikaCliError);
+      expect((error as MikaCliError).details?.suggestedCommand).toBe("mikacli developer github me --json");
     }
   });
 

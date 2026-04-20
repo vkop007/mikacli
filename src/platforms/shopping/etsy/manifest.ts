@@ -19,8 +19,8 @@ export const etsyPlatformDefinition: PlatformDefinition = {
     storeDescription: "Load an Etsy shop by shop URL or shop name via public discovery",
   }),
   examples: [
-    'autocli etsy search "wireless mouse" --limit 5',
-    "autocli etsy product https://www.etsy.com/listing/4383876994/wisp-16g-ultralight-wireless-gaming",
-    "autocli etsy shop plannerkate1",
+    'mikacli etsy search "wireless mouse" --limit 5',
+    "mikacli etsy product https://www.etsy.com/listing/4383876994/wisp-16g-ultralight-wireless-gaming",
+    "mikacli etsy shop plannerkate1",
   ],
 };

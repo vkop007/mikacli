@@ -12,7 +12,7 @@ export const SPOTIFY_TRACK_PLAYBACK_BASE = "https://gue1-spclient.spotify.com/tr
 export const SPOTIFY_DEALER_URL = "wss://dealer.spotify.com/";
 export const SPOTIFY_APP_PLATFORM = "WebPlayer";
 export const SPOTIFY_CONNECT_VERSION = "harmony:4.43.2-a61ecaf5";
-export const SPOTIFY_CONNECT_DEVICE_NAME = "AutoCLI";
+export const SPOTIFY_CONNECT_DEVICE_NAME = "MikaCLI";
 export const SPOTIFY_CONNECT_DEVICE_MODEL = "web_player";
 export const SPOTIFY_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";

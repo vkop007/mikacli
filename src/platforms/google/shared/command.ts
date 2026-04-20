@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { Logger } from "../../../logger.js";
 import { setInteractiveProgressHandler } from "../../../utils/interactive-progress.js";
 import { parsePositiveInteger } from "../../devops/shared/options.js";
@@ -66,11 +66,11 @@ export function parseJsonTable(value: string): unknown[][] {
   try {
     parsed = JSON.parse(value) as unknown;
   } catch (error) {
-    throw new AutoCliError("INVALID_JSON", `Invalid JSON passed to --values: ${(error as Error).message}`);
+    throw new MikaCliError("INVALID_JSON", `Invalid JSON passed to --values: ${(error as Error).message}`);
   }
 
   if (!Array.isArray(parsed)) {
-    throw new AutoCliError("INVALID_JSON_ARRAY", "Expected --values to be a JSON array.");
+    throw new MikaCliError("INVALID_JSON_ARRAY", "Expected --values to be a JSON array.");
   }
 
   return parsed.map((row) => (Array.isArray(row) ? row : [row]));

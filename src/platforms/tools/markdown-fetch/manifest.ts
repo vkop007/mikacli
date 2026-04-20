@@ -10,9 +10,9 @@ import { printMarkdownFetchResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli markdown-fetch https://example.com",
-  "autocli markdown-fetch https://news.ycombinator.com --include-links",
-  "autocli markdown-fetch https://example.com/article --max-chars 12000",
+  "mikacli markdown-fetch https://example.com",
+  "mikacli markdown-fetch https://news.ycombinator.com --include-links",
+  "mikacli markdown-fetch https://example.com/article --max-chars 12000",
 ] as const;
 
 function buildMarkdownFetchCommand(options: PlatformCommandBuildOptions = {}): Command {

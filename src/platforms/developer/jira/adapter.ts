@@ -1,7 +1,7 @@
 import { CookieJar } from "tough-cookie";
 
 import { sanitizeAccountName } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { JiraWebClient, type JiraIssue, type JiraProject, type JiraUser } from "./client.js";
@@ -89,7 +89,7 @@ export class JiraAdapter {
         lastValidatedAt: active.session.status.lastValidatedAt,
       };
     } catch (error) {
-      if (error instanceof AutoCliError && error.code === "JIRA_SESSION_INVALID") {
+      if (error instanceof MikaCliError && error.code === "JIRA_SESSION_INVALID") {
         const expired = await this.markSessionExpired(session, error.message);
         return {
           platform: this.platform,
@@ -209,7 +209,7 @@ export class JiraAdapter {
     const active = await this.ensureUsableSession();
     const summary = input.summary.trim();
     if (!summary) {
-      throw new AutoCliError("JIRA_SUMMARY_REQUIRED", "Jira issue summary cannot be empty.");
+      throw new MikaCliError("JIRA_SUMMARY_REQUIRED", "Jira issue summary cannot be empty.");
     }
 
     const issue = await active.client.createIssue({
@@ -269,10 +269,10 @@ export class JiraAdapter {
         siteUrl,
       };
     } catch (error) {
-      await this.markSessionExpired(session, error instanceof AutoCliError ? error.message : "Jira rejected the saved web session. Re-import fresh cookies.");
-      throw error instanceof AutoCliError
+      await this.markSessionExpired(session, error instanceof MikaCliError ? error.message : "Jira rejected the saved web session. Re-import fresh cookies.");
+      throw error instanceof MikaCliError
         ? error
-        : new AutoCliError("JIRA_SESSION_INVALID", "Jira rejected the saved web session. Re-import fresh cookies.", {
+        : new MikaCliError("JIRA_SESSION_INVALID", "Jira rejected the saved web session. Re-import fresh cookies.", {
             cause: error,
           });
     }
@@ -288,7 +288,7 @@ export class JiraAdapter {
       return inferred;
     }
 
-    throw new AutoCliError("JIRA_SITE_REQUIRED", "Could not infer the Jira site from the imported cookies. Re-run login with --site https://your-workspace.atlassian.net.");
+    throw new MikaCliError("JIRA_SITE_REQUIRED", "Could not infer the Jira site from the imported cookies. Re-run login with --site https://your-workspace.atlassian.net.");
   }
 
   private async persistSession(

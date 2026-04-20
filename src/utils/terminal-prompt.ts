@@ -1,11 +1,11 @@
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 export async function promptForInput(label: string, options: { secret?: boolean } = {}): Promise<string> {
   if (!input.isTTY || !output.isTTY) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "INTERACTIVE_INPUT_REQUIRED",
       `Missing required input for ${label}. Run the command in a TTY or pass the required flag explicitly.`,
       {

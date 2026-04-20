@@ -113,11 +113,11 @@ export const deezerPlatformDefinition: PlatformDefinition = {
     }),
   ],
   examples: [
-    'autocli deezer search "radiohead"',
-    'autocli deezer search "radiohead" --type album',
-    "autocli deezer track 3135556",
-    "autocli deezer album https://www.deezer.com/album/302127",
-    "autocli deezer artist https://www.deezer.com/artist/382254",
-    "autocli deezer playlist https://www.deezer.com/playlist/908622995",
+    'mikacli deezer search "radiohead"',
+    'mikacli deezer search "radiohead" --type album',
+    "mikacli deezer track 3135556",
+    "mikacli deezer album https://www.deezer.com/album/302127",
+    "mikacli deezer artist https://www.deezer.com/artist/382254",
+    "mikacli deezer playlist https://www.deezer.com/playlist/908622995",
   ],
 };

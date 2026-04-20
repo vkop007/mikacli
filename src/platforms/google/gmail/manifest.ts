@@ -6,13 +6,13 @@ import { gmailAdapter } from "./adapter.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli google gmail login --client-id google-client-id-example --client-secret google-client-secret-example",
-  "autocli google gmail auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
-  "autocli google gmail login --client-id google-client-id-example --client-secret google-client-secret-example --code google-auth-code-example --redirect-uri http://127.0.0.1:3333/callback",
-  "autocli google gmail labels --json",
-  'autocli google gmail messages --query "label:inbox newer_than:7d" --limit 10 --json',
-  "autocli google gmail message 197f1f0f1f0f1f0f --json",
-  'autocli google gmail send person@example.com "Hello from AutoCLI" --subject "Checking in"',
+  "mikacli google gmail login --client-id google-client-id-example --client-secret google-client-secret-example",
+  "mikacli google gmail auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
+  "mikacli google gmail login --client-id google-client-id-example --client-secret google-client-secret-example --code google-auth-code-example --redirect-uri http://127.0.0.1:3333/callback",
+  "mikacli google gmail labels --json",
+  'mikacli google gmail messages --query "label:inbox newer_than:7d" --limit 10 --json',
+  "mikacli google gmail message 197f1f0f1f0f1f0f --json",
+  'mikacli google gmail send person@example.com "Hello from MikaCLI" --subject "Checking in"',
 ] as const;
 
 function buildGmailCommand(_options: PlatformCommandBuildOptions = {}): Command {

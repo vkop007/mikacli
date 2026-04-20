@@ -10,8 +10,8 @@ const distEntry = join(projectRoot, "dist", "index.js");
 const bunHome = process.env.BUN_INSTALL ?? join(homedir(), ".bun");
 const globalNodeModules = join(bunHome, "install", "global", "node_modules");
 const globalBin = join(bunHome, "bin");
-const packageLinkPath = join(globalNodeModules, "autocli");
-const binLinkPath = join(globalBin, "autocli");
+const packageLinkPath = join(globalNodeModules, "mikacli");
+const binLinkPath = join(globalBin, "mikacli");
 
 async function ensureParentDir(filePath: string): Promise<void> {
   await mkdir(dirname(filePath), { recursive: true });
@@ -69,8 +69,8 @@ async function main(): Promise<void> {
   await ensureSymlink(packageLinkPath, projectRoot, "dir");
   await ensureSymlink(binLinkPath, distEntry, "file");
 
-  console.log(`Linked autocli to ${binLinkPath}`);
-  console.log('Run "autocli --help" in a new shell if your current shell still caches command lookups.');
+  console.log(`Linked mikacli to ${binLinkPath}`);
+  console.log('Run "mikacli --help" in a new shell if your current shell still caches command lookups.');
 }
 
 await main();

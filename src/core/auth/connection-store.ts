@@ -9,7 +9,7 @@ import {
   getPlatformConnectionDir,
   sanitizeAccountName,
 } from "../../config.js";
-import { AutoCliError } from "../../errors.js";
+import { MikaCliError } from "../../errors.js";
 import { isPlatform } from "../../platforms/config.js";
 import { CookieManager } from "../../utils/cookie-manager.js";
 
@@ -25,7 +25,7 @@ import type {
 const ConnectionRecordSchema = {
   parse(input: unknown): ConnectionRecord {
     if (!input || typeof input !== "object") {
-      throw new AutoCliError("INVALID_CONNECTION_FILE", "Connection file is not a valid JSON object.");
+      throw new MikaCliError("INVALID_CONNECTION_FILE", "Connection file is not a valid JSON object.");
     }
 
     const record = input as Partial<ConnectionRecord>;
@@ -43,15 +43,15 @@ const ConnectionRecordSchema = {
       !record.status ||
       typeof record.status.state !== "string"
     ) {
-      throw new AutoCliError("INVALID_CONNECTION_FILE", "Connection file is missing required fields.");
+      throw new MikaCliError("INVALID_CONNECTION_FILE", "Connection file is missing required fields.");
     }
 
     if (record.auth.kind === "botToken" && typeof (record.auth as { token?: unknown }).token !== "string") {
-      throw new AutoCliError("INVALID_CONNECTION_FILE", "Bot token connection is missing its token.");
+      throw new MikaCliError("INVALID_CONNECTION_FILE", "Bot token connection is missing its token.");
     }
 
     if (record.auth.kind === "apiKey" && typeof (record.auth as { token?: unknown }).token !== "string") {
-      throw new AutoCliError("INVALID_CONNECTION_FILE", "API token connection is missing its token.");
+      throw new MikaCliError("INVALID_CONNECTION_FILE", "API token connection is missing its token.");
     }
 
     if (
@@ -59,7 +59,7 @@ const ConnectionRecordSchema = {
       typeof (record.auth as { refreshToken?: unknown }).refreshToken !== "string" &&
       typeof (record.auth as { accessToken?: unknown }).accessToken !== "string"
     ) {
-      throw new AutoCliError("INVALID_CONNECTION_FILE", "OAuth2 connection is missing both refresh and access tokens.");
+      throw new MikaCliError("INVALID_CONNECTION_FILE", "OAuth2 connection is missing both refresh and access tokens.");
     }
 
     return record as ConnectionRecord;
@@ -100,7 +100,7 @@ export class ConnectionStore {
     try {
       return await this.loadStoredConnection(platform, resolvedAccount);
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "CONNECTION_NOT_FOUND") {
         throw error;
       }
     }
@@ -135,7 +135,7 @@ export class ConnectionStore {
       const existing = await this.loadStoredConnection(input.platform, input.account);
       createdAt = existing.connection.createdAt;
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "CONNECTION_NOT_FOUND") {
         throw error;
       }
     }
@@ -177,7 +177,7 @@ export class ConnectionStore {
       const existing = await this.loadStoredConnection(input.platform, input.account);
       createdAt = existing.connection.createdAt;
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "CONNECTION_NOT_FOUND") {
         throw error;
       }
     }
@@ -218,7 +218,7 @@ export class ConnectionStore {
       const existing = await this.loadStoredConnection(input.platform, input.account);
       createdAt = existing.connection.createdAt;
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "CONNECTION_NOT_FOUND") {
         throw error;
       }
     }
@@ -265,7 +265,7 @@ export class ConnectionStore {
       const existing = await this.loadStoredConnection(input.platform, input.account);
       createdAt = existing.connection.createdAt;
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "CONNECTION_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "CONNECTION_NOT_FOUND") {
         throw error;
       }
     }
@@ -303,7 +303,7 @@ export class ConnectionStore {
   ): Promise<{ connection: ConnectionRecord; path: string; auth: BotTokenConnectionAuth }> {
     const loaded = await this.loadConnection(platform, account);
     if (loaded.connection.auth.kind !== "botToken") {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_CONNECTION_AUTH",
         `The saved ${platform} connection does not use a bot token auth strategy.`,
         {
@@ -329,7 +329,7 @@ export class ConnectionStore {
   ): Promise<{ connection: ConnectionRecord; path: string; auth: ApiKeyConnectionAuth }> {
     const loaded = await this.loadConnection(platform, account);
     if (loaded.connection.auth.kind !== "apiKey") {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_CONNECTION_AUTH",
         `The saved ${platform} connection does not use an API token auth strategy.`,
         {
@@ -355,7 +355,7 @@ export class ConnectionStore {
   ): Promise<{ connection: ConnectionRecord; path: string; auth: SessionConnectionAuth }> {
     const loaded = await this.loadConnection(platform, account);
     if (loaded.connection.auth.kind !== "session") {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_CONNECTION_AUTH",
         `The saved ${platform} connection does not use a session auth strategy.`,
         {
@@ -381,7 +381,7 @@ export class ConnectionStore {
   ): Promise<{ connection: ConnectionRecord; path: string; auth: OAuth2ConnectionAuth }> {
     const loaded = await this.loadConnection(platform, account);
     if (loaded.connection.auth.kind !== "oauth2") {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_CONNECTION_AUTH",
         `The saved ${platform} connection does not use an OAuth2 auth strategy.`,
         {
@@ -423,7 +423,7 @@ export class ConnectionStore {
     const connectionPath = getConnectionPath(platform, resolvedAccount);
 
     await access(connectionPath, constants.R_OK).catch(() => {
-      throw new AutoCliError("CONNECTION_NOT_FOUND", `No saved ${platform} connection found for account "${resolvedAccount}".`, {
+      throw new MikaCliError("CONNECTION_NOT_FOUND", `No saved ${platform} connection found for account "${resolvedAccount}".`, {
         details: { platform, account: resolvedAccount, connectionPath },
       });
     });
@@ -475,7 +475,7 @@ export class ConnectionStore {
   private async resolveDefaultStoredAccount(platform: Platform): Promise<string> {
     const platformConnections = (await this.listStoredConnections()).filter(({ connection }) => connection.platform === platform);
     if (platformConnections.length === 0) {
-      throw new AutoCliError("CONNECTION_NOT_FOUND", `No saved ${platform} connections found.`, {
+      throw new MikaCliError("CONNECTION_NOT_FOUND", `No saved ${platform} connections found.`, {
         details: { platform },
       });
     }

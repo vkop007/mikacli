@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../../../../errors.js";
+import { MikaCliError } from "../../../../errors.js";
 import { SessionHttpClient } from "../../../../utils/http-client.js";
 import { extractQwenAuthToken, mapQwenError, normalizeQwenAuthToken, parseQwenCompletionStream } from "../client.js";
 
@@ -43,7 +43,7 @@ data: {"choices":[{"delta":{"content":" world"}}]}
 
   test("maps missing-token responses to expired sessions", () => {
     const mapped = mapQwenError(
-      new AutoCliError("QWEN_AUTH_TOKEN_MISSING", "missing token"),
+      new MikaCliError("QWEN_AUTH_TOKEN_MISSING", "missing token"),
       "fallback",
     );
 

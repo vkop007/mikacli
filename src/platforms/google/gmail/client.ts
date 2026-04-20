@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { GoogleApiClient } from "../shared/client.js";
 
 export interface GmailProfile {
@@ -105,7 +105,7 @@ export class GmailApiClient {
     const text = input.text?.trim();
     const html = input.html?.trim();
     if (!text && !html) {
-      throw new AutoCliError("GMAIL_MESSAGE_BODY_REQUIRED", "Gmail send requires either message text or --html.");
+      throw new MikaCliError("GMAIL_MESSAGE_BODY_REQUIRED", "Gmail send requires either message text or --html.");
     }
 
     const raw = toBase64Url(buildMimeMessage(input));
@@ -198,7 +198,7 @@ function buildMimeMessage(input: {
   const html = input.html?.trim();
 
   if (text && html) {
-    const boundary = `autocli-boundary-${Date.now()}`;
+    const boundary = `mikacli-boundary-${Date.now()}`;
     lines.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
     return [
       ...lines,

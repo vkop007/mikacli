@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { normalizePublicHttpUrl } from "./url.js";
 
 type PublicHtmlFetchResult = {
@@ -30,18 +30,18 @@ export async function fetchPublicHtmlDocument(input: {
         "accept-language": "en-US,en;q=0.9",
         "cache-control": "no-cache",
         pragma: "no-cache",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError(input.errorCode, `Unable to reach the target URL for ${input.errorLabel}.`, {
+    throw new MikaCliError(input.errorCode, `Unable to reach the target URL for ${input.errorLabel}.`, {
       cause: error,
       details: { target },
     });
   }
 
   if (!response.ok) {
-    throw new AutoCliError(input.errorCode, `${input.errorLabel} request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError(input.errorCode, `${input.errorLabel} request failed with ${response.status} ${response.statusText}.`, {
       details: {
         status: response.status,
         statusText: response.statusText,

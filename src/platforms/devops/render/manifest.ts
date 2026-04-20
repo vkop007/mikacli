@@ -12,10 +12,10 @@ export const renderPlatformDefinition: PlatformDefinition = {
   adapter: renderAdapter,
   capabilities: renderCapabilities,
   examples: [
-    "autocli render login --token $RENDER_API_KEY",
-    "autocli render me",
-    "autocli render services",
-    "autocli render projects",
-    "autocli render env-groups",
+    "mikacli render login --token $RENDER_API_KEY",
+    "mikacli render me",
+    "mikacli render services",
+    "mikacli render projects",
+    "mikacli render env-groups",
   ],
 };

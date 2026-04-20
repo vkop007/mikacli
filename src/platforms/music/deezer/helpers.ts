@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export type DeezerSearchType = "track" | "album" | "artist" | "playlist" | "all";
 export type DeezerEntityKind = Exclude<DeezerSearchType, "all">;
@@ -9,7 +9,7 @@ export function parseDeezerSearchType(value: string): DeezerSearchType {
     return normalized;
   }
 
-  throw new AutoCliError("DEEZER_SEARCH_TYPE_INVALID", "Deezer search type must be one of: track, album, artist, playlist, or all.", {
+  throw new MikaCliError("DEEZER_SEARCH_TYPE_INVALID", "Deezer search type must be one of: track, album, artist, playlist, or all.", {
     details: {
       value,
     },
@@ -19,7 +19,7 @@ export function parseDeezerSearchType(value: string): DeezerSearchType {
 export function parsePositiveInteger(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new AutoCliError("DEEZER_LIMIT_INVALID", "Deezer limits must be positive integers.", {
+    throw new MikaCliError("DEEZER_LIMIT_INVALID", "Deezer limits must be positive integers.", {
       details: {
         value,
       },

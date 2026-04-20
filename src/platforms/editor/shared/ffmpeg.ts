@@ -4,7 +4,7 @@ import { access } from "node:fs/promises";
 import { join, parse, resolve } from "node:path";
 
 import { ensureParentDirectory } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export interface FfprobeStream {
   index?: number;
@@ -34,8 +34,8 @@ export interface FfprobePayload {
   format?: FfprobeFormat;
 }
 
-const FFMPEG_BIN = process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg";
-const FFPROBE_BIN = process.env.AUTOCLI_FFPROBE_BIN || "ffprobe";
+const FFMPEG_BIN = process.env.MIKACLI_FFMPEG_BIN || "ffmpeg";
+const FFPROBE_BIN = process.env.MIKACLI_FFPROBE_BIN || "ffprobe";
 
 export async function assertLocalInputFile(inputPath: string): Promise<string> {
   const resolved = resolve(inputPath);
@@ -43,7 +43,7 @@ export async function assertLocalInputFile(inputPath: string): Promise<string> {
   try {
     await access(resolved, constants.R_OK);
   } catch (error) {
-    throw new AutoCliError("EDITOR_INPUT_NOT_FOUND", `Input file does not exist: ${inputPath}`, {
+    throw new MikaCliError("EDITOR_INPUT_NOT_FOUND", `Input file does not exist: ${inputPath}`, {
       details: {
         inputPath,
         resolvedPath: resolved,
@@ -75,7 +75,7 @@ export async function runFfprobe(inputPath: string): Promise<FfprobePayload> {
   try {
     return JSON.parse(stdout) as FfprobePayload;
   } catch (error) {
-    throw new AutoCliError("FFPROBE_OUTPUT_INVALID", "ffprobe returned invalid JSON output.", {
+    throw new MikaCliError("FFPROBE_OUTPUT_INVALID", "ffprobe returned invalid JSON output.", {
       details: {
         inputPath: resolvedPath,
       },
@@ -147,7 +147,7 @@ export function toNumber(value: string | number | undefined): number | undefined
 export function requirePositiveInteger(value: string | number | undefined, label: string): number {
   const parsed = toNumber(value);
   if (!parsed || !Number.isInteger(parsed) || parsed <= 0) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a positive integer.`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a positive integer.`, {
       details: {
         label,
         value,
@@ -161,7 +161,7 @@ export function requirePositiveInteger(value: string | number | undefined, label
 export function requireNonNegativeInteger(value: string | number | undefined, label: string): number {
   const parsed = toNumber(value);
   if (parsed === undefined || !Number.isInteger(parsed) || parsed < 0) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a non-negative integer.`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a non-negative integer.`, {
       details: {
         label,
         value,
@@ -220,7 +220,7 @@ async function runBinary(
 
     child.on("error", (error) => {
       rejectPromise(
-        new AutoCliError(missingCode, missingMessage, {
+        new MikaCliError(missingCode, missingMessage, {
           details: {
             command,
           },
@@ -236,7 +236,7 @@ async function runBinary(
       }
 
       rejectPromise(
-        new AutoCliError("EDITOR_COMMAND_FAILED", `${command} exited with code ${code}.`, {
+        new MikaCliError("EDITOR_COMMAND_FAILED", `${command} exited with code ${code}.`, {
           details: {
             command,
             args,

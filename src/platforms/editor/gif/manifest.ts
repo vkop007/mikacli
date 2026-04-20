@@ -9,10 +9,10 @@ import { printGifEditorResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli gif info ./clip.gif",
-  "autocli gif create ./clip.mp4 --start 00:00:01 --duration 2",
-  "autocli gif optimize ./clip.gif --width 480",
-  "autocli gif to-video ./clip.gif --to mp4",
+  "mikacli gif info ./clip.gif",
+  "mikacli gif create ./clip.mp4 --start 00:00:01 --duration 2",
+  "mikacli gif optimize ./clip.gif --width 480",
+  "mikacli gif to-video ./clip.gif --to mp4",
 ] as const;
 
 function buildGifEditorCommand(options: PlatformCommandBuildOptions = {}): Command {

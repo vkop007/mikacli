@@ -6,7 +6,7 @@ import makeWASocket, { DisconnectReason, fetchLatestBaileysVersion, useMultiFile
 
 import { DEFAULT_ACCOUNT_NAME, ensureConnectionDirectory, getPlatformConnectionDir, sanitizeAccountName } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { printTerminalQr } from "../../../utils/terminal-qr.js";
 
 import type { AdapterActionResult, AdapterStatusResult, SessionStatus, SessionUser } from "../../../types.js";
@@ -14,7 +14,7 @@ import type { ConnectionRecord } from "../../../core/auth/auth-types.js";
 
 const PLATFORM = "whatsapp" as const;
 const DISPLAY_NAME = "WhatsApp";
-const CACHE_FILE_NAME = "autocli-cache.json";
+const CACHE_FILE_NAME = "mikacli-cache.json";
 const DEFAULT_LIMIT = 20;
 const DEFAULT_SYNC_WAIT_MS = 4000;
 const MAX_CACHE_MESSAGES_PER_CHAT = 100;
@@ -174,7 +174,7 @@ export class WhatsAppSocialService {
         await active.stop();
       }
     } catch (error) {
-      if (error instanceof AutoCliError) {
+      if (error instanceof MikaCliError) {
         return {
           platform: PLATFORM,
           account: loaded.connection.account,
@@ -352,7 +352,7 @@ export class WhatsAppSocialService {
   }): Promise<ActiveWhatsAppConnection> {
     const result = await this.openConnectionAttempt(input);
     if ("restart" in result) {
-      throw new AutoCliError("WHATSAPP_CONNECTION_RESTART_LOOP", "WhatsApp requested another restart before the session opened.");
+      throw new MikaCliError("WHATSAPP_CONNECTION_RESTART_LOOP", "WhatsApp requested another restart before the session opened.");
     }
 
     return result;
@@ -375,7 +375,7 @@ export class WhatsAppSocialService {
     const version = await fetchLatestBaileysVersion().catch(() => null);
     const sock = makeWASocket({
       auth: state,
-      browser: ["AutoCLI", "Desktop", "1.0.0"],
+      browser: ["MikaCLI", "Desktop", "1.0.0"],
       logger: createSilentBaileysLogger(),
       markOnlineOnConnect: false,
       syncFullHistory: true,
@@ -430,7 +430,7 @@ export class WhatsAppSocialService {
             sink.write(`Pairing code: ${pairingCode}\n`);
           } catch (error) {
             reject(
-              new AutoCliError("WHATSAPP_PAIRING_CODE_FAILED", "Failed to generate a WhatsApp pairing code.", {
+              new MikaCliError("WHATSAPP_PAIRING_CODE_FAILED", "Failed to generate a WhatsApp pairing code.", {
                 cause: error,
                 details: {
                   phone: input.pairingPhone,
@@ -464,7 +464,7 @@ export class WhatsAppSocialService {
 
           if (statusCode === DisconnectReason.loggedOut || (!input.allowBootstrap && qrSeen)) {
             reject(
-              new AutoCliError(
+              new MikaCliError(
                 "WHATSAPP_SESSION_EXPIRED",
                 "WhatsApp session expired or was logged out. Run social whatsapp login again.",
               ),
@@ -473,7 +473,7 @@ export class WhatsAppSocialService {
           }
 
           reject(
-            new AutoCliError("WHATSAPP_CONNECTION_CLOSED", disconnect?.message ?? "WhatsApp closed the session unexpectedly."),
+            new MikaCliError("WHATSAPP_CONNECTION_CLOSED", disconnect?.message ?? "WhatsApp closed the session unexpectedly."),
           );
         }
       });
@@ -533,7 +533,7 @@ function parseWhatsAppMetadata(connection: ConnectionRecord): WhatsAppStoredMeta
     cachePath.trim().length === 0 ||
     (loginMode !== "qr" && loginMode !== "pairing-code")
   ) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "WHATSAPP_SESSION_INVALID",
       "The saved WhatsApp session is missing its auth directory metadata. Log in again.",
       {
@@ -671,7 +671,7 @@ function mergeMessage(cache: WhatsAppCache, message: WhatsAppMessageSummary): vo
 async function resolveWhatsAppTarget(sock: ReturnType<typeof makeWASocket>, target: string): Promise<string> {
   const normalized = target.trim();
   if (normalized.length === 0) {
-    throw new AutoCliError("WHATSAPP_TARGET_REQUIRED", "WhatsApp target is required.");
+    throw new MikaCliError("WHATSAPP_TARGET_REQUIRED", "WhatsApp target is required.");
   }
 
   if (normalized.includes("@")) {
@@ -691,7 +691,7 @@ async function resolveWhatsAppTarget(sock: ReturnType<typeof makeWASocket>, targ
 function normalizePhoneNumber(value: string): string {
   const digits = value.replace(/[^\d]/g, "");
   if (digits.length < 6) {
-    throw new AutoCliError("WHATSAPP_PHONE_INVALID", "WhatsApp pairing/login requires a valid phone number.");
+    throw new MikaCliError("WHATSAPP_PHONE_INVALID", "WhatsApp pairing/login requires a valid phone number.");
   }
 
   return digits;
@@ -839,7 +839,7 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: s
       promise,
       new Promise<T>((_, reject) => {
         timeoutId = setTimeout(() => {
-          reject(new AutoCliError("WHATSAPP_TIMEOUT", message));
+          reject(new MikaCliError("WHATSAPP_TIMEOUT", message));
         }, timeoutMs);
       }),
     ]);

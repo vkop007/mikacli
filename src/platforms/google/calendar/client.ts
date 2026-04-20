@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { GoogleApiClient } from "../shared/client.js";
 
 export interface GoogleCalendarSummary {
@@ -207,7 +207,7 @@ export class CalendarApiClient {
       status: input.status,
     });
     if (Object.keys(body).length === 0) {
-      throw new AutoCliError("GOOGLE_CALENDAR_UPDATE_EMPTY", "Calendar update requires at least one change.");
+      throw new MikaCliError("GOOGLE_CALENDAR_UPDATE_EMPTY", "Calendar update requires at least one change.");
     }
 
     const payload = await this.client.json<CalendarApiEvent>(

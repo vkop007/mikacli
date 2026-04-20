@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { extractNewsPageSummary, stripHtml } from "../../news/news/helpers.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -48,7 +48,7 @@ export const markdownFetchAdapter = new MarkdownFetchAdapter();
 export function normalizePageUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("MARKDOWN_FETCH_URL_REQUIRED", "Page URL cannot be empty.");
+    throw new MikaCliError("MARKDOWN_FETCH_URL_REQUIRED", "Page URL cannot be empty.");
   }
 
   try {
@@ -66,25 +66,25 @@ export async function fetchHtmlDocument(url: string): Promise<{ html: string; re
       redirect: "follow",
       headers: {
         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.5",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("MARKDOWN_FETCH_REQUEST_FAILED", "Unable to reach the page.", {
+    throw new MikaCliError("MARKDOWN_FETCH_REQUEST_FAILED", "Unable to reach the page.", {
       details: { url },
       cause: error,
     });
   }
 
   if (!response.ok) {
-    throw new AutoCliError("MARKDOWN_FETCH_REQUEST_FAILED", `Page request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("MARKDOWN_FETCH_REQUEST_FAILED", `Page request failed with ${response.status} ${response.statusText}.`, {
       details: { url, status: response.status, statusText: response.statusText },
     });
   }
 
   const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
   if (!contentType.includes("html") && !contentType.includes("xml") && !contentType.includes("text/")) {
-    throw new AutoCliError("MARKDOWN_FETCH_UNSUPPORTED", "The response does not look like an HTML or text page.");
+    throw new MikaCliError("MARKDOWN_FETCH_UNSUPPORTED", "The response does not look like an HTML or text page.");
   }
 
   return {

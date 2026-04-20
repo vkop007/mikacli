@@ -6,13 +6,13 @@ import { calendarAdapter } from "./adapter.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli google calendar login --client-id google-client-id-example --client-secret google-client-secret-example",
-  "autocli google calendar auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
-  "autocli google calendar calendars --json",
-  "autocli google calendar events --calendar primary --limit 10 --json",
-  "autocli google calendar today --calendar primary --json",
-  'autocli google calendar create-event --calendar primary --summary "Launch review" --start 2026-04-12T10:00:00+05:30 --end 2026-04-12T10:30:00+05:30 --json',
-  'autocli google calendar update-event google-event-id-example --calendar primary --location "Zoom" --json',
+  "mikacli google calendar login --client-id google-client-id-example --client-secret google-client-secret-example",
+  "mikacli google calendar auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
+  "mikacli google calendar calendars --json",
+  "mikacli google calendar events --calendar primary --limit 10 --json",
+  "mikacli google calendar today --calendar primary --json",
+  'mikacli google calendar create-event --calendar primary --summary "Launch review" --start 2026-04-12T10:00:00+05:30 --end 2026-04-12T10:30:00+05:30 --json',
+  'mikacli google calendar update-event google-event-id-example --calendar primary --location "Zoom" --json',
 ] as const;
 
 function buildCalendarCommand(_options: PlatformCommandBuildOptions = {}): Command {

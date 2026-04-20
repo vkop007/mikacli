@@ -1,9 +1,9 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export function parseCareersLimitOption(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new AutoCliError("CAREERS_LIMIT_INVALID", "Expected --limit to be a positive integer.", {
+    throw new MikaCliError("CAREERS_LIMIT_INVALID", "Expected --limit to be a positive integer.", {
       details: {
         value,
       },

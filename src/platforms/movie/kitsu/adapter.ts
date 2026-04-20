@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { trimSummary } from "../shared/helpers.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -55,7 +55,7 @@ export class KitsuAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("KITSU_QUERY_REQUIRED", "Provide an anime query to search Kitsu.");
+      throw new MikaCliError("KITSU_QUERY_REQUIRED", "Provide an anime query to search Kitsu.");
     }
 
     const limit = normalizeLimit(input.limit, 5, 10);
@@ -80,7 +80,7 @@ export class KitsuAdapter {
   async titleInfo(input: { target: string }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("KITSU_TARGET_REQUIRED", "Provide a Kitsu anime URL, anime ID, or search query.");
+      throw new MikaCliError("KITSU_TARGET_REQUIRED", "Provide a Kitsu anime URL, anime ID, or search query.");
     }
 
     const anime = await this.resolveAnime(target);
@@ -106,7 +106,7 @@ export class KitsuAdapter {
       const response = await this.fetchJson(`https://kitsu.io/api/edge/anime/${id}`);
       const resource = response.data;
       if (!resource || Array.isArray(resource)) {
-        throw new AutoCliError("KITSU_TITLE_NOT_FOUND", "Kitsu could not find that anime ID.", {
+        throw new MikaCliError("KITSU_TITLE_NOT_FOUND", "Kitsu could not find that anime ID.", {
           details: { target },
         });
       }
@@ -118,7 +118,7 @@ export class KitsuAdapter {
       const response = await this.fetchJson(`https://kitsu.io/api/edge/anime?filter[slug]=${encodeURIComponent(slug)}&page[limit]=1`);
       const resource = asArray(response.data)[0];
       if (!resource) {
-        throw new AutoCliError("KITSU_TITLE_NOT_FOUND", "Kitsu could not find that anime slug.", {
+        throw new MikaCliError("KITSU_TITLE_NOT_FOUND", "Kitsu could not find that anime slug.", {
           details: { target },
         });
       }
@@ -134,7 +134,7 @@ export class KitsuAdapter {
       results[0];
 
     if (!exact) {
-      throw new AutoCliError("KITSU_TITLE_NOT_FOUND", "Kitsu could not find a matching anime.", {
+      throw new MikaCliError("KITSU_TITLE_NOT_FOUND", "Kitsu could not find a matching anime.", {
         details: { target },
       });
     }
@@ -146,12 +146,12 @@ export class KitsuAdapter {
     const response = await fetch(url, {
       headers: {
         accept: "application/vnd.api+json",
-        "user-agent": "AutoCLI/1.0 (+https://kitsu.io)",
+        "user-agent": "MikaCLI/1.0 (+https://kitsu.io)",
       },
     });
 
     if (!response.ok) {
-      throw new AutoCliError("KITSU_REQUEST_FAILED", "Kitsu request failed.", {
+      throw new MikaCliError("KITSU_REQUEST_FAILED", "Kitsu request failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,

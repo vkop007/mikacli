@@ -12,10 +12,10 @@ export const cloudflarePlatformDefinition: PlatformDefinition = {
   adapter: cloudflareAdapter,
   capabilities: cloudflareCapabilities,
   examples: [
-    "autocli cloudflare login --token $CLOUDFLARE_API_TOKEN",
-    "autocli cloudflare me",
-    "autocli cloudflare accounts",
-    "autocli cloudflare zones",
-    "autocli cloudflare dns example.com",
+    "mikacli cloudflare login --token $CLOUDFLARE_API_TOKEN",
+    "mikacli cloudflare me",
+    "mikacli cloudflare accounts",
+    "mikacli cloudflare zones",
+    "mikacli cloudflare dns example.com",
   ],
 };

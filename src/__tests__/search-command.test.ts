@@ -11,20 +11,20 @@ describe("search command", () => {
 
   test("indexes providers and nested commands", () => {
     const index = buildSearchIndex();
-    expect(index.some((entry) => entry.command === "autocli tools download")).toBe(true);
-    expect(index.some((entry) => entry.command === "autocli tools download video")).toBe(true);
-    expect(index.some((entry) => entry.command === "autocli login")).toBe(true);
-    expect(index.some((entry) => entry.command === "autocli jobs")).toBe(true);
+    expect(index.some((entry) => entry.command === "mikacli tools download")).toBe(true);
+    expect(index.some((entry) => entry.command === "mikacli tools download video")).toBe(true);
+    expect(index.some((entry) => entry.command === "mikacli login")).toBe(true);
+    expect(index.some((entry) => entry.command === "mikacli jobs")).toBe(true);
   });
 
   test("finds provider matches by display name and category words", () => {
     const results = searchCommandIndex(buildSearchIndex(), "uptime robot", { limit: 5 });
-    expect(results[0]?.command).toBe("autocli devops uptimerobot");
+    expect(results[0]?.command).toBe("mikacli devops uptimerobot");
   });
 
   test("finds command matches from examples and descriptions", () => {
     const results = searchCommandIndex(buildSearchIndex(), "youtube download", { limit: 5 });
-    expect(results.some((entry) => entry.command === "autocli tools download")).toBe(true);
+    expect(results.some((entry) => entry.command === "mikacli tools download")).toBe(true);
   });
 
   test("supports category filtering", () => {
@@ -37,6 +37,6 @@ describe("search command", () => {
 
   test("finds root commands by option text", () => {
     const results = searchCommandIndex(buildSearchIndex(), "browser login", { limit: 5 });
-    expect(results[0]?.command).toBe("autocli login");
+    expect(results[0]?.command).toBe("mikacli login");
   });
 });

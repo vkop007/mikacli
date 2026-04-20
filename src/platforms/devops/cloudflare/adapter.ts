@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { BaseApiKeyPlatformAdapter, type LoadedApiKeyConnection } from "../shared/base.js";
 import { CloudflareApiClient } from "./client.js";
 
@@ -191,13 +191,13 @@ export class CloudflareAdapter extends BaseApiKeyPlatformAdapter {
   private async resolveZone(client: CloudflareApiClient, target: string): Promise<CloudflareZone> {
     const normalized = target.trim();
     if (!normalized) {
-      throw new AutoCliError("CLOUDFLARE_ZONE_REQUIRED", "Cloudflare DNS commands require a zone name or zone ID.");
+      throw new MikaCliError("CLOUDFLARE_ZONE_REQUIRED", "Cloudflare DNS commands require a zone name or zone ID.");
     }
 
     const zones = await client.listZones(100);
     const match = zones.find((entry) => entry.id === normalized || entry.name.toLowerCase() === normalized.toLowerCase());
     if (!match) {
-      throw new AutoCliError("CLOUDFLARE_ZONE_NOT_FOUND", `No Cloudflare zone matched "${target}".`);
+      throw new MikaCliError("CLOUDFLARE_ZONE_NOT_FOUND", `No Cloudflare zone matched "${target}".`);
     }
 
     return match;

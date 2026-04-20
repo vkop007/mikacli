@@ -9,9 +9,9 @@ import { printHeadersResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli headers https://example.com",
-  "autocli headers openai.com --method GET",
-  "autocli headers https://example.com --json",
+  "mikacli headers https://example.com",
+  "mikacli headers openai.com --method GET",
+  "mikacli headers https://example.com --json",
 ] as const;
 
 function buildHeadersCommand(options: PlatformCommandBuildOptions = {}): Command {

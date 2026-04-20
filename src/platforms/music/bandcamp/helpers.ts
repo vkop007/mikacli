@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export type BandcampSearchType = "artist" | "album" | "track" | "all";
 
@@ -8,7 +8,7 @@ export function parseBandcampSearchType(value: string): BandcampSearchType {
     return normalized;
   }
 
-  throw new AutoCliError("BANDCAMP_SEARCH_TYPE_INVALID", "Bandcamp search type must be one of: artist, album, track, or all.", {
+  throw new MikaCliError("BANDCAMP_SEARCH_TYPE_INVALID", "Bandcamp search type must be one of: artist, album, track, or all.", {
     details: {
       value,
     },
@@ -18,7 +18,7 @@ export function parseBandcampSearchType(value: string): BandcampSearchType {
 export function parseBandcampLimitOption(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new AutoCliError("BANDCAMP_LIMIT_INVALID", "Bandcamp limit must be a positive integer.", {
+    throw new MikaCliError("BANDCAMP_LIMIT_INVALID", "Bandcamp limit must be a positive integer.", {
       details: {
         value,
       },
@@ -102,7 +102,7 @@ export function toBandcampReadableUrl(url: string): string {
 export function resolveBandcampArtistUrl(target: string): string {
   const url = normalizeBandcampUrl(target);
   if (!url) {
-    throw new AutoCliError("BANDCAMP_ARTIST_URL_INVALID", "Expected a Bandcamp artist URL.", {
+    throw new MikaCliError("BANDCAMP_ARTIST_URL_INVALID", "Expected a Bandcamp artist URL.", {
       details: {
         target,
       },

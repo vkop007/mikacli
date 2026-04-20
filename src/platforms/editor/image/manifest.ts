@@ -9,21 +9,21 @@ import { printImageEditorResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli image info ./photo.png",
-  "autocli image resize ./photo.png --width 1200",
-  "autocli image crop ./photo.png --width 1080 --height 1080",
-  "autocli image convert ./photo.webp --to png",
-  "autocli image rotate ./photo.png --degrees 90",
-  "autocli image upscale ./photo.png --factor 2",
-  "autocli image compress ./photo.png --quality 82",
-  "autocli image grayscale ./photo.png",
-  "autocli image background-remove ./portrait.png --color '#00ff00'",
-  "autocli image watermark ./photo.png --watermark ./logo.png --position bottom-right",
-  "autocli image upscale ./photo.png --scale 4x --model realesrgan",
-  "autocli image collage ./a.png ./b.png ./c.png --layout grid --gap 10",
-  "autocli image palette ./photo.png --colors 5 --json",
-  "autocli image exif ./photo.jpg --json",
-  "autocli image crop ./photo.png --aspect 16:9 --gravity center",
+  "mikacli image info ./photo.png",
+  "mikacli image resize ./photo.png --width 1200",
+  "mikacli image crop ./photo.png --width 1080 --height 1080",
+  "mikacli image convert ./photo.webp --to png",
+  "mikacli image rotate ./photo.png --degrees 90",
+  "mikacli image upscale ./photo.png --factor 2",
+  "mikacli image compress ./photo.png --quality 82",
+  "mikacli image grayscale ./photo.png",
+  "mikacli image background-remove ./portrait.png --color '#00ff00'",
+  "mikacli image watermark ./photo.png --watermark ./logo.png --position bottom-right",
+  "mikacli image upscale ./photo.png --scale 4x --model realesrgan",
+  "mikacli image collage ./a.png ./b.png ./c.png --layout grid --gap 10",
+  "mikacli image palette ./photo.png --colors 5 --json",
+  "mikacli image exif ./photo.jpg --json",
+  "mikacli image crop ./photo.png --aspect 16:9 --gravity center",
 ] as const;
 
 function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Command {

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { createUploadBlob } from "../../../utils/upload-pipeline.js";
 
 type SlackApiResponse = {
@@ -118,7 +118,7 @@ export class SlackbotApiClient {
         body: createUploadBlob({ bytes: Buffer.from(bytes), mimeType: input.mimeType }),
       });
     } catch (error) {
-      throw new AutoCliError("SLACK_UPLOAD_UNAVAILABLE", "Unable to reach Slack's external upload URL.", {
+      throw new MikaCliError("SLACK_UPLOAD_UNAVAILABLE", "Unable to reach Slack's external upload URL.", {
         cause: error,
         details: {
           uploadUrl,
@@ -127,7 +127,7 @@ export class SlackbotApiClient {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("SLACK_UPLOAD_FAILED", "Slack external file upload failed.", {
+      throw new MikaCliError("SLACK_UPLOAD_FAILED", "Slack external file upload failed.", {
         details: {
           uploadUrl,
           status: response.status,
@@ -160,7 +160,7 @@ export class SlackbotApiClient {
     const channels = await this.conversationsAll();
     const found = channels.find((channel) => channel.id === normalized || channel.name === normalized);
     if (!found) {
-      throw new AutoCliError("SLACK_CHANNEL_NOT_FOUND", `Could not find a Slack channel named "${reference}".`, {
+      throw new MikaCliError("SLACK_CHANNEL_NOT_FOUND", `Could not find a Slack channel named "${reference}".`, {
         details: { channel: reference },
       });
     }
@@ -190,7 +190,7 @@ export class SlackbotApiClient {
         body,
       });
     } catch (error) {
-      throw new AutoCliError("SLACK_API_UNAVAILABLE", `Unable to reach Slack API method "${method}".`, {
+      throw new MikaCliError("SLACK_API_UNAVAILABLE", `Unable to reach Slack API method "${method}".`, {
         cause: error,
         details: { method },
       });
@@ -199,7 +199,7 @@ export class SlackbotApiClient {
     const requestId = response.headers.get("x-slack-req-id") ?? undefined;
 
     if (response.status === 429) {
-      throw new AutoCliError("SLACK_RATE_LIMITED", `Slack rate limited method "${method}".`, {
+      throw new MikaCliError("SLACK_RATE_LIMITED", `Slack rate limited method "${method}".`, {
         details: {
           method,
           requestId,
@@ -214,7 +214,7 @@ export class SlackbotApiClient {
     try {
       payload = JSON.parse(text) as SlackApiResponse;
     } catch (error) {
-      throw new AutoCliError("INVALID_SLACK_RESPONSE", "Slack returned a non-JSON response.", {
+      throw new MikaCliError("INVALID_SLACK_RESPONSE", "Slack returned a non-JSON response.", {
         cause: error,
         details: {
           method,
@@ -226,7 +226,7 @@ export class SlackbotApiClient {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("SLACK_HTTP_ERROR", `Slack API returned HTTP ${response.status} for "${method}".`, {
+      throw new MikaCliError("SLACK_HTTP_ERROR", `Slack API returned HTTP ${response.status} for "${method}".`, {
         details: {
           method,
           requestId,
@@ -236,7 +236,7 @@ export class SlackbotApiClient {
     }
 
     if (!payload.ok) {
-      throw new AutoCliError("SLACK_API_ERROR", `Slack API method "${method}" failed.`, {
+      throw new MikaCliError("SLACK_API_ERROR", `Slack API method "${method}" failed.`, {
         details: {
           method,
           requestId,

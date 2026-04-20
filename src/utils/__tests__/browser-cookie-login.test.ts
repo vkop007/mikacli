@@ -161,11 +161,11 @@ describe("browser cookie login detection", () => {
   it("extracts reusable managed-browser processes and skips helper processes", () => {
     const candidates = extractManagedBrowserProcessCandidates(
       `
-15424 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=/Users/example/.autocli/browser/default --remote-debugging-port=50345 --no-first-run
-15483 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/146.0.7680.178/Helpers/Google Chrome Helper --type=gpu-process --user-data-dir=/Users/example/.autocli/browser/default --remote-debugging-port=50345
-33601 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=/var/folders/tmp/autocli-cdp --remote-debugging-port=51232 --no-first-run
+15424 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=/Users/example/.mikacli/browser/default --remote-debugging-port=50345 --no-first-run
+15483 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/146.0.7680.178/Helpers/Google Chrome Helper --type=gpu-process --user-data-dir=/Users/example/.mikacli/browser/default --remote-debugging-port=50345
+33601 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=/var/folders/tmp/mikacli-cdp --remote-debugging-port=51232 --no-first-run
       `,
-      "/Users/example/.autocli/browser/default",
+      "/Users/example/.mikacli/browser/default",
     );
 
     expect(candidates).toEqual([

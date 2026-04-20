@@ -10,7 +10,7 @@ import {
   runFfprobe,
   toNumber,
 } from "../shared/ffmpeg.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -124,7 +124,7 @@ export class ImageEditorAdapter {
     const probe = await runFfprobe(input.inputPath);
     const stream = (probe.streams ?? []).find((entry) => entry.codec_type === "video");
     if (!stream) {
-      throw new AutoCliError("IMAGE_INFO_UNAVAILABLE", "Could not read image dimensions from the file.", {
+      throw new MikaCliError("IMAGE_INFO_UNAVAILABLE", "Could not read image dimensions from the file.", {
         details: {
           inputPath: input.inputPath,
         },
@@ -154,7 +154,7 @@ export class ImageEditorAdapter {
     const width = input.width !== undefined ? requirePositiveInteger(input.width, "width") : undefined;
     const height = input.height !== undefined ? requirePositiveInteger(input.height, "height") : undefined;
     if (!width && !height) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Resize needs at least one of --width or --height.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Resize needs at least one of --width or --height.");
     }
 
     const outputPath = resolveEditorOutputPath({
@@ -198,7 +198,7 @@ export class ImageEditorAdapter {
       const asW = toNumber(parts[0]);
       const asH = toNumber(parts[1]);
       if (!asW || !asH) {
-        throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Aspect must be in format W:H, e.g. 16:9");
+        throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Aspect must be in format W:H, e.g. 16:9");
       }
       
       let xExp = "0";
@@ -267,7 +267,7 @@ export class ImageEditorAdapter {
   async rotate(input: ImageRotateInput): Promise<AdapterActionResult> {
     const degrees = toNumber(input.degrees);
     if (degrees === undefined) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "degrees must be a valid number.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "degrees must be a valid number.");
     }
 
     const outputPath = resolveEditorOutputPath({
@@ -438,7 +438,7 @@ export class ImageEditorAdapter {
     const probe = await runFfprobe(input.inputPath);
     const stream = (probe.streams ?? []).find((entry) => entry.codec_type === "video");
     if (!stream || typeof stream.width !== "number" || typeof stream.height !== "number") {
-      throw new AutoCliError("IMAGE_INFO_UNAVAILABLE", "Could not read image dimensions from the file.", {
+      throw new MikaCliError("IMAGE_INFO_UNAVAILABLE", "Could not read image dimensions from the file.", {
         details: {
           inputPath: input.inputPath,
         },
@@ -616,7 +616,7 @@ export class ImageEditorAdapter {
 
   async collage(input: ImageCollageInput): Promise<AdapterActionResult> {
     if (input.inputPaths.length < 2) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Collage requires at least 2 image paths.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Collage requires at least 2 image paths.");
     }
     const resolvedInputs = await Promise.all(input.inputPaths.map(p => assertLocalInputFile(p)));
     const gap = clampNumber(toNumber(input.gap) ?? 0, 0, 500);
@@ -704,7 +704,7 @@ function normalizeImageFormat(value: string): "png" | "jpeg" | "webp" | "bmp" {
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported image format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported image format "${value}".`, {
     details: {
       supportedFormats: ["png", "jpg", "jpeg", "webp", "bmp"],
     },
@@ -738,7 +738,7 @@ function normalizeBackgroundColor(value: string | undefined): string {
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported background color "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported background color "${value}".`, {
     details: {
       supportedFormats: ["#RRGGBB", "0xRRGGBB", "white", "black", "green"],
     },
@@ -757,7 +757,7 @@ function normalizeOverlayPosition(value: string | undefined): "top-left" | "top-
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported watermark position "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported watermark position "${value}".`, {
     details: {
       supportedPositions: ["top-left", "top-right", "bottom-left", "bottom-right", "center"],
     },

@@ -1,7 +1,7 @@
 import { parse as parseCsv } from "csv-parse/sync";
 import { stringify as stringifyCsv } from "csv-stringify/sync";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { loadTextSource, writeTextOutput } from "../shared/io.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -101,7 +101,7 @@ function parseCsvTable(raw: string): { headers: string[]; records: CsvRecord[] }
   });
 
   if (!headers || headers.length === 0) {
-    throw new AutoCliError("DATA_CSV_EMPTY", "CSV input did not contain a header row.");
+    throw new MikaCliError("DATA_CSV_EMPTY", "CSV input did not contain a header row.");
   }
 
   const records = rows.slice(1).map((row) => {
@@ -118,7 +118,7 @@ function parseCsvTable(raw: string): { headers: string[]; records: CsvRecord[] }
 function buildCsvFilter(expression: string): (record: CsvRecord) => boolean {
   const match = expression.trim().match(/^([^=!<>~]+?)\s*(=|!=|>=|<=|>|<|~)\s*(.+)$/);
   if (!match?.[1] || !match[2]) {
-    throw new AutoCliError("DATA_CSV_FILTER_INVALID", "Use a filter expression like status=done, amount>10, or name~john.");
+    throw new MikaCliError("DATA_CSV_FILTER_INVALID", "Use a filter expression like status=done, amount>10, or name~john.");
   }
 
   const column = match[1].trim();

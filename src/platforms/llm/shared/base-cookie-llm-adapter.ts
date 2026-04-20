@@ -2,7 +2,7 @@ import { constants } from "node:fs";
 import { access } from "node:fs/promises";
 
 import { BasePlatformAdapter } from "../../shared/base-platform-adapter.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { getPlatformAuthCookieNames, getPlatformHomeUrl } from "../../config.js";
 import { buildCookieLlmSessionStatus } from "./helpers.js";
 
@@ -118,7 +118,7 @@ export class CookieLlmAdapter extends BasePlatformAdapter {
     const session = await this.ensureUsableSession(input.account);
     const prompt = input.prompt.trim();
     if (!prompt) {
-      throw new AutoCliError("INVALID_PROMPT", `Expected a non-empty ${this.displayName} text prompt.`);
+      throw new MikaCliError("INVALID_PROMPT", `Expected a non-empty ${this.displayName} text prompt.`);
     }
 
     return this.executeText(session, {
@@ -131,7 +131,7 @@ export class CookieLlmAdapter extends BasePlatformAdapter {
   async image(input: CookieLlmImageInput): Promise<AdapterActionResult> {
     const session = await this.ensureUsableSession(input.account);
     await access(input.mediaPath, constants.R_OK).catch(() => {
-      throw new AutoCliError("MEDIA_NOT_FOUND", `Could not read media file: ${input.mediaPath}`, {
+      throw new MikaCliError("MEDIA_NOT_FOUND", `Could not read media file: ${input.mediaPath}`, {
         details: { mediaPath: input.mediaPath },
       });
     });
@@ -146,7 +146,7 @@ export class CookieLlmAdapter extends BasePlatformAdapter {
     const session = await this.ensureUsableSession(input.account);
     const prompt = input.prompt.trim();
     if (!prompt) {
-      throw new AutoCliError("INVALID_PROMPT", `Expected a non-empty ${this.displayName} video prompt.`);
+      throw new MikaCliError("INVALID_PROMPT", `Expected a non-empty ${this.displayName} video prompt.`);
     }
 
     return this.executeVideo(session, {
@@ -172,15 +172,15 @@ export class CookieLlmAdapter extends BasePlatformAdapter {
   }
 
   async like(_input: LikeInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", `${this.displayName} does not expose like-style commands in this CLI.`);
+    throw new MikaCliError("UNSUPPORTED_ACTION", `${this.displayName} does not expose like-style commands in this CLI.`);
   }
 
   async comment(_input: CommentInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", `${this.displayName} does not expose comment-style commands in this CLI.`);
+    throw new MikaCliError("UNSUPPORTED_ACTION", `${this.displayName} does not expose comment-style commands in this CLI.`);
   }
 
   protected async executeText(_session: PlatformSession, input: CookieLlmTextInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(`${this.platform.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_TEXT_UNIMPLEMENTED`, this.provider.textUnsupportedMessage, {
+    throw new MikaCliError(`${this.platform.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_TEXT_UNIMPLEMENTED`, this.provider.textUnsupportedMessage, {
       details: {
         platform: this.platform,
         model: input.model,
@@ -189,7 +189,7 @@ export class CookieLlmAdapter extends BasePlatformAdapter {
   }
 
   protected async executeImage(_session: PlatformSession, input: CookieLlmImageInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(`${this.platform.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_IMAGE_UNIMPLEMENTED`, this.provider.imageUnsupportedMessage, {
+    throw new MikaCliError(`${this.platform.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_IMAGE_UNIMPLEMENTED`, this.provider.imageUnsupportedMessage, {
       details: {
         platform: this.platform,
         mediaPath: input.mediaPath,
@@ -199,7 +199,7 @@ export class CookieLlmAdapter extends BasePlatformAdapter {
   }
 
   protected async executeVideo(_session: PlatformSession, input: CookieLlmVideoInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(`${this.platform.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_VIDEO_UNIMPLEMENTED`, this.provider.videoUnsupportedMessage, {
+    throw new MikaCliError(`${this.platform.toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_VIDEO_UNIMPLEMENTED`, this.provider.videoUnsupportedMessage, {
       details: {
         platform: this.platform,
         model: input.model,
@@ -213,7 +213,7 @@ export class CookieLlmAdapter extends BasePlatformAdapter {
     const persisted = await this.persistExistingSession(session, { status: nextStatus });
 
     if (nextStatus.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", nextStatus.message ?? `${this.displayName} session has expired.`, {
+      throw new MikaCliError("SESSION_EXPIRED", nextStatus.message ?? `${this.displayName} session has expired.`, {
         details: {
           platform: this.platform,
           account: persisted.account,

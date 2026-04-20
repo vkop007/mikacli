@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   runFirstClassBrowserAction,
   withBrowserActionMetadata,
@@ -274,7 +274,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Instagram session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Instagram session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -336,7 +336,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     const probe = await this.ensureActiveSession(session);
     const media = await readMediaFile(input.mediaPath);
     if (!media.mimeType.startsWith("image/")) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "UNSUPPORTED_ACTION",
         "Instagram post currently supports image uploads only. Video and reel publishing are not implemented yet.",
         {
@@ -430,9 +430,9 @@ export class InstagramAdapter extends BasePlatformAdapter {
   }
 
   async postText(_input: TextPostInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "UNSUPPORTED_ACTION",
-      "Instagram web sessions cannot publish a text-only post. Use `autocli social instagram post <media-path> --caption ...`.",
+      "Instagram web sessions cannot publish a text-only post. Use `mikacli social instagram post <media-path> --caption ...`.",
     );
   }
 
@@ -456,7 +456,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
     const media = response.items?.[0];
     if (!media?.id && !media?.pk) {
-      throw new AutoCliError("INSTAGRAM_MEDIA_NOT_FOUND", "Instagram could not find that media item.", {
+      throw new MikaCliError("INSTAGRAM_MEDIA_NOT_FOUND", "Instagram could not find that media item.", {
         details: {
           target: input.target,
           mediaId: target.mediaId,
@@ -466,7 +466,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
     const assets = this.extractInstagramDownloadAssets(media, Boolean(input.all));
     if (assets.length === 0) {
-      throw new AutoCliError("INSTAGRAM_DOWNLOAD_UNAVAILABLE", "Instagram did not expose any downloadable media URLs for that item.", {
+      throw new MikaCliError("INSTAGRAM_DOWNLOAD_UNAVAILABLE", "Instagram did not expose any downloadable media URLs for that item.", {
         details: {
           target: input.target,
           mediaId: target.mediaId,
@@ -686,7 +686,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     const selectedItems = storyItems.filter((item) => this.matchesInstagramStoryMediaFilter(item, mediaFilter)).slice(0, limit);
 
     if (selectedItems.length === 0) {
-      throw new AutoCliError("INSTAGRAM_STORIES_UNAVAILABLE", `No active Instagram stories found for ${profile.username ?? profile.id}.`, {
+      throw new MikaCliError("INSTAGRAM_STORIES_UNAVAILABLE", `No active Instagram stories found for ${profile.username ?? profile.id}.`, {
         details: {
           target: input.target,
           profileId: profile.id,
@@ -733,7 +733,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     }
 
     if (savedFiles.length === 0) {
-      throw new AutoCliError("INSTAGRAM_STORY_DOWNLOAD_UNAVAILABLE", "Instagram did not expose any downloadable story assets for that profile.", {
+      throw new MikaCliError("INSTAGRAM_STORY_DOWNLOAD_UNAVAILABLE", "Instagram did not expose any downloadable story assets for that profile.", {
         details: {
           target: input.target,
           profileId: profile.id,
@@ -786,7 +786,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
     const posts = (response.items ?? []).filter((item) => this.matchesInstagramPostFilter(item, type)).slice(0, limit);
     if (posts.length === 0) {
-      throw new AutoCliError("INSTAGRAM_POSTS_UNAVAILABLE", `No Instagram posts found for ${profile.username ?? profile.id}.`, {
+      throw new MikaCliError("INSTAGRAM_POSTS_UNAVAILABLE", `No Instagram posts found for ${profile.username ?? profile.id}.`, {
         details: {
           target: input.target,
           profileId: profile.id,
@@ -951,13 +951,13 @@ export class InstagramAdapter extends BasePlatformAdapter {
     const steps = input.browser
       ? [{
           source: "shared" as const,
-          announceLabel: `Opening shared AutoCLI browser profile for Instagram deletion: ${targetUrl}`,
+          announceLabel: `Opening shared MikaCLI browser profile for Instagram deletion: ${targetUrl}`,
         }]
       : [
           { source: "headless" as const, shouldContinueOnError: () => true },
           {
             source: "shared" as const,
-            announceLabel: `Opening shared AutoCLI browser profile for Instagram deletion: ${targetUrl}`,
+            announceLabel: `Opening shared MikaCLI browser profile for Instagram deletion: ${targetUrl}`,
           },
         ];
 
@@ -1042,13 +1042,13 @@ export class InstagramAdapter extends BasePlatformAdapter {
     const steps = input.browser
       ? [{
           source: "shared" as const,
-          announceLabel: `Opening shared AutoCLI browser profile for Instagram comment deletion: ${target.url}`,
+          announceLabel: `Opening shared MikaCLI browser profile for Instagram comment deletion: ${target.url}`,
         }]
       : [
           { source: "headless" as const, shouldContinueOnError: () => true },
           {
             source: "shared" as const,
-            announceLabel: `Opening shared AutoCLI browser profile for Instagram comment deletion: ${target.url}`,
+            announceLabel: `Opening shared MikaCLI browser profile for Instagram comment deletion: ${target.url}`,
           },
         ];
 
@@ -1150,7 +1150,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
         );
 
         if (!response.ok) {
-          throw new AutoCliError("PLATFORM_REQUEST_FAILED", "Failed to delete the Instagram comment.", {
+          throw new MikaCliError("PLATFORM_REQUEST_FAILED", "Failed to delete the Instagram comment.", {
             details: {
               mediaId: target.mediaId,
               commentId,
@@ -1196,7 +1196,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     const query = input.query.trim();
 
     if (!query) {
-      throw new AutoCliError("INVALID_SEARCH_QUERY", "Expected a non-empty Instagram search query.");
+      throw new MikaCliError("INVALID_SEARCH_QUERY", "Expected a non-empty Instagram search query.");
     }
 
     const limit = this.normalizeSearchLimit(input.limit);
@@ -1251,7 +1251,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
     const media = response.items?.[0];
     if (!media?.id && !media?.pk) {
-      throw new AutoCliError("INSTAGRAM_MEDIA_NOT_FOUND", "Instagram could not find that media item.", {
+      throw new MikaCliError("INSTAGRAM_MEDIA_NOT_FOUND", "Instagram could not find that media item.", {
         details: {
           target: input.target,
           mediaId: target.mediaId,
@@ -1373,7 +1373,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     await this.persistSessionState(session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Instagram session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Instagram session has expired.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -1545,7 +1545,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
     videosOnly?: boolean;
   }): "all" | "photo" | "video" {
     if (input.photosOnly && input.videosOnly) {
-      throw new AutoCliError("INVALID_MEDIA_FILTER", "Use either --photos-only or --videos-only, not both.");
+      throw new MikaCliError("INVALID_MEDIA_FILTER", "Use either --photos-only or --videos-only, not both.");
     }
 
     if (input.photosOnly) {
@@ -1860,7 +1860,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
         : undefined;
 
     if (!user) {
-      throw new AutoCliError("INSTAGRAM_PROFILE_NOT_FOUND", "Instagram could not find that profile.", {
+      throw new MikaCliError("INSTAGRAM_PROFILE_NOT_FOUND", "Instagram could not find that profile.", {
         details: {
           target,
         },
@@ -1925,7 +1925,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 
     const media = response.items?.[0];
     if (!media?.id && !media?.pk) {
-      throw new AutoCliError("INSTAGRAM_MEDIA_NOT_FOUND", "Instagram could not find that media item.", {
+      throw new MikaCliError("INSTAGRAM_MEDIA_NOT_FOUND", "Instagram could not find that media item.", {
         details: {
           mediaId,
         },
@@ -1967,17 +1967,17 @@ export class InstagramAdapter extends BasePlatformAdapter {
     }
 
     if (page.url().includes("/accounts/login")) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INSTAGRAM_BROWSER_NOT_LOGGED_IN",
-        "The browser session is not logged into Instagram. Re-login with `autocli social instagram login --browser` first.",
+        "The browser session is not logged into Instagram. Re-login with `mikacli social instagram login --browser` first.",
       );
     }
 
     const loginInputs = await page.locator('input[name="username"], input[name="password"]').count().catch(() => 0);
     if (loginInputs > 0) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INSTAGRAM_BROWSER_NOT_LOGGED_IN",
-        "The browser session is not logged into Instagram. Re-login with `autocli social instagram login --browser` first.",
+        "The browser session is not logged into Instagram. Re-login with `mikacli social instagram login --browser` first.",
       );
     }
   }
@@ -1999,7 +1999,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("INSTAGRAM_POST_NOT_FOUND", "Instagram never exposed the requested post in the browser flow.", {
+    throw new MikaCliError("INSTAGRAM_POST_NOT_FOUND", "Instagram never exposed the requested post in the browser flow.", {
       details: {
         targetUrl,
         shortcode,
@@ -2035,7 +2035,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("INSTAGRAM_DELETE_CONFIRM_NOT_FOUND", "Instagram never exposed the delete confirmation button.", {
+    throw new MikaCliError("INSTAGRAM_DELETE_CONFIRM_NOT_FOUND", "Instagram never exposed the delete confirmation button.", {
       details: {
         url: page.url(),
       },
@@ -2058,7 +2058,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(500);
     }
 
-    throw new AutoCliError("INSTAGRAM_DELETE_TIMEOUT", "Instagram never confirmed that the post was deleted.", {
+    throw new MikaCliError("INSTAGRAM_DELETE_TIMEOUT", "Instagram never confirmed that the post was deleted.", {
       details: {
         targetUrl,
         finalUrl: page.url(),
@@ -2132,7 +2132,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
       return null as T;
     }
 
-    throw new AutoCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
+    throw new MikaCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
       cause: lastError,
       details: lastError instanceof Error ? { message: lastError.message } : undefined,
     });
@@ -2142,7 +2142,7 @@ export class InstagramAdapter extends BasePlatformAdapter {
 export function normalizeInstagramCommentId(commentId: string): string {
   const normalized = commentId.trim();
   if (!/^\d+$/u.test(normalized)) {
-    throw new AutoCliError("INVALID_COMMENT_ID", "Expected a numeric Instagram comment ID.", {
+    throw new MikaCliError("INVALID_COMMENT_ID", "Expected a numeric Instagram comment ID.", {
       details: {
         commentId,
       },
@@ -2169,7 +2169,7 @@ async function firstVisibleInstagramLocator(page: PlaywrightPage, selectors: rea
     }
   }
 
-  throw new AutoCliError("INSTAGRAM_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Instagram element for selectors: ${selectors.join(", ")}`);
+  throw new MikaCliError("INSTAGRAM_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Instagram element for selectors: ${selectors.join(", ")}`);
 }
 
 async function firstVisibleInstagramLocatorWithin(root: PlaywrightLocator, selectors: readonly string[]) {
@@ -2184,7 +2184,7 @@ async function firstVisibleInstagramLocatorWithin(root: PlaywrightLocator, selec
     }
   }
 
-  throw new AutoCliError("INSTAGRAM_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Instagram element for selectors: ${selectors.join(", ")}`);
+  throw new MikaCliError("INSTAGRAM_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible Instagram element for selectors: ${selectors.join(", ")}`);
 }
 
 async function clickInstagramLocator(locator: PlaywrightLocator): Promise<void> {

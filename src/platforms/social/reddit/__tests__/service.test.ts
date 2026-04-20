@@ -23,12 +23,12 @@ describe("reddit service", () => {
                     kind: "t3",
                     data: {
                       id: "1abc123",
-                      title: "AutoCLI launch",
+                      title: "MikaCLI launch",
                       selftext: "Shipping Reddit support.",
                       author: "example_author",
                       subreddit: "programming",
                       subreddit_name_prefixed: "r/programming",
-                      permalink: "/r/programming/comments/1abc123/autocli_launch/",
+                      permalink: "/r/programming/comments/1abc123/mikacli_launch/",
                       created_utc: 1774769793,
                       score: 42,
                       num_comments: 3,
@@ -46,7 +46,7 @@ describe("reddit service", () => {
                       id: "c1",
                       body: "Nice work",
                       author: "reader1",
-                      permalink: "/r/programming/comments/1abc123/autocli_launch/c1/",
+                      permalink: "/r/programming/comments/1abc123/mikacli_launch/c1/",
                       subreddit: "programming",
                       subreddit_name_prefixed: "r/programming",
                       created_utc: 1774769800,
@@ -59,7 +59,7 @@ describe("reddit service", () => {
                       id: "c2",
                       body: "Looks useful",
                       author: "reader2",
-                      permalink: "/r/programming/comments/1abc123/autocli_launch/c2/",
+                      permalink: "/r/programming/comments/1abc123/mikacli_launch/c2/",
                       subreddit: "programming",
                       created_utc: 1774769801,
                       score: 4,
@@ -83,10 +83,10 @@ describe("reddit service", () => {
 
     expect(result.ok).toBe(true);
     expect(result.id).toBe("1abc123");
-    expect(result.url).toBe("https://www.reddit.com/r/programming/comments/1abc123/autocli_launch/");
+    expect(result.url).toBe("https://www.reddit.com/r/programming/comments/1abc123/mikacli_launch/");
     expect(result.data?.thread).toMatchObject({
       id: "1abc123",
-      title: "AutoCLI launch",
+      title: "MikaCLI launch",
       username: "example_author",
     });
     expect(result.data?.replies).toEqual([

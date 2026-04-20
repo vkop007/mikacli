@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { BaseApiKeyPlatformAdapter, type LoadedApiKeyConnection } from "../shared/base.js";
 import { UptimeRobotApiClient, type UptimeRobotPagination, type UptimeRobotUser } from "./client.js";
 
@@ -319,7 +319,7 @@ export class UptimeRobotAdapter extends BaseApiKeyPlatformAdapter {
 
   async uptimeStats(input: UptimeStatsInput): Promise<AdapterActionResult> {
     if (input.timeFrame === "CUSTOM" && (typeof input.start !== "number" || typeof input.end !== "number")) {
-      throw new AutoCliError("UPTIMEROBOT_CUSTOM_TIMEFRAME_REQUIRED", "CUSTOM uptime stats require both --start and --end Unix timestamps.");
+      throw new MikaCliError("UPTIMEROBOT_CUSTOM_TIMEFRAME_REQUIRED", "CUSTOM uptime stats require both --start and --end Unix timestamps.");
     }
 
     const active = await this.ensureActiveConnection(input.account);

@@ -4,7 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 
 import { getConnectionPath, sanitizeAccountName } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 
 import type { ConnectionRecord } from "../../../core/auth/auth-types.js";
@@ -406,7 +406,7 @@ export class TempMailAdapter {
       });
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "TEMPMAIL_WAIT_TIMEOUT",
       `No new temp mail message arrived within ${Math.ceil(timeoutMs / 1000)} seconds.`,
       {
@@ -608,7 +608,7 @@ export class TempMailAdapter {
   private createClient(token?: string): SessionHttpClient {
     return new SessionHttpClient(undefined, {
       accept: "application/json",
-      "user-agent": "AutoCLI/1.0 (+https://github.com/vkop007/autocli)",
+      "user-agent": "MikaCLI/1.0 (+https://github.com/vkop007/mikacli)",
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     });
   }
@@ -664,7 +664,7 @@ export class TempMailAdapter {
     });
 
     if (typeof payload.token !== "string" || payload.token.length === 0) {
-      throw new AutoCliError("TEMPMAIL_TOKEN_INVALID", "Mail.tm did not return a bearer token.");
+      throw new MikaCliError("TEMPMAIL_TOKEN_INVALID", "Mail.tm did not return a bearer token.");
     }
 
     return payload.token;
@@ -831,7 +831,7 @@ export function normalizeTempMailLocalPart(value: string): string {
   const normalized = value.trim().toLowerCase();
   const safe = normalized.replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
   if (safe.length < 3) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "TEMPMAIL_NAME_INVALID",
       "Temp mailbox local part must contain at least 3 letters or numbers after normalization.",
       {
@@ -850,10 +850,10 @@ export function pickTempMailDomain(domains: readonly TempMailDomain[], requested
   if (normalizedRequested) {
     const requested = domains.find((domain) => domain.domain.toLowerCase() === normalizedRequested);
     if (!requested) {
-      throw new AutoCliError("TEMPMAIL_DOMAIN_NOT_FOUND", `Temp mail domain "${requestedDomain}" is not available right now.`);
+      throw new MikaCliError("TEMPMAIL_DOMAIN_NOT_FOUND", `Temp mail domain "${requestedDomain}" is not available right now.`);
     }
     if (!requested.isActive || requested.isPrivate) {
-      throw new AutoCliError("TEMPMAIL_DOMAIN_UNAVAILABLE", `Temp mail domain "${requested.domain}" is not publicly available right now.`);
+      throw new MikaCliError("TEMPMAIL_DOMAIN_UNAVAILABLE", `Temp mail domain "${requested.domain}" is not publicly available right now.`);
     }
 
     return requested;
@@ -861,7 +861,7 @@ export function pickTempMailDomain(domains: readonly TempMailDomain[], requested
 
   const defaultDomain = domains.find((domain) => domain.isActive && !domain.isPrivate) ?? domains.find((domain) => domain.isActive) ?? domains[0];
   if (!defaultDomain) {
-    throw new AutoCliError("TEMPMAIL_DOMAIN_NOT_FOUND", "Mail.tm did not return any available temp-mail domains.");
+    throw new MikaCliError("TEMPMAIL_DOMAIN_NOT_FOUND", "Mail.tm did not return any available temp-mail domains.");
   }
 
   return defaultDomain;
@@ -1029,7 +1029,7 @@ function parseTempMailAddress(value: Record<string, unknown> | undefined): TempM
 
 function parseTempMailSessionMetadata(value: unknown): TempMailSessionMetadata {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new AutoCliError("TEMPMAIL_CONNECTION_INVALID", "Saved temp mail connection metadata is missing.");
+    throw new MikaCliError("TEMPMAIL_CONNECTION_INVALID", "Saved temp mail connection metadata is missing.");
   }
 
   const metadata = value as Partial<TempMailSessionMetadata>;
@@ -1039,7 +1039,7 @@ function parseTempMailSessionMetadata(value: unknown): TempMailSessionMetadata {
     typeof metadata.accountId !== "string" ||
     typeof metadata.domain !== "string"
   ) {
-    throw new AutoCliError("TEMPMAIL_CONNECTION_INVALID", "Saved temp mail connection metadata is incomplete.");
+    throw new MikaCliError("TEMPMAIL_CONNECTION_INVALID", "Saved temp mail connection metadata is incomplete.");
   }
 
   return {
@@ -1107,7 +1107,7 @@ function resolveSavedTempMailAccountName(account: string | undefined, address: s
 }
 
 function createRandomTempMailLocalPart(): string {
-  return `autocli-${randomBytes(4).toString("hex")}`;
+  return `mikacli-${randomBytes(4).toString("hex")}`;
 }
 
 function createRandomTempMailPassword(): string {
@@ -1117,21 +1117,21 @@ function createRandomTempMailPassword(): string {
 function requireTempMailPassword(value: string | undefined, message: string): string {
   const normalized = normalizeOptionalString(value);
   if (!normalized) {
-    throw new AutoCliError("TEMPMAIL_PASSWORD_REQUIRED", message);
+    throw new MikaCliError("TEMPMAIL_PASSWORD_REQUIRED", message);
   }
 
   return normalized;
 }
 
-function wrapTempMailRequestError(error: unknown, message: string): AutoCliError {
-  if (error instanceof AutoCliError) {
-    return new AutoCliError(error.code, message, {
+function wrapTempMailRequestError(error: unknown, message: string): MikaCliError {
+  if (error instanceof MikaCliError) {
+    return new MikaCliError(error.code, message, {
       cause: error,
       details: error.details,
     });
   }
 
-  return new AutoCliError("TEMPMAIL_REQUEST_FAILED", message, {
+  return new MikaCliError("TEMPMAIL_REQUEST_FAILED", message, {
     cause: error,
   });
 }
@@ -1167,7 +1167,7 @@ function requireString(value: unknown, message: string): string {
     return value;
   }
 
-  throw new AutoCliError("TEMPMAIL_RESPONSE_INVALID", message);
+  throw new MikaCliError("TEMPMAIL_RESPONSE_INVALID", message);
 }
 
 function asString(value: unknown): string | undefined {

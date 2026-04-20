@@ -12,10 +12,10 @@ export const flyPlatformDefinition: PlatformDefinition = {
   adapter: flyAdapter,
   capabilities: flyCapabilities,
   examples: [
-    "autocli fly login --token $FLY_API_TOKEN",
-    "autocli fly apps --org personal",
-    "autocli fly app my-app",
-    "autocli fly machines my-app",
-    "autocli fly certificates my-app",
+    "mikacli fly login --token $FLY_API_TOKEN",
+    "mikacli fly apps --org personal",
+    "mikacli fly app my-app",
+    "mikacli fly machines my-app",
+    "mikacli fly certificates my-app",
   ],
 };

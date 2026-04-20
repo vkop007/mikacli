@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible bug in AutoCLI.
+description: Report a reproducible bug in MikaCLI.
 title: "[Bug]: "
 labels:
   - bug
@@ -9,7 +9,7 @@ body:
     attributes:
       label: What happened?
       description: Tell us what you expected and what happened instead.
-      placeholder: autocli social x post ... returned ...
+      placeholder: mikacli social x post ... returned ...
     validations:
       required: true
   - type: textarea
@@ -18,7 +18,7 @@ body:
       label: Steps to reproduce
       description: Include the exact commands when possible. Redact secrets before posting.
       placeholder: |
-        1. Run `autocli ...`
+        1. Run `mikacli ...`
         2. ...
     validations:
       required: true

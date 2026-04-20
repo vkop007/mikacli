@@ -38,7 +38,7 @@ describe("screenshot adapter", () => {
   });
 
   test("downloads and saves a screenshot", async () => {
-    const tempDir = mkdtempSync(join(tmpdir(), "autocli-screenshot-test-"));
+    const tempDir = mkdtempSync(join(tmpdir(), "mikacli-screenshot-test-"));
     const outputPath = join(tempDir, "example.png");
 
     let requestCount = 0;

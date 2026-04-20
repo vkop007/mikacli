@@ -1,9 +1,9 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export function normalizePublicHttpUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("PUBLIC_URL_REQUIRED", "A target URL is required.");
+    throw new MikaCliError("PUBLIC_URL_REQUIRED", "A target URL is required.");
   }
 
   try {
@@ -12,7 +12,7 @@ export function normalizePublicHttpUrl(value: string): string {
     try {
       return validatePublicHttpUrl(new URL(`https://${trimmed}`));
     } catch {
-      throw new AutoCliError("PUBLIC_URL_INVALID", `Invalid URL "${value}".`, {
+      throw new MikaCliError("PUBLIC_URL_INVALID", `Invalid URL "${value}".`, {
         details: {
           value,
         },

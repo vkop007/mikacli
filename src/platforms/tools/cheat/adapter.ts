@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 import { buildCheatUrl, normalizeCheatLanguage, normalizeCheatShell, normalizeCheatTopic, truncateCheatSnippet } from "./helpers.js";
@@ -40,7 +40,7 @@ export class CheatAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("CHEAT_FETCH_FAILED", "Unable to reach cht.sh.", {
+      throw new MikaCliError("CHEAT_FETCH_FAILED", "Unable to reach cht.sh.", {
         cause: error,
         details: {
           url,
@@ -49,7 +49,7 @@ export class CheatAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("CHEAT_HTTP_ERROR", `cht.sh returned HTTP ${response.status}.`, {
+      throw new MikaCliError("CHEAT_HTTP_ERROR", `cht.sh returned HTTP ${response.status}.`, {
         details: {
           url,
           status: response.status,

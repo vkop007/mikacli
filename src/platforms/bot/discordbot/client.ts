@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { readUploadFile } from "../../../utils/file-source.js";
 import { createUploadFile } from "../../../utils/upload-pipeline.js";
 
@@ -172,7 +172,7 @@ export class DiscordApiClient {
           continue;
         }
 
-        throw new AutoCliError("DISCORD_RATE_LIMITED", `Discord rate limited ${method} ${path}.`, {
+        throw new MikaCliError("DISCORD_RATE_LIMITED", `Discord rate limited ${method} ${path}.`, {
           details: {
             method,
             path,
@@ -189,7 +189,7 @@ export class DiscordApiClient {
           ? parsed.message
           : `Discord API returned HTTP ${response.status} for ${method} ${path}.`;
 
-        throw new AutoCliError(this.mapStatusCode(response.status), message, {
+        throw new MikaCliError(this.mapStatusCode(response.status), message, {
           details: {
             method,
             path,
@@ -204,7 +204,7 @@ export class DiscordApiClient {
       }
 
       if (parsed === null) {
-        throw new AutoCliError("DISCORD_INVALID_RESPONSE", `Discord returned a non-JSON response for ${method} ${path}.`, {
+        throw new MikaCliError("DISCORD_INVALID_RESPONSE", `Discord returned a non-JSON response for ${method} ${path}.`, {
           details: {
             method,
             path,
@@ -217,7 +217,7 @@ export class DiscordApiClient {
       return parsed as T;
     }
 
-    throw new AutoCliError("DISCORD_API_UNAVAILABLE", `Unable to reach Discord API for ${method} ${path}.`, {
+    throw new MikaCliError("DISCORD_API_UNAVAILABLE", `Unable to reach Discord API for ${method} ${path}.`, {
       cause: lastError instanceof Error ? lastError : undefined,
       details: {
         method,

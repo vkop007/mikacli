@@ -10,10 +10,10 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli data csv info ./users.csv",
-  "autocli data csv to-json ./orders.csv --output ./orders.json",
-  "autocli data csv filter ./orders.csv --where 'status=paid'",
-  "autocli data csv filter ./orders.csv --where 'amount>100' --as json --json",
+  "mikacli data csv info ./users.csv",
+  "mikacli data csv to-json ./orders.csv --output ./orders.json",
+  "mikacli data csv filter ./orders.csv --where 'status=paid'",
+  "mikacli data csv filter ./orders.csv --where 'amount>100' --as json --json",
 ] as const;
 
 function buildCsvCommand(options: PlatformCommandBuildOptions = {}): Command {

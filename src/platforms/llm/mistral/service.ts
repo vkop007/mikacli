@@ -4,7 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { Cookie, CookieJar } from "tough-cookie";
 import { ModuleClient, SessionClient } from "tlsclientwrapper";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 
 import type { SessionHttpClient } from "../../../utils/http-client.js";
 import type { SessionStatus, SessionUser } from "../../../types.js";
@@ -190,7 +190,7 @@ export class MistralService {
         };
       });
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return {
           status: {
             state: error.code === "SESSION_EXPIRED" ? "expired" : "unknown",
@@ -232,7 +232,7 @@ export class MistralService {
         });
 
         if (!createdChat.chatId) {
-          throw new AutoCliError("MISTRAL_CHAT_CREATE_FAILED", "Mistral did not return a chat ID for the new conversation.");
+          throw new MikaCliError("MISTRAL_CHAT_CREATE_FAILED", "Mistral did not return a chat ID for the new conversation.");
         }
 
         const stream = await startMistralChat(session, jar, {
@@ -249,7 +249,7 @@ export class MistralService {
         const outputText = extractMistralMessageText(assistantMessage).trim() || parsedStream.outputText.trim();
 
         if (!outputText) {
-          throw new AutoCliError("MISTRAL_EMPTY_RESPONSE", "Mistral returned an empty response.", {
+          throw new MikaCliError("MISTRAL_EMPTY_RESPONSE", "Mistral returned an empty response.", {
             details: {
               chatId: createdChat.chatId,
               assistantMessageId: assistantMessage.id ?? parsedStream.assistantMessageId,
@@ -418,7 +418,7 @@ async function waitForMistralAssistant(
     if (assistant) {
       lastSeenAssistant = assistant;
       if (assistant.generationStatus === "failed") {
-        throw new AutoCliError("MISTRAL_GENERATION_FAILED", "Mistral reported that the generation failed.", {
+        throw new MikaCliError("MISTRAL_GENERATION_FAILED", "Mistral reported that the generation failed.", {
           details: {
             chatId: input.chatId,
             assistantMessageId: assistant.id,
@@ -427,7 +427,7 @@ async function waitForMistralAssistant(
       }
 
       if (assistant.generationStatus === "canceled") {
-        throw new AutoCliError("MISTRAL_GENERATION_CANCELED", "Mistral canceled the generation before it completed.", {
+        throw new MikaCliError("MISTRAL_GENERATION_CANCELED", "Mistral canceled the generation before it completed.", {
           details: {
             chatId: input.chatId,
             assistantMessageId: assistant.id,
@@ -443,7 +443,7 @@ async function waitForMistralAssistant(
     await delay(MISTRAL_POLL_INTERVAL_MS);
   }
 
-  throw new AutoCliError("MISTRAL_TIMEOUT", "Mistral did not finish responding before the timeout.", {
+  throw new MikaCliError("MISTRAL_TIMEOUT", "Mistral did not finish responding before the timeout.", {
     details: {
       chatId: input.chatId,
       assistantMessageId: lastSeenAssistant?.id,
@@ -516,7 +516,7 @@ function parseMistralTrpcResponse<T>(status: number, body: string, procedure: st
 
   const result = envelope?.result?.data?.json;
   if (typeof result === "undefined") {
-    throw new AutoCliError("MISTRAL_TRPC_INVALID_RESPONSE", `Mistral did not return a valid ${procedure} result.`, {
+    throw new MikaCliError("MISTRAL_TRPC_INVALID_RESPONSE", `Mistral did not return a valid ${procedure} result.`, {
       details: {
         procedure,
         status,
@@ -528,13 +528,13 @@ function parseMistralTrpcResponse<T>(status: number, body: string, procedure: st
   return result;
 }
 
-function createMistralTrpcError(error: MistralTrpcErrorEnvelope, status: number): AutoCliError {
+function createMistralTrpcError(error: MistralTrpcErrorEnvelope, status: number): MikaCliError {
   const code = error.data?.code ?? "TRPC_ERROR";
   const httpStatus = error.data?.httpStatus ?? status;
   const message = error.message ?? "Mistral returned an unexpected tRPC error.";
 
   if (httpStatus === 401 || code === "UNAUTHORIZED") {
-    return new AutoCliError("SESSION_EXPIRED", "Mistral session expired. Re-import cookies.", {
+    return new MikaCliError("SESSION_EXPIRED", "Mistral session expired. Re-import cookies.", {
       details: {
         procedure: error.data?.path,
         upstreamCode: code,
@@ -542,7 +542,7 @@ function createMistralTrpcError(error: MistralTrpcErrorEnvelope, status: number)
     });
   }
 
-  return new AutoCliError(`MISTRAL_${code}`, message, {
+  return new MikaCliError(`MISTRAL_${code}`, message, {
     details: {
       procedure: error.data?.path,
       httpStatus,
@@ -551,7 +551,7 @@ function createMistralTrpcError(error: MistralTrpcErrorEnvelope, status: number)
   });
 }
 
-function createMistralRequestError(status: number, body: string, url: string): AutoCliError {
+function createMistralRequestError(status: number, body: string, url: string): MikaCliError {
   let upstreamCode: string | undefined;
   let upstreamMessage: string | undefined;
 
@@ -563,7 +563,7 @@ function createMistralRequestError(status: number, body: string, url: string): A
     }
   }
 
-  return new AutoCliError("MISTRAL_REQUEST_FAILED", upstreamMessage ?? `Mistral request failed with ${status}.`, {
+  return new MikaCliError("MISTRAL_REQUEST_FAILED", upstreamMessage ?? `Mistral request failed with ${status}.`, {
     details: {
       url,
       status,
@@ -695,16 +695,16 @@ function resolveUserTimeZone(): string {
 }
 
 function isMistralUnauthorizedError(error: unknown): boolean {
-  return isAutoCliError(error) && error.code === "SESSION_EXPIRED";
+  return isMikaCliError(error) && error.code === "SESSION_EXPIRED";
 }
 
-export function mapMistralError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+export function mapMistralError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     return error;
   }
 
   if (error instanceof Error) {
-    return new AutoCliError("MISTRAL_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("MISTRAL_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details: {
         message: error.message,
@@ -712,7 +712,7 @@ export function mapMistralError(error: unknown, fallbackMessage: string): AutoCl
     });
   }
 
-  return new AutoCliError("MISTRAL_REQUEST_FAILED", fallbackMessage);
+  return new MikaCliError("MISTRAL_REQUEST_FAILED", fallbackMessage);
 }
 
 async function exportJarCookiesForTls(

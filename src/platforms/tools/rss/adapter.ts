@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { fetchNewsPageSummary, parseNewsFeedDocument } from "../../news/news/helpers.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -26,18 +26,18 @@ export class RssAdapter {
         signal: AbortSignal.timeout(12000),
         headers: {
           accept: "application/rss+xml,application/atom+xml,text/xml,application/xml,text/plain;q=0.9,*/*;q=0.8",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("RSS_REQUEST_FAILED", "Unable to reach the RSS feed.", {
+      throw new MikaCliError("RSS_REQUEST_FAILED", "Unable to reach the RSS feed.", {
         details: { feedUrl },
         cause: error,
       });
     }
 
     if (!response.ok) {
-      throw new AutoCliError("RSS_REQUEST_FAILED", `RSS feed request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("RSS_REQUEST_FAILED", `RSS feed request failed with ${response.status} ${response.statusText}.`, {
         details: { feedUrl, status: response.status, statusText: response.statusText },
       });
     }
@@ -78,7 +78,7 @@ export const rssAdapter = new RssAdapter();
 function normalizeFeedUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("RSS_FEED_REQUIRED", "Feed URL cannot be empty.");
+    throw new MikaCliError("RSS_FEED_REQUIRED", "Feed URL cannot be empty.");
   }
 
   try {

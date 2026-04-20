@@ -1,4 +1,4 @@
-import { errorToJson, isAutoCliError } from "../errors.js";
+import { errorToJson, isMikaCliError } from "../errors.js";
 import { buildPlatformCommandPrefix } from "../core/runtime/platform-command-prefix.js";
 import { getPlatformDefinition, getPlatformDefinitions } from "../platforms/index.js";
 
@@ -47,7 +47,7 @@ export function resolveErrorRecovery(error: unknown): {
   hint?: string;
   nextCommand?: string;
 } {
-  if (!isAutoCliError(error)) {
+  if (!isMikaCliError(error)) {
     return {};
   }
 
@@ -57,14 +57,14 @@ export function resolveErrorRecovery(error: unknown): {
   if (error.code === "BROWSER_LOGIN_TIMEOUT") {
     return {
       hint: "Finish the sign-in flow before the timeout expires, or retry with a longer browser timeout.",
-      nextCommand: loginCommand ? `${loginCommand} --browser-timeout 300` : "autocli login --browser --browser-timeout 300",
+      nextCommand: loginCommand ? `${loginCommand} --browser-timeout 300` : "mikacli login --browser --browser-timeout 300",
     };
   }
 
   if (error.code === "CATEGORY_COMMAND_REQUIRED") {
     const suggestedCommand = typeof error.details?.suggestedCommand === "string" ? error.details.suggestedCommand : undefined;
     return {
-      hint: "Provider commands live under categories. Retry with the full category path, or use `autocli search <query>` if you are unsure.",
+      hint: "Provider commands live under categories. Retry with the full category path, or use `mikacli search <query>` if you are unsure.",
       nextCommand: suggestedCommand,
     };
   }
@@ -72,7 +72,7 @@ export function resolveErrorRecovery(error: unknown): {
   if (BROWSER_REQUIRED_CODES.has(error.code)) {
     return {
       hint: "This action needs a live shared browser session for the provider before it can continue.",
-      nextCommand: loginCommand ?? "autocli login --browser",
+      nextCommand: loginCommand ?? "mikacli login --browser",
     };
   }
 
@@ -115,7 +115,7 @@ export function resolveErrorRecovery(error: unknown): {
     const jobId = typeof error.details?.jobId === "string" ? error.details.jobId : undefined;
     return {
       hint: "Retry with a longer `jobs watch --timeout` value, or inspect the saved job state directly.",
-      nextCommand: jobId ? `autocli jobs show ${jobId}` : undefined,
+      nextCommand: jobId ? `mikacli jobs show ${jobId}` : undefined,
     };
   }
 

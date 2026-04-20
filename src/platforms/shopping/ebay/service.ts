@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { clamp, collapseWhitespace } from "../shared/helpers.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -51,7 +51,7 @@ export class EbayAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("EBAY_QUERY_REQUIRED", "Provide an eBay query to search.");
+      throw new MikaCliError("EBAY_QUERY_REQUIRED", "Provide an eBay query to search.");
     }
 
     const limit = clamp(input.limit ?? 5, 1, 25);
@@ -129,7 +129,7 @@ export class EbayAdapter {
   async suggestions(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("EBAY_QUERY_REQUIRED", "Provide an eBay query to suggest.");
+      throw new MikaCliError("EBAY_QUERY_REQUIRED", "Provide an eBay query to suggest.");
     }
 
     const url = new URL("https://autosug.ebay.com/autosug");
@@ -154,7 +154,7 @@ export class EbayAdapter {
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("EBAY_SUGGESTIONS_FAILED", "eBay rejected the suggestions request.", {
+      throw new MikaCliError("EBAY_SUGGESTIONS_FAILED", "eBay rejected the suggestions request.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -186,7 +186,7 @@ export class EbayAdapter {
   private async resolveProductTarget(target: string): Promise<{ itemId: string; url: string }> {
     const trimmed = target.trim();
     if (!trimmed) {
-      throw new AutoCliError("EBAY_TARGET_REQUIRED", "Provide an eBay item URL, numeric item ID, or search query.");
+      throw new MikaCliError("EBAY_TARGET_REQUIRED", "Provide an eBay item URL, numeric item ID, or search query.");
     }
 
     const itemIdMatch = trimmed.match(/(?:ebay\.[^/]+\/itm(?:\/[^/?#]+)?\/|^)(\d{9,14})(?:[/?#]|$)/i);
@@ -200,7 +200,7 @@ export class EbayAdapter {
     const results = parseEbaySearchResults(await this.fetchReadableMarkdown(this.buildSearchUrl(trimmed)));
     const first = results[0];
     if (!first) {
-      throw new AutoCliError("EBAY_PRODUCT_NOT_FOUND", `eBay could not find a product for "${trimmed}".`);
+      throw new MikaCliError("EBAY_PRODUCT_NOT_FOUND", `eBay could not find a product for "${trimmed}".`);
     }
 
     return {
@@ -218,7 +218,7 @@ export class EbayAdapter {
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("EBAY_REQUEST_FAILED", "Failed to load eBay's public page.", {
+      throw new MikaCliError("EBAY_REQUEST_FAILED", "Failed to load eBay's public page.", {
         details: {
           sourceUrl,
           status: response.status,
@@ -291,7 +291,7 @@ function parseEbayProductInfo(markdown: string, url: string, fallbackItemId: str
   const lines = markdown.split("\n").map((line) => line.trim());
   const title = collapseWhitespace(lines.find((line) => line.startsWith("# "))?.replace(/^#\s+/, "").replace(/\s+\|\s+eBay$/i, ""));
   if (!title) {
-    throw new AutoCliError("EBAY_PRODUCT_PARSE_FAILED", "eBay loaded the item page, but AutoCLI could not parse the title.");
+    throw new MikaCliError("EBAY_PRODUCT_PARSE_FAILED", "eBay loaded the item page, but MikaCLI could not parse the title.");
   }
 
   const sellerSectionIndex = lines.findIndex((line) => line.includes("Seller's other items"));
@@ -344,7 +344,7 @@ function parseEbaySellerInfo(markdown: string, url: string, fallbackSellerId: st
       lines.find((line) => /^Title:\s+.+ on eBay$/i.test(line))?.replace(/^Title:\s+/i, "").replace(/\s+on eBay$/i, ""),
   );
   if (!title) {
-    throw new AutoCliError("EBAY_SELLER_PARSE_FAILED", "eBay loaded the seller page, but AutoCLI could not parse the seller name.");
+    throw new MikaCliError("EBAY_SELLER_PARSE_FAILED", "eBay loaded the seller page, but MikaCLI could not parse the seller name.");
   }
 
   const itemsSoldText = collapseWhitespace(lines.find((line) => /\bitems sold\b/i.test(line)));
@@ -378,14 +378,14 @@ function parseEbaySellerInfo(markdown: string, url: string, fallbackSellerId: st
 function parseEbaySuggestions(payload: string): string[] {
   const jsonMatch = payload.match(/_do\((\{[\s\S]*\})\)\s*$/);
   if (!jsonMatch?.[1]) {
-    throw new AutoCliError("EBAY_SUGGESTIONS_PARSE_FAILED", "eBay returned an unexpected suggestions payload.");
+    throw new MikaCliError("EBAY_SUGGESTIONS_PARSE_FAILED", "eBay returned an unexpected suggestions payload.");
   }
 
   let parsed: unknown;
   try {
     parsed = JSON.parse(jsonMatch[1]);
   } catch {
-    throw new AutoCliError("EBAY_SUGGESTIONS_PARSE_FAILED", "eBay returned invalid suggestions JSON.");
+    throw new MikaCliError("EBAY_SUGGESTIONS_PARSE_FAILED", "eBay returned invalid suggestions JSON.");
   }
 
   const suggestions = (parsed as { res?: { sug?: unknown[] } }).res?.sug;
@@ -395,7 +395,7 @@ function parseEbaySuggestions(payload: string): string[] {
 function resolveEbaySellerTarget(target: string): string {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("EBAY_SELLER_REQUIRED", "Provide an eBay seller URL or username.");
+    throw new MikaCliError("EBAY_SELLER_REQUIRED", "Provide an eBay seller URL or username.");
   }
 
   const urlMatch = trimmed.match(/ebay\.[^/]+\/usr\/([^/?#]+)/i);
@@ -408,7 +408,7 @@ function resolveEbaySellerTarget(target: string): string {
     return normalized;
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected an eBay seller URL or username.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected an eBay seller URL or username.", {
     details: { target },
   });
 }

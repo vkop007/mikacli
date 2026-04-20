@@ -1,4 +1,4 @@
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { maybeAutoRefreshSession } from "../../../utils/autorefresh.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
 import {
@@ -562,7 +562,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Spotify session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Spotify session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -602,7 +602,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
 
   async postMedia(input: PostMediaInput): Promise<AdapterActionResult> {
     const { session } = await this.ensureSavedSession(input.account);
-    throw new AutoCliError(
+    throw new MikaCliError(
       "UNSUPPORTED_ACTION",
       "Spotify does not support media posting from this CLI. Use library and follow actions instead.",
       {
@@ -617,7 +617,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
 
   async postText(input: TextPostInput): Promise<AdapterActionResult> {
     const { session } = await this.ensureSavedSession(input.account);
-    throw new AutoCliError(
+    throw new MikaCliError(
       "UNSUPPORTED_ACTION",
       "Spotify does not support text posting from this CLI. Use library and follow actions instead.",
       {
@@ -655,7 +655,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
 
   async comment(input: CommentInput): Promise<AdapterActionResult> {
     const { session } = await this.ensureSavedSession(input.account);
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Spotify does not expose comments in the web player flow used by this CLI.", {
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Spotify does not expose comments in the web player flow used by this CLI.", {
       details: {
         platform: this.platform,
         account: session.account,
@@ -903,7 +903,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     const { session, client, accessToken } = await this.createAuthorizedContext(input.account);
     const profile = await this.requestApi<SpotifyMeResponse>(client, accessToken, "/me");
     if (!profile.id) {
-      throw new AutoCliError("SPOTIFY_PROFILE_UNAVAILABLE", "Spotify profile id is required to create playlists.", {
+      throw new MikaCliError("SPOTIFY_PROFILE_UNAVAILABLE", "Spotify profile id is required to create playlists.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -978,7 +978,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     });
 
     if (uris.length === 0) {
-      throw new AutoCliError("INVALID_TARGET", "Provide at least one Spotify track target to add.", {
+      throw new MikaCliError("INVALID_TARGET", "Provide at least one Spotify track target to add.", {
         details: {
           platform: this.platform,
           playlist: input.playlist,
@@ -1020,7 +1020,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     });
 
     if (tracks.length === 0) {
-      throw new AutoCliError("INVALID_TARGET", "Provide at least one Spotify track target to remove.", {
+      throw new MikaCliError("INVALID_TARGET", "Provide at least one Spotify track target to remove.", {
         details: {
           platform: this.platform,
           playlist: input.playlist,
@@ -1834,7 +1834,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Spotify session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Spotify session has expired.", {
         details: {
           platform: this.platform,
           account: loaded.session.account,
@@ -1967,7 +1967,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
                   ? "Session validated via the Spotify homepage and token bootstrap, but Spotify rate-limited the profile check."
                   : "Session validated via the Spotify homepage and token bootstrap, but the Web API profile check failed.",
               lastValidatedAt: new Date().toISOString(),
-              lastErrorCode: isAutoCliError(error) ? error.code : undefined,
+              lastErrorCode: isMikaCliError(error) ? error.code : undefined,
             },
             metadata: {
               market: config.market,
@@ -2058,7 +2058,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
       }
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "SPOTIFY_ACCESS_TOKEN_UNAVAILABLE",
       "Spotify access token resolution failed for this saved session. Re-import fresh cookies from a logged-in browser session.",
       {
@@ -2116,11 +2116,11 @@ export class SpotifyAdapter extends BasePlatformAdapter {
         },
       });
     } catch (error) {
-      const upstreamDetails = isAutoCliError(error) && error.details ? error.details : undefined;
+      const upstreamDetails = isMikaCliError(error) && error.details ? error.details : undefined;
       const upstreamStatus = this.extractHttpStatus(error);
 
       if (upstreamStatus === 429) {
-        throw new AutoCliError("SPOTIFY_API_RATE_LIMITED", "Spotify API rate limit exceeded. Try again later.", {
+        throw new MikaCliError("SPOTIFY_API_RATE_LIMITED", "Spotify API rate limit exceeded. Try again later.", {
           cause: error,
           details: {
             platform: this.platform,
@@ -2130,7 +2130,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
         });
       }
 
-      throw new AutoCliError("PLATFORM_REQUEST_FAILED", "Spotify API request failed.", {
+      throw new MikaCliError("PLATFORM_REQUEST_FAILED", "Spotify API request failed.", {
         cause: error,
         details: {
           platform: this.platform,
@@ -2142,7 +2142,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
   }
 
   private extractHttpStatus(error: unknown): number | undefined {
-    if (!isAutoCliError(error)) {
+    if (!isMikaCliError(error)) {
       return undefined;
     }
 
@@ -2159,7 +2159,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     });
 
     if (!response.ok) {
-      throw new AutoCliError("SPOTIFY_ENTITY_NOT_FOUND", `Spotify could not load the requested ${type}.`, {
+      throw new MikaCliError("SPOTIFY_ENTITY_NOT_FOUND", `Spotify could not load the requested ${type}.`, {
         details: {
           platform: this.platform,
           type,
@@ -2176,7 +2176,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     const entity = initialState.entities?.items?.[entityKey];
 
     if (!entity) {
-      throw new AutoCliError("SPOTIFY_ENTITY_NOT_FOUND", `Spotify page data did not include the requested ${type}.`, {
+      throw new MikaCliError("SPOTIFY_ENTITY_NOT_FOUND", `Spotify page data did not include the requested ${type}.`, {
         details: {
           platform: this.platform,
           type,
@@ -2217,7 +2217,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     const { session, client, accessToken } = await this.createAuthorizedContext(account);
     const deviceId = await client.getCookieValue("sp_t", SPOTIFY_HOME);
     if (!deviceId) {
-      throw new AutoCliError("SPOTIFY_CONNECT_DEVICE_COOKIE_MISSING", "Spotify Connect requires the sp_t cookie from the saved browser session.", {
+      throw new MikaCliError("SPOTIFY_CONNECT_DEVICE_COOKIE_MISSING", "Spotify Connect requires the sp_t cookie from the saved browser session.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -2228,7 +2228,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
     const clientVersion = await this.resolveSpotifyClientVersion(session, client);
     const clientId = typeof accessToken.clientId === "string" && accessToken.clientId.length > 0 ? accessToken.clientId : undefined;
     if (!clientId) {
-      throw new AutoCliError("SPOTIFY_CONNECT_CLIENT_ID_MISSING", "Spotify access token bootstrap did not expose the Spotify web client id.", {
+      throw new MikaCliError("SPOTIFY_CONNECT_CLIENT_ID_MISSING", "Spotify access token bootstrap did not expose the Spotify web client id.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -2261,7 +2261,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
       return config.clientVersion.split(".g")[0] ?? config.clientVersion;
     }
 
-    throw new AutoCliError("SPOTIFY_CONNECT_CLIENT_VERSION_MISSING", "Spotify homepage config did not expose the current client version.");
+    throw new MikaCliError("SPOTIFY_CONNECT_CLIENT_VERSION_MISSING", "Spotify homepage config did not expose the current client version.");
   }
 
   private async resolveSpotifyAppServerConfig(
@@ -2318,7 +2318,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
   }
 
   private shouldFallbackFromConnect(error: unknown): boolean {
-    if (!isAutoCliError(error)) {
+    if (!isMikaCliError(error)) {
       return false;
     }
 
@@ -2326,7 +2326,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
   }
 
   private shouldFallbackSpotifySearch(error: unknown): boolean {
-    if (!isAutoCliError(error)) {
+    if (!isMikaCliError(error)) {
       return false;
     }
 
@@ -2416,7 +2416,7 @@ export class SpotifyAdapter extends BasePlatformAdapter {
       return partialName;
     }
 
-    throw new AutoCliError("SPOTIFY_DEVICE_NOT_FOUND", `Spotify device "${target}" was not found.`, {
+    throw new MikaCliError("SPOTIFY_DEVICE_NOT_FOUND", `Spotify device "${target}" was not found.`, {
       details: {
         platform: this.platform,
         target,

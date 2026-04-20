@@ -7,7 +7,7 @@ import { subtitleEditorAdapter } from "../adapter.js";
 
 describe("subtitle editor adapter", () => {
   test("converts and shifts subtitle files", async () => {
-    const workDir = mkdtempSync(join(tmpdir(), "autocli-subtitle-"));
+    const workDir = mkdtempSync(join(tmpdir(), "mikacli-subtitle-"));
     const inputPath = join(workDir, "input.srt");
     const shiftedPath = join(workDir, "input.shifted.srt");
     const convertedPath = join(workDir, "input.converted.vtt");

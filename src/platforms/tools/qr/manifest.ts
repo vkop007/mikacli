@@ -11,9 +11,9 @@ import { parsePositiveInteger } from "./helpers.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  'autocli tools qr encode "https://example.com"',
-  'autocli tools qr encode "https://example.com" --size 8 --margin 4',
-  'autocli tools qr decode ./qr-image.png --json',
+  'mikacli tools qr encode "https://example.com"',
+  'mikacli tools qr encode "https://example.com" --size 8 --margin 4',
+  'mikacli tools qr decode ./qr-image.png --json',
 ] as const;
 
 function buildQrCommand(options: PlatformCommandBuildOptions = {}): Command {

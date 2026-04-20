@@ -22,9 +22,9 @@ export const ebayPlatformDefinition: PlatformDefinition = {
     suggestionsDescription: "Load eBay query suggestions from the public autosuggest endpoint",
   }),
   examples: [
-    'autocli ebay search "wireless mouse" --limit 5',
-    "autocli ebay product 147218374447",
-    "autocli ebay seller avicii",
-    'autocli ebay suggest "wireless mouse"',
+    'mikacli ebay search "wireless mouse" --limit 5',
+    "mikacli ebay product 147218374447",
+    "mikacli ebay seller avicii",
+    'mikacli ebay suggest "wireless mouse"',
   ],
 };

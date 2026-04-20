@@ -6,7 +6,7 @@ import { readFile } from "node:fs/promises";
 import { Command } from "commander";
 
 import {
-  AUTOCLI_DIR,
+  MIKACLI_DIR,
   BROWSER_DIR,
   CACHE_DIR,
   CONNECTIONS_DIR,
@@ -95,7 +95,7 @@ type BinaryCheckDefinition = {
 };
 
 const DIRECTORY_CHECKS = [
-  { id: "autocli-home", label: "AutoCLI home", path: AUTOCLI_DIR },
+  { id: "mikacli-home", label: "MikaCLI home", path: MIKACLI_DIR },
   { id: "sessions-dir", label: "Sessions directory", path: SESSIONS_DIR },
   { id: "connections-dir", label: "Connections directory", path: CONNECTIONS_DIR },
   { id: "jobs-dir", label: "Jobs directory", path: JOBS_DIR },
@@ -106,14 +106,14 @@ const DIRECTORY_CHECKS = [
 const BINARY_CHECKS: readonly BinaryCheckDefinition[] = [
   {
     id: "ffmpeg",
-    command: process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg",
+    command: process.env.MIKACLI_FFMPEG_BIN || "ffmpeg",
     args: ["-version"],
     purpose: "editor audio/video/image/gif",
     installHint: buildBinaryInstallHint("ffmpeg"),
   },
   {
     id: "ffprobe",
-    command: process.env.AUTOCLI_FFPROBE_BIN || "ffprobe",
+    command: process.env.MIKACLI_FFPROBE_BIN || "ffprobe",
     args: ["-version"],
     purpose: "editor media inspection",
     installHint: buildBinaryInstallHint("ffmpeg"),
@@ -134,28 +134,28 @@ const BINARY_CHECKS: readonly BinaryCheckDefinition[] = [
   },
   {
     id: "qpdf",
-    command: process.env.AUTOCLI_QPDF_BIN || "qpdf",
+    command: process.env.MIKACLI_QPDF_BIN || "qpdf",
     args: ["--version"],
     purpose: "editor pdf advanced actions",
     installHint: buildBinaryInstallHint("qpdf"),
   },
   {
     id: "pdftotext",
-    command: process.env.AUTOCLI_PDFTOTEXT_BIN || "pdftotext",
+    command: process.env.MIKACLI_PDFTOTEXT_BIN || "pdftotext",
     args: ["-v"],
     purpose: "editor document pdf extraction",
     installHint: buildBinaryInstallHint("poppler"),
   },
   {
     id: "pdftoppm",
-    command: process.env.AUTOCLI_PDFTOPPM_BIN || "pdftoppm",
+    command: process.env.MIKACLI_PDFTOPPM_BIN || "pdftoppm",
     args: ["-h"],
     purpose: "editor pdf to-images rendering",
     installHint: buildBinaryInstallHint("poppler"),
   },
   {
     id: "qlmanage",
-    command: process.env.AUTOCLI_QLMANAGE_BIN || "qlmanage",
+    command: process.env.MIKACLI_QLMANAGE_BIN || "qlmanage",
     args: ["-h"],
     purpose: "editor document/pdf preview rendering on macOS",
     platforms: ["darwin"],
@@ -163,7 +163,7 @@ const BINARY_CHECKS: readonly BinaryCheckDefinition[] = [
   },
   {
     id: "textutil",
-    command: process.env.AUTOCLI_TEXTUTIL_BIN || "textutil",
+    command: process.env.MIKACLI_TEXTUTIL_BIN || "textutil",
     args: ["-help"],
     purpose: "editor document conversion",
     platforms: ["darwin"],
@@ -171,14 +171,14 @@ const BINARY_CHECKS: readonly BinaryCheckDefinition[] = [
   },
   {
     id: "tesseract",
-    command: process.env.AUTOCLI_TESSERACT_BIN || "tesseract",
+    command: process.env.MIKACLI_TESSERACT_BIN || "tesseract",
     args: ["--version"],
     purpose: "editor document OCR",
     installHint: buildBinaryInstallHint("tesseract"),
   },
   {
     id: "mdls",
-    command: process.env.AUTOCLI_MDLS_BIN || "mdls",
+    command: process.env.MIKACLI_MDLS_BIN || "mdls",
     args: ["-name", "kMDItemFSName", "."],
     purpose: "editor document metadata on macOS",
     platforms: ["darwin"],
@@ -186,42 +186,42 @@ const BINARY_CHECKS: readonly BinaryCheckDefinition[] = [
   },
   {
     id: "zip",
-    command: process.env.AUTOCLI_ZIP_BIN || "zip",
+    command: process.env.MIKACLI_ZIP_BIN || "zip",
     args: ["-v"],
     purpose: "editor archive create",
     installHint: buildBinaryInstallHint("zip"),
   },
   {
     id: "unzip",
-    command: process.env.AUTOCLI_UNZIP_BIN || "unzip",
+    command: process.env.MIKACLI_UNZIP_BIN || "unzip",
     args: ["-v"],
     purpose: "editor archive extract and list",
     installHint: buildBinaryInstallHint("unzip"),
   },
   {
     id: "tar",
-    command: process.env.AUTOCLI_TAR_BIN || "tar",
+    command: process.env.MIKACLI_TAR_BIN || "tar",
     args: ["--version"],
     purpose: "editor archive tar flows",
     installHint: buildBinaryInstallHint("tar"),
   },
   {
     id: "gzip",
-    command: process.env.AUTOCLI_GZIP_BIN || "gzip",
+    command: process.env.MIKACLI_GZIP_BIN || "gzip",
     args: ["--version"],
     purpose: "editor archive gzip",
     installHint: buildBinaryInstallHint("gzip"),
   },
   {
     id: "gunzip",
-    command: process.env.AUTOCLI_GUNZIP_BIN || "gunzip",
+    command: process.env.MIKACLI_GUNZIP_BIN || "gunzip",
     args: ["--version"],
     purpose: "editor archive gunzip",
     installHint: buildBinaryInstallHint("gzip"),
   },
   {
     id: "7z",
-    command: process.env.AUTOCLI_7Z_BIN || "7z",
+    command: process.env.MIKACLI_7Z_BIN || "7z",
     args: ["--help"],
     purpose: "editor archive 7z support",
     installHint: buildBinaryInstallHint("7z"),
@@ -230,17 +230,17 @@ const BINARY_CHECKS: readonly BinaryCheckDefinition[] = [
 
 export function createDoctorCommand(): Command {
   return new Command("doctor")
-    .description("Check local AutoCLI health, saved connection state, and optional binary availability")
+    .description("Check local MikaCLI health, saved connection state, and optional binary availability")
     .option("--fix", "Install all supported missing browser and local-tool dependencies automatically")
     .option("--strict", "Return a failing exit code for warnings too")
     .addHelpText(
       "after",
       `
 Examples:
-  autocli doctor
-  autocli doctor --json
-  autocli doctor --fix
-  autocli doctor --strict
+  mikacli doctor
+  mikacli doctor --json
+  mikacli doctor --fix
+  mikacli doctor --strict
 `,
     )
     .action(async function doctorAction(this: Command) {
@@ -362,11 +362,11 @@ export function buildDoctorRecommendations(
   const fixPlan = buildDoctorFixPlan(checks);
 
   if (failedDirectories.length > 0) {
-    recommendations.push("Fix the failing AutoCLI directories first so sessions, browser state, and jobs can be saved correctly.");
+    recommendations.push("Fix the failing MikaCLI directories first so sessions, browser state, and jobs can be saved correctly.");
   }
 
   if (fixPlan.supported && fixPlan.targets.length > 0) {
-    recommendations.push("Run `autocli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.");
+    recommendations.push("Run `mikacli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.");
   }
 
   if (browserExecutableCheck && browserExecutableCheck.status !== "pass") {
@@ -374,24 +374,24 @@ export function buildDoctorRecommendations(
     recommendations.push(
       hint
         ? `Install a Chrome/Chromium browser for browser-backed actions. ${hint}`
-        : "Install Chrome/Chromium or set `AUTOCLI_BROWSER_PATH` so browser-backed actions can run.",
+        : "Install Chrome/Chromium or set `MIKACLI_BROWSER_PATH` so browser-backed actions can run.",
     );
   }
 
   if (summary.records === 0) {
-    recommendations.push("Run `autocli login --browser` or a provider-specific `login` command to save your first reusable account.");
+    recommendations.push("Run `mikacli login --browser` or a provider-specific `login` command to save your first reusable account.");
   }
 
   if (browserProfileCheck?.status === "warn") {
-    recommendations.push("Run `autocli login --browser` once to create the shared AutoCLI browser profile before using browser-backed actions.");
+    recommendations.push("Run `mikacli login --browser` once to create the shared MikaCLI browser profile before using browser-backed actions.");
   }
 
   if (browserRuntimeCheck?.status === "warn" && asString(browserRuntimeCheck?.details?.state) === "stale") {
-    recommendations.push("A stale shared browser state file was detected. Re-run `autocli login --browser` to refresh the managed browser state.");
+    recommendations.push("A stale shared browser state file was detected. Re-run `mikacli login --browser` to refresh the managed browser state.");
   }
 
   if (summary.expired > 0) {
-    recommendations.push("Inspect expired records with `autocli sessions --status expired` and refresh them with the provider's `login` command.");
+    recommendations.push("Inspect expired records with `mikacli sessions --status expired` and refresh them with the provider's `login` command.");
   }
 
   if (warnedBinaries.length > 0) {
@@ -411,7 +411,7 @@ export function buildDoctorRecommendations(
   }
 
   if (summary.unknown > 0 && summary.records > 0) {
-    recommendations.push("Use `autocli sessions` to review saved records that still have unknown validation state.");
+    recommendations.push("Use `mikacli sessions` to review saved records that still have unknown validation state.");
   }
 
   return dedupeStrings(recommendations);
@@ -450,7 +450,7 @@ async function runDirectoryCheck(input: (typeof DIRECTORY_CHECKS)[number]): Prom
       id: input.id,
       category: "filesystem",
       status: "warn",
-      message: `${input.label} does not exist yet. AutoCLI will create it on first use.`,
+      message: `${input.label} does not exist yet. MikaCLI will create it on first use.`,
       details: {
         path: input.path,
       },
@@ -552,7 +552,7 @@ async function runBrowserProfileCheck(): Promise<DoctorCheck> {
       id: "shared-browser-profile",
       category: "browser",
       status: "warn",
-      message: "The default shared AutoCLI browser profile has not been created yet.",
+      message: "The default shared MikaCLI browser profile has not been created yet.",
       details: {
         path: profilePath,
         profile: DEFAULT_BROWSER_PROFILE,
@@ -566,8 +566,8 @@ async function runBrowserProfileCheck(): Promise<DoctorCheck> {
     category: "browser",
     status: writable ? "pass" : "fail",
     message: writable
-      ? "The default shared AutoCLI browser profile is ready."
-      : "The default shared AutoCLI browser profile exists but is not writable.",
+      ? "The default shared MikaCLI browser profile is ready."
+      : "The default shared MikaCLI browser profile exists but is not writable.",
     details: {
       path: profilePath,
       profile: DEFAULT_BROWSER_PROFILE,
@@ -583,7 +583,7 @@ async function runSharedBrowserRuntimeCheck(): Promise<DoctorCheck> {
       id: "shared-browser-runtime",
       category: "browser",
       status: "pass",
-      message: "The shared AutoCLI browser is currently stopped.",
+      message: "The shared MikaCLI browser is currently stopped.",
       details: {
         state: "stopped",
         profile: DEFAULT_BROWSER_PROFILE,
@@ -612,7 +612,7 @@ async function runSharedBrowserRuntimeCheck(): Promise<DoctorCheck> {
       id: "shared-browser-runtime",
       category: "browser",
       status: "warn",
-      message: "The shared browser state file is stale. AutoCLI does not see the recorded browser process anymore.",
+      message: "The shared browser state file is stale. MikaCLI does not see the recorded browser process anymore.",
       details: {
         state: "stale",
         profile: DEFAULT_BROWSER_PROFILE,
@@ -626,7 +626,7 @@ async function runSharedBrowserRuntimeCheck(): Promise<DoctorCheck> {
     id: "shared-browser-runtime",
     category: "browser",
     status: "pass",
-    message: "The shared AutoCLI browser is running and ready to reuse.",
+    message: "The shared MikaCLI browser is running and ready to reuse.",
     details: {
       state: "running",
       profile: DEFAULT_BROWSER_PROFILE,
@@ -893,7 +893,7 @@ async function runDoctorFix(
         ...plan.skipped,
         ...plan.targets.map((target) => ({
           id: target.id,
-          reason: "Homebrew is required for `autocli doctor --fix` on macOS. Install Homebrew first, then retry.",
+          reason: "Homebrew is required for `mikacli doctor --fix` on macOS. Install Homebrew first, then retry.",
         })),
       ],
       reason: "Homebrew is required for automatic installs on macOS.",
@@ -1108,14 +1108,14 @@ function formatPlatformName(platform: NodeJS.Platform): string {
 
 function buildBrowserInstallHint(): string {
   if (process.platform === "darwin") {
-    return "Install Google Chrome or Chromium, then re-run `autocli doctor`. You can also set `AUTOCLI_BROWSER_PATH` to a custom browser binary.";
+    return "Install Google Chrome or Chromium, then re-run `mikacli doctor`. You can also set `MIKACLI_BROWSER_PATH` to a custom browser binary.";
   }
 
   if (process.platform === "win32") {
-    return "Install Google Chrome or Chromium, or set `AUTOCLI_BROWSER_PATH` to the browser executable.";
+    return "Install Google Chrome or Chromium, or set `MIKACLI_BROWSER_PATH` to the browser executable.";
   }
 
-  return "Install Chrome/Chromium with your package manager, or set `AUTOCLI_BROWSER_PATH` to the browser executable.";
+  return "Install Chrome/Chromium with your package manager, or set `MIKACLI_BROWSER_PATH` to the browser executable.";
 }
 
 function buildBinaryInstallHint(id: string): string {
@@ -1139,7 +1139,7 @@ function buildBinaryInstallHint(id: string): string {
       case "gzip":
         return "Install the missing archive utility with Xcode Command Line Tools or your preferred package manager.";
       default:
-        return "Install the missing dependency and rerun `autocli doctor`.";
+        return "Install the missing dependency and rerun `mikacli doctor`.";
     }
   }
 
@@ -1150,7 +1150,7 @@ function buildBinaryInstallHint(id: string): string {
       case "yt-dlp":
         return "Install yt-dlp, for example with `winget install yt-dlp.yt-dlp`.";
       default:
-        return "Install the missing dependency and rerun `autocli doctor`.";
+        return "Install the missing dependency and rerun `mikacli doctor`.";
     }
   }
 
@@ -1168,6 +1168,6 @@ function buildBinaryInstallHint(id: string): string {
     case "7z":
       return "Install 7-Zip support with your package manager.";
     default:
-      return "Install the missing dependency and rerun `autocli doctor`.";
+      return "Install the missing dependency and rerun `mikacli doctor`.";
   }
 }

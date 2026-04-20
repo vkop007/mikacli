@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 
 import { ensureParentDirectory, getCachePath } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -80,11 +80,11 @@ async function fetchScreenshotMetadata(target: string, timeoutMs: number): Promi
       signal: AbortSignal.timeout(timeoutMs),
       headers: {
         accept: "application/json",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("SCREENSHOT_METADATA_FAILED", "Unable to reach the screenshot service.", {
+    throw new MikaCliError("SCREENSHOT_METADATA_FAILED", "Unable to reach the screenshot service.", {
       details: {
         target,
       },
@@ -93,7 +93,7 @@ async function fetchScreenshotMetadata(target: string, timeoutMs: number): Promi
   }
 
   if (!response.ok) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "SCREENSHOT_METADATA_FAILED",
       `Screenshot service returned ${response.status} ${response.statusText}.`,
       {
@@ -109,7 +109,7 @@ async function fetchScreenshotMetadata(target: string, timeoutMs: number): Promi
   try {
     payload = await response.json();
   } catch (error) {
-    throw new AutoCliError("SCREENSHOT_METADATA_INVALID", "Screenshot service returned invalid JSON.", {
+    throw new MikaCliError("SCREENSHOT_METADATA_INVALID", "Screenshot service returned invalid JSON.", {
       cause: error,
     });
   }
@@ -127,11 +127,11 @@ async function fetchScreenshotBinary(
       signal: AbortSignal.timeout(timeoutMs),
       headers: {
         accept: "image/*",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("SCREENSHOT_DOWNLOAD_FAILED", "Unable to download the generated screenshot image.", {
+    throw new MikaCliError("SCREENSHOT_DOWNLOAD_FAILED", "Unable to download the generated screenshot image.", {
       details: {
         screenshotUrl,
       },
@@ -140,7 +140,7 @@ async function fetchScreenshotBinary(
   }
 
   if (!response.ok) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "SCREENSHOT_DOWNLOAD_FAILED",
       `Screenshot image download failed with ${response.status} ${response.statusText}.`,
       {
@@ -161,7 +161,7 @@ async function fetchScreenshotBinary(
 
 export function parseMicrolinkScreenshotResponse(payload: unknown): MicrolinkScreenshotPayload {
   if (!payload || typeof payload !== "object") {
-    throw new AutoCliError("SCREENSHOT_METADATA_INVALID", "Screenshot service payload was not an object.");
+    throw new MikaCliError("SCREENSHOT_METADATA_INVALID", "Screenshot service payload was not an object.");
   }
 
   const root = payload as Record<string, unknown>;
@@ -174,7 +174,7 @@ export function parseMicrolinkScreenshotResponse(payload: unknown): MicrolinkScr
   const sourceUrl = typeof data?.url === "string" ? data.url.trim() : "";
 
   if (status !== "success" || !screenshotUrl || !sourceUrl) {
-    throw new AutoCliError("SCREENSHOT_METADATA_INVALID", "Screenshot service did not return a usable screenshot URL.");
+    throw new MikaCliError("SCREENSHOT_METADATA_INVALID", "Screenshot service did not return a usable screenshot URL.");
   }
 
   return {

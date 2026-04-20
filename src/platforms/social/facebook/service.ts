@@ -1,7 +1,7 @@
 import { access } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   runFirstClassBrowserAction,
   withBrowserActionMetadata,
@@ -124,7 +124,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Facebook session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Facebook session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -197,7 +197,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
     const imagePath = input.imagePath ? resolve(input.imagePath) : undefined;
 
     if (!text && !imagePath) {
-      throw new AutoCliError("INVALID_POST_TEXT", "Expected post text, an image, or both for the Facebook post.");
+      throw new MikaCliError("INVALID_POST_TEXT", "Expected post text, an image, or both for the Facebook post.");
     }
 
     if (imagePath) {
@@ -324,7 +324,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
         await clickFacebookLocator(control.locator);
         const liked = await this.waitForFacebookLikeState(page, "liked");
         if (!liked && !control.kind.startsWith("text")) {
-          throw new AutoCliError("FACEBOOK_BROWSER_ACTION_FAILED", "Facebook did not confirm the like action in the browser flow.", {
+          throw new MikaCliError("FACEBOOK_BROWSER_ACTION_FAILED", "Facebook did not confirm the like action in the browser flow.", {
             details: {
               target: input.target,
               url: page.url(),
@@ -363,7 +363,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
     const target = buildFacebookBrowserTarget(input.target);
     const text = normalizeFacebookText(input.text);
     if (!text) {
-      throw new AutoCliError("INVALID_COMMENT_TEXT", "Expected non-empty text for the Facebook comment.");
+      throw new MikaCliError("INVALID_COMMENT_TEXT", "Expected non-empty text for the Facebook comment.");
     }
 
     const timeoutSeconds = input.browserTimeoutSeconds ?? 75;
@@ -426,7 +426,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
     await this.persistSessionState(loaded.session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Facebook session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Facebook session has expired.", {
         details: {
           platform: this.platform,
           account: loaded.session.account,
@@ -523,7 +523,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
   private buildBrowserWriteSteps(actionLabel: string, targetUrl: string, useSharedBrowser: boolean) {
     const sharedStep = {
       source: "shared" as const,
-      announceLabel: `Opening shared AutoCLI browser profile for Facebook ${actionLabel}: ${targetUrl}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Facebook ${actionLabel}: ${targetUrl}`,
     };
 
     return useSharedBrowser
@@ -541,7 +541,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
     try {
       await access(filePath);
     } catch (error) {
-      throw new AutoCliError(code, message, {
+      throw new MikaCliError(code, message, {
         cause: error,
         details: {
           path: filePath,
@@ -566,9 +566,9 @@ export class FacebookAdapter extends BasePlatformAdapter {
       await page.locator('form#login_form, input[name="email"], input[name="pass"], button[name="login"]').first().isVisible().catch(() => false);
 
     if (loggedOut) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "SESSION_EXPIRED",
-        "Facebook opened a logged-out browser state. Re-login with `autocli social facebook login --browser` or refresh the saved cookies first.",
+        "Facebook opened a logged-out browser state. Re-login with `mikacli social facebook login --browser` or refresh the saved cookies first.",
         {
           details: {
             url: page.url(),
@@ -646,7 +646,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("FACEBOOK_BROWSER_COMPOSER_MISSING", "Facebook did not open the create-post composer in the browser flow.", {
+    throw new MikaCliError("FACEBOOK_BROWSER_COMPOSER_MISSING", "Facebook did not open the create-post composer in the browser flow.", {
       details: {
         url: page.url(),
       },
@@ -680,7 +680,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
     }
 
     if (count === 0) {
-      throw new AutoCliError("FACEBOOK_BROWSER_UPLOAD_INPUT_MISSING", "Facebook did not show an image upload field in the browser composer.");
+      throw new MikaCliError("FACEBOOK_BROWSER_UPLOAD_INPUT_MISSING", "Facebook did not show an image upload field in the browser composer.");
     }
 
     await input.last().setInputFiles(imagePath);
@@ -720,7 +720,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("FACEBOOK_BROWSER_POST_BUTTON_DISABLED", "Facebook never enabled the Post button for the browser-backed composer.");
+    throw new MikaCliError("FACEBOOK_BROWSER_POST_BUTTON_DISABLED", "Facebook never enabled the Post button for the browser-backed composer.");
   }
 
   private async waitForFacebookMutationResponse(
@@ -939,7 +939,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
       }
     }
 
-    throw new AutoCliError("FACEBOOK_BROWSER_LIKE_BUTTON_MISSING", "Facebook did not render a visible Like control for the target post.");
+    throw new MikaCliError("FACEBOOK_BROWSER_LIKE_BUTTON_MISSING", "Facebook did not render a visible Like control for the target post.");
   }
 
   private async readFacebookLikeState(page: PlaywrightPage): Promise<FacebookLikeState> {
@@ -1004,7 +1004,7 @@ export class FacebookAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("FACEBOOK_BROWSER_COMMENT_BOX_MISSING", "Facebook did not render a visible comment box for the target post.");
+    throw new MikaCliError("FACEBOOK_BROWSER_COMMENT_BOX_MISSING", "Facebook did not render a visible comment box for the target post.");
   }
 
   private async waitForFacebookCommentEcho(page: PlaywrightPage, text: string): Promise<void> {
@@ -1142,7 +1142,7 @@ async function firstVisibleFacebookLocator(
     }
   }
 
-  throw new AutoCliError("FACEBOOK_BROWSER_SELECTOR_MISSING", `Facebook did not render an expected browser control for selectors: ${selectors.join(", ")}`);
+  throw new MikaCliError("FACEBOOK_BROWSER_SELECTOR_MISSING", `Facebook did not render an expected browser control for selectors: ${selectors.join(", ")}`);
 }
 
 function resolveFacebookLikeTextKind(label: string): "text-like" | "text-liked" | null {

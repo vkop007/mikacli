@@ -71,9 +71,9 @@ export const letterboxdPlatformDefinition: PlatformDefinition = {
     }),
   ],
   examples: [
-    'autocli letterboxd search "inception"',
-    "autocli letterboxd title https://letterboxd.com/film/inception/",
-    "autocli letterboxd profile darrencb",
-    "autocli letterboxd diary darrencb --limit 5",
+    'mikacli letterboxd search "inception"',
+    "mikacli letterboxd title https://letterboxd.com/film/inception/",
+    "mikacli letterboxd profile darrencb",
+    "mikacli letterboxd diary darrencb --limit 5",
   ],
 };

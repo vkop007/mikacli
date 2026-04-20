@@ -10,10 +10,10 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli data json format ./payload.json",
-  "autocli data json query ./payload.json data.items[0].title",
-  "autocli data json merge ./base.json ./override.json --sort-keys",
-  "autocli data json format '{\"ok\":true}' --json",
+  "mikacli data json format ./payload.json",
+  "mikacli data json query ./payload.json data.items[0].title",
+  "mikacli data json merge ./base.json ./override.json --sort-keys",
+  "mikacli data json format '{\"ok\":true}' --json",
 ] as const;
 
 function buildJsonCommand(options: PlatformCommandBuildOptions = {}): Command {

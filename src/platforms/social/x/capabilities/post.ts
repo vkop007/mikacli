@@ -17,7 +17,7 @@ export const xPostCapability: PlatformCapability = {
       .description("Publish a text post on X, optionally with one image, through a browser-backed compose flow")
       .option("--image <path>", "Attach an image to the post")
       .option("--account <name>", "Optional override for a specific saved X session")
-      .option("--browser", "Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path")
+      .option("--browser", "Force the post through the shared MikaCLI browser profile instead of the invisible browser-backed path")
       .option("--browser-timeout <seconds>", "Maximum seconds to allow the browser action to complete", parseBrowserTimeoutSeconds)
       .action(async (text, options, cmd) => {
         const ctx = resolveCommandContext(cmd);

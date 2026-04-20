@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { htmlToText, normalizeWhitespace } from "../../data/shared/text.js";
 
 const DEFAULT_INSTANCE_ORIGIN = "https://mastodon.social";
@@ -44,7 +44,7 @@ export function normalizeMastodonInstanceUrl(target: string): string {
 export function parseMastodonSearchTarget(target: string): MastodonSearchTarget {
   const trimmed = normalizePotentialMastodonUrl(target.trim());
   if (!trimmed) {
-    throw new AutoCliError("MASTODON_TARGET_INVALID", "Mastodon target cannot be empty.");
+    throw new MikaCliError("MASTODON_TARGET_INVALID", "Mastodon target cannot be empty.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
@@ -72,7 +72,7 @@ export function parseMastodonSearchTarget(target: string): MastodonSearchTarget 
 export function normalizeMastodonProfileTarget(target: string): MastodonProfileTarget {
   const trimmed = normalizePotentialMastodonUrl(target.trim());
   if (!trimmed) {
-    throw new AutoCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon profile URL, handle, or username.");
+    throw new MikaCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon profile URL, handle, or username.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
@@ -81,7 +81,7 @@ export function normalizeMastodonProfileTarget(target: string): MastodonProfileT
 
   const handle = trimmed.startsWith("@") ? trimmed.slice(1).trim() : trimmed;
   if (!handle) {
-    throw new AutoCliError("MASTODON_TARGET_INVALID", "Mastodon handle cannot be empty.");
+    throw new MikaCliError("MASTODON_TARGET_INVALID", "Mastodon handle cannot be empty.");
   }
 
   if (/^[A-Za-z0-9._-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/u.test(handle)) {
@@ -89,7 +89,7 @@ export function normalizeMastodonProfileTarget(target: string): MastodonProfileT
     const username = parts[0];
     const host = parts[1];
     if (!username || !host) {
-      throw new AutoCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon profile URL, handle, or username.");
+      throw new MikaCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon profile URL, handle, or username.");
     }
     return {
       origin: normalizeMastodonOrigin(host),
@@ -106,13 +106,13 @@ export function normalizeMastodonProfileTarget(target: string): MastodonProfileT
     };
   }
 
-  throw new AutoCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon profile URL, handle, or username.");
+  throw new MikaCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon profile URL, handle, or username.");
 }
 
 export function normalizeMastodonStatusTarget(target: string): MastodonStatusTarget {
   const trimmed = normalizePotentialMastodonUrl(target.trim());
   if (!trimmed) {
-    throw new AutoCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon status URL or status ID.");
+    throw new MikaCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon status URL or status ID.");
   }
 
   if (/^\d+$/u.test(trimmed)) {
@@ -169,7 +169,7 @@ export function normalizeMastodonStatusTarget(target: string): MastodonStatusTar
     };
   }
 
-  throw new AutoCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon status URL or numeric status ID.");
+  throw new MikaCliError("MASTODON_TARGET_INVALID", "Expected a Mastodon status URL or numeric status ID.");
 }
 
 export function buildMastodonProfileUrl(origin: string, username: string): string {
@@ -217,7 +217,7 @@ function parseProfileUrl(target: string): MastodonProfileTarget {
   if (webHandle) {
     const username = webHandle.slice(1);
     if (!username) {
-      throw new AutoCliError("MASTODON_TARGET_INVALID", `Could not resolve a Mastodon profile handle from "${target}".`);
+      throw new MikaCliError("MASTODON_TARGET_INVALID", `Could not resolve a Mastodon profile handle from "${target}".`);
     }
 
     const acct = normalizeMastodonOrigin(url.origin) === DEFAULT_INSTANCE_ORIGIN ? username : `${username}@${url.hostname}`;
@@ -241,7 +241,7 @@ function parseProfileUrl(target: string): MastodonProfileTarget {
     };
   }
 
-  throw new AutoCliError("MASTODON_TARGET_INVALID", `Could not resolve a Mastodon profile handle from "${target}".`);
+  throw new MikaCliError("MASTODON_TARGET_INVALID", `Could not resolve a Mastodon profile handle from "${target}".`);
 }
 
 function normalizePotentialMastodonUrl(value: string): string {

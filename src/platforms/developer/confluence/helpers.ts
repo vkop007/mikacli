@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { htmlToText, normalizeWhitespace } from "../../data/shared/text.js";
 
@@ -9,7 +9,7 @@ const ATLASSIAN_HOST_IGNORE = new Set(["id.atlassian.com", "admin.atlassian.com"
 export function normalizeConfluenceSiteUrl(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) {
-    throw new AutoCliError("CONFLUENCE_SITE_REQUIRED", "Provide a Confluence site URL like https://your-workspace.atlassian.net/wiki.");
+    throw new MikaCliError("CONFLUENCE_SITE_REQUIRED", "Provide a Confluence site URL like https://your-workspace.atlassian.net/wiki.");
   }
 
   const withProtocol = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
@@ -17,7 +17,7 @@ export function normalizeConfluenceSiteUrl(input: string): string {
   try {
     url = new URL(withProtocol);
   } catch (error) {
-    throw new AutoCliError("CONFLUENCE_SITE_INVALID", `Invalid Confluence site URL "${input}".`, {
+    throw new MikaCliError("CONFLUENCE_SITE_INVALID", `Invalid Confluence site URL "${input}".`, {
       cause: error,
       details: { input },
     });
@@ -53,7 +53,7 @@ export function getStoredConfluenceSiteUrl(metadata?: Record<string, unknown>): 
 export function normalizeConfluenceSpaceTarget(target: string): string {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("CONFLUENCE_SPACE_TARGET_INVALID", "Confluence space target cannot be empty.");
+    throw new MikaCliError("CONFLUENCE_SPACE_TARGET_INVALID", "Confluence space target cannot be empty.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
@@ -62,7 +62,7 @@ export function normalizeConfluenceSpaceTarget(target: string): string {
     const fromDisplay = url.pathname.match(/\/display\/([^/]+)/iu)?.[1];
     const resolved = fromSpaces ?? fromDisplay;
     if (!resolved) {
-      throw new AutoCliError("CONFLUENCE_SPACE_TARGET_INVALID", `Could not resolve a Confluence space key from "${target}".`);
+      throw new MikaCliError("CONFLUENCE_SPACE_TARGET_INVALID", `Could not resolve a Confluence space key from "${target}".`);
     }
     return decodeURIComponent(resolved).toUpperCase();
   }
@@ -73,7 +73,7 @@ export function normalizeConfluenceSpaceTarget(target: string): string {
 export function normalizeConfluencePageTarget(target: string): string {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("CONFLUENCE_PAGE_TARGET_INVALID", "Confluence page target cannot be empty.");
+    throw new MikaCliError("CONFLUENCE_PAGE_TARGET_INVALID", "Confluence page target cannot be empty.");
   }
 
   if (/^\d+$/u.test(trimmed)) {
@@ -87,13 +87,13 @@ export function normalizeConfluencePageTarget(target: string): string {
       url.pathname.match(/\/pages\/(\d+)/iu)?.[1];
 
     if (!pageId) {
-      throw new AutoCliError("CONFLUENCE_PAGE_TARGET_INVALID", `Could not resolve a Confluence page ID from "${target}".`);
+      throw new MikaCliError("CONFLUENCE_PAGE_TARGET_INVALID", `Could not resolve a Confluence page ID from "${target}".`);
     }
 
     return pageId;
   }
 
-  throw new AutoCliError("CONFLUENCE_PAGE_TARGET_INVALID", `Invalid Confluence page target "${target}". Expected a numeric page ID or page URL.`);
+  throw new MikaCliError("CONFLUENCE_PAGE_TARGET_INVALID", `Invalid Confluence page target "${target}". Expected a numeric page ID or page URL.`);
 }
 
 export function buildConfluencePageUrl(siteUrl: string, pageId: string): string {

@@ -63,16 +63,16 @@ export function prefixCliExample(example: string, examplePrefix: string | undefi
     return example;
   }
 
-  const normalized = example.replace(/^autocli\s+/u, "").trim();
+  const normalized = example.replace(/^mikacli\s+/u, "").trim();
   if (PLATFORM_CATEGORY_PREFIXES.some((category) => normalized.startsWith(`${category} `))) {
-    return `autocli ${normalized}`;
+    return `mikacli ${normalized}`;
   }
 
   const expectedPrefix = `${examplePrefix} `;
   const withoutDuplicatePrefix =
     normalized.startsWith(expectedPrefix) ? normalized.slice(expectedPrefix.length) : normalized;
 
-  return `autocli ${examplePrefix} ${withoutDuplicatePrefix}`.trim();
+  return `mikacli ${examplePrefix} ${withoutDuplicatePrefix}`.trim();
 }
 
 export function buildExamplesHelpText(

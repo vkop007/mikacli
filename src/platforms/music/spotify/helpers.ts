@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { SpotifyEntityType } from "../../../utils/targets.js";
 
 export interface SpotifyImageSource {
@@ -18,14 +18,14 @@ export function extractSpotifyScriptPayload<T>(html: string, scriptId: string): 
   const match = html.match(new RegExp(`<script id="${escapedId}" type="text/plain">([\\s\\S]*?)</script>`, "i"));
 
   if (!match?.[1]) {
-    throw new AutoCliError("SPOTIFY_PAGE_PARSE_FAILED", `Spotify page payload "${scriptId}" was not found.`);
+    throw new MikaCliError("SPOTIFY_PAGE_PARSE_FAILED", `Spotify page payload "${scriptId}" was not found.`);
   }
 
   try {
     const decoded = Buffer.from(match[1], "base64").toString("utf8");
     return JSON.parse(decoded) as T;
   } catch (error) {
-    throw new AutoCliError("SPOTIFY_PAGE_PARSE_FAILED", `Spotify page payload "${scriptId}" could not be decoded.`, {
+    throw new MikaCliError("SPOTIFY_PAGE_PARSE_FAILED", `Spotify page payload "${scriptId}" could not be decoded.`, {
       cause: error,
     });
   }

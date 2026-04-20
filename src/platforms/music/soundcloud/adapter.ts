@@ -5,7 +5,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 
 import { ensureParentDirectory, getCachePath } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   extractSoundCloudNumericId,
   formatCompactNumber,
@@ -98,7 +98,7 @@ const SOUNDCLOUD_API_ORIGIN = "https://api-v2.soundcloud.com";
 const SOUNDCLOUD_USER_AGENT =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36";
 const SOUNDCLOUD_CLIENT_ID_TTL_MS = 30 * 60 * 1000;
-const FFMPEG_BIN = process.env.AUTOCLI_FFMPEG_BIN || "ffmpeg";
+const FFMPEG_BIN = process.env.MIKACLI_FFMPEG_BIN || "ffmpeg";
 
 export class SoundCloudAdapter {
   readonly platform = "soundcloud" as const;
@@ -112,7 +112,7 @@ export class SoundCloudAdapter {
   async search(input: { query: string; type?: SoundCloudSearchType; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("SOUNDCLOUD_QUERY_REQUIRED", "Provide a SoundCloud query to search.");
+      throw new MikaCliError("SOUNDCLOUD_QUERY_REQUIRED", "Provide a SoundCloud query to search.");
     }
 
     const limit = normalizeSoundCloudLimit(input.limit, 5, 25);
@@ -326,7 +326,7 @@ export class SoundCloudAdapter {
   private async resolveTrack(target: string): Promise<SoundCloudTrack> {
     const resolved = await this.resolveEntity(target, "track");
     if (!isTrack(resolved)) {
-      throw new AutoCliError("SOUNDCLOUD_TRACK_NOT_FOUND", "SoundCloud could not resolve that track.", {
+      throw new MikaCliError("SOUNDCLOUD_TRACK_NOT_FOUND", "SoundCloud could not resolve that track.", {
         details: {
           target,
           kind: resolved.kind,
@@ -339,7 +339,7 @@ export class SoundCloudAdapter {
   private async resolvePlaylist(target: string): Promise<SoundCloudPlaylist> {
     const resolved = await this.resolveEntity(target, "playlist");
     if (!isSoundCloudPlaylist(resolved)) {
-      throw new AutoCliError("SOUNDCLOUD_PLAYLIST_NOT_FOUND", "SoundCloud could not resolve that playlist.", {
+      throw new MikaCliError("SOUNDCLOUD_PLAYLIST_NOT_FOUND", "SoundCloud could not resolve that playlist.", {
         details: {
           target,
           kind: resolved.kind,
@@ -352,7 +352,7 @@ export class SoundCloudAdapter {
   private async resolveUser(target: string): Promise<SoundCloudUser> {
     const resolved = await this.resolveEntity(target, "user");
     if (!isUser(resolved)) {
-      throw new AutoCliError("SOUNDCLOUD_USER_NOT_FOUND", "SoundCloud could not resolve that user.", {
+      throw new MikaCliError("SOUNDCLOUD_USER_NOT_FOUND", "SoundCloud could not resolve that user.", {
         details: {
           target,
           kind: resolved.kind,
@@ -365,7 +365,7 @@ export class SoundCloudAdapter {
   private async resolveEntity(target: string, kind: "track" | "playlist" | "user"): Promise<SoundCloudResolveResult> {
     const normalizedTarget = target.trim();
     if (!normalizedTarget) {
-      throw new AutoCliError("SOUNDCLOUD_TARGET_REQUIRED", "Provide a SoundCloud URL, numeric ID, or search query.");
+      throw new MikaCliError("SOUNDCLOUD_TARGET_REQUIRED", "Provide a SoundCloud URL, numeric ID, or search query.");
     }
 
     const url = normalizeSoundCloudUrl(normalizedTarget);
@@ -407,7 +407,7 @@ export class SoundCloudAdapter {
       }) ?? collection[0];
 
     if (!exact) {
-      throw new AutoCliError(code, "SoundCloud could not find a matching result.", {
+      throw new MikaCliError(code, "SoundCloud could not find a matching result.", {
         details: {
           target,
         },
@@ -443,7 +443,7 @@ export class SoundCloudAdapter {
       transcodings[0];
 
     if (!preferred?.url) {
-      throw new AutoCliError("SOUNDCLOUD_STREAM_NOT_AVAILABLE", "SoundCloud did not expose a downloadable stream for this track.", {
+      throw new MikaCliError("SOUNDCLOUD_STREAM_NOT_AVAILABLE", "SoundCloud did not expose a downloadable stream for this track.", {
         details: {
           trackId: track.id,
         },
@@ -452,7 +452,7 @@ export class SoundCloudAdapter {
 
     const response = await this.requestAbsolute<{ url?: string }>(preferred.url);
     if (!response.url) {
-      throw new AutoCliError("SOUNDCLOUD_STREAM_NOT_AVAILABLE", "SoundCloud did not return a media URL for this track.", {
+      throw new MikaCliError("SOUNDCLOUD_STREAM_NOT_AVAILABLE", "SoundCloud did not return a media URL for this track.", {
         details: {
           trackId: track.id,
           transcodingUrl: preferred.url,
@@ -476,7 +476,7 @@ export class SoundCloudAdapter {
     });
 
     if (!response.ok || !response.body) {
-      throw new AutoCliError("SOUNDCLOUD_DOWNLOAD_FAILED", "SoundCloud media download failed.", {
+      throw new MikaCliError("SOUNDCLOUD_DOWNLOAD_FAILED", "SoundCloud media download failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -507,7 +507,7 @@ export class SoundCloudAdapter {
 
       child.on("error", (error) => {
         rejectPromise(
-          new AutoCliError("SOUNDCLOUD_FFMPEG_NOT_AVAILABLE", "ffmpeg is required to download non-progressive SoundCloud streams.", {
+          new MikaCliError("SOUNDCLOUD_FFMPEG_NOT_AVAILABLE", "ffmpeg is required to download non-progressive SoundCloud streams.", {
             details: {
               command: FFMPEG_BIN,
             },
@@ -523,7 +523,7 @@ export class SoundCloudAdapter {
         }
 
         rejectPromise(
-          new AutoCliError("SOUNDCLOUD_DOWNLOAD_FAILED", `ffmpeg exited with code ${code} while saving the SoundCloud track.`, {
+          new MikaCliError("SOUNDCLOUD_DOWNLOAD_FAILED", `ffmpeg exited with code ${code} while saving the SoundCloud track.`, {
             details: {
               outputPath,
               stderr: stderr.trim() || null,
@@ -561,7 +561,7 @@ export class SoundCloudAdapter {
 
     if (!response.ok) {
       const body = await safeReadText(response);
-      throw new AutoCliError("SOUNDCLOUD_REQUEST_FAILED", "SoundCloud request failed.", {
+      throw new MikaCliError("SOUNDCLOUD_REQUEST_FAILED", "SoundCloud request failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -593,7 +593,7 @@ export class SoundCloudAdapter {
 
     if (!response.ok) {
       const body = await safeReadText(response);
-      throw new AutoCliError("SOUNDCLOUD_REQUEST_FAILED", "SoundCloud request failed.", {
+      throw new MikaCliError("SOUNDCLOUD_REQUEST_FAILED", "SoundCloud request failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -620,7 +620,7 @@ export class SoundCloudAdapter {
     });
 
     if (!response.ok) {
-      throw new AutoCliError("SOUNDCLOUD_CLIENT_ID_FETCH_FAILED", "Failed to load SoundCloud's public web app.", {
+      throw new MikaCliError("SOUNDCLOUD_CLIENT_ID_FETCH_FAILED", "Failed to load SoundCloud's public web app.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -634,21 +634,21 @@ export class SoundCloudAdapter {
     const start = html.indexOf(marker);
     const end = html.indexOf(";</script>", start);
     if (start < 0 || end < 0) {
-      throw new AutoCliError("SOUNDCLOUD_CLIENT_ID_MISSING", "Could not locate SoundCloud hydration data for the current web app.");
+      throw new MikaCliError("SOUNDCLOUD_CLIENT_ID_MISSING", "Could not locate SoundCloud hydration data for the current web app.");
     }
 
     let hydration: SoundCloudApiClientHydrationEntry[];
     try {
       hydration = JSON.parse(html.slice(start + marker.length, end)) as SoundCloudApiClientHydrationEntry[];
     } catch (error) {
-      throw new AutoCliError("SOUNDCLOUD_CLIENT_ID_INVALID", "Could not parse SoundCloud hydration data.", {
+      throw new MikaCliError("SOUNDCLOUD_CLIENT_ID_INVALID", "Could not parse SoundCloud hydration data.", {
         cause: error,
       });
     }
 
     const clientId = hydration.find((entry) => entry.hydratable === "apiClient")?.data?.id;
     if (!clientId) {
-      throw new AutoCliError("SOUNDCLOUD_CLIENT_ID_MISSING", "Could not find SoundCloud's current public client id.");
+      throw new MikaCliError("SOUNDCLOUD_CLIENT_ID_MISSING", "Could not find SoundCloud's current public client id.");
     }
 
     this.clientIdCache = {
@@ -743,7 +743,7 @@ function resolveDownloadOutputPath(input: {
   extension: string;
 }): string {
   if (input.output && input.outputDir) {
-    throw new AutoCliError("SOUNDCLOUD_DOWNLOAD_PATH_CONFLICT", "Use either --output or --output-dir, not both.");
+    throw new MikaCliError("SOUNDCLOUD_DOWNLOAD_PATH_CONFLICT", "Use either --output or --output-dir, not both.");
   }
 
   const filename = `${slugifyFilename(`${input.title}-${input.id}`)}${input.extension}`;

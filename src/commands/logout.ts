@@ -5,7 +5,7 @@ import { Command } from "commander";
 
 import { getBrowserProfileDir, sanitizeAccountName } from "../config.js";
 import { ConnectionStore } from "../core/auth/connection-store.js";
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { isPlatform } from "../platforms/config.js";
 import { resolveCommandContext } from "../utils/cli.js";
 import { printJson } from "../utils/output.js";
@@ -34,21 +34,21 @@ type LogoutConnectionStore = Pick<ConnectionStore, "listConnections">;
 
 export function createLogoutCommand(): Command {
   return new Command("logout")
-    .description("Remove saved provider sessions and optionally clear the shared AutoCLI browser profile")
+    .description("Remove saved provider sessions and optionally clear the shared MikaCLI browser profile")
     .argument("[platform]", "Optional platform id")
     .argument("[account]", "Optional saved account name; defaults to all saved accounts for the platform")
     .option("--all", "Remove all saved provider sessions and token connections (default when no platform is passed)")
-    .option("--browser", "Also clear the shared AutoCLI browser profile")
+    .option("--browser", "Also clear the shared MikaCLI browser profile")
     .addHelpText(
       "after",
       `
 Examples:
-  autocli logout
-  autocli logout --all
-  autocli logout --browser
-  autocli logout x
-  autocli logout x default
-  autocli logout x default --browser
+  mikacli logout
+  mikacli logout --all
+  mikacli logout --browser
+  mikacli logout x
+  mikacli logout x default
+  mikacli logout x default --browser
 `,
     )
     .action(async function logoutAction(this: Command, platform?: string, account?: string) {
@@ -103,7 +103,7 @@ export async function logoutSavedState(input: {
   });
 
   if (!removeAllSaved && targets.length === 0) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "SESSION_NOT_FOUND",
       account
         ? `No saved ${platform ?? "provider"} record found for account "${account}".`
@@ -211,7 +211,7 @@ async function fileExists(path: string): Promise<boolean> {
 
 function requirePlatform(value: string): Platform {
   if (!isPlatform(value)) {
-    throw new AutoCliError("INVALID_PLATFORM", `Unknown platform "${value}".`, {
+    throw new MikaCliError("INVALID_PLATFORM", `Unknown platform "${value}".`, {
       details: {
         platform: value,
       },

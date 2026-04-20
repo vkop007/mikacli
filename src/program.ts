@@ -11,46 +11,46 @@ import { createSessionsCommand } from "./commands/sessions.js";
 import { createStatusCommand } from "./commands/status.js";
 import { createLogsCommand } from "./commands/logs.js";
 import { createJobsCommand } from "./commands/jobs.js";
-import { AutoCliError } from "./errors.js";
+import { MikaCliError } from "./errors.js";
 import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
 import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
 
-const HELP_FRAME = `${pc.bold(pc.cyan("AutoCLI"))}
+const HELP_FRAME = `${pc.bold(pc.cyan("MikaCLI"))}
 ${pc.dim("Terminal automation across LLMs, editors, finance, data, Google apps, maps, movies, news, socials, shopping, developer platforms, devops, bots, and tools")}
 `;
 
 const ROOT_EXAMPLES = [
-  "autocli login --browser",
-  "autocli logout x default",
-  'autocli search "youtube download"',
-  'autocli llm chatgpt text "Hello my name is Justine"',
-  "autocli doctor",
-  "autocli sessions",
-  "autocli logs --status failed --since 1h",
-  "autocli jobs",
-  'autocli editor image resize ./photo.png --width 1200',
-  'autocli finance stocks AAPL',
-  "autocli google gmail labels",
-  "autocli google calendar today",
-  "autocli google docs documents",
-  "autocli google forms forms",
-  'autocli maps openstreetmap search "Mumbai"',
-  'autocli movie imdb search "inception"',
-  'autocli news top "AI"',
-  'autocli social x post "Launching AutoCLI"',
-  'autocli shopping amazon search "wireless mouse"',
-  "autocli developer github me",
-  "autocli devops cloudflare zones",
-  'autocli music spotify search "dandelions"',
-  'autocli bot telegrambot me',
-  'autocli tools translate "hello world" --to hi',
+  "mikacli login --browser",
+  "mikacli logout x default",
+  'mikacli search "youtube download"',
+  'mikacli llm chatgpt text "Hello my name is Justine"',
+  "mikacli doctor",
+  "mikacli sessions",
+  "mikacli logs --status failed --since 1h",
+  "mikacli jobs",
+  'mikacli editor image resize ./photo.png --width 1200',
+  'mikacli finance stocks AAPL',
+  "mikacli google gmail labels",
+  "mikacli google calendar today",
+  "mikacli google docs documents",
+  "mikacli google forms forms",
+  'mikacli maps openstreetmap search "Mumbai"',
+  'mikacli movie imdb search "inception"',
+  'mikacli news top "AI"',
+  'mikacli social x post "Launching MikaCLI"',
+  'mikacli shopping amazon search "wireless mouse"',
+  "mikacli developer github me",
+  "mikacli devops cloudflare zones",
+  'mikacli music spotify search "dandelions"',
+  'mikacli bot telegrambot me',
+  'mikacli tools translate "hello world" --to hi',
 ] as const;
 
 export function createProgram(): Command {
   const program = new Command();
 
   program
-    .name("autocli")
+    .name("mikacli")
     .description(
       "Automate platforms from the terminal using category-based commands for llm, editor, finance, data, google, maps, movie, news, music, social, shopping, developer, devops, bot, and tools.",
     )
@@ -69,14 +69,14 @@ Examples:
 ${ROOT_EXAMPLES.map((example) => `  ${example}`).join("\n")}
 
 Filtering & Selection:
-  autocli developer github repos --json --select name,stargazers_count,language
-  autocli social x posts --json --filter 'public_metrics.like_count > 1000'
-  autocli developer github repos --json --select name,stars --filter 'stargazers_count > 100 AND language = "TypeScript"'
+  mikacli developer github repos --json --select name,stargazers_count,language
+  mikacli social x posts --json --filter 'public_metrics.like_count > 1000'
+  mikacli developer github repos --json --select name,stars --filter 'stargazers_count > 100 AND language = "TypeScript"'
 
 Format Transformations (with or without --json):
-  autocli developer github repos --json --format csv > repos.csv
-  autocli social reddit search "ai" --format table --filter 'score > 100'
-  autocli devops vercel projects --format yaml --select name,updated_at
+  mikacli developer github repos --json --format csv > repos.csv
+  mikacli social reddit search "ai" --format table --filter 'score > 100'
+  mikacli devops vercel projects --format yaml --select name,updated_at
 `,
     )
     .addCommand(createLoginCommand())
@@ -105,7 +105,7 @@ export function assertCategoryOnlyInvocation(argv: readonly string[]): void {
     return;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "CATEGORY_COMMAND_REQUIRED",
     `Top-level provider commands are disabled. "${suggestion.command}" lives under "${suggestion.category}". Use "${suggestion.suggestedCommand}" instead.`,
     {
@@ -158,16 +158,16 @@ function buildSuggestedCategoryCommand(
 ): string {
   if (isHelpRequest) {
     const tail = argv.slice(1).filter((token, index) => !(index === 0 && token === typedProvider));
-    return ["autocli", category, providerId, ...tail, "--help"].join(" ").trim();
+    return ["mikacli", category, providerId, ...tail, "--help"].join(" ").trim();
   }
 
   const providerIndex = argv.findIndex((token) => token === typedProvider);
   if (providerIndex < 0) {
-    return `autocli ${category} ${providerId}`;
+    return `mikacli ${category} ${providerId}`;
   }
 
   return [
-    "autocli",
+    "mikacli",
     ...argv.slice(0, providerIndex),
     category,
     providerId,

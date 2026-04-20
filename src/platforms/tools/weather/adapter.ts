@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 type WeatherLookupInput = {
@@ -50,11 +50,11 @@ export class WeatherAdapter {
         signal: AbortSignal.timeout(12000),
         headers: {
           accept: "application/json",
-          "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+          "user-agent": "MikaCLI/1.0 (+https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("WEATHER_REQUEST_FAILED", "Unable to reach wttr.in weather service.", {
+      throw new MikaCliError("WEATHER_REQUEST_FAILED", "Unable to reach wttr.in weather service.", {
         details: {
           location: location ?? "auto",
         },
@@ -63,7 +63,7 @@ export class WeatherAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "WEATHER_REQUEST_FAILED",
         `wttr.in weather request failed with ${response.status} ${response.statusText}.`,
         {
@@ -79,7 +79,7 @@ export class WeatherAdapter {
     try {
       payload = await response.json();
     } catch (error) {
-      throw new AutoCliError("WEATHER_RESPONSE_INVALID", "wttr.in returned invalid JSON weather data.", {
+      throw new MikaCliError("WEATHER_RESPONSE_INVALID", "wttr.in returned invalid JSON weather data.", {
         cause: error,
       });
     }
@@ -127,7 +127,7 @@ function parseWeatherPayload(payload: unknown, days: number): {
 
   const currentRaw = firstRecord(root.current_condition);
   if (!currentRaw) {
-    throw new AutoCliError("WEATHER_RESPONSE_INVALID", "wttr.in response did not include current conditions.");
+    throw new MikaCliError("WEATHER_RESPONSE_INVALID", "wttr.in response did not include current conditions.");
   }
 
   const nearestAreaRaw = firstRecord(root.nearest_area);

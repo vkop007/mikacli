@@ -6,7 +6,7 @@ export function createSpotifyLoginCapability(adapter: SpotifyAdapter) {
   return createAdapterActionCapability({
     id: "login",
     command: "login",
-    description: "Save the Spotify session for future headless use. With no auth flags, AutoCLI opens browser login by default",
+    description: "Save the Spotify session for future headless use. With no auth flags, MikaCLI opens browser login by default",
     spinnerText: "Saving Spotify session...",
     successMessage: "Spotify session saved.",
     options: createCookieLoginOptions(),

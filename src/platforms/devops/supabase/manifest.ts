@@ -12,10 +12,10 @@ export const supabasePlatformDefinition: PlatformDefinition = {
   adapter: supabaseAdapter,
   capabilities: supabaseCapabilities,
   examples: [
-    "autocli supabase login --token $SUPABASE_ACCESS_TOKEN",
-    "autocli supabase me",
-    "autocli supabase organizations",
-    "autocli supabase projects",
-    "autocli supabase functions your-project-ref",
+    "mikacli supabase login --token $SUPABASE_ACCESS_TOKEN",
+    "mikacli supabase me",
+    "mikacli supabase organizations",
+    "mikacli supabase projects",
+    "mikacli supabase functions your-project-ref",
   ],
 };

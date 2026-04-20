@@ -1,5 +1,5 @@
 import { CookieLlmAdapter } from "../shared/base-cookie-llm-adapter.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { ChatGptService } from "./service.js";
 
 import type {
@@ -89,7 +89,7 @@ export class ChatGptAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
-      throw new AutoCliError("INVALID_PROMPT", "Expected a non-empty ChatGPT text prompt.");
+      throw new MikaCliError("INVALID_PROMPT", "Expected a non-empty ChatGPT text prompt.");
     }
 
     const { session } = await this.loadSession(input.account);
@@ -106,7 +106,7 @@ export class ChatGptAdapter extends CookieLlmAdapter {
     });
 
     if (inspection.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", inspection.status.message ?? "ChatGPT session expired. Re-import cookies.", {
+      throw new MikaCliError("SESSION_EXPIRED", inspection.status.message ?? "ChatGPT session expired. Re-import cookies.", {
         details: {
           platform: this.platform,
           account: inspectedSession.account,
@@ -183,14 +183,14 @@ export class ChatGptAdapter extends CookieLlmAdapter {
   }
 
   async video(): Promise<AdapterActionResult> {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "CHATGPT_VIDEO_UNIMPLEMENTED",
       "ChatGPT video prompting is scaffolded, but the private generation endpoint is not mapped yet in this CLI.",
     );
   }
 
   protected async executeText(_session: PlatformSession): Promise<AdapterActionResult> {
-    throw new AutoCliError("CHATGPT_TEXT_INTERNAL_MISMATCH", "ChatGPT text dispatch should not use the cookie-only adapter path.");
+    throw new MikaCliError("CHATGPT_TEXT_INTERNAL_MISMATCH", "ChatGPT text dispatch should not use the cookie-only adapter path.");
   }
 
   private async refreshSavedSession(account: string, sessionPath?: string): Promise<AdapterActionResult> {

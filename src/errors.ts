@@ -1,4 +1,4 @@
-export class AutoCliError extends Error {
+export class MikaCliError extends Error {
   readonly code: string;
   readonly details?: Record<string, unknown>;
   readonly exitCode: number;
@@ -13,15 +13,15 @@ export class AutoCliError extends Error {
     },
   ) {
     super(message, { cause: options?.cause });
-    this.name = "AutoCliError";
+    this.name = "MikaCliError";
     this.code = code;
     this.details = options?.details;
     this.exitCode = options?.exitCode ?? 1;
   }
 }
 
-export function isAutoCliError(error: unknown): error is AutoCliError {
-  return error instanceof AutoCliError;
+export function isMikaCliError(error: unknown): error is MikaCliError {
+  return error instanceof MikaCliError;
 }
 
 export function errorToJson(error: unknown): {
@@ -32,7 +32,7 @@ export function errorToJson(error: unknown): {
     details?: Record<string, unknown>;
   };
 } {
-  if (isAutoCliError(error)) {
+  if (isMikaCliError(error)) {
     return {
       ok: false,
       error: {

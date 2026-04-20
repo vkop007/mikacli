@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { BaseGooglePlatformAdapter } from "../shared/base.js";
 import { FormsApiClient } from "./client.js";
 
@@ -104,7 +104,7 @@ export class FormsAdapter extends BaseGooglePlatformAdapter {
     const active = await this.ensureActiveConnection(input.account);
     const title = input.title.trim();
     if (!title) {
-      throw new AutoCliError("GOOGLE_FORMS_TITLE_REQUIRED", "Google Forms create requires a title.");
+      throw new MikaCliError("GOOGLE_FORMS_TITLE_REQUIRED", "Google Forms create requires a title.");
     }
 
     const form = await this.createClient(active.accessToken).createForm({
@@ -169,7 +169,7 @@ export class FormsAdapter extends BaseGooglePlatformAdapter {
     const active = await this.ensureActiveConnection(input.account);
     const title = input.title.trim();
     if (!title) {
-      throw new AutoCliError("GOOGLE_FORMS_QUESTION_TITLE_REQUIRED", "Google Forms add-text-question requires --title.");
+      throw new MikaCliError("GOOGLE_FORMS_QUESTION_TITLE_REQUIRED", "Google Forms add-text-question requires --title.");
     }
 
     const result = await this.createClient(active.accessToken).addTextQuestion({
@@ -211,12 +211,12 @@ export class FormsAdapter extends BaseGooglePlatformAdapter {
     const active = await this.ensureActiveConnection(input.account);
     const title = input.title.trim();
     if (!title) {
-      throw new AutoCliError("GOOGLE_FORMS_QUESTION_TITLE_REQUIRED", "Google Forms add-choice-question requires --title.");
+      throw new MikaCliError("GOOGLE_FORMS_QUESTION_TITLE_REQUIRED", "Google Forms add-choice-question requires --title.");
     }
 
     const options = input.options.map((value) => value.trim()).filter(Boolean);
     if (options.length < 2) {
-      throw new AutoCliError("GOOGLE_FORMS_OPTIONS_REQUIRED", "Google Forms add-choice-question requires at least two options.");
+      throw new MikaCliError("GOOGLE_FORMS_OPTIONS_REQUIRED", "Google Forms add-choice-question requires at least two options.");
     }
 
     const result = await this.createClient(active.accessToken).addChoiceQuestion({
@@ -277,7 +277,7 @@ export class FormsAdapter extends BaseGooglePlatformAdapter {
     const active = await this.ensureActiveConnection(input.account);
     const isAcceptingResponses = input.published ? input.acceptingResponses ?? true : false;
     if (!input.published && input.acceptingResponses) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "GOOGLE_FORMS_INVALID_PUBLISH_STATE",
         "Google Forms cannot accept responses while unpublished. Use --published true or remove --accepting-responses true.",
       );

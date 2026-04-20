@@ -1,6 +1,6 @@
 import { DEFAULT_ACCOUNT_NAME } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError, toError } from "../../../errors.js";
+import { MikaCliError, toError } from "../../../errors.js";
 import { promptForInput } from "../../../utils/terminal-prompt.js";
 import { printTerminalQr } from "../../../utils/terminal-qr.js";
 
@@ -75,7 +75,7 @@ export class TelegramSocialService {
       if (initialSession.length > 0) {
         const authorized = await client.checkAuthorization();
         if (!authorized) {
-          throw new AutoCliError(
+          throw new MikaCliError(
             "TELEGRAM_SESSION_INVALID",
             "Telegram rejected the provided session string. Generate a fresh session or log in again.",
           );
@@ -316,7 +316,7 @@ export class TelegramSocialService {
 
     if (!authorized) {
       await safelyDisconnectTelegram(client);
-      throw new AutoCliError("TELEGRAM_SESSION_EXPIRED", "Telegram session expired. Run social telegram login again.", {
+      throw new MikaCliError("TELEGRAM_SESSION_EXPIRED", "Telegram session expired. Run social telegram login again.", {
         details: {
           account: loaded.connection.account,
           platform: PLATFORM,
@@ -381,7 +381,7 @@ function parseTelegramMetadata(connection: ConnectionRecord): TelegramStoredMeta
     sessionString.trim().length === 0 ||
     (loginMode !== "session-string" && loginMode !== "phone" && loginMode !== "qr")
   ) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "TELEGRAM_SESSION_INVALID",
       "The saved Telegram session is missing apiId, apiHash, or session string metadata.",
       {
@@ -414,7 +414,7 @@ function parseApiId(value: number | string | undefined): number {
     }
   }
 
-  throw new AutoCliError("TELEGRAM_API_ID_REQUIRED", "Telegram login requires --api-id from my.telegram.org.", {
+  throw new MikaCliError("TELEGRAM_API_ID_REQUIRED", "Telegram login requires --api-id from my.telegram.org.", {
     details: {
       input: value,
     },
@@ -426,7 +426,7 @@ function requireNonEmpty(value: string | undefined, code: string, message: strin
     return value.trim();
   }
 
-  throw new AutoCliError(code, message);
+  throw new MikaCliError(code, message);
 }
 
 async function getRequiredValue(currentValue: string | undefined, label: string): Promise<string> {
@@ -531,7 +531,7 @@ function normalizeTelegramEntity(entity: unknown): Record<string, unknown> {
 function coerceTelegramTarget(target: string): string | number {
   const normalized = target.trim();
   if (normalized.length === 0) {
-    throw new AutoCliError("TELEGRAM_TARGET_REQUIRED", "Telegram target is required.");
+    throw new MikaCliError("TELEGRAM_TARGET_REQUIRED", "Telegram target is required.");
   }
 
   if (/^-?\d+$/.test(normalized)) {
@@ -576,7 +576,7 @@ function extractTelegramSessionString(client: TelegramClientInstance): string {
     }
   }
 
-  throw new AutoCliError("TELEGRAM_SESSION_SERIALIZE_FAILED", "Unable to serialize the Telegram session string.");
+  throw new MikaCliError("TELEGRAM_SESSION_SERIALIZE_FAILED", "Unable to serialize the Telegram session string.");
 }
 
 function normalizeTelegramDate(value: unknown): string | undefined {

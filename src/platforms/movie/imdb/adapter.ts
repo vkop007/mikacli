@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult } from "../../../types.js";
 
@@ -29,7 +29,7 @@ export class ImdbAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("IMDB_QUERY_REQUIRED", "Provide a movie or show query to search IMDb.");
+      throw new MikaCliError("IMDB_QUERY_REQUIRED", "Provide a movie or show query to search IMDb.");
     }
 
     const items = (await this.fetchSuggestions(query)).slice(0, normalizeLimit(input.limit, 5, 10));
@@ -49,7 +49,7 @@ export class ImdbAdapter {
   async titleInfo(input: { target: string }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("IMDB_TARGET_REQUIRED", "Provide an IMDb title URL, title ID, or search query.");
+      throw new MikaCliError("IMDB_TARGET_REQUIRED", "Provide an IMDb title URL, title ID, or search query.");
     }
 
     let item: ImdbSuggestionItem | undefined;
@@ -66,7 +66,7 @@ export class ImdbAdapter {
     }
 
     if (!item?.id || !item.l) {
-      throw new AutoCliError("IMDB_TITLE_NOT_FOUND", "IMDb could not find a matching title.", {
+      throw new MikaCliError("IMDB_TITLE_NOT_FOUND", "IMDb could not find a matching title.", {
         details: {
           target,
         },
@@ -108,7 +108,7 @@ export class ImdbAdapter {
     });
 
     if (!response.ok) {
-      throw new AutoCliError("IMDB_REQUEST_FAILED", "IMDb search request failed.", {
+      throw new MikaCliError("IMDB_REQUEST_FAILED", "IMDb search request failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,

@@ -1,7 +1,7 @@
 import { access } from "node:fs/promises";
 import { constants } from "node:fs";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { appendUploadFileField, readUploadAsset } from "../../../utils/upload-pipeline.js";
 
 import type {

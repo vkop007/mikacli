@@ -1,4 +1,4 @@
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 export interface ImageMetadata {
   width: number;
@@ -16,7 +16,7 @@ export function readImageMetadata(bytes: Buffer, mimeType: string): ImageMetadat
     case "image/jpeg":
       return readJpegMetadata(bytes);
     default:
-      throw new AutoCliError("UNSUPPORTED_MEDIA_TYPE", `Unsupported image type: ${mimeType}`, {
+      throw new MikaCliError("UNSUPPORTED_MEDIA_TYPE", `Unsupported image type: ${mimeType}`, {
         details: {
           mimeType,
           supportedTypes: ["image/png", "image/jpeg", "image/gif", "image/webp"],
@@ -134,6 +134,6 @@ function isSofMarker(marker: number): boolean {
   ].includes(marker);
 }
 
-function invalidImage(kind: string): AutoCliError {
-  return new AutoCliError("INVALID_IMAGE_METADATA", `Failed to read ${kind} image metadata.`);
+function invalidImage(kind: string): MikaCliError {
+  return new MikaCliError("INVALID_IMAGE_METADATA", `Failed to read ${kind} image metadata.`);
 }

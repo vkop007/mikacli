@@ -7,7 +7,7 @@ import { mergeSubtitleDocuments, shiftSubtitleDocument, subtitleEditorAdapter } 
 
 describe("subtitle editor", () => {
   test("loads srt info", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "autocli-subtitle-test-"));
+    const dir = mkdtempSync(join(tmpdir(), "mikacli-subtitle-test-"));
     const file = join(dir, "sample.srt");
     writeFileSync(
       file,
@@ -63,7 +63,7 @@ describe("subtitle editor", () => {
   });
 
   test("converts subtitles between formats", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "autocli-subtitle-convert-"));
+    const dir = mkdtempSync(join(tmpdir(), "mikacli-subtitle-convert-"));
     const input = join(dir, "sample.srt");
     const output = join(dir, "sample.vtt");
     writeFileSync(input, "1\n00:00:01,000 --> 00:00:02,000\nHello\n", "utf8");

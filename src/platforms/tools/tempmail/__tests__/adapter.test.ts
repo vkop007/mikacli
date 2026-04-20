@@ -17,7 +17,7 @@ describe("temp mail provider helpers", () => {
   });
 
   test("builds temp mail addresses from a local part and domain", () => {
-    expect(buildTempMailAddress("autocli-123", "example.com")).toBe("autocli-123@example.com");
+    expect(buildTempMailAddress("mikacli-123", "example.com")).toBe("mikacli-123@example.com");
   });
 
   test("selects an explicit public active domain when requested", () => {
@@ -74,6 +74,6 @@ describe("temp mail command surface", () => {
 
   test("uses category-based examples in the manifest", () => {
     const examples = tempMailPlatformDefinition.examples ?? [];
-    expect(examples.every((example) => example.startsWith("autocli tools tempmail"))).toBe(true);
+    expect(examples.every((example) => example.startsWith("mikacli tools tempmail"))).toBe(true);
   });
 });

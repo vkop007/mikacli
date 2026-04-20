@@ -12,10 +12,10 @@ export const ziprecruiterPlatformDefinition: PlatformDefinition = {
   adapter: ziprecruiterAdapter,
   capabilities: createCareersCapabilities(ziprecruiterAdapter),
   examples: [
-    'autocli careers ziprecruiter search "software engineer"',
-    'autocli careers ziprecruiter search "product manager" --location "Austin"',
-    'autocli careers ziprecruiter search "marketing manager" --limit 15',
-    'autocli careers ziprecruiter search "data analyst" --job-type "contract"',
-    'autocli careers ziprecruiter search "devops engineer" --location "Seattle" --limit 10 --json',
+    'mikacli careers ziprecruiter search "software engineer"',
+    'mikacli careers ziprecruiter search "product manager" --location "Austin"',
+    'mikacli careers ziprecruiter search "marketing manager" --limit 15',
+    'mikacli careers ziprecruiter search "data analyst" --job-type "contract"',
+    'mikacli careers ziprecruiter search "devops engineer" --location "Seattle" --limit 10 --json',
   ],
 };

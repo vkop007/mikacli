@@ -12,9 +12,9 @@ export const deepSeekPlatformDefinition: PlatformDefinition = {
   adapter: deepSeekAdapter,
   capabilities: createDeepSeekCapabilities(deepSeekAdapter),
   examples: [
-    "autocli deepseek login",
-    "autocli deepseek login --cookies ./deepseek.cookies.json --token <userToken>",
-    'autocli deepseek text "Explain vector databases"',
-    'autocli deepseek text "Draft a short release note"',
+    "mikacli deepseek login",
+    "mikacli deepseek login --cookies ./deepseek.cookies.json --token <userToken>",
+    'mikacli deepseek text "Explain vector databases"',
+    'mikacli deepseek text "Draft a short release note"',
   ],
 };

@@ -12,7 +12,7 @@ import type { PlatformCapability } from "../../../../core/runtime/platform-defin
 export const xLoginCapability: PlatformCapability = {
   id: "login",
   register(command: Command, definition) {
-    const loginCommand = command.command("login").description("Save an X session for future headless use. With no auth flags, AutoCLI opens browser login by default.");
+    const loginCommand = command.command("login").description("Save an X session for future headless use. With no auth flags, MikaCLI opens browser login by default.");
 
     for (const option of createCookieLoginOptions()) {
       if (option.parser) {

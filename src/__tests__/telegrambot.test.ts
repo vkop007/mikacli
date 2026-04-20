@@ -9,8 +9,8 @@ import { TelegramBotAdapter } from "../platforms/bot/telegrambot/adapter.js";
 const TEST_BOT = {
   id: 42,
   is_bot: true,
-  first_name: "AutoCLI",
-  username: "autocli_bot",
+  first_name: "MikaCLI",
+  username: "mikacli_bot",
 };
 
 afterEach(() => {
@@ -19,7 +19,7 @@ afterEach(() => {
 
 describe("TelegramBotApi", () => {
   test("uploads local media files as multipart form data", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "autocli-telegram-"));
+    const dir = mkdtempSync(join(tmpdir(), "mikacli-telegram-"));
     const filePath = join(dir, "photo.txt");
     writeFileSync(filePath, "hello world");
 

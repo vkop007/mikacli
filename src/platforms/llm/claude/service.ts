@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { readMediaFile } from "../../../utils/media.js";
 import { appendUploadFileField } from "../../../utils/upload-pipeline.js";
 
@@ -87,7 +87,7 @@ export class ClaudeService {
         };
       }
 
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return {
           status: {
             state: "unknown",
@@ -113,7 +113,7 @@ export class ClaudeService {
     try {
       const organizations = await this.fetchOrganizations(client);
       const candidates = orderClaudeOrganizations(organizations, input.preferredOrganizationId);
-      let fallbackError: AutoCliError | undefined;
+      let fallbackError: MikaCliError | undefined;
 
       for (const candidate of candidates) {
         if (!candidate.uuid) {
@@ -129,7 +129,7 @@ export class ClaudeService {
           const parsed = parseClaudeCompletionStream(stream);
 
           if (!parsed.outputText) {
-            throw new AutoCliError("CLAUDE_EMPTY_RESPONSE", "Claude returned an empty response.");
+            throw new MikaCliError("CLAUDE_EMPTY_RESPONSE", "Claude returned an empty response.");
           }
 
           return {
@@ -142,14 +142,14 @@ export class ClaudeService {
           };
         } catch (error) {
           if (isClaudeOrganizationAuthError(error)) {
-            fallbackError = asAutoCliError(error);
+            fallbackError = asMikaCliError(error);
             continue;
           }
           throw error;
         }
       }
 
-      throw fallbackError ?? new AutoCliError(
+      throw fallbackError ?? new MikaCliError(
         "CLAUDE_ORGANIZATION_FORBIDDEN",
         "Claude denied message access for all detected organizations. Re-import cookies from the active organization session.",
         {
@@ -176,7 +176,7 @@ export class ClaudeService {
       const media = await readMediaFile(input.mediaPath);
       const organizations = await this.fetchOrganizations(client);
       const candidates = orderClaudeOrganizations(organizations, input.preferredOrganizationId);
-      let fallbackError: AutoCliError | undefined;
+      let fallbackError: MikaCliError | undefined;
 
       for (const candidate of candidates) {
         if (!candidate.uuid) {
@@ -194,7 +194,7 @@ export class ClaudeService {
           const parsed = parseClaudeCompletionStream(stream);
 
           if (!parsed.outputText) {
-            throw new AutoCliError("CLAUDE_EMPTY_RESPONSE", "Claude returned an empty response for the uploaded image.");
+            throw new MikaCliError("CLAUDE_EMPTY_RESPONSE", "Claude returned an empty response for the uploaded image.");
           }
 
           return {
@@ -208,14 +208,14 @@ export class ClaudeService {
           };
         } catch (error) {
           if (isClaudeOrganizationAuthError(error)) {
-            fallbackError = asAutoCliError(error);
+            fallbackError = asMikaCliError(error);
             continue;
           }
           throw error;
         }
       }
 
-      throw fallbackError ?? new AutoCliError(
+      throw fallbackError ?? new MikaCliError(
         "CLAUDE_ORGANIZATION_FORBIDDEN",
         "Claude denied message access for all detected organizations. Re-import cookies from the active organization session.",
         {
@@ -234,7 +234,7 @@ export class ClaudeService {
     const selected = selectClaudeOrganization(organizations, preferredOrganizationId);
 
     if (!selected?.uuid) {
-      throw new AutoCliError("CLAUDE_ORGANIZATION_NOT_FOUND", "Claude did not return an accessible organization for this session.");
+      throw new MikaCliError("CLAUDE_ORGANIZATION_NOT_FOUND", "Claude did not return an accessible organization for this session.");
     }
 
     return {
@@ -260,7 +260,7 @@ export class ClaudeService {
       }
       return parsed.filter((value): value is ClaudeOrganization => Boolean(value) && typeof value === "object");
     } catch (error) {
-      throw new AutoCliError("CLAUDE_SESSION_EXPIRED", "Claude session expired. Re-import cookies.", {
+      throw new MikaCliError("CLAUDE_SESSION_EXPIRED", "Claude session expired. Re-import cookies.", {
         cause: error,
         details: {
           preview: text.slice(0, 200),
@@ -290,7 +290,7 @@ export class ClaudeService {
     );
 
     if (!response.uuid) {
-      throw new AutoCliError("CLAUDE_CHAT_CREATE_FAILED", "Claude did not return a chat id.");
+      throw new MikaCliError("CLAUDE_CHAT_CREATE_FAILED", "Claude did not return a chat id.");
     }
 
     return response.uuid;
@@ -321,7 +321,7 @@ export class ClaudeService {
     });
 
     if (!response.file_uuid) {
-      throw new AutoCliError("CLAUDE_FILE_UPLOAD_FAILED", "Claude did not return an uploaded file id.");
+      throw new MikaCliError("CLAUDE_FILE_UPLOAD_FAILED", "Claude did not return an uploaded file id.");
     }
 
     return response.file_uuid;
@@ -387,7 +387,7 @@ export function parseClaudeCompletionStream(stream: string): {
     if (payload.error) {
       const resetsAt = payload.error.resets_at;
       if (typeof resetsAt === "number" || typeof resetsAt === "string") {
-        throw new AutoCliError("CLAUDE_RATE_LIMITED", "Claude rate limited this session.", {
+        throw new MikaCliError("CLAUDE_RATE_LIMITED", "Claude rate limited this session.", {
           details: {
             resetsAt,
           },
@@ -395,10 +395,10 @@ export function parseClaudeCompletionStream(stream: string): {
       }
 
       if (typeof payload.error.type === "string" && payload.error.type.includes("overloaded")) {
-        throw new AutoCliError("CLAUDE_OVERLOADED", payload.error.message || "Claude is currently overloaded.");
+        throw new MikaCliError("CLAUDE_OVERLOADED", payload.error.message || "Claude is currently overloaded.");
       }
 
-      throw new AutoCliError("CLAUDE_STREAM_ERROR", payload.error.message || "Claude returned an error event.", {
+      throw new MikaCliError("CLAUDE_STREAM_ERROR", payload.error.message || "Claude returned an error event.", {
         details: {
           type: payload.error.type,
         },
@@ -463,14 +463,14 @@ function buildClaudeHeaders(input: {
 }
 
 function isClaudeExpiredError(error: unknown): boolean {
-  return isAutoCliError(error) && [
+  return isMikaCliError(error) && [
     "CLAUDE_SESSION_EXPIRED",
     "CLAUDE_ORGANIZATION_NOT_FOUND",
   ].includes(error.code);
 }
 
 function isClaudeOrganizationAuthError(error: unknown): boolean {
-  if (!isAutoCliError(error)) {
+  if (!isMikaCliError(error)) {
     return false;
   }
 
@@ -487,32 +487,32 @@ function isClaudeOrganizationAuthError(error: unknown): boolean {
   return status === 403 && /Invalid authorization for organization/i.test(body);
 }
 
-function asAutoCliError(error: unknown): AutoCliError | undefined {
-  return isAutoCliError(error) ? error : undefined;
+function asMikaCliError(error: unknown): MikaCliError | undefined {
+  return isMikaCliError(error) ? error : undefined;
 }
 
-function mapClaudeError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+function mapClaudeError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     if (error.code === "HTTP_REQUEST_FAILED") {
       const status = Number(error.details?.status);
       const body = typeof error.details?.body === "string" ? error.details.body : "";
       if (status === 403 && /Invalid authorization for organization/i.test(body)) {
-        return new AutoCliError(
+        return new MikaCliError(
           "CLAUDE_ORGANIZATION_FORBIDDEN",
-          "Claude rejected the selected organization for write access. AutoCLI will retry with other available organizations.",
+          "Claude rejected the selected organization for write access. MikaCLI will retry with other available organizations.",
           {
             details: error.details,
           },
         );
       }
       if (status === 401 || status === 403) {
-        return new AutoCliError("CLAUDE_SESSION_EXPIRED", "Claude session expired. Re-import cookies.", {
+        return new MikaCliError("CLAUDE_SESSION_EXPIRED", "Claude session expired. Re-import cookies.", {
           details: error.details,
         });
       }
 
       if (status === 429) {
-        return new AutoCliError("CLAUDE_RATE_LIMITED", "Claude rate limited this session.", {
+        return new MikaCliError("CLAUDE_RATE_LIMITED", "Claude rate limited this session.", {
           details: error.details,
         });
       }
@@ -522,7 +522,7 @@ function mapClaudeError(error: unknown, fallbackMessage: string): AutoCliError {
   }
 
   if (error instanceof Error) {
-    return new AutoCliError("CLAUDE_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("CLAUDE_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details: {
         message: error.message,
@@ -530,5 +530,5 @@ function mapClaudeError(error: unknown, fallbackMessage: string): AutoCliError {
     });
   }
 
-  return new AutoCliError("CLAUDE_REQUEST_FAILED", fallbackMessage);
+  return new MikaCliError("CLAUDE_REQUEST_FAILED", fallbackMessage);
 }

@@ -2,7 +2,7 @@ import { constants } from "node:fs";
 import { access, readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export interface LoadedTextSource {
   kind: "file" | "literal" | "stdin";
@@ -14,12 +14,12 @@ export interface LoadedTextSource {
 export async function loadTextSource(source: string): Promise<LoadedTextSource> {
   const trimmed = source.trim();
   if (!trimmed) {
-    throw new AutoCliError("DATA_INPUT_REQUIRED", "Provide a data input string, file path, or '-' for stdin.");
+    throw new MikaCliError("DATA_INPUT_REQUIRED", "Provide a data input string, file path, or '-' for stdin.");
   }
 
   if (trimmed === "-") {
     if (process.stdin.isTTY) {
-      throw new AutoCliError("DATA_STDIN_EMPTY", "Expected piped stdin input, but stdin is interactive.");
+      throw new MikaCliError("DATA_STDIN_EMPTY", "Expected piped stdin input, but stdin is interactive.");
     }
 
     return {

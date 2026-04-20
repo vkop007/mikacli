@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { WebSearchClient } from "../../tools/websearch/client.js";
 import {
   buildDeezerEntityUrl,
@@ -108,7 +108,7 @@ export class DeezerAdapter {
   async search(input: { query: string; type?: DeezerSearchType; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("DEEZER_QUERY_REQUIRED", "Provide a Deezer query to search.");
+      throw new MikaCliError("DEEZER_QUERY_REQUIRED", "Provide a Deezer query to search.");
     }
 
     const type = input.type ?? "all";
@@ -311,7 +311,7 @@ export class DeezerAdapter {
     }
 
     if (parsed && parsed.kind !== kind) {
-      throw new AutoCliError("DEEZER_TARGET_TYPE_MISMATCH", `The target is a Deezer ${parsed.kind}, not a ${kind}.`, {
+      throw new MikaCliError("DEEZER_TARGET_TYPE_MISMATCH", `The target is a Deezer ${parsed.kind}, not a ${kind}.`, {
         details: {
           target,
           expected: kind,
@@ -323,7 +323,7 @@ export class DeezerAdapter {
     const matches = await this.searchTyped(target, kind, 1);
     const match = matches[0];
     if (!match) {
-      throw new AutoCliError("DEEZER_RESULT_NOT_FOUND", `Deezer could not find a matching ${kind}.`, {
+      throw new MikaCliError("DEEZER_RESULT_NOT_FOUND", `Deezer could not find a matching ${kind}.`, {
         details: {
           target,
           kind,
@@ -406,7 +406,7 @@ export class DeezerAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("DEEZER_REQUEST_FAILED", "Failed to reach Deezer.", {
+      throw new MikaCliError("DEEZER_REQUEST_FAILED", "Failed to reach Deezer.", {
         cause: error,
         details: {
           url: url.toString(),
@@ -416,7 +416,7 @@ export class DeezerAdapter {
 
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("DEEZER_REQUEST_FAILED", `Deezer request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("DEEZER_REQUEST_FAILED", `Deezer request failed with ${response.status} ${response.statusText}.`, {
         details: {
           url: url.toString(),
           status: response.status,
@@ -430,7 +430,7 @@ export class DeezerAdapter {
     try {
       payload = JSON.parse(text);
     } catch (error) {
-      throw new AutoCliError("DEEZER_RESPONSE_INVALID", "Deezer returned invalid JSON.", {
+      throw new MikaCliError("DEEZER_RESPONSE_INVALID", "Deezer returned invalid JSON.", {
         cause: error,
         details: {
           url: url.toString(),
@@ -441,7 +441,7 @@ export class DeezerAdapter {
 
     const record = payload as Record<string, unknown>;
     if (record.error) {
-      throw new AutoCliError("DEEZER_REQUEST_FAILED", "Deezer returned an error payload.", {
+      throw new MikaCliError("DEEZER_REQUEST_FAILED", "Deezer returned an error payload.", {
         details: {
           url: url.toString(),
           error: record.error,

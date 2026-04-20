@@ -1,5 +1,5 @@
 import { createAdapterActionCapability } from "../../../../core/runtime/capability-helpers.js";
-import { AutoCliError } from "../../../../errors.js";
+import { MikaCliError } from "../../../../errors.js";
 import { parsePositiveInteger } from "../../shared/options.js";
 import { uptimeRobotAdapter, type UptimeRobotAdapter } from "../adapter.js";
 import {
@@ -913,13 +913,13 @@ function parseJsonObject(value: string): Record<string, unknown> {
   try {
     parsed = JSON.parse(value) as unknown;
   } catch (error) {
-    throw new AutoCliError("INVALID_JSON", `Expected a valid JSON object, received "${value}".`, {
+    throw new MikaCliError("INVALID_JSON", `Expected a valid JSON object, received "${value}".`, {
       cause: error,
     });
   }
 
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new AutoCliError("INVALID_JSON_OBJECT", "Expected a JSON object.");
+    throw new MikaCliError("INVALID_JSON_OBJECT", "Expected a JSON object.");
   }
 
   return parsed as Record<string, unknown>;
@@ -929,7 +929,7 @@ function parseTimeFrame(value: string): string {
   const normalized = value.trim().toUpperCase();
   const allowed = new Set<string>(["DAY", "WEEK", "MONTH", "DAYS_30", "YEAR", "ALL", "CUSTOM"]);
   if (!allowed.has(normalized)) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "INVALID_UPTIMEROBOT_TIMEFRAME",
       `Unsupported time frame "${value}". Expected DAY, WEEK, MONTH, DAYS_30, YEAR, ALL, or CUSTOM.`,
     );

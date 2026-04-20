@@ -11,9 +11,9 @@ import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../c
 import type { PlatformName } from "../../config.js";
 
 const EXAMPLES = [
-  'autocli translate "hello world"',
-  'autocli translate "hello world" --to hi',
-  'autocli translate "good morning" --from en --to es',
+  'mikacli translate "hello world"',
+  'mikacli translate "hello world" --to hi',
+  'mikacli translate "good morning" --from en --to es',
 ] as const;
 
 function buildTranslateCommand(options: PlatformCommandBuildOptions = {}): Command {

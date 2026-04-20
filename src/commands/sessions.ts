@@ -6,7 +6,7 @@ import { Command } from "commander";
 import { getConnectionPath, getSessionPath, sanitizeAccountName } from "../config.js";
 import { ConnectionStore } from "../core/auth/connection-store.js";
 import { buildPlatformCommandPrefix } from "../core/runtime/platform-command-prefix.js";
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { getPlatformDisplayName, isPlatform } from "../platforms/config.js";
 import { getPlatformDefinition } from "../platforms/index.js";
 import { parseBrowserTimeoutSeconds } from "../platforms/shared/cookie-login.js";
@@ -105,14 +105,14 @@ export function createSessionsCommand(): Command {
       "after",
       `
 Examples:
-  autocli sessions
-  autocli sessions --platform x
-  autocli sessions validate
-  autocli sessions validate x default
-  autocli sessions repair
-  autocli sessions repair x --browser
-  autocli sessions show x cookie-check
-  autocli sessions remove spotify default
+  mikacli sessions
+  mikacli sessions --platform x
+  mikacli sessions validate
+  mikacli sessions validate x default
+  mikacli sessions repair
+  mikacli sessions repair x --browser
+  mikacli sessions show x cookie-check
+  mikacli sessions remove spotify default
 `,
     )
     .action(async function sessionsListAction(this: Command) {
@@ -293,7 +293,7 @@ async function listTargetConnections(
   });
 
   if (filtered.length === 0 && (platform || account)) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "SESSION_NOT_FOUND",
       account
         ? `No saved ${platform ?? "provider"} record found for account "${account}".`
@@ -421,16 +421,16 @@ export function summarizeRepairedSessionEntries(entries: readonly SessionRepairE
 export function buildSessionRecommendations(summary: SessionSummary): string[] {
   const recommendations: string[] = [];
   if (summary.total === 0) {
-    recommendations.push("Run `autocli login --browser` or a provider-specific `login` command to save your first reusable session.");
+    recommendations.push("Run `mikacli login --browser` or a provider-specific `login` command to save your first reusable session.");
     return recommendations;
   }
 
   if (summary.expired > 0) {
-    recommendations.push("Run `autocli sessions validate` to confirm expired records live, then refresh them with the provider's `login` command.");
+    recommendations.push("Run `mikacli sessions validate` to confirm expired records live, then refresh them with the provider's `login` command.");
   }
 
   if (summary.unknown > 0) {
-    recommendations.push("Run `autocli sessions validate` to replace unknown saved state with a live provider check.");
+    recommendations.push("Run `mikacli sessions validate` to replace unknown saved state with a live provider check.");
   }
 
   return recommendations;
@@ -728,7 +728,7 @@ function buildRepairPlan(
       if (!options.browser) {
         return {
           kind: "manual",
-          message: "Cookie-backed repair needs `--browser` so AutoCLI can refresh the saved web session safely.",
+          message: "Cookie-backed repair needs `--browser` so MikaCLI can refresh the saved web session safely.",
           next: buildProviderLoginCommand(connection.platform, connection.account),
           repairAction: "browser-login",
         };
@@ -923,7 +923,7 @@ export async function removeSessionArtifacts(platform: Platform, account: string
   }
 
   if (removed.length === 0) {
-    throw new AutoCliError("SESSION_NOT_FOUND", `No saved records found for ${platform}/${account}.`, {
+    throw new MikaCliError("SESSION_NOT_FOUND", `No saved records found for ${platform}/${account}.`, {
       details: {
         platform,
         account,
@@ -936,7 +936,7 @@ export async function removeSessionArtifacts(platform: Platform, account: string
 
 function requirePlatform(value: string): Platform {
   if (!isPlatform(value)) {
-    throw new AutoCliError("INVALID_PLATFORM", `Unknown platform "${value}".`, {
+    throw new MikaCliError("INVALID_PLATFORM", `Unknown platform "${value}".`, {
       details: {
         platform: value,
       },
@@ -951,7 +951,7 @@ function requireStatus(value: string): "active" | "expired" | "unknown" {
     return value;
   }
 
-  throw new AutoCliError("INVALID_STATUS_FILTER", `Unknown session state "${value}". Use active, expired, or unknown.`, {
+  throw new MikaCliError("INVALID_STATUS_FILTER", `Unknown session state "${value}". Use active, expired, or unknown.`, {
     details: {
       status: value,
     },
@@ -963,7 +963,7 @@ function requireAuthKind(value: string): ConnectionRecord["auth"]["kind"] {
     return value;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "INVALID_AUTH_FILTER",
     `Unknown auth kind "${value}". Use cookies, apiKey, botToken, session, oauth2, or none.`,
     {

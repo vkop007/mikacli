@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export const QR_SHARE_BASE_URL = "https://qrenco.de";
 export const QR_IMAGE_BASE_URL = "https://quickchart.io/qr";
@@ -9,7 +9,7 @@ export const QR_TEXT_LIMIT = 4000;
 export function normalizeQrText(value: string): string {
   const normalized = value.trim();
   if (!normalized) {
-    throw new AutoCliError("QR_TEXT_REQUIRED", "Provide text to encode as a QR code.");
+    throw new MikaCliError("QR_TEXT_REQUIRED", "Provide text to encode as a QR code.");
   }
 
   return normalized;
@@ -18,7 +18,7 @@ export function normalizeQrText(value: string): string {
 export function parsePositiveInteger(value: string, label: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new AutoCliError("QR_INVALID_NUMBER", `Invalid ${label} "${value}". Expected a positive integer.`);
+    throw new MikaCliError("QR_INVALID_NUMBER", `Invalid ${label} "${value}". Expected a positive integer.`);
   }
 
   return parsed;

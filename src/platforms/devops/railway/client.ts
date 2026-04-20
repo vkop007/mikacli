@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { isObject } from "../shared/rest.js";
 
 export interface RailwayUser {
@@ -124,7 +124,7 @@ export class RailwayApiClient {
         authorization: `Bearer ${this.token}`,
         accept: "application/json",
         "content-type": "application/json",
-        "user-agent": "AutoCLI/0.1 (+https://github.com/vkop007/autocli)",
+        "user-agent": "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)",
       },
       body: JSON.stringify({ query, variables }),
     });
@@ -134,11 +134,11 @@ export class RailwayApiClient {
       const message =
         payload?.errors?.map((entry) => entry.message).find((value): value is string => typeof value === "string" && value.trim().length > 0)
         ?? `Railway API request failed with status ${response.status}.`;
-      throw new AutoCliError("RAILWAY_API_ERROR", message);
+      throw new MikaCliError("RAILWAY_API_ERROR", message);
     }
 
     if (!payload?.data) {
-      throw new AutoCliError("RAILWAY_API_ERROR", "Railway returned an empty response.");
+      throw new MikaCliError("RAILWAY_API_ERROR", "Railway returned an empty response.");
     }
 
     return payload.data;

@@ -1,7 +1,7 @@
 import makeFetchCookie from "fetch-cookie";
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 const GITLAB_API_VERSION = "v4";
 type FetchLike = typeof fetch;
@@ -186,7 +186,7 @@ export class GitLabWebClient {
     return {
       accept: "application/json",
       ...(includeJsonContentType ? { "content-type": "application/json" } : {}),
-      "user-agent": "AutoCLI",
+      "user-agent": "MikaCLI",
       "X-GitLab-Api-Version": GITLAB_API_VERSION,
     };
   }
@@ -200,7 +200,7 @@ export class GitLabWebClient {
     try {
       return JSON.parse(text) as T;
     } catch (error) {
-      throw new AutoCliError("GITLAB_RESPONSE_INVALID", "GitLab returned a non-JSON response.", {
+      throw new MikaCliError("GITLAB_RESPONSE_INVALID", "GitLab returned a non-JSON response.", {
         cause: error,
         details: {
           url,
@@ -211,7 +211,7 @@ export class GitLabWebClient {
     }
   }
 
-  private async toGitLabError(response: Response): Promise<AutoCliError> {
+  private async toGitLabError(response: Response): Promise<MikaCliError> {
     let bodyText = "";
     let payload: Record<string, unknown> | undefined;
 
@@ -241,7 +241,7 @@ export class GitLabWebClient {
       : code === "GITLAB_VALIDATION_FAILED" ? `GitLab rejected the request: ${upstreamMessage}`
       : `GitLab API request failed with HTTP ${response.status}.`;
 
-    return new AutoCliError(code, message, {
+    return new MikaCliError(code, message, {
       details: {
         status: response.status,
         statusText: response.statusText,

@@ -17,9 +17,9 @@ export const tmdbPlatformDefinition: PlatformDefinition = {
     trendingDescription: "Load popular TMDb movies from the live catalog",
   }),
   examples: [
-    'autocli tmdb search "inception"',
-    "autocli tmdb title 27205",
-    "autocli tmdb recommendations https://www.themoviedb.org/movie/27205-inception",
-    "autocli tmdb trending --limit 10",
+    'mikacli tmdb search "inception"',
+    "mikacli tmdb title 27205",
+    "mikacli tmdb recommendations https://www.themoviedb.org/movie/27205-inception",
+    "mikacli tmdb trending --limit 10",
   ],
 };

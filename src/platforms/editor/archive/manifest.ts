@@ -9,12 +9,12 @@ import { printArchiveEditorResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli archive info ./bundle.zip",
-  "autocli archive list ./bundle.zip",
-  "autocli archive create ./bundle.zip ./dist ./README.md",
-  "autocli archive extract ./bundle.zip --output-dir ./bundle",
-  "autocli archive gzip ./notes.txt",
-  "autocli archive gunzip ./notes.txt.gz",
+  "mikacli archive info ./bundle.zip",
+  "mikacli archive list ./bundle.zip",
+  "mikacli archive create ./bundle.zip ./dist ./README.md",
+  "mikacli archive extract ./bundle.zip --output-dir ./bundle",
+  "mikacli archive gzip ./notes.txt",
+  "mikacli archive gunzip ./notes.txt.gz",
 ] as const;
 
 function buildArchiveEditorCommand(options: PlatformCommandBuildOptions = {}): Command {

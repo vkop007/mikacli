@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createServer } from "node:http";
 
-import { AutoCliError } from "../../../../errors.js";
+import { MikaCliError } from "../../../../errors.js";
 import { startGoogleLoopbackAuthorization } from "../loopback.js";
 
 const LOOPBACK_AVAILABLE = await probeLoopbackAvailability();
@@ -47,8 +47,8 @@ describe("Google loopback authorization", () => {
       await flow.waitForCode();
       throw new Error("Expected the loopback authorization to reject.");
     } catch (error) {
-      expect(error).toBeInstanceOf(AutoCliError);
-      expect((error as AutoCliError).code).toBe("GOOGLE_OAUTH_STATE_MISMATCH");
+      expect(error).toBeInstanceOf(MikaCliError);
+      expect((error as MikaCliError).code).toBe("GOOGLE_OAUTH_STATE_MISMATCH");
     }
 
     await flow.close();

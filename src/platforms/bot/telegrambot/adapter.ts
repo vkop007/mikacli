@@ -1,5 +1,5 @@
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { sanitizeAccountName } from "../../../config.js";
 import type { BotTokenConnectionAuth, ConnectionRecord } from "../../../core/auth/auth-types.js";
 import type {
@@ -69,7 +69,7 @@ export class TelegramBotAdapter {
   async login(input: { account?: string; token?: string }): Promise<AdapterActionResult> {
     const token = input.token?.trim();
     if (!token) {
-      throw new AutoCliError("INVALID_LOGIN_INPUT", "Provide a Telegram bot token with --token.");
+      throw new MikaCliError("INVALID_LOGIN_INPUT", "Provide a Telegram bot token with --token.");
     }
 
     const api = this.createApi(token);
@@ -359,22 +359,22 @@ export class TelegramBotAdapter {
   }
 
   async postMedia(input: PostMediaInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "UNSUPPORTED_ACTION",
       "Telegram bots do not support a generic postMedia action. Use send-photo, send-document, or send-video.",
     );
   }
 
   async postText(input: TextPostInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Telegram bots do not support a generic postText action. Use send.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Telegram bots do not support a generic postText action. Use send.");
   }
 
   async like(_input: LikeInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Telegram bots do not support likes.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Telegram bots do not support likes.");
   }
 
   async comment(_input: CommentInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Telegram bots do not support comments.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Telegram bots do not support comments.");
   }
 
   private async loadTelegramConnection(account?: string): Promise<{
@@ -432,7 +432,7 @@ export class TelegramBotAdapter {
   }
 
   private toFailureStatus(error: unknown): SessionStatus {
-    if (error instanceof AutoCliError) {
+    if (error instanceof MikaCliError) {
       return {
         state: "expired",
         message: error.message,

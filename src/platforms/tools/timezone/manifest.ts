@@ -9,10 +9,10 @@ import { printTimezoneResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli timezone Asia/Kolkata",
-  'autocli timezone "Mumbai"',
-  "autocli timezone 19.0760,72.8777",
-  "autocli timezone --lat 40.7128 --lon -74.0060 --json",
+  "mikacli timezone Asia/Kolkata",
+  'mikacli timezone "Mumbai"',
+  "mikacli timezone 19.0760,72.8777",
+  "mikacli timezone --lat 40.7128 --lon -74.0060 --json",
 ] as const;
 
 function buildTimezoneCommand(options: PlatformCommandBuildOptions = {}): Command {

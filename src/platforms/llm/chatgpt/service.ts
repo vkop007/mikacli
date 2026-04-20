@@ -1,6 +1,6 @@
 import { createHash, randomInt, randomUUID } from "node:crypto";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { readImageMetadata } from "../../../utils/image-metadata.js";
 import { readMediaFile } from "../../../utils/media.js";
@@ -155,7 +155,7 @@ export class ChatGptService {
         };
       }
 
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return {
           status: {
             state: "unknown",
@@ -186,7 +186,7 @@ export class ChatGptService {
       const parsed = parseChatGptConversationStream(conversationStream);
 
       if (!parsed.outputText) {
-        throw new AutoCliError("CHATGPT_EMPTY_RESPONSE", "ChatGPT returned an empty response.");
+        throw new MikaCliError("CHATGPT_EMPTY_RESPONSE", "ChatGPT returned an empty response.");
       }
 
       return {
@@ -226,7 +226,7 @@ export class ChatGptService {
       const parsed = parseChatGptConversationStream(conversationStream);
 
       if (!parsed.outputText) {
-        throw new AutoCliError("CHATGPT_EMPTY_RESPONSE", "ChatGPT returned an empty response.");
+        throw new MikaCliError("CHATGPT_EMPTY_RESPONSE", "ChatGPT returned an empty response.");
       }
 
       return {
@@ -273,7 +273,7 @@ export class ChatGptService {
       const parsed = parseChatGptConversationStream(conversationStream);
 
       if (!parsed.outputText) {
-        throw new AutoCliError("CHATGPT_EMPTY_RESPONSE", "ChatGPT returned an empty response for the image prompt.");
+        throw new MikaCliError("CHATGPT_EMPTY_RESPONSE", "ChatGPT returned an empty response for the image prompt.");
       }
 
       return {
@@ -385,7 +385,7 @@ export class ChatGptService {
     });
 
     if (typeof response.csrfToken !== "string" || response.csrfToken.length === 0) {
-      throw new AutoCliError("CHATGPT_CSRF_MISSING", "ChatGPT did not return a CSRF token.");
+      throw new MikaCliError("CHATGPT_CSRF_MISSING", "ChatGPT did not return a CSRF token.");
     }
 
     return response.csrfToken;
@@ -482,7 +482,7 @@ export class ChatGptService {
     });
 
     if (!data || typeof data.token !== "string" || !data.proofofwork?.seed || !data.proofofwork.difficulty) {
-      throw new AutoCliError("CHATGPT_REQUIREMENTS_FAILED", "ChatGPT did not return the anonymous sentinel requirements.", {
+      throw new MikaCliError("CHATGPT_REQUIREMENTS_FAILED", "ChatGPT did not return the anonymous sentinel requirements.", {
         details: {
           hasToken: typeof data?.token === "string",
           hasProofSeed: typeof data?.proofofwork?.seed === "string",
@@ -493,7 +493,7 @@ export class ChatGptService {
 
     const oaiSc = extractCookieValueFromResponse(response, "oai-sc");
     if (!oaiSc) {
-      throw new AutoCliError("CHATGPT_OAI_SC_MISSING", "ChatGPT did not return the required anonymous session cookie.");
+      throw new MikaCliError("CHATGPT_OAI_SC_MISSING", "ChatGPT did not return the required anonymous session cookie.");
     }
 
     return {
@@ -530,7 +530,7 @@ export class ChatGptService {
 
     const prepareToken = prepared.prepare_token ?? prepared.token;
     if (!prepareToken) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "CHATGPT_REQUIREMENTS_FAILED",
         "ChatGPT did not return the authenticated sentinel requirements token.",
       );
@@ -556,7 +556,7 @@ export class ChatGptService {
 
     const requirementsToken = finalized.token ?? prepareToken;
     if (!requirementsToken) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "CHATGPT_REQUIREMENTS_FAILED",
         "ChatGPT did not return the finalized authenticated chat requirements token.",
       );
@@ -599,7 +599,7 @@ export class ChatGptService {
     );
 
     if (!response.conduit_token) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "CHATGPT_CONDUIT_TOKEN_MISSING",
         "ChatGPT did not return the conduit token required for authenticated prompts.",
       );
@@ -708,7 +708,7 @@ export class ChatGptService {
     });
 
     if (!file.file_id || !file.upload_url) {
-      throw new AutoCliError("CHATGPT_FILE_UPLOAD_INIT_FAILED", "ChatGPT did not return an upload URL for the image.");
+      throw new MikaCliError("CHATGPT_FILE_UPLOAD_INIT_FAILED", "ChatGPT did not return an upload URL for the image.");
     }
 
     await client.request<string>(file.upload_url, {
@@ -744,7 +744,7 @@ export class ChatGptService {
     });
 
     if (!/file\.processing\.completed|Succeeded processing /u.test(processStream)) {
-      throw new AutoCliError("CHATGPT_FILE_PROCESSING_FAILED", "ChatGPT did not finish processing the uploaded image.", {
+      throw new MikaCliError("CHATGPT_FILE_PROCESSING_FAILED", "ChatGPT did not finish processing the uploaded image.", {
         details: {
           fileId: file.file_id,
           preview: processStream.slice(0, 400),
@@ -811,7 +811,7 @@ export function solveChatGptSentinelChallenge(seed: string, difficulty: string):
     }
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "CHATGPT_PROOF_UNSOLVED",
     "ChatGPT's browserless proof-of-work challenge could not be solved within the current retry budget.",
     {
@@ -1311,17 +1311,17 @@ function readString(value: unknown): string | undefined {
 }
 
 function isChatGptExpiredError(error: unknown): boolean {
-  return isAutoCliError(error) && error.code === "CHATGPT_SESSION_EXPIRED";
+  return isMikaCliError(error) && error.code === "CHATGPT_SESSION_EXPIRED";
 }
 
-function mapChatGptError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+function mapChatGptError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     if (error.code === "HTTP_REQUEST_FAILED") {
       const status = Number(error.details?.status);
       const body = typeof error.details?.body === "string" ? error.details.body : "";
 
       if (status === 403 && /unusual activity/i.test(body)) {
-        return new AutoCliError(
+        return new MikaCliError(
           "CHATGPT_UNUSUAL_ACTIVITY",
           "ChatGPT rejected the browserless web request as unusual activity. Try again later.",
           {
@@ -1331,7 +1331,7 @@ function mapChatGptError(error: unknown, fallbackMessage: string): AutoCliError 
       }
 
       if (status === 429) {
-        return new AutoCliError("CHATGPT_RATE_LIMITED", "ChatGPT rate limited the browserless web request.", {
+        return new MikaCliError("CHATGPT_RATE_LIMITED", "ChatGPT rate limited the browserless web request.", {
           details: error.details,
         });
       }
@@ -1341,7 +1341,7 @@ function mapChatGptError(error: unknown, fallbackMessage: string): AutoCliError 
   }
 
   if (error instanceof Error) {
-    return new AutoCliError("CHATGPT_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("CHATGPT_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details: {
         message: error.message,
@@ -1349,5 +1349,5 @@ function mapChatGptError(error: unknown, fallbackMessage: string): AutoCliError 
     });
   }
 
-  return new AutoCliError("CHATGPT_REQUEST_FAILED", fallbackMessage);
+  return new MikaCliError("CHATGPT_REQUEST_FAILED", fallbackMessage);
 }

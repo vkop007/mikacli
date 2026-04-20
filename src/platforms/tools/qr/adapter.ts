@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 import { readFile } from "fs/promises";
 
@@ -57,7 +57,7 @@ export class QrAdapter {
       const result = await this.decodeQrFromBuffer(fileBuffer);
 
       if (!result) {
-        throw new AutoCliError("QR_DECODE_FAILED", "No QR code found in the image.");
+        throw new MikaCliError("QR_DECODE_FAILED", "No QR code found in the image.");
       }
 
       return this.buildDecodeResult({
@@ -69,10 +69,10 @@ export class QrAdapter {
         },
       });
     } catch (error) {
-      if (error instanceof AutoCliError) {
+      if (error instanceof MikaCliError) {
         throw error;
       }
-      throw new AutoCliError("QR_DECODE_ERROR", "Failed to decode QR code from image.", {
+      throw new MikaCliError("QR_DECODE_ERROR", "Failed to decode QR code from image.", {
         cause: error,
         details: { filePath: input.filePath },
       });
@@ -112,7 +112,7 @@ export class QrAdapter {
     } catch (error) {
       // Fallback: try to provide helpful error message
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new AutoCliError("FILE_NOT_FOUND", `File not found: ${(error as NodeJS.ErrnoException).path}`, {
+        throw new MikaCliError("FILE_NOT_FOUND", `File not found: ${(error as NodeJS.ErrnoException).path}`, {
           cause: error,
         });
       }
@@ -124,7 +124,7 @@ export class QrAdapter {
     try {
       const response = await fetch(url, {
         headers: {
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
           accept: "text/plain,text/*;q=0.9,*/*;q=0.8",
         },
       });

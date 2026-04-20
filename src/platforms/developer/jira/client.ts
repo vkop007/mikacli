@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { adfDocumentFromPlainText, buildJiraIssuesJql, normalizeJiraIssueTarget, normalizeJiraProjectTarget, normalizeJiraSiteUrl } from "./helpers.js";
 
@@ -201,7 +201,7 @@ export class JiraWebClient {
           ...(input.body ? { "content-type": "application/json" } : {}),
           "x-atlassian-token": "no-check",
           "x-requested-with": "XMLHttpRequest",
-          "user-agent": "AutoCLI",
+          "user-agent": "MikaCLI",
         },
         ...(input.body ? { body: JSON.stringify(input.body) } : {}),
       });
@@ -212,7 +212,7 @@ export class JiraWebClient {
       }
 
       if (text.startsWith("<")) {
-        throw new AutoCliError("JIRA_SESSION_INVALID", "Jira redirected the saved web session to an HTML page. Re-import fresh cookies.", {
+        throw new MikaCliError("JIRA_SESSION_INVALID", "Jira redirected the saved web session to an HTML page. Re-import fresh cookies.", {
           details: {
             url,
             preview: text.slice(0, 200),
@@ -223,7 +223,7 @@ export class JiraWebClient {
       try {
         return JSON.parse(text) as T;
       } catch (error) {
-        throw new AutoCliError("JIRA_RESPONSE_INVALID", "Jira returned a non-JSON response.", {
+        throw new MikaCliError("JIRA_RESPONSE_INVALID", "Jira returned a non-JSON response.", {
           cause: error,
           details: {
             url,
@@ -236,9 +236,9 @@ export class JiraWebClient {
     }
   }
 
-  private normalizeError(error: unknown): AutoCliError {
-    if (!(error instanceof AutoCliError)) {
-      return new AutoCliError("JIRA_REQUEST_FAILED", "Jira request failed.", { cause: error });
+  private normalizeError(error: unknown): MikaCliError {
+    if (!(error instanceof MikaCliError)) {
+      return new MikaCliError("JIRA_REQUEST_FAILED", "Jira request failed.", { cause: error });
     }
 
     if (error.code !== "HTTP_REQUEST_FAILED") {
@@ -265,7 +265,7 @@ export class JiraWebClient {
       : code === "JIRA_VALIDATION_FAILED" ? `Jira rejected the request: ${message}`
       : `Jira request failed${status ? ` with HTTP ${status}` : ""}.`;
 
-    return new AutoCliError(code, friendly, {
+    return new MikaCliError(code, friendly, {
       cause: error,
       details: {
         status,
@@ -300,7 +300,7 @@ function selectIssueType(issueTypes: JiraIssueType[], preferred?: string): JiraI
     return issueTypes[0];
   }
 
-  throw new AutoCliError("JIRA_ISSUE_TYPE_NOT_FOUND", "Jira did not return any issue types for that project.");
+  throw new MikaCliError("JIRA_ISSUE_TYPE_NOT_FOUND", "Jira did not return any issue types for that project.");
 }
 
 function extractJiraUpstreamMessage(body: string): string {

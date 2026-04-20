@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import pc from "picocolors";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { prefixCliExample } from "../core/runtime/example-help.js";
 import { buildPlatformCommand } from "../core/runtime/build-platform-command.js";
 import { buildPlatformCommandPrefix } from "../core/runtime/platform-command-prefix.js";
@@ -48,65 +48,65 @@ const ROOT_SEARCH_COMMANDS: readonly RootSearchCommand[] = [
   {
     builder: createLoginCommand,
     examples: [
-      "autocli login --browser",
-      "autocli login --url https://accounts.google.com/",
+      "mikacli login --browser",
+      "mikacli login --url https://accounts.google.com/",
     ],
   },
   {
     builder: createLogoutCommand,
     examples: [
-      "autocli logout",
-      "autocli logout x default",
-      "autocli logout --browser",
+      "mikacli logout",
+      "mikacli logout x default",
+      "mikacli logout --browser",
     ],
   },
   {
     builder: createStatusCommand,
-    examples: ["autocli status --json"],
+    examples: ["mikacli status --json"],
   },
   {
     builder: createDoctorCommand,
     examples: [
-      "autocli doctor",
-      "autocli doctor --fix",
+      "mikacli doctor",
+      "mikacli doctor --fix",
     ],
   },
   {
     builder: createSessionsCommand,
     examples: [
-      "autocli sessions",
-      "autocli sessions validate",
-      "autocli sessions validate x default",
-      "autocli sessions repair",
-      "autocli sessions repair x --browser",
-      "autocli sessions show x default",
-      "autocli sessions remove spotify default",
+      "mikacli sessions",
+      "mikacli sessions validate",
+      "mikacli sessions validate x default",
+      "mikacli sessions repair",
+      "mikacli sessions repair x --browser",
+      "mikacli sessions show x default",
+      "mikacli sessions remove spotify default",
     ],
   },
   {
     builder: createLogsCommand,
     examples: [
-      "autocli logs",
-      "autocli logs --provider x",
-      "autocli logs --status failed --since 1h",
-      "autocli logs show 123e4567-e89b-12d3-a456-426614174000",
-      "autocli logs clear",
+      "mikacli logs",
+      "mikacli logs --provider x",
+      "mikacli logs --status failed --since 1h",
+      "mikacli logs show 123e4567-e89b-12d3-a456-426614174000",
+      "mikacli logs clear",
     ],
   },
   {
     builder: createJobsCommand,
     examples: [
-      "autocli jobs",
-      "autocli jobs show job_ab12",
-      "autocli jobs watch job_ab12",
-      "autocli jobs download job_ab12 --output-dir ./renders",
+      "mikacli jobs",
+      "mikacli jobs show job_ab12",
+      "mikacli jobs watch job_ab12",
+      "mikacli jobs download job_ab12 --output-dir ./renders",
     ],
   },
 ] as const;
 
 export function createSearchCommand(): Command {
   const command = new Command("search")
-    .description("Search AutoCLI providers, commands, and examples")
+    .description("Search MikaCLI providers, commands, and examples")
     .argument("<query>", "Search query, for example github issues or youtube download")
     .option("--category <category>", "Filter results to one category, for example developer or tools")
     .option("--limit <count>", "Maximum results to return (default: 10)", parsePositiveInteger, 10)
@@ -114,10 +114,10 @@ export function createSearchCommand(): Command {
       "after",
       `
 Examples:
-  autocli search github
-  autocli search youtube download
-  autocli search uptime --category devops
-  autocli search transcript --json
+  mikacli search github
+  mikacli search youtube download
+  mikacli search uptime --category devops
+  mikacli search transcript --json
 `,
     )
     .action(function searchAction(this: Command, query: string, options: { category?: string; limit: number }) {
@@ -156,7 +156,7 @@ export function buildSearchIndex(): SearchEntry[] {
 
   for (const rootCommand of ROOT_SEARCH_COMMANDS) {
     const command = rootCommand.builder();
-    const commandPath = `autocli ${command.name()}`;
+    const commandPath = `mikacli ${command.name()}`;
 
     entries.push(buildSearchEntry({
       kind: "root",
@@ -468,7 +468,7 @@ function normalizeSearchCategory(value?: string): PlatformCategory | undefined {
     return normalized;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "SEARCH_CATEGORY_INVALID",
     `Unknown category "${value}". Use one of: ${getPlatformCategories().join(", ")}.`,
   );

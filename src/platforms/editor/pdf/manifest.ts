@@ -9,21 +9,21 @@ import { printPdfResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli pdf info ./document.pdf",
-  "autocli pdf merge ./out.pdf ./a.pdf ./b.pdf",
-  "autocli pdf split ./book.pdf --output-dir ./pages",
-  "autocli pdf to-images ./book.pdf --output-dir ./book-images",
-  'autocli pdf extract-pages ./book.pdf --pages "1,3-5" --output ./excerpt.pdf',
-  'autocli pdf remove-pages ./book.pdf --pages "2,4-6" --output ./book-trimmed.pdf',
-  'autocli pdf metadata ./book.pdf',
-  'autocli pdf metadata ./book.pdf --title "New Title" --author "AutoCLI" --output ./book-updated.pdf',
-  "autocli pdf rotate ./book.pdf --angle 90 --pages 1-3 --output ./book-rotated.pdf",
-  'autocli pdf reorder-pages ./book.pdf --pages "3,1-2" --output ./book-reordered.pdf',
-  'autocli pdf watermark ./book.pdf --text "CONFIDENTIAL" --pages "1-3"',
-  "autocli pdf encrypt ./book.pdf --output ./book-encrypted.pdf",
-  "autocli pdf decrypt ./book-encrypted.pdf --output ./book-decrypted.pdf --password secret",
-  "autocli pdf compress ./book.pdf --output ./book-optimized.pdf",
-  "autocli pdf optimize ./book.pdf --output ./book-optimized.pdf",
+  "mikacli pdf info ./document.pdf",
+  "mikacli pdf merge ./out.pdf ./a.pdf ./b.pdf",
+  "mikacli pdf split ./book.pdf --output-dir ./pages",
+  "mikacli pdf to-images ./book.pdf --output-dir ./book-images",
+  'mikacli pdf extract-pages ./book.pdf --pages "1,3-5" --output ./excerpt.pdf',
+  'mikacli pdf remove-pages ./book.pdf --pages "2,4-6" --output ./book-trimmed.pdf',
+  'mikacli pdf metadata ./book.pdf',
+  'mikacli pdf metadata ./book.pdf --title "New Title" --author "MikaCLI" --output ./book-updated.pdf',
+  "mikacli pdf rotate ./book.pdf --angle 90 --pages 1-3 --output ./book-rotated.pdf",
+  'mikacli pdf reorder-pages ./book.pdf --pages "3,1-2" --output ./book-reordered.pdf',
+  'mikacli pdf watermark ./book.pdf --text "CONFIDENTIAL" --pages "1-3"',
+  "mikacli pdf encrypt ./book.pdf --output ./book-encrypted.pdf",
+  "mikacli pdf decrypt ./book-encrypted.pdf --output ./book-decrypted.pdf --password secret",
+  "mikacli pdf compress ./book.pdf --output ./book-optimized.pdf",
+  "mikacli pdf optimize ./book.pdf --output ./book-optimized.pdf",
 ] as const;
 
 function buildPdfCommand(options: PlatformCommandBuildOptions = {}): Command {

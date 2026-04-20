@@ -1,6 +1,6 @@
 import { createHmac, randomUUID } from "node:crypto";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import type { SessionHttpClient } from "../../../utils/http-client.js";
 import type { SessionStatus, SessionUser } from "../../../types.js";
 
@@ -113,7 +113,7 @@ export class ZaiService {
         };
       }
 
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return {
           status: {
             state: "unknown",
@@ -213,7 +213,7 @@ export class ZaiService {
     });
 
     if (!auth || typeof auth.id !== "string" || typeof auth.token !== "string") {
-      throw new AutoCliError("ZAI_INVALID_AUTH_STATE", "Saved Z.ai session is missing the authenticated token. Re-import cookies.", {
+      throw new MikaCliError("ZAI_INVALID_AUTH_STATE", "Saved Z.ai session is missing the authenticated token. Re-import cookies.", {
         details: {
           hasUserId: typeof auth?.id === "string",
           hasToken: typeof auth?.token === "string",
@@ -257,7 +257,7 @@ export class ZaiService {
       },
       body: JSON.stringify({
         chat: {
-          title: "AutoCLI",
+          title: "MikaCLI",
         },
         folder_id: null,
         from: "web",
@@ -268,7 +268,7 @@ export class ZaiService {
     });
 
     if (!chat || typeof chat.id !== "string" || chat.id.length === 0) {
-      throw new AutoCliError("ZAI_CHAT_CREATE_FAILED", "Failed to create a Z.ai chat before sending the prompt.");
+      throw new MikaCliError("ZAI_CHAT_CREATE_FAILED", "Failed to create a Z.ai chat before sending the prompt.");
     }
 
     return chat.id;
@@ -338,7 +338,7 @@ export function parseZaiCompletionStream(stream: string): { outputText: string; 
 
   const normalizedOutput = outputText.trim();
   if (!normalizedOutput) {
-    throw new AutoCliError("ZAI_EMPTY_RESPONSE", "Z.ai did not return any assistant text.", {
+    throw new MikaCliError("ZAI_EMPTY_RESPONSE", "Z.ai did not return any assistant text.", {
       details: {
         preview: stream.slice(0, 400),
       },
@@ -501,15 +501,15 @@ function pad2(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-function mapZaiError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (!isAutoCliError(error)) {
-    return new AutoCliError("ZAI_REQUEST_FAILED", fallbackMessage, {
+function mapZaiError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (!isMikaCliError(error)) {
+    return new MikaCliError("ZAI_REQUEST_FAILED", fallbackMessage, {
       cause: error,
     });
   }
 
   if (isExpiredAuthError(error)) {
-    return new AutoCliError("SESSION_EXPIRED", "Z.ai session expired. Re-import cookies.", {
+    return new MikaCliError("SESSION_EXPIRED", "Z.ai session expired. Re-import cookies.", {
       details: error.details,
       cause: error,
     });
@@ -517,7 +517,7 @@ function mapZaiError(error: unknown, fallbackMessage: string): AutoCliError {
 
   if (error.code === "HTTP_REQUEST_FAILED") {
     const upstream = extractUpstreamMessage(error.details?.body);
-    return new AutoCliError("ZAI_REQUEST_FAILED", upstream ?? fallbackMessage, {
+    return new MikaCliError("ZAI_REQUEST_FAILED", upstream ?? fallbackMessage, {
       details: error.details,
       cause: error,
     });
@@ -547,5 +547,5 @@ function extractUpstreamMessage(body: unknown): string | undefined {
 }
 
 function isExpiredAuthError(error: unknown): boolean {
-  return isAutoCliError(error) && error.code === "HTTP_REQUEST_FAILED" && [401, 403].includes(Number(error.details?.status));
+  return isMikaCliError(error) && error.code === "HTTP_REQUEST_FAILED" && [401, 403].includes(Number(error.details?.status));
 }

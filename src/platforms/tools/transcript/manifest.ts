@@ -9,9 +9,9 @@ import { printTranscriptResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --lang en --format srt",
-  "autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --auto --format json --json",
+  "mikacli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "mikacli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --lang en --format srt",
+  "mikacli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --auto --format json --json",
 ] as const;
 
 function buildTranscriptCommand(options: PlatformCommandBuildOptions = {}): Command {

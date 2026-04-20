@@ -1,7 +1,7 @@
 import { CookieJar } from "tough-cookie";
 
 import { sanitizeAccountName } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { normalizeTrelloBoardTarget } from "./helpers.js";
@@ -83,7 +83,7 @@ export class TrelloAdapter {
         lastValidatedAt: active.session.status.lastValidatedAt,
       };
     } catch (error) {
-      if (error instanceof AutoCliError && error.code === "TRELLO_SESSION_INVALID") {
+      if (error instanceof MikaCliError && error.code === "TRELLO_SESSION_INVALID") {
         const expired = await this.markSessionExpired(session, error.message);
         return {
           platform: this.platform,
@@ -218,7 +218,7 @@ export class TrelloAdapter {
     const active = await this.ensureUsableSession();
     const name = input.name.trim();
     if (!name) {
-      throw new AutoCliError("TRELLO_CARD_NAME_REQUIRED", "Trello card name cannot be empty.");
+      throw new MikaCliError("TRELLO_CARD_NAME_REQUIRED", "Trello card name cannot be empty.");
     }
 
     const card = await active.client.createCard({
@@ -275,10 +275,10 @@ export class TrelloAdapter {
         viewer,
       };
     } catch (error) {
-      await this.markSessionExpired(session, error instanceof AutoCliError ? error.message : "Trello rejected the saved web session. Re-import fresh cookies.");
-      throw error instanceof AutoCliError
+      await this.markSessionExpired(session, error instanceof MikaCliError ? error.message : "Trello rejected the saved web session. Re-import fresh cookies.");
+      throw error instanceof MikaCliError
         ? error
-        : new AutoCliError("TRELLO_SESSION_INVALID", "Trello rejected the saved web session. Re-import fresh cookies.", {
+        : new MikaCliError("TRELLO_SESSION_INVALID", "Trello rejected the saved web session. Re-import fresh cookies.", {
             cause: error,
           });
     }

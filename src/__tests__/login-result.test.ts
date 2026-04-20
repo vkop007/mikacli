@@ -28,11 +28,11 @@ describe("login result normalization", () => {
       status: "active",
       validation: "verified",
       reused: false,
-      recommendedNextCommand: "autocli developer github me --json",
+      recommendedNextCommand: "mikacli developer github me --json",
       nextCommands: [
-        "autocli developer github me --json",
-        "autocli developer github status --json",
-        "autocli developer github capabilities --json",
+        "mikacli developer github me --json",
+        "mikacli developer github status --json",
+        "mikacli developer github capabilities --json",
       ],
     });
   });
@@ -58,11 +58,11 @@ describe("login result normalization", () => {
       status: "active",
       validation: "verified",
       reused: false,
-      recommendedNextCommand: "autocli social telegram me --json",
+      recommendedNextCommand: "mikacli social telegram me --json",
       nextCommands: [
-        "autocli social telegram me --json",
-        "autocli social telegram status --json",
-        "autocli social telegram capabilities --json",
+        "mikacli social telegram me --json",
+        "mikacli social telegram status --json",
+        "mikacli social telegram capabilities --json",
       ],
     });
   });
@@ -87,10 +87,10 @@ describe("login result normalization", () => {
     );
 
     expect(result.data?.guidance).toEqual({
-      recommendedNextCommand: "autocli social reddit profile --json",
+      recommendedNextCommand: "mikacli social reddit profile --json",
       nextCommands: [
-        "autocli social reddit profile --json",
-        "autocli social reddit capabilities --json",
+        "mikacli social reddit profile --json",
+        "mikacli social reddit capabilities --json",
       ],
       stability: "partial",
     });
@@ -133,10 +133,10 @@ describe("login result normalization", () => {
       count: 1,
     });
     expect(result.data?.guidance).toEqual({
-      recommendedNextCommand: "autocli movie tmdb recommendations --json",
+      recommendedNextCommand: "mikacli movie tmdb recommendations --json",
       nextCommands: [
-        "autocli movie tmdb recommendations --json",
-        "autocli movie tmdb capabilities --json",
+        "mikacli movie tmdb recommendations --json",
+        "mikacli movie tmdb capabilities --json",
       ],
       stability: "stable",
     });

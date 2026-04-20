@@ -13,11 +13,11 @@ export const newsPlatformDefinition: PlatformDefinition = {
   adapter: newsAdapter,
   capabilities: newsCapabilities,
   examples: [
-    "autocli news sources",
-    "autocli news top",
-    'autocli news top "AI"',
-    'autocli news search "typescript cli"',
-    'autocli news search "open source ai" --source google',
-    "autocli news feed https://hnrss.org/frontpage",
+    "mikacli news sources",
+    "mikacli news top",
+    'mikacli news top "AI"',
+    'mikacli news search "typescript cli"',
+    'mikacli news search "open source ai" --source google',
+    "mikacli news feed https://hnrss.org/frontpage",
   ],
 };

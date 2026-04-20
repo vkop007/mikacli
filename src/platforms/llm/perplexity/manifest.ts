@@ -12,9 +12,9 @@ export const perplexityPlatformDefinition: PlatformDefinition = {
   adapter: perplexityAdapter,
   capabilities: createCookieLlmCapabilities(perplexityAdapter),
   examples: [
-    "autocli perplexity login",
-    "autocli perplexity login --cookies ./perplexity.cookies.json",
-    'autocli perplexity text "Summarize the latest AI browser trends"',
-    'autocli perplexity text "Draft a research brief about agent tooling"',
+    "mikacli perplexity login",
+    "mikacli perplexity login --cookies ./perplexity.cookies.json",
+    'mikacli perplexity text "Summarize the latest AI browser trends"',
+    'mikacli perplexity text "Draft a research brief about agent tooling"',
   ],
 };

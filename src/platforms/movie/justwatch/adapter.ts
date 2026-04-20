@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { decodeHtml, trimSummary } from "../shared/helpers.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -166,7 +166,7 @@ async function fetchJustWatchHtml(url: string): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new AutoCliError("JUSTWATCH_REQUEST_FAILED", "JustWatch request failed.", {
+    throw new MikaCliError("JUSTWATCH_REQUEST_FAILED", "JustWatch request failed.", {
       details: {
         status: response.status,
         statusText: response.statusText,
@@ -278,13 +278,13 @@ function extractJustWatchListItems(html: string): JustWatchListItem[] {
 function extractJustWatchJsonLd(html: string): JustWatchJsonLd {
   const match = html.match(/<script[^>]+application\/ld\+json[^>]*>([\s\S]*?)<\/script>/i);
   if (!match?.[1]) {
-    throw new AutoCliError("JUSTWATCH_PARSE_FAILED", "JustWatch returned a page, but the structured metadata block was missing.");
+    throw new MikaCliError("JUSTWATCH_PARSE_FAILED", "JustWatch returned a page, but the structured metadata block was missing.");
   }
 
   try {
     return JSON.parse(match[1]) as JustWatchJsonLd;
   } catch (error) {
-    throw new AutoCliError("JUSTWATCH_PARSE_FAILED", "Failed to parse the JustWatch structured metadata block.", {
+    throw new MikaCliError("JUSTWATCH_PARSE_FAILED", "Failed to parse the JustWatch structured metadata block.", {
       cause: error,
     });
   }
@@ -293,7 +293,7 @@ function extractJustWatchJsonLd(html: string): JustWatchJsonLd {
 function resolveJustWatchTarget(target: string, countryInput?: string, typeInput?: string): ResolvedJustWatchTarget {
   const normalized = target.trim();
   if (!normalized) {
-    throw new AutoCliError("JUSTWATCH_TARGET_REQUIRED", "Provide a JustWatch title URL or slug like /us/movie/inception.");
+    throw new MikaCliError("JUSTWATCH_TARGET_REQUIRED", "Provide a JustWatch title URL or slug like /us/movie/inception.");
   }
 
   const fullUrl = normalized.match(/^https?:\/\/(?:www\.)?justwatch\.com\/([a-z]{2})\/(movie|tv-show)\/([^/?#]+)/i);
@@ -327,19 +327,19 @@ function resolveJustWatchTarget(target: string, countryInput?: string, typeInput
   }
 
   if (!normalized.includes("/")) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "JUSTWATCH_TARGET_REQUIRED",
       "JustWatch needs a direct title URL or slug like /us/movie/inception because public query search is not stable enough yet.",
     );
   }
 
-  throw new AutoCliError("JUSTWATCH_TARGET_REQUIRED", "Provide a valid JustWatch URL or slug like /us/movie/inception.");
+  throw new MikaCliError("JUSTWATCH_TARGET_REQUIRED", "Provide a valid JustWatch URL or slug like /us/movie/inception.");
 }
 
 function normalizeCountry(input: string | undefined): string {
   const country = (input?.trim() || "us").toLowerCase();
   if (!/^[a-z]{2}$/.test(country)) {
-    throw new AutoCliError("JUSTWATCH_COUNTRY_INVALID", "JustWatch country must be a 2-letter code like us or in.");
+    throw new MikaCliError("JUSTWATCH_COUNTRY_INVALID", "JustWatch country must be a 2-letter code like us or in.");
   }
   return country;
 }
@@ -355,7 +355,7 @@ function normalizeType(input: string | undefined, fallback: JustWatchType): Just
   if (value === "show" || value === "tv" || value === "tv-show") {
     return "show";
   }
-  throw new AutoCliError("JUSTWATCH_TYPE_INVALID", "JustWatch type must be movie or show.");
+  throw new MikaCliError("JUSTWATCH_TYPE_INVALID", "JustWatch type must be movie or show.");
 }
 
 function normalizeListType(input: string | undefined): JustWatchType | "all" {

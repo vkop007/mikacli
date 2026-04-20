@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 type QueryValue = string | number | boolean | undefined;
 type JsonLikeBody = Record<string, unknown> | unknown[];
@@ -6,7 +6,7 @@ type GoogleRequestInit = Omit<RequestInit, "body"> & {
   body?: BodyInit | JsonLikeBody | Buffer | ArrayBuffer | ArrayBufferView | null;
 };
 
-const USER_AGENT = "AutoCLI/0.1 (+https://github.com/vkop007/autocli)";
+const USER_AGENT = "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)";
 
 export class GoogleApiClient {
   constructor(
@@ -28,7 +28,7 @@ export class GoogleApiClient {
     try {
       return JSON.parse(text) as T;
     } catch (error) {
-      throw new AutoCliError(this.options.errorCode, "Google returned an unreadable JSON response.", {
+      throw new MikaCliError(this.options.errorCode, "Google returned an unreadable JSON response.", {
         cause: error,
         details: {
           pathOrUrl,
@@ -70,7 +70,7 @@ export class GoogleApiClient {
     return response;
   }
 
-  private async createError(pathOrUrl: string, response: Response): Promise<AutoCliError> {
+  private async createError(pathOrUrl: string, response: Response): Promise<MikaCliError> {
     const text = await response.text().catch(() => "");
     let message = `Google API request failed with status ${response.status}.`;
 
@@ -94,7 +94,7 @@ export class GoogleApiClient {
       }
     }
 
-    return new AutoCliError(this.options.errorCode, message, {
+    return new MikaCliError(this.options.errorCode, message, {
       details: {
         pathOrUrl,
         status: response.status,

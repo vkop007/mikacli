@@ -7,7 +7,7 @@ export function createTrelloLoginCapability(adapter: TrelloAdapter) {
   return createAdapterActionCapability({
     id: "login",
     command: "login",
-    description: `Save the ${adapter.displayName} web session for future CLI use. With no auth flags, AutoCLI opens browser login by default`,
+    description: `Save the ${adapter.displayName} web session for future CLI use. With no auth flags, MikaCLI opens browser login by default`,
     spinnerText: `Saving ${adapter.displayName} session...`,
     successMessage: `${adapter.displayName} session saved.`,
     options: createCookieLoginOptions(),

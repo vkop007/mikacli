@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { extractLinkTags, fetchPublicHtmlDocument, resolveOptionalHttpUrl } from "../shared/html.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
@@ -58,7 +58,7 @@ export class FaviconAdapter {
     const primary = candidates.find((candidate) => candidate.reachable) ?? candidates[0];
 
     if (!primary) {
-      throw new AutoCliError("FAVICON_NOT_FOUND", "No favicon candidates were found on the page.");
+      throw new MikaCliError("FAVICON_NOT_FOUND", "No favicon candidates were found on the page.");
     }
 
     return {
@@ -166,7 +166,7 @@ async function tryHeadThenGet(url: string, timeoutMs: number): Promise<Response 
         signal: AbortSignal.timeout(timeoutMs),
         headers: {
           accept: "image/*,*/*;q=0.8",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
 
@@ -190,5 +190,5 @@ function shouldRetryWithGet(status: number): boolean {
 }
 
 function isFallbackableFaviconError(error: unknown): boolean {
-  return error instanceof AutoCliError && error.code === "FAVICON_REQUEST_FAILED";
+  return error instanceof MikaCliError && error.code === "FAVICON_REQUEST_FAILED";
 }

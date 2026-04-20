@@ -54,7 +54,7 @@ export const instagramDeleteCapability = createAdapterActionCapability({
   successMessage: "Instagram post deleted.",
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved Instagram session" },
-    { flags: "--browser", description: "Force the delete through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    { flags: "--browser", description: "Force the delete through the shared MikaCLI browser profile instead of the invisible browser-backed path" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",
@@ -79,7 +79,7 @@ export const instagramDeleteCommentCapability = createAdapterActionCapability({
   successMessage: "Instagram comment deleted.",
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved Instagram session" },
-    { flags: "--browser", description: "Force the delete through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    { flags: "--browser", description: "Force the delete through the shared MikaCLI browser profile instead of the invisible browser-backed path" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",

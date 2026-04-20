@@ -1,6 +1,6 @@
 import pc from "picocolors";
 
-import { isAutoCliError } from "../errors.js";
+import { isMikaCliError } from "../errors.js";
 import { serializeCliError } from "./error-recovery.js";
 
 export function printJson(value: unknown): void {
@@ -397,7 +397,7 @@ export function printError(error: unknown, json: boolean): never {
   const serialized = serializeCliError(error);
   if (json) {
     printJson(serialized);
-  } else if (isAutoCliError(error)) {
+  } else if (isMikaCliError(error)) {
     console.error(`${pc.red("error")} ${serialized.error.message}`);
 
     if (error.details && Object.keys(error.details).length > 0) {
@@ -423,6 +423,6 @@ export function printError(error: unknown, json: boolean): never {
     console.error(`${pc.red("error")} Unknown error`);
   }
 
-  process.exitCode = isAutoCliError(error) ? error.exitCode : 1;
+  process.exitCode = isMikaCliError(error) ? error.exitCode : 1;
   throw error;
 }

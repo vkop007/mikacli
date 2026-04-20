@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { type SessionStatus } from "../../../types.js";
 import { BaseApiKeyPlatformAdapter, type LoadedApiKeyConnection } from "../shared/base.js";
 import { FlyApiClient } from "./client.js";

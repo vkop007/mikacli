@@ -9,9 +9,9 @@ import { printPageLinksResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli page-links https://example.com",
-  "autocli page-links openai.com --type external",
-  "autocli page-links https://example.com --limit 20 --json",
+  "mikacli page-links https://example.com",
+  "mikacli page-links openai.com --type external",
+  "mikacli page-links https://example.com --limit 20 --json",
 ] as const;
 
 function buildPageLinksCommand(options: PlatformCommandBuildOptions = {}): Command {

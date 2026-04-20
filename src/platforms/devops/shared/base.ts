@@ -1,6 +1,6 @@
 import { sanitizeAccountName } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { getPlatformDisplayName } from "../../config.js";
 
 import type { ConnectionRecord } from "../../../core/auth/auth-types.js";
@@ -27,7 +27,7 @@ export abstract class BaseApiKeyPlatformAdapter {
   protected requireToken(token: string | undefined): string {
     const normalized = token?.trim();
     if (!normalized) {
-      throw new AutoCliError("API_TOKEN_REQUIRED", `${this.displayName} login requires --token.`);
+      throw new MikaCliError("API_TOKEN_REQUIRED", `${this.displayName} login requires --token.`);
     }
 
     return normalized;

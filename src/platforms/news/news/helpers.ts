@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export const NEWS_SOURCES = ["google", "gdelt", "hn", "reddit", "rss"] as const;
 
@@ -105,7 +105,7 @@ export function normalizeNewsSource(value: string | undefined): NewsSourceScope 
     return normalized as NewsSourceId;
   }
 
-  throw new AutoCliError("NEWS_SOURCE_INVALID", `Unknown news source "${value}". Supported sources: all, ${NEWS_SOURCES.join(", ")}.`, {
+  throw new MikaCliError("NEWS_SOURCE_INVALID", `Unknown news source "${value}". Supported sources: all, ${NEWS_SOURCES.join(", ")}.`, {
     details: {
       source: value,
       supportedSources: ["all", ...NEWS_SOURCES],
@@ -282,7 +282,7 @@ export function parseNewsFeedDocument(xml: string, feedUrl: string): NewsFeedDoc
     .slice(0, 50);
 
   if (items.length === 0) {
-    throw new AutoCliError("NEWS_FEED_EMPTY", "The feed did not contain any usable items.", {
+    throw new MikaCliError("NEWS_FEED_EMPTY", "The feed did not contain any usable items.", {
       details: {
         feedUrl,
       },
@@ -341,7 +341,7 @@ export async function fetchNewsPageSummary(url: string): Promise<string | undefi
       signal: AbortSignal.timeout(8000),
       headers: {
         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.5",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
 

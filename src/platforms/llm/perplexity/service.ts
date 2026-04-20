@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { Cookie, CookieJar } from "tough-cookie";
 import { ModuleClient, SessionClient } from "tlsclientwrapper";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 
 import type { SessionHttpClient } from "../../../utils/http-client.js";
 import type { SessionStatus, SessionUser } from "../../../types.js";
@@ -163,7 +163,7 @@ export class PerplexityService {
         subscriptionTier: readPerplexitySubscriptionTier(auth.user),
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return {
           status: {
             state: error.code === "SESSION_EXPIRED" ? "expired" : "unknown",
@@ -189,7 +189,7 @@ export class PerplexityService {
     try {
       const auth = await this.fetchAuthSession(client);
       if (!auth.user?.id) {
-        throw new AutoCliError("SESSION_EXPIRED", "Perplexity session expired. Re-import cookies.");
+        throw new MikaCliError("SESSION_EXPIRED", "Perplexity session expired. Re-import cookies.");
       }
 
       const parsed = await withPerplexityTlsSession(client.jar, async (session) => {
@@ -200,7 +200,7 @@ export class PerplexityService {
       });
 
       if (!parsed.outputText) {
-        throw new AutoCliError("PERPLEXITY_EMPTY_RESPONSE", "Perplexity returned an empty response.", {
+        throw new MikaCliError("PERPLEXITY_EMPTY_RESPONSE", "Perplexity returned an empty response.", {
           details: {
             queryId: parsed.queryId,
             threadUrlSlug: parsed.threadUrlSlug,
@@ -230,7 +230,7 @@ export class PerplexityService {
     });
 
     if (response.status === 401) {
-      throw new AutoCliError("SESSION_EXPIRED", "Perplexity session expired. Re-import cookies.");
+      throw new MikaCliError("SESSION_EXPIRED", "Perplexity session expired. Re-import cookies.");
     }
 
     return data;
@@ -284,7 +284,7 @@ async function openPerplexityPollingSession(session: SessionClient, jar: CookieJ
 
   const packet = response.body.trim();
   if (!packet.startsWith("0")) {
-    throw new AutoCliError("PERPLEXITY_SOCKET_OPEN_FAILED", "Perplexity did not return a valid Socket.IO open packet.", {
+    throw new MikaCliError("PERPLEXITY_SOCKET_OPEN_FAILED", "Perplexity did not return a valid Socket.IO open packet.", {
       details: {
         preview: packet.slice(0, 200),
       },
@@ -294,7 +294,7 @@ async function openPerplexityPollingSession(session: SessionClient, jar: CookieJ
   const parsed = safeParseJson<Record<string, unknown>>(packet.slice(1));
   const sid = typeof parsed?.sid === "string" ? parsed.sid : undefined;
   if (!sid) {
-    throw new AutoCliError("PERPLEXITY_SOCKET_OPEN_FAILED", "Perplexity did not return a valid Socket.IO session ID.", {
+    throw new MikaCliError("PERPLEXITY_SOCKET_OPEN_FAILED", "Perplexity did not return a valid Socket.IO session ID.", {
       details: {
         preview: packet.slice(0, 200),
       },
@@ -316,7 +316,7 @@ async function authorizePerplexityNamespace(session: SessionClient, jar: CookieJ
   session.setDefaultCookies(await exportJarCookiesForTls(jar, PERPLEXITY_HOME_URL));
 
   if (authResponse.status !== 200 || authResponse.body.trim() !== "OK") {
-    throw new AutoCliError("PERPLEXITY_SOCKET_AUTH_FAILED", "Perplexity rejected the Socket.IO namespace authorization.", {
+    throw new MikaCliError("PERPLEXITY_SOCKET_AUTH_FAILED", "Perplexity rejected the Socket.IO namespace authorization.", {
       details: {
         status: authResponse.status,
         body: authResponse.body.slice(0, 200),
@@ -334,7 +334,7 @@ async function authorizePerplexityNamespace(session: SessionClient, jar: CookieJ
   session.setDefaultCookies(await exportJarCookiesForTls(jar, PERPLEXITY_HOME_URL));
 
   if (connectResponse.status !== 200 || !connectResponse.body.includes("40")) {
-    throw new AutoCliError("PERPLEXITY_SOCKET_CONNECT_FAILED", "Perplexity did not confirm the Socket.IO namespace connection.", {
+    throw new MikaCliError("PERPLEXITY_SOCKET_CONNECT_FAILED", "Perplexity did not confirm the Socket.IO namespace connection.", {
       details: {
         status: connectResponse.status,
         body: connectResponse.body.slice(0, 200),
@@ -379,7 +379,7 @@ async function sendPerplexityTextPrompt(
   session.setDefaultCookies(await exportJarCookiesForTls(jar, PERPLEXITY_HOME_URL));
 
   if (response.status !== 200 || response.body.trim() !== "OK") {
-    throw new AutoCliError("PERPLEXITY_PROMPT_REJECTED", "Perplexity rejected the prompt submission.", {
+    throw new MikaCliError("PERPLEXITY_PROMPT_REJECTED", "Perplexity rejected the prompt submission.", {
       details: {
         status: response.status,
         body: response.body.slice(0, 200),
@@ -426,7 +426,7 @@ async function pollPerplexityAnswer(
       }
 
       if (parsed.kind === "error") {
-        throw new AutoCliError("PERPLEXITY_QUERY_FAILED", parsed.message, {
+        throw new MikaCliError("PERPLEXITY_QUERY_FAILED", parsed.message, {
           details: parsed.details,
         });
       }
@@ -449,7 +449,7 @@ async function pollPerplexityAnswer(
     }
   }
 
-  throw new AutoCliError("PERPLEXITY_TIMEOUT", "Perplexity did not finish responding before the timeout.");
+  throw new MikaCliError("PERPLEXITY_TIMEOUT", "Perplexity did not finish responding before the timeout.");
 }
 
 async function respondToPerplexityPing(session: SessionClient, jar: CookieJar, sid: string): Promise<void> {
@@ -536,7 +536,7 @@ export function parsePerplexityCompletionPayloads(payloads: readonly PerplexityP
     payloads[payloads.length - 1];
 
   if (!finalPayload) {
-    throw new AutoCliError("PERPLEXITY_EMPTY_RESPONSE", "Perplexity did not emit any completion payloads.");
+    throw new MikaCliError("PERPLEXITY_EMPTY_RESPONSE", "Perplexity did not emit any completion payloads.");
   }
 
   const parsedAnswer =
@@ -732,12 +732,12 @@ function toPerplexitySessionUser(user: NonNullable<PerplexityAuthSessionResponse
   };
 }
 
-function mapPerplexityError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+function mapPerplexityError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     return error;
   }
 
-  return new AutoCliError("PERPLEXITY_REQUEST_FAILED", fallbackMessage, {
+  return new MikaCliError("PERPLEXITY_REQUEST_FAILED", fallbackMessage, {
     cause: error,
     details: {
       message: error instanceof Error ? error.message : String(error),
@@ -745,10 +745,10 @@ function mapPerplexityError(error: unknown, fallbackMessage: string): AutoCliErr
   });
 }
 
-function createPerplexityRequestError(status: number, body: string, url: string): AutoCliError {
+function createPerplexityRequestError(status: number, body: string, url: string): MikaCliError {
   const preview = body.slice(0, 400);
   if (status === 401) {
-    return new AutoCliError("SESSION_EXPIRED", "Perplexity session expired. Re-import cookies.", {
+    return new MikaCliError("SESSION_EXPIRED", "Perplexity session expired. Re-import cookies.", {
       details: {
         url,
         status,
@@ -757,7 +757,7 @@ function createPerplexityRequestError(status: number, body: string, url: string)
   }
 
   if (status === 403 && /just a moment|security verification|cloudflare/iu.test(body)) {
-    return new AutoCliError(
+    return new MikaCliError(
       "PERPLEXITY_ANTI_BOT_BLOCKED",
       "Perplexity rejected the browserless request with its current anti-bot rules.",
       {
@@ -770,7 +770,7 @@ function createPerplexityRequestError(status: number, body: string, url: string)
     );
   }
 
-  return new AutoCliError("PERPLEXITY_REQUEST_FAILED", `Perplexity request failed with ${status}.`, {
+  return new MikaCliError("PERPLEXITY_REQUEST_FAILED", `Perplexity request failed with ${status}.`, {
     details: {
       url,
       status,

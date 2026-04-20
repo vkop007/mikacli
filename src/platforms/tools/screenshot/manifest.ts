@@ -9,9 +9,9 @@ import { printScreenshotResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli screenshot https://example.com",
-  "autocli screenshot openai.com --output-dir ./shots",
-  "autocli screenshot https://news.ycombinator.com --output ./hn.png",
+  "mikacli screenshot https://example.com",
+  "mikacli screenshot openai.com --output-dir ./shots",
+  "mikacli screenshot https://news.ycombinator.com --output ./hn.png",
 ] as const;
 
 function buildScreenshotCommand(options: PlatformCommandBuildOptions = {}): Command {

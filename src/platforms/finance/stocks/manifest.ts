@@ -9,7 +9,7 @@ import { printStocksResult } from "./output.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-const EXAMPLES = ["autocli stocks AAPL", "autocli stocks TSLA", "autocli stocks RYCEY --market l"] as const;
+const EXAMPLES = ["mikacli stocks AAPL", "mikacli stocks TSLA", "mikacli stocks RYCEY --market l"] as const;
 
 function buildStocksCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("stocks").description("Load stock quotes from a public no-key market feed");

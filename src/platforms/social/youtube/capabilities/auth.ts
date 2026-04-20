@@ -5,7 +5,7 @@ import { youtubeAdapter } from "../adapter.js";
 export const youtubeLoginCapability = createAdapterActionCapability({
   id: "login",
   command: "login",
-  description: "Save the YouTube session for future headless use. With no auth flags, AutoCLI opens browser login by default",
+  description: "Save the YouTube session for future headless use. With no auth flags, MikaCLI opens browser login by default",
   spinnerText: "Saving YouTube session...",
   successMessage: "YouTube session saved.",
   options: createCookieLoginOptions(),

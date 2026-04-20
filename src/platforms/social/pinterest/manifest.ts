@@ -17,9 +17,9 @@ export const pinterestPlatformDefinition: PlatformDefinition = {
     threadDescription: "Load a public Pinterest pin by URL or numeric pin ID",
   }),
   examples: [
-    'autocli pinterest search "interior design"',
-    "autocli pinterest profile pinterest",
-    "autocli pinterest posts pinterest --limit 5",
-    "autocli pinterest thread https://www.pinterest.com/pin/99360735500167749/",
+    'mikacli pinterest search "interior design"',
+    "mikacli pinterest profile pinterest",
+    "mikacli pinterest posts pinterest --limit 5",
+    "mikacli pinterest thread https://www.pinterest.com/pin/99360735500167749/",
   ],
 };

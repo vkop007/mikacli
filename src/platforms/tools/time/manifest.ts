@@ -9,7 +9,7 @@ import { printTimeResult } from "./output.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-const EXAMPLES = ["autocli time", "autocli time Asia/Kolkata", "autocli time America/New_York"] as const;
+const EXAMPLES = ["mikacli time", "mikacli time Asia/Kolkata", "mikacli time America/New_York"] as const;
 
 function buildTimeCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("time").description("Show local time by IP or a specific timezone");

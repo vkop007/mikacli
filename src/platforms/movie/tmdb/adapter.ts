@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { decodeHtml, trimSummary } from "../shared/helpers.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -25,7 +25,7 @@ export class TmdbAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("TMDB_QUERY_REQUIRED", "Provide a TMDb query to search.");
+      throw new MikaCliError("TMDB_QUERY_REQUIRED", "Provide a TMDb query to search.");
     }
 
     const html = await this.fetchHtml(`${TMDB_ORIGIN}/search?query=${encodeURIComponent(query)}&language=en-US`);
@@ -100,7 +100,7 @@ export class TmdbAdapter {
   private async resolveTitleTarget(target: string): Promise<{ id: string; title: string; type: TmdbTitleType; path: string; url: string }> {
     const trimmed = target.trim();
     if (!trimmed) {
-      throw new AutoCliError("TMDB_TARGET_REQUIRED", "Provide a TMDb URL, numeric title ID, or search query.");
+      throw new MikaCliError("TMDB_TARGET_REQUIRED", "Provide a TMDb URL, numeric title ID, or search query.");
     }
 
     const parsed = parseTmdbTarget(trimmed);
@@ -111,7 +111,7 @@ export class TmdbAdapter {
     const html = await this.fetchHtml(`${TMDB_ORIGIN}/search?query=${encodeURIComponent(trimmed)}&language=en-US`);
     const first = parseTmdbSearchResults(html)[0];
     if (!first) {
-      throw new AutoCliError("TMDB_TITLE_NOT_FOUND", "TMDb could not find a matching title.", {
+      throw new MikaCliError("TMDB_TITLE_NOT_FOUND", "TMDb could not find a matching title.", {
         details: {
           target,
         },
@@ -120,7 +120,7 @@ export class TmdbAdapter {
 
     const resolved = parseTmdbTarget(first.url);
     if (!resolved) {
-      throw new AutoCliError("TMDB_TITLE_NOT_FOUND", "TMDb returned an unreadable title target.", {
+      throw new MikaCliError("TMDB_TITLE_NOT_FOUND", "TMDb returned an unreadable title target.", {
         details: {
           target,
           url: first.url,
@@ -145,7 +145,7 @@ export class TmdbAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("TMDB_REQUEST_FAILED", "Failed to load TMDb.", {
+      throw new MikaCliError("TMDB_REQUEST_FAILED", "Failed to load TMDb.", {
         cause: error,
         details: {
           url,
@@ -154,7 +154,7 @@ export class TmdbAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("TMDB_REQUEST_FAILED", "TMDb request failed.", {
+      throw new MikaCliError("TMDB_REQUEST_FAILED", "TMDb request failed.", {
         details: {
           url,
           status: response.status,

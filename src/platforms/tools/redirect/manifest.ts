@@ -9,9 +9,9 @@ import { printRedirectResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli redirect https://example.com",
-  "autocli redirect github.com --method GET",
-  "autocli redirect https://example.com --max-hops 5",
+  "mikacli redirect https://example.com",
+  "mikacli redirect github.com --method GET",
+  "mikacli redirect https://example.com --max-hops 5",
 ] as const;
 
 function buildRedirectCommand(options: PlatformCommandBuildOptions = {}): Command {

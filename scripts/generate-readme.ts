@@ -97,8 +97,8 @@ export async function generateReadme(): Promise<void> {
 
 function renderBadges(context: ReadmeContext): string {
   return [
-    `[![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)`,
-    `[![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)`,
+    `[![npm version](https://img.shields.io/npm/v/%40vk007%2Fmikacli)](https://www.npmjs.com/package/@vk007/mikacli)`,
+    `[![license](https://img.shields.io/github/license/vkop007/mikacli)](./LICENSE)`,
     `[![providers](https://img.shields.io/badge/providers-${context.providerCount}-blue)](#category-overview)`,
     `[![categories](https://img.shields.io/badge/categories-${context.categoryCount}-6f42c1)](#category-overview)`,
   ].join("\n");
@@ -112,19 +112,19 @@ function renderAtAGlance(context: ReadmeContext): string {
   return [
     "| Item | Value |",
     "| --- | --- |",
-    "| Package | `@vk007/autocli` |",
-    "| CLI command | `autocli` |",
+    "| Package | `@vk007/mikacli` |",
+    "| CLI command | `mikacli` |",
     `| Providers | \`${context.providerCount}\` |`,
     `| Categories | \`${context.categoryCount}\` |`,
-    "| npm install | `npm install -g @vk007/autocli` |",
-    "| bun install | `bun install -g @vk007/autocli` |",
+    "| npm install | `npm install -g @vk007/mikacli` |",
+    "| bun install | `bun install -g @vk007/mikacli` |",
     "| Local setup | `bun install` |",
     "| Docs sync | `bun run sync:docs` |",
   ].join("\n");
 }
 
 function renderCommandModelCategories(context: ReadmeContext): string {
-  return context.categories.map((category) => `- \`autocli ${category} ...\``).join("\n");
+  return context.categories.map((category) => `- \`mikacli ${category} ...\``).join("\n");
 }
 
 function renderCategoryOverview(context: ReadmeContext): string {
@@ -139,20 +139,20 @@ function renderCategoryOverview(context: ReadmeContext): string {
     const definitions = [...getPlatformDefinitionsByCategory(category)].sort((left, right) => left.id.localeCompare(right.id));
     const providers = formatRepresentativeProviders(definitions);
     const authModes = formatCategoryAuthModes(definitions);
-    const route = `\`autocli ${category} ...\``;
+    const route = `\`mikacli ${category} ...\``;
     lines.push(
       `| \`${category}\` | ${providers} | ${definitions.length} | ${authModes} | ${CATEGORY_SUMMARIES[category]} | ${route} |`,
     );
   }
 
   lines.push("");
-  lines.push(`AutoCLI currently exposes \`${context.providerCount}\` providers across \`${context.categoryCount}\` active command groups.`);
+  lines.push(`MikaCLI currently exposes \`${context.providerCount}\` providers across \`${context.categoryCount}\` active command groups.`);
   return lines.join("\n");
 }
 
 function renderProviderMatrix(context: ReadmeContext): string {
   const sections = [
-    "The tables below are generated from provider manifests and runtime capability metadata, so they stay aligned with `autocli <category> <provider> capabilities --json`.",
+    "The tables below are generated from provider manifests and runtime capability metadata, so they stay aligned with `mikacli <category> <provider> capabilities --json`.",
     "",
   ];
 

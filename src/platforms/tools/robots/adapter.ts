@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -41,7 +41,7 @@ export const robotsAdapter = new RobotsAdapter();
 export function normalizeRobotsUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("ROBOTS_URL_REQUIRED", "Robots URL cannot be empty.");
+    throw new MikaCliError("ROBOTS_URL_REQUIRED", "Robots URL cannot be empty.");
   }
 
   try {
@@ -68,18 +68,18 @@ export async function fetchRobotsText(url: string): Promise<string> {
       signal: AbortSignal.timeout(12000),
       headers: {
         accept: "text/plain,text/*;q=0.9,*/*;q=0.8",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("ROBOTS_REQUEST_FAILED", "Unable to reach the robots.txt URL.", {
+    throw new MikaCliError("ROBOTS_REQUEST_FAILED", "Unable to reach the robots.txt URL.", {
       details: { url },
       cause: error,
     });
   }
 
   if (!response.ok) {
-    throw new AutoCliError("ROBOTS_REQUEST_FAILED", `robots.txt request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("ROBOTS_REQUEST_FAILED", `robots.txt request failed with ${response.status} ${response.statusText}.`, {
       details: { url, status: response.status, statusText: response.statusText },
     });
   }
@@ -155,7 +155,7 @@ function ensureRule(
   rule: { userAgent: string; allow: string[]; disallow: string[]; crawlDelay?: number } | undefined,
 ): { userAgent: string; allow: string[]; disallow: string[]; crawlDelay?: number } {
   if (!rule) {
-    throw new AutoCliError("ROBOTS_PARSE_FAILED", "robots.txt does not declare a user-agent block before a rule.");
+    throw new MikaCliError("ROBOTS_PARSE_FAILED", "robots.txt does not declare a user-agent block before a rule.");
   }
 
   return rule;

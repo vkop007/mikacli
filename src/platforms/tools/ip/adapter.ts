@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 type IpVersion = "4" | "6" | "any";
@@ -64,7 +64,7 @@ export class IpAdapter {
           signal: AbortSignal.timeout(10000),
           headers: {
             accept: "application/json",
-            "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+            "user-agent": "MikaCLI/1.0 (+https://github.com/)",
           },
         });
 
@@ -91,7 +91,7 @@ export class IpAdapter {
       }
     }
 
-    throw new AutoCliError("IP_LOOKUP_FAILED", "Unable to determine your public IP address.", {
+    throw new MikaCliError("IP_LOOKUP_FAILED", "Unable to determine your public IP address.", {
       details: {
         requestedVersion: version,
         errors,
@@ -121,7 +121,7 @@ export class IpAdapter {
           signal: AbortSignal.timeout(10000),
           headers: {
             accept: "application/json",
-            "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+            "user-agent": "MikaCLI/1.0 (+https://github.com/)",
           },
         });
 
@@ -196,7 +196,7 @@ function normalizeIpVersion(value: string | undefined): IpVersion {
     return normalized;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "IP_VERSION_INVALID",
     `Invalid IP version "${value}". Supported versions: 4, 6, any.`,
     {

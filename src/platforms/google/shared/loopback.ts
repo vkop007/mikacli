@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { createServer } from "node:http";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 type LoopbackCodeListenerInput = {
   clientId: string;
@@ -32,7 +32,7 @@ const SUCCESS_HTML = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>AutoCLI Google Login</title>
+    <title>MikaCLI Google Login</title>
     <style>
       body { font-family: sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
       h1 { margin-bottom: 0.5rem; }
@@ -41,8 +41,8 @@ const SUCCESS_HTML = `<!doctype html>
   </head>
   <body>
     <h1>Google login captured</h1>
-    <p>AutoCLI received the authorization code successfully.</p>
-    <p>You can close this tab and return to <code>autocli</code>.</p>
+    <p>MikaCLI received the authorization code successfully.</p>
+    <p>You can close this tab and return to <code>mikacli</code>.</p>
   </body>
 </html>`;
 
@@ -50,7 +50,7 @@ const ERROR_HTML = `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>AutoCLI Google Login Error</title>
+    <title>MikaCLI Google Login Error</title>
     <style>
       body { font-family: sans-serif; max-width: 42rem; margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
       h1 { margin-bottom: 0.5rem; color: #991b1b; }
@@ -59,7 +59,7 @@ const ERROR_HTML = `<!doctype html>
   </head>
   <body>
     <h1>Google login failed</h1>
-    <p>AutoCLI did not receive a valid authorization code.</p>
+    <p>MikaCLI did not receive a valid authorization code.</p>
     <p>Return to the terminal and try again.</p>
   </body>
 </html>`;
@@ -126,7 +126,7 @@ export async function startGoogleLoopbackAuthorization(
       resolve();
     });
   }).catch((error) => {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "GOOGLE_LOOPBACK_LISTEN_FAILED",
       `Could not listen for the Google OAuth callback on ${target.hostname}:${listenPort || 0}.`,
       { cause: error },
@@ -136,7 +136,7 @@ export async function startGoogleLoopbackAuthorization(
   const address = server.address();
   if (!address || typeof address === "string") {
     await closeServer(server);
-    throw new AutoCliError("GOOGLE_LOOPBACK_LISTEN_FAILED", "AutoCLI could not determine the Google OAuth callback address.");
+    throw new MikaCliError("GOOGLE_LOOPBACK_LISTEN_FAILED", "MikaCLI could not determine the Google OAuth callback address.");
   }
 
   const redirectUri = new URL(`${target.pathname}${target.search}`, `http://${target.hostname}:${address.port}`).toString();
@@ -154,7 +154,7 @@ export async function startGoogleLoopbackAuthorization(
     }
 
     settled = true;
-    rejectedError = new AutoCliError(
+    rejectedError = new MikaCliError(
       "GOOGLE_OAUTH_CALLBACK_TIMEOUT",
       `Timed out waiting for the Google OAuth callback on ${redirectUri}.`,
       {
@@ -205,15 +205,15 @@ function resolveLoopbackTarget(redirectUri: string | undefined): URL {
   try {
     url = new URL(normalized);
   } catch (error) {
-    throw new AutoCliError("GOOGLE_REDIRECT_URI_INVALID", `Invalid Google OAuth redirect URI "${normalized}".`, { cause: error });
+    throw new MikaCliError("GOOGLE_REDIRECT_URI_INVALID", `Invalid Google OAuth redirect URI "${normalized}".`, { cause: error });
   }
 
   if (url.protocol !== "http:") {
-    throw new AutoCliError("GOOGLE_REDIRECT_URI_INVALID", "Google loopback login requires an http:// redirect URI.");
+    throw new MikaCliError("GOOGLE_REDIRECT_URI_INVALID", "Google loopback login requires an http:// redirect URI.");
   }
 
   if (url.hostname !== "127.0.0.1" && url.hostname !== "localhost") {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "GOOGLE_REDIRECT_URI_INVALID",
       "Google loopback login only supports localhost or 127.0.0.1 redirect URIs.",
       {
@@ -225,7 +225,7 @@ function resolveLoopbackTarget(redirectUri: string | undefined): URL {
   }
 
   if (url.username || url.password) {
-    throw new AutoCliError("GOOGLE_REDIRECT_URI_INVALID", "Google loopback redirect URIs cannot include credentials.");
+    throw new MikaCliError("GOOGLE_REDIRECT_URI_INVALID", "Google loopback redirect URIs cannot include credentials.");
   }
 
   return url;
@@ -241,7 +241,7 @@ async function handleLoopbackRequest(input: {
     end(body?: string): void;
   };
   onSuccess: (code: string) => void;
-  onError: (error: AutoCliError) => void;
+  onError: (error: MikaCliError) => void;
 }): Promise<void> {
   const url = new URL(input.requestUrl || "/", input.redirectUri);
   if (url.pathname !== input.expectedPathname) {
@@ -254,7 +254,7 @@ async function handleLoopbackRequest(input: {
   if (errorValue) {
     input.response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
     input.response.end(ERROR_HTML);
-    input.onError(new AutoCliError("GOOGLE_OAUTH_DENIED", `Google OAuth returned "${errorValue}".`));
+    input.onError(new MikaCliError("GOOGLE_OAUTH_DENIED", `Google OAuth returned "${errorValue}".`));
     return;
   }
 
@@ -269,14 +269,14 @@ async function handleLoopbackRequest(input: {
   if (state !== input.expectedState) {
     input.response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
     input.response.end(ERROR_HTML);
-    input.onError(new AutoCliError("GOOGLE_OAUTH_STATE_MISMATCH", "Google OAuth returned a mismatched state parameter."));
+    input.onError(new MikaCliError("GOOGLE_OAUTH_STATE_MISMATCH", "Google OAuth returned a mismatched state parameter."));
     return;
   }
 
   if (!code) {
     input.response.writeHead(400, { "content-type": "text/html; charset=utf-8" });
     input.response.end(ERROR_HTML);
-    input.onError(new AutoCliError("GOOGLE_AUTH_CODE_REQUIRED", "Google OAuth did not return an authorization code."));
+    input.onError(new MikaCliError("GOOGLE_AUTH_CODE_REQUIRED", "Google OAuth did not return an authorization code."));
     return;
   }
 

@@ -9,9 +9,9 @@ import { printOEmbedResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "autocli oembed https://vimeo.com/76979871 --format json",
-  "autocli oembed https://www.flickr.com/photos/bees/2341623661 --json",
+  "mikacli oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "mikacli oembed https://vimeo.com/76979871 --format json",
+  "mikacli oembed https://www.flickr.com/photos/bees/2341623661 --json",
 ] as const;
 
 function buildOEmbedCommand(options: PlatformCommandBuildOptions = {}): Command {

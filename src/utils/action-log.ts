@@ -32,7 +32,7 @@ export interface ActionLogListOptions {
   limit?: number;
 }
 
-const ACTION_LOG_CAPTURED = Symbol.for("autocli.actionLogCaptured");
+const ACTION_LOG_CAPTURED = Symbol.for("mikacli.actionLogCaptured");
 const CATEGORY_COMMANDS = new Set([
   "llm",
   "editor",
@@ -139,42 +139,42 @@ export function buildActionLogCommandLabel(input: {
     return summarizeCommandPath(input.commandPath);
   }
 
-  return "autocli";
+  return "mikacli";
 }
 
 export function inferSafeCommandPath(argv: readonly string[]): string {
   const positionals = argv.filter((token) => !token.startsWith("-"));
   if (positionals.length === 0) {
-    return "autocli";
+    return "mikacli";
   }
 
   const [first, second, third] = positionals;
   if (!first) {
-    return "autocli";
+    return "mikacli";
   }
 
   if (CATEGORY_COMMANDS.has(first)) {
     if (!second) {
-      return `autocli ${first}`;
+      return `mikacli ${first}`;
     }
 
     if (!third) {
-      return `autocli ${first} ${second}`;
+      return `mikacli ${first} ${second}`;
     }
 
-    return `autocli ${first} ${second} ${third}`;
+    return `mikacli ${first} ${second} ${third}`;
   }
 
   if (second && ROOT_SUBCOMMANDS[first]?.has(second)) {
-    return `autocli ${first} ${second}`;
+    return `mikacli ${first} ${second}`;
   }
 
-  return `autocli ${first}`;
+  return `mikacli ${first}`;
 }
 
 export function summarizeCommandPath(commandPath: string): string {
   const tokens = commandPath.trim().split(/\s+/u);
-  const normalized = tokens[0] === "autocli" ? tokens.slice(1) : tokens;
+  const normalized = tokens[0] === "mikacli" ? tokens.slice(1) : tokens;
 
   if (normalized.length >= 3) {
     return `${normalized[1]}/${normalized[2]}`;
@@ -184,7 +184,7 @@ export function summarizeCommandPath(commandPath: string): string {
     return `${normalized[0]}/${normalized[1]}`;
   }
 
-  return normalized[0] ?? "autocli";
+  return normalized[0] ?? "mikacli";
 }
 
 async function readActionLogs(filePath: string): Promise<ActionLogEntry[]> {

@@ -1,4 +1,4 @@
-import { AutoCliError } from '../../errors.js';
+import { MikaCliError } from '../../errors.js';
 
 export type OutputFormat = 'json' | 'csv' | 'table' | 'yaml' | 'markdown' | 'html';
 
@@ -40,7 +40,7 @@ export function formatOutput(
     case 'html':
       return formatAsHTML(items, options);
     default:
-      throw new AutoCliError('UNKNOWN_FORMAT', `Unknown format: ${options.format}`);
+      throw new MikaCliError('UNKNOWN_FORMAT', `Unknown format: ${options.format}`);
   }
 }
 

@@ -68,7 +68,7 @@ async function requestProbe(target: string, method: UptimeHttpMethod, timeoutMs:
       accept: "*/*",
       "cache-control": "no-cache",
       pragma: "no-cache",
-      "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+      "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
     },
   });
   const latencyMs = Math.max(1, Math.round(performance.now() - startedAt));

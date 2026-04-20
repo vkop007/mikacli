@@ -12,10 +12,10 @@ export const indeedPlatformDefinition: PlatformDefinition = {
   adapter: indeedAdapter,
   capabilities: createCareersCapabilities(indeedAdapter),
   examples: [
-    'autocli careers indeed search "software engineer"',
-    'autocli careers indeed search "data scientist" --location "New York"',
-    'autocli careers indeed search "frontend developer" --limit 10',
-    'autocli careers indeed search "python developer" --job-type "full-time"',
-    'autocli careers indeed search "ui designer" --location "San Francisco" --limit 20 --json',
+    'mikacli careers indeed search "software engineer"',
+    'mikacli careers indeed search "data scientist" --location "New York"',
+    'mikacli careers indeed search "frontend developer" --limit 10',
+    'mikacli careers indeed search "python developer" --job-type "full-time"',
+    'mikacli careers indeed search "ui designer" --location "San Francisco" --limit 20 --json',
   ],
 };

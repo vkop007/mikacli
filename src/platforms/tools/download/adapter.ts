@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawn } from "node:child_process";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { CookieManager } from "../../../utils/cookie-manager.js";
 import { parseYouTubeChannelTarget } from "../../../utils/targets.js";
 import { getPlatformCookieDomain, isPlatform } from "../../config.js";
@@ -173,11 +173,11 @@ export class DownloadToolsAdapter {
         },
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         throw error;
       }
 
-      throw new AutoCliError("DOWNLOAD_INFO_FAILED", "Failed to fetch media info with yt-dlp.", {
+      throw new MikaCliError("DOWNLOAD_INFO_FAILED", "Failed to fetch media info with yt-dlp.", {
         cause: error,
         details: { url },
       });
@@ -240,11 +240,11 @@ export class DownloadToolsAdapter {
         },
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         throw error;
       }
 
-      throw new AutoCliError("DOWNLOAD_VIDEO_FAILED", "Failed to download video with yt-dlp.", {
+      throw new MikaCliError("DOWNLOAD_VIDEO_FAILED", "Failed to download video with yt-dlp.", {
         cause: error,
         details: { url, format },
       });
@@ -309,11 +309,11 @@ export class DownloadToolsAdapter {
         },
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         throw error;
       }
 
-      throw new AutoCliError("DOWNLOAD_AUDIO_FAILED", "Failed to download audio with yt-dlp.", {
+      throw new MikaCliError("DOWNLOAD_AUDIO_FAILED", "Failed to download audio with yt-dlp.", {
         cause: error,
         details: { url, format, audioFormat },
       });
@@ -344,7 +344,7 @@ export class DownloadToolsAdapter {
       const info = parseYtDlpInfo(stdout);
       const streamUrls = extractStreamUrls(info);
       if (streamUrls.length === 0) {
-        throw new AutoCliError("DOWNLOAD_STREAM_RESOLVE_FAILED", "yt-dlp did not return a playable stream URL.", {
+        throw new MikaCliError("DOWNLOAD_STREAM_RESOLVE_FAILED", "yt-dlp did not return a playable stream URL.", {
           details: { url, format },
         });
       }
@@ -378,11 +378,11 @@ export class DownloadToolsAdapter {
         },
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         throw error;
       }
 
-      throw new AutoCliError("DOWNLOAD_STREAM_FAILED", "Failed to resolve a media stream URL with yt-dlp.", {
+      throw new MikaCliError("DOWNLOAD_STREAM_FAILED", "Failed to resolve a media stream URL with yt-dlp.", {
         cause: error,
         details: { url, format },
       });
@@ -396,16 +396,16 @@ export class DownloadToolsAdapter {
     const hasSessionPlatform = Boolean(input.sessionPlatform?.trim());
 
     if (hasCookiesPath && hasSessionPlatform) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "DOWNLOAD_AUTH_CONFLICT",
         "Use either --cookies or --platform/--account, not both.",
       );
     }
 
     if (!hasCookiesPath && input.account?.trim()) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "DOWNLOAD_PLATFORM_REQUIRED",
-        "Use --platform <provider> with --account when reusing a saved AutoCLI session.",
+        "Use --platform <provider> with --account when reusing a saved MikaCLI session.",
       );
     }
 
@@ -422,13 +422,13 @@ export class DownloadToolsAdapter {
     if (hasSessionPlatform) {
       const sessionPlatform = input.sessionPlatform!.trim();
       if (!isPlatform(sessionPlatform) || sessionPlatform === "download") {
-        throw new AutoCliError("DOWNLOAD_PLATFORM_INVALID", `Unknown provider "${sessionPlatform}" for --platform.`, {
+        throw new MikaCliError("DOWNLOAD_PLATFORM_INVALID", `Unknown provider "${sessionPlatform}" for --platform.`, {
           details: { platform: sessionPlatform },
         });
       }
 
       const { session } = await this.cookieManager.loadSession(sessionPlatform, input.account?.trim() || undefined);
-      const tempDir = await mkdtemp(join(tmpdir(), "autocli-download-cookies-"));
+      const tempDir = await mkdtemp(join(tmpdir(), "mikacli-download-cookies-"));
       const cookiesPath = join(tempDir, "cookies.txt");
       await writeFile(cookiesPath, buildNetscapeCookies(session), "utf8");
 
@@ -455,7 +455,7 @@ export class DownloadToolsAdapter {
           return;
         }
 
-        rejectPromise(new AutoCliError(code, message, { details: { path } }));
+        rejectPromise(new MikaCliError(code, message, { details: { path } }));
       });
     });
   }
@@ -477,7 +477,7 @@ export class DownloadToolsAdapter {
         "code" in error.cause &&
         error.cause.code === "ENOENT"
       ) {
-        throw new AutoCliError(errorCode, errorMessage, {
+        throw new MikaCliError(errorCode, errorMessage, {
           details: { command },
           cause: error,
         });
@@ -515,7 +515,7 @@ export class DownloadToolsAdapter {
         }
 
         rejectPromise(
-          new AutoCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
+          new MikaCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
             details: {
               command,
               args,
@@ -534,13 +534,13 @@ export const downloadToolsAdapter = new DownloadToolsAdapter();
 export function normalizeDownloadUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("DOWNLOAD_URL_REQUIRED", "A media URL is required.");
+    throw new MikaCliError("DOWNLOAD_URL_REQUIRED", "A media URL is required.");
   }
 
   try {
     return new URL(trimmed).toString();
   } catch {
-    throw new AutoCliError("DOWNLOAD_URL_INVALID", `Invalid media URL "${value}".`);
+    throw new MikaCliError("DOWNLOAD_URL_INVALID", `Invalid media URL "${value}".`);
   }
 }
 
@@ -558,7 +558,7 @@ export function normalizeYouTubeChannelVideosUrl(target: string): string {
     return `https://www.youtube.com${parsed.path}/videos`;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "INVALID_TARGET",
     "Expected a YouTube channel URL, @handle, /channel/<id> URL, or raw UC... channel ID.",
     {
@@ -661,7 +661,7 @@ function parseQualityHeight(value?: string): number | null {
 
   const match = value.trim().match(/^(\d{3,4})(?:p)?$/iu);
   if (!match) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "DOWNLOAD_QUALITY_INVALID",
       `Invalid quality "${value}". Use a resolution like 720p or 1080.`,
     );
@@ -669,7 +669,7 @@ function parseQualityHeight(value?: string): number | null {
 
   const heightToken = match[1];
   if (!heightToken) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "DOWNLOAD_QUALITY_INVALID",
       `Invalid quality "${value}". Use a resolution like 720p or 1080.`,
     );
@@ -682,7 +682,7 @@ function parseYtDlpInfo(stdout: string): YtDlpInfo {
   try {
     return JSON.parse(stdout) as YtDlpInfo;
   } catch (error) {
-    throw new AutoCliError("DOWNLOAD_INFO_PARSE_FAILED", "yt-dlp did not return valid media metadata.", {
+    throw new MikaCliError("DOWNLOAD_INFO_PARSE_FAILED", "yt-dlp did not return valid media metadata.", {
       cause: error,
     });
   }
@@ -726,14 +726,14 @@ function extractDownloadedPaths(stdout: string): string[] {
     .filter(Boolean);
 
   if (lines.length === 0) {
-    throw new AutoCliError("DOWNLOAD_OUTPUT_MISSING", "yt-dlp completed but did not report an output file path.");
+    throw new MikaCliError("DOWNLOAD_OUTPUT_MISSING", "yt-dlp completed but did not report an output file path.");
   }
 
   return lines;
 }
 
 function buildNetscapeCookies(session: PlatformSession): string {
-  const header = ["# Netscape HTTP Cookie File", "# This file was generated by AutoCLI.", ""];
+  const header = ["# Netscape HTTP Cookie File", "# This file was generated by MikaCLI.", ""];
   const cookies = Array.isArray(session.cookieJar.cookies) ? session.cookieJar.cookies : [];
   const fallbackDomain = getFallbackCookieDomain(session.platform);
 

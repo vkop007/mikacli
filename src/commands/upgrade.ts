@@ -6,11 +6,11 @@ import { resolveCommandContext } from "../utils/cli.js";
 
 export function createUpgradeCommand(): Command {
   return new Command("upgrade")
-    .description("Self-update AutoCLI to the latest npm version")
+    .description("Self-update MikaCLI to the latest npm version")
     .action(async (_options, cmd) => {
       const ctx = resolveCommandContext(cmd);
       const logger = new Logger(ctx);
-      const spinner = logger.spinner("Upgrading AutoCLI to the latest version...");
+      const spinner = logger.spinner("Upgrading MikaCLI to the latest version...");
 
       return new Promise<void>((resolve, reject) => {
         // Detect current runtime to choose package manager
@@ -20,8 +20,8 @@ export function createUpgradeCommand(): Command {
         // npm is universally safe and likely what they used to install globally if not bun
         const commandStr = isBun ? "bun" : "npm";
         const args = isBun 
-           ? ["add", "--global", "@vk007/autocli@latest"] 
-           : ["install", "-g", "@vk007/autocli@latest"];
+           ? ["add", "--global", "@vk007/mikacli@latest"] 
+           : ["install", "-g", "@vk007/mikacli@latest"];
         
         const child = spawn(commandStr, args, { 
             stdio: "ignore", // standard npm install can be noisy, keep it clean
@@ -30,7 +30,7 @@ export function createUpgradeCommand(): Command {
 
         child.on("close", (code) => {
           if (code === 0) {
-            spinner?.succeed(pc.green("Successfully upgraded AutoCLI to the latest version."));
+            spinner?.succeed(pc.green("Successfully upgraded MikaCLI to the latest version."));
             resolve();
           } else {
             spinner?.fail(pc.red(`Upgrade failed with exit code ${code}. Try running manually:\n> ${commandStr} ${args.join(" ")}`));

@@ -1,6 +1,6 @@
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { loadTextSource, writeTextOutput } from "../shared/io.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -71,7 +71,7 @@ function parseXmlValue(raw: string): unknown {
   try {
     return XML_PARSER.parse(raw);
   } catch (error) {
-    throw new AutoCliError("DATA_XML_INVALID", "Input is not valid XML.", {
+    throw new MikaCliError("DATA_XML_INVALID", "Input is not valid XML.", {
       cause: error,
     });
   }

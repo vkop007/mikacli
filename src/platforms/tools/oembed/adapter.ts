@@ -1,6 +1,6 @@
 import { XMLParser } from "fast-xml-parser";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { decodeHtml, extractLinkTags, fetchPublicHtmlDocument, resolveOptionalHttpUrl } from "../shared/html.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
@@ -67,7 +67,7 @@ export class OEmbedAdapter {
         }
       | undefined;
     let discoveredEndpoints: OEmbedEndpoint[] = [];
-    let discoveryError: AutoCliError | undefined;
+    let discoveryError: MikaCliError | undefined;
 
     try {
       const document = await fetchPublicHtmlDocument({
@@ -84,7 +84,7 @@ export class OEmbedAdapter {
       };
       discoveredEndpoints = extractOEmbedEndpoints(document.html, document.finalUrl);
     } catch (error) {
-      if (error instanceof AutoCliError) {
+      if (error instanceof MikaCliError) {
         discoveryError = error;
       } else {
         throw error;
@@ -119,7 +119,7 @@ export class OEmbedAdapter {
           throw error;
         }
 
-        if (error instanceof AutoCliError) {
+        if (error instanceof MikaCliError) {
           discoveryError = error;
         } else {
           throw error;
@@ -128,7 +128,7 @@ export class OEmbedAdapter {
     }
 
     if (discoverOnly) {
-      throw new AutoCliError("OEMBED_DISCOVERY_NOT_FOUND", "No oEmbed discovery endpoint was found on the page.", {
+      throw new MikaCliError("OEMBED_DISCOVERY_NOT_FOUND", "No oEmbed discovery endpoint was found on the page.", {
         details: {
           target,
           finalUrl: resolvedTarget,
@@ -247,12 +247,12 @@ async function requestDiscoveredOEmbed(input: {
         signal: AbortSignal.timeout(input.timeoutMs),
         headers: {
           accept: endpoint.format === "xml" ? "text/xml,application/xml;q=0.9,*/*;q=0.8" : "application/json,*/*;q=0.8",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
 
       if (!response.ok) {
-        throw new AutoCliError("OEMBED_REQUEST_FAILED", `oEmbed endpoint failed with ${response.status} ${response.statusText}.`, {
+        throw new MikaCliError("OEMBED_REQUEST_FAILED", `oEmbed endpoint failed with ${response.status} ${response.statusText}.`, {
           details: {
             endpointUrl,
             status: response.status,
@@ -301,11 +301,11 @@ async function requestNoEmbed(input: {
       signal: AbortSignal.timeout(input.timeoutMs),
       headers: {
         accept: "application/json,*/*;q=0.8",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("OEMBED_REQUEST_FAILED", "Unable to reach the public oEmbed fallback service.", {
+    throw new MikaCliError("OEMBED_REQUEST_FAILED", "Unable to reach the public oEmbed fallback service.", {
       cause: error,
       details: {
         endpointUrl: endpoint.toString(),
@@ -315,7 +315,7 @@ async function requestNoEmbed(input: {
 
   const body = await response.text();
   if (!response.ok) {
-    throw new AutoCliError("OEMBED_NOT_SUPPORTED", "The public fallback service could not resolve oEmbed metadata for this URL.", {
+    throw new MikaCliError("OEMBED_NOT_SUPPORTED", "The public fallback service could not resolve oEmbed metadata for this URL.", {
       details: {
         endpointUrl: endpoint.toString(),
         status: response.status,
@@ -377,7 +377,7 @@ function parseJsonOEmbed(text: string): OEmbedPayload {
   try {
     parsed = JSON.parse(text);
   } catch (error) {
-    throw new AutoCliError("OEMBED_RESPONSE_INVALID", "The oEmbed endpoint returned invalid JSON.", {
+    throw new MikaCliError("OEMBED_RESPONSE_INVALID", "The oEmbed endpoint returned invalid JSON.", {
       cause: error,
       details: {
         preview: text.slice(0, 200),
@@ -394,7 +394,7 @@ function parseXmlOEmbed(text: string): OEmbedPayload {
   try {
     parsed = XML_PARSER.parse(text);
   } catch (error) {
-    throw new AutoCliError("OEMBED_RESPONSE_INVALID", "The oEmbed endpoint returned invalid XML.", {
+    throw new MikaCliError("OEMBED_RESPONSE_INVALID", "The oEmbed endpoint returned invalid XML.", {
       cause: error,
       details: {
         preview: text.slice(0, 200),
@@ -430,12 +430,12 @@ function normalizeOEmbedRecord(record: Record<string, unknown>): OEmbedPayload {
   };
 }
 
-function normalizeOEmbedError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (error instanceof AutoCliError) {
+function normalizeOEmbedError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (error instanceof MikaCliError) {
     return error;
   }
 
-  return new AutoCliError("OEMBED_REQUEST_FAILED", fallbackMessage, {
+  return new MikaCliError("OEMBED_REQUEST_FAILED", fallbackMessage, {
     cause: error,
   });
 }
@@ -446,7 +446,7 @@ function normalizeFormat(value: string | undefined): "auto" | "json" | "xml" {
     return normalized;
   }
 
-  throw new AutoCliError("OEMBED_FORMAT_INVALID", `Unsupported oEmbed format "${value}". Use auto, json, or xml.`);
+  throw new MikaCliError("OEMBED_FORMAT_INVALID", `Unsupported oEmbed format "${value}". Use auto, json, or xml.`);
 }
 
 function clampOptionalDimension(value: number | undefined): number | undefined {

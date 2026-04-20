@@ -12,12 +12,12 @@ import type { AdapterActionResult, AdapterStatusResult } from "../../../types.js
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr",
-  "autocli social telegram login --api-id 123456 --api-hash abcdef123456 --phone +911234567890",
-  "autocli social telegram me",
-  "autocli social telegram chats --limit 10",
-  'autocli social telegram history me --limit 20',
-  'autocli social telegram send me "Hello from AutoCLI"',
+  "mikacli social telegram login --api-id 123456 --api-hash abcdef123456 --qr",
+  "mikacli social telegram login --api-id 123456 --api-hash abcdef123456 --phone +911234567890",
+  "mikacli social telegram me",
+  "mikacli social telegram chats --limit 10",
+  'mikacli social telegram history me --limit 20',
+  'mikacli social telegram send me "Hello from MikaCLI"',
 ] as const;
 
 function buildTelegramCommand(options: PlatformCommandBuildOptions = {}): Command {

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { runFirstClassBrowserAction } from "../../../core/runtime/browser-action-runtime.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { parseFlipkartProductTarget } from "../../../utils/targets.js";
@@ -155,9 +155,9 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     const item = findFlipkartCartItem(afterCart.items, target);
 
     if (!item || getFlipkartCartQuantity(item) !== finalQuantity) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "FLIPKART_ADD_TO_CART_NOT_CONFIRMED",
-        `Flipkart loaded the cart, but AutoCLI could not confirm that ${target.pid} was added.`,
+        `Flipkart loaded the cart, but MikaCLI could not confirm that ${target.pid} was added.`,
         {
           details: {
             pid: target.pid,
@@ -206,7 +206,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     const afterContext = await this.loadFlipkartSessionContext(session);
     const afterCart = buildFlipkartCartSnapshot(afterContext.state);
     if (findFlipkartCartItem(afterCart.items, target)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "FLIPKART_REMOVE_FROM_CART_NOT_CONFIRMED",
         `Flipkart still shows ${target.pid} in the cart after the remove action.`,
         {
@@ -258,9 +258,9 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     const item = findFlipkartCartItem(afterCart.items, target);
 
     if (!item || getFlipkartCartQuantity(item) !== quantity) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "FLIPKART_UPDATE_CART_NOT_CONFIRMED",
-        `Flipkart loaded the cart, but AutoCLI could not confirm the final quantity for ${target.pid}.`,
+        `Flipkart loaded the cart, but MikaCLI could not confirm the final quantity for ${target.pid}.`,
         {
           details: {
             pid: target.pid,
@@ -298,14 +298,14 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
   async orderDetail(input: { target: string; account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
     const orderId = input.target.trim();
     if (!orderId) {
-      throw new AutoCliError("FLIPKART_ORDER_REQUIRED", "Flipkart order ID cannot be empty.");
+      throw new MikaCliError("FLIPKART_ORDER_REQUIRED", "Flipkart order ID cannot be empty.");
     }
 
     const { session } = await this.ensureActiveSession(input.account);
     const context = await this.loadFlipkartSessionContext(session);
     const order = await this.findFlipkartOrder(context, orderId);
     if (!order) {
-      throw new AutoCliError("FLIPKART_ORDER_NOT_FOUND", `Flipkart could not find order ${orderId}.`, {
+      throw new MikaCliError("FLIPKART_ORDER_NOT_FOUND", `Flipkart could not find order ${orderId}.`, {
         details: {
           orderId,
         },
@@ -328,7 +328,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
   async search(input: { query: string; limit?: number; account?: string }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("FLIPKART_QUERY_REQUIRED", "Flipkart search query cannot be empty.");
+      throw new MikaCliError("FLIPKART_QUERY_REQUIRED", "Flipkart search query cannot be empty.");
     }
 
     const client = this.createGuestClient();
@@ -417,7 +417,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
           state: "unknown",
           message: "Flipkart validation was unavailable, but the imported session was saved.",
           lastValidatedAt: new Date().toISOString(),
-          lastErrorCode: error instanceof AutoCliError ? error.code : "REQUEST_FAILED",
+          lastErrorCode: error instanceof MikaCliError ? error.code : "REQUEST_FAILED",
         },
       };
     }
@@ -490,7 +490,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
   private async fetchFlipkartStatePage(client: SessionHttpClient, url: string): Promise<string> {
     const html = await this.fetchFlipkartHtml(client, url);
     if (isFlipkartLoggedOutHtml(html)) {
-      throw new AutoCliError("SESSION_EXPIRED", "Flipkart redirected the saved session to the login flow. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "Flipkart redirected the saved session to the login flow. Re-import cookies.txt.");
     }
     return html;
   }
@@ -631,7 +631,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     }
 
     if (requireExisting) {
-      throw new AutoCliError("FLIPKART_CART_ITEM_NOT_FOUND", `Flipkart cart does not contain ${input.trim()}.`, {
+      throw new MikaCliError("FLIPKART_CART_ITEM_NOT_FOUND", `Flipkart cart does not contain ${input.trim()}.`, {
         details: {
           target: input,
         },
@@ -640,7 +640,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
 
     const pid = parsed.pid;
     if (!pid) {
-      throw new AutoCliError("INVALID_TARGET", "Expected a Flipkart product URL or raw PID.", {
+      throw new MikaCliError("INVALID_TARGET", "Expected a Flipkart product URL or raw PID.", {
         details: { target: input },
       });
     }
@@ -649,7 +649,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
     const html = await this.fetchFlipkartHtml(context.client, url);
     const listingId = parsed.listingId ?? extractFlipkartListingIdFromHtml(html, pid);
     if (!listingId) {
-      throw new AutoCliError("FLIPKART_LISTING_NOT_FOUND", `Flipkart did not expose a listing ID for ${pid}.`, {
+      throw new MikaCliError("FLIPKART_LISTING_NOT_FOUND", `Flipkart did not expose a listing ID for ${pid}.`, {
         details: {
           pid,
           url,
@@ -693,9 +693,9 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
 
   private assertFlipkartBrowserPageState(bodyText: string, finalUrl: string): void {
     if (isFlipkartLoggedOutUrl(finalUrl) || /\bLogin\b[\s\S]*\bSign Up\b/i.test(bodyText)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "SESSION_EXPIRED",
-        "Flipkart redirected the browser session to sign-in. Re-import cookies.txt or log into Flipkart once with `autocli login --browser --url https://www.flipkart.com/` so the shared browser profile can be reused.",
+        "Flipkart redirected the browser session to sign-in. Re-import cookies.txt or log into Flipkart once with `mikacli login --browser --url https://www.flipkart.com/` so the shared browser profile can be reused.",
       );
     }
   }
@@ -773,7 +773,7 @@ export class FlipkartAdapter extends BaseShoppingAdapter {
       }
     }
 
-    throw new AutoCliError("FLIPKART_CART_ITEM_NOT_FOUND", `Flipkart could not find ${target.pid} in the visible cart page.`, {
+    throw new MikaCliError("FLIPKART_CART_ITEM_NOT_FOUND", `Flipkart could not find ${target.pid} in the visible cart page.`, {
       details: {
         pid: target.pid,
         listingId: target.listingId,
@@ -870,7 +870,7 @@ function extractFlipkartProduct(html: string, url: string, pid: string): Flipkar
     normalizeFlipkartTitle(collapseWhitespace(extractMatch(html, /<meta property="og:title" content="([^"]+)"/i))) ??
     normalizeFlipkartTitle(collapseWhitespace(extractMatch(html, /<title[^>]*>([\s\S]*?)<\/title>/i)));
   if (!title) {
-    throw new AutoCliError("FLIPKART_PRODUCT_NOT_FOUND", "Flipkart did not return a recognizable product detail page.");
+    throw new MikaCliError("FLIPKART_PRODUCT_NOT_FOUND", "Flipkart did not return a recognizable product detail page.");
   }
 
   const metaPrice = asNumber(extractMatch(html, /<meta property="product:price:amount" content="([^"]+)"/i));
@@ -933,13 +933,13 @@ function isFlipkartLoggedOutHtml(html: string): boolean {
 function extractFirstJsonObject(input: string, marker: string): Record<string, unknown> {
   const segment = extractBalancedJsonSegments(input, marker)[0];
   if (!segment) {
-    throw new AutoCliError("FLIPKART_STATE_MISSING", `Flipkart did not expose the expected ${marker.trim()} state block.`);
+    throw new MikaCliError("FLIPKART_STATE_MISSING", `Flipkart did not expose the expected ${marker.trim()} state block.`);
   }
 
   try {
     return asRecord(JSON.parse(segment.json));
   } catch (error) {
-    throw new AutoCliError("FLIPKART_STATE_INVALID", `Flipkart exposed an invalid ${marker.trim()} state block.`, {
+    throw new MikaCliError("FLIPKART_STATE_INVALID", `Flipkart exposed an invalid ${marker.trim()} state block.`, {
       cause: error,
     });
   }
@@ -1072,7 +1072,7 @@ function buildFlipkartCartSnapshot(state: Record<string, unknown>): FlipkartCart
 function parseFlipkartCartTarget(target: string): { pid?: string; listingId?: string; url?: string } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("INVALID_TARGET", "Expected a Flipkart product URL, listing ID, or raw PID.", {
+    throw new MikaCliError("INVALID_TARGET", "Expected a Flipkart product URL, listing ID, or raw PID.", {
       details: { target },
     });
   }
@@ -1099,7 +1099,7 @@ function parseFlipkartCartTarget(target: string): { pid?: string; listingId?: st
     };
   }
 
-  throw new AutoCliError("INVALID_TARGET", "Expected a Flipkart product URL, listing ID, or raw PID.", {
+  throw new MikaCliError("INVALID_TARGET", "Expected a Flipkart product URL, listing ID, or raw PID.", {
     details: { target },
   });
 }

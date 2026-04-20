@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { matchesTrelloQuery, normalizeTrelloBoardTarget, normalizeTrelloCardTarget } from "./helpers.js";
 
@@ -134,7 +134,7 @@ export class TrelloWebClient {
           ...(input.body ? { "content-type": "application/x-www-form-urlencoded;charset=UTF-8" } : {}),
           "x-requested-with": "XMLHttpRequest",
           "x-trello-client-version": "1.0.0",
-          "user-agent": "AutoCLI",
+          "user-agent": "MikaCLI",
         },
         ...(input.body ? { body: input.body.toString() } : {}),
       });
@@ -144,7 +144,7 @@ export class TrelloWebClient {
         return {} as T;
       }
       if (text.startsWith("<")) {
-        throw new AutoCliError("TRELLO_SESSION_INVALID", "Trello redirected the saved web session to HTML. Re-import fresh cookies.", {
+        throw new MikaCliError("TRELLO_SESSION_INVALID", "Trello redirected the saved web session to HTML. Re-import fresh cookies.", {
           details: { preview: text.slice(0, 200) },
         });
       }
@@ -152,7 +152,7 @@ export class TrelloWebClient {
       try {
         return JSON.parse(text) as T;
       } catch (error) {
-        throw new AutoCliError("TRELLO_RESPONSE_INVALID", "Trello returned a non-JSON response.", {
+        throw new MikaCliError("TRELLO_RESPONSE_INVALID", "Trello returned a non-JSON response.", {
           cause: error,
           details: { preview: text.slice(0, 200) },
         });
@@ -162,9 +162,9 @@ export class TrelloWebClient {
     }
   }
 
-  private normalizeError(error: unknown): AutoCliError {
-    if (!(error instanceof AutoCliError)) {
-      return new AutoCliError("TRELLO_REQUEST_FAILED", "Trello request failed.", { cause: error });
+  private normalizeError(error: unknown): MikaCliError {
+    if (!(error instanceof MikaCliError)) {
+      return new MikaCliError("TRELLO_REQUEST_FAILED", "Trello request failed.", { cause: error });
     }
 
     if (error.code !== "HTTP_REQUEST_FAILED") {
@@ -190,7 +190,7 @@ export class TrelloWebClient {
       : code === "TRELLO_VALIDATION_FAILED" ? `Trello rejected the request: ${upstream}`
       : `Trello request failed${status ? ` with HTTP ${status}` : ""}.`;
 
-    return new AutoCliError(code, message, {
+    return new MikaCliError(code, message, {
       cause: error,
       details: {
         status,
@@ -202,7 +202,7 @@ export class TrelloWebClient {
 
 function resolveTrelloList(lists: TrelloList[], reference?: string): TrelloList {
   if (!lists[0]) {
-    throw new AutoCliError("TRELLO_LIST_NOT_FOUND", "No open Trello lists were available on that board.");
+    throw new MikaCliError("TRELLO_LIST_NOT_FOUND", "No open Trello lists were available on that board.");
   }
 
   if (!reference?.trim()) {
@@ -212,7 +212,7 @@ function resolveTrelloList(lists: TrelloList[], reference?: string): TrelloList 
   const normalized = reference.trim().toLowerCase();
   const match = lists.find((list) => list.id.toLowerCase() === normalized || list.name.toLowerCase() === normalized);
   if (!match) {
-    throw new AutoCliError("TRELLO_LIST_NOT_FOUND", `Could not find a Trello list matching "${reference}".`);
+    throw new MikaCliError("TRELLO_LIST_NOT_FOUND", `Could not find a Trello list matching "${reference}".`);
   }
 
   return match;

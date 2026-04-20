@@ -143,7 +143,7 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     browserFallback: "supported",
     stability: "partial",
     asyncJobs: "supported",
-    notes: ["AutoCLI can fall back to an in-browser Grok request path when the browserless endpoint is blocked."],
+    notes: ["MikaCLI can fall back to an in-browser Grok request path when the browserless endpoint is blocked."],
   },
   mistral: {
     browserLogin: "supported",
@@ -265,7 +265,7 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     browserLogin: "supported",
     browserFallback: "supported",
     stability: "partial",
-    notes: ["X write actions run through browser-backed flows. Use `--browser` to force the shared AutoCLI browser profile immediately when you want the live browser path."],
+    notes: ["X write actions run through browser-backed flows. Use `--browser` to force the shared MikaCLI browser profile immediately when you want the live browser path."],
   },
   instagram: {
     mutation: "supported",
@@ -279,7 +279,7 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     browserLogin: "supported",
     browserFallback: "supported",
     stability: "partial",
-    notes: ["Facebook writes now run through browser-backed post, like, and comment flows. Use `--browser` to jump straight into the shared AutoCLI browser profile when you want the visible browser path."],
+    notes: ["Facebook writes now run through browser-backed post, like, and comment flows. Use `--browser` to jump straight into the shared MikaCLI browser profile when you want the visible browser path."],
   },
   linkedin: {
     mutation: "partial",
@@ -298,8 +298,8 @@ const PROVIDER_OVERRIDES: Partial<Record<PlatformDefinition["id"], PlatformCapab
     stability: "partial",
     notes: [
       "Uses Twitch's authenticated web GraphQL surface for channel, stream, video, and clip lookups.",
-      "Follow and unfollow try Twitch's web mutation path first, then can fall back to the shared AutoCLI browser profile when Twitch enforces an integrity challenge.",
-      "Clip creation and stream settings updates currently run through the shared AutoCLI browser profile.",
+      "Follow and unfollow try Twitch's web mutation path first, then can fall back to the shared MikaCLI browser profile when Twitch enforces an integrity challenge.",
+      "Clip creation and stream settings updates currently run through the shared MikaCLI browser profile.",
     ],
   },
   youtube: {

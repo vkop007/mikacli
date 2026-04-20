@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../errors.js";
+import { MikaCliError } from "../../errors.js";
 
 export type FilterOperator = ">" | "<" | ">=" | "<=" | "=" | "!=" | "CONTAINS" | "STARTS_WITH" | "ENDS_WITH" | "IN" | "BETWEEN";
 export type LogicalOperator = "AND" | "OR";
@@ -172,7 +172,7 @@ export class FilterExpressionParser {
     const token = this.peek();
 
     if (!token) {
-      throw new AutoCliError("FILTER_PARSE_ERROR", "Unexpected end of filter expression");
+      throw new MikaCliError("FILTER_PARSE_ERROR", "Unexpected end of filter expression");
     }
 
     if (token.value === "(") {
@@ -180,7 +180,7 @@ export class FilterExpressionParser {
       const expr = this.parseLogicalExpression();
       const next = this.consume();
       if (next?.value !== ")") {
-        throw new AutoCliError("FILTER_PARSE_ERROR", "Expected closing parenthesis");
+        throw new MikaCliError("FILTER_PARSE_ERROR", "Expected closing parenthesis");
       }
       return expr;
     }
@@ -195,18 +195,18 @@ export class FilterExpressionParser {
   private parseCondition(): FilterCondition {
     const fieldToken = this.consume();
     if (!fieldToken || fieldToken.type !== "field") {
-      throw new AutoCliError("FILTER_PARSE_ERROR", "Expected field name");
+      throw new MikaCliError("FILTER_PARSE_ERROR", "Expected field name");
     }
 
     const operatorToken = this.consume();
     if (!operatorToken || !this.isOperator(operatorToken.value)) {
       const op = operatorToken?.value || "(none)";
-      throw new AutoCliError("FILTER_PARSE_ERROR", `Expected operator after field "${fieldToken.value}", got "${op}"`);
+      throw new MikaCliError("FILTER_PARSE_ERROR", `Expected operator after field "${fieldToken.value}", got "${op}"`);
     }
 
     const valueToken = this.consume();
     if (!valueToken || valueToken.type !== "value") {
-      throw new AutoCliError("FILTER_PARSE_ERROR", `Expected value after operator "${operatorToken.value}"`);
+      throw new MikaCliError("FILTER_PARSE_ERROR", `Expected value after operator "${operatorToken.value}"`);
     }
 
     return {

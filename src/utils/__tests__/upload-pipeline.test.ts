@@ -14,7 +14,7 @@ import {
 
 describe("upload pipeline", () => {
   test("reads upload assets with normalized metadata", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "autocli-upload-asset-"));
+    const dir = await mkdtemp(join(tmpdir(), "mikacli-upload-asset-"));
     const filePath = join(dir, "photo.png");
 
     try {

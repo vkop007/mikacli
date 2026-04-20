@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 
 import { Cookie, CookieJar } from "tough-cookie";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import type {
   AdapterActionResult,
   AdapterStatusResult,
@@ -163,7 +163,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube Music session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube Music session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -201,15 +201,15 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   }
 
   async postMedia(_input: PostMediaInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "YouTube Music uploads are not implemented in this CLI.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "YouTube Music uploads are not implemented in this CLI.");
   }
 
   async postText(_input: TextPostInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "YouTube Music text posting is not implemented in this CLI.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "YouTube Music text posting is not implemented in this CLI.");
   }
 
   async comment(_input: CommentInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "YouTube Music comments are not implemented in this CLI.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "YouTube Music comments are not implemented in this CLI.");
   }
 
   async search(input: {
@@ -220,7 +220,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("INVALID_SEARCH_QUERY", "Expected a non-empty YouTube Music search query.");
+      throw new MikaCliError("INVALID_SEARCH_QUERY", "Expected a non-empty YouTube Music search query.");
     }
 
     const limit = this.normalizeLimit(input.limit);
@@ -310,7 +310,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
 
       info = this.parseInfoResponse(response, target.videoId, context.url);
     } catch (error) {
-      if (isAutoCliError(error) && (error.code === "YTMUSIC_ITEM_UNAVAILABLE" || error.code === "YTMUSIC_INFO_MISSING")) {
+      if (isMikaCliError(error) && (error.code === "YTMUSIC_ITEM_UNAVAILABLE" || error.code === "YTMUSIC_INFO_MISSING")) {
         info = await this.loadPublicYouTubeInfo(target.videoId, context.url);
       } else {
         throw this.mapWriteError(error, "Failed to fetch YouTube Music item details.");
@@ -501,7 +501,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
     if (!input.target || input.target.trim().length === 0) {
       const current = getYouTubeMusicControllerCurrentItem(state);
       if (!current) {
-        throw new AutoCliError("YTMUSIC_QUEUE_EMPTY", "No queued YouTube Music item is available. Use `play <target>` first.");
+        throw new MikaCliError("YTMUSIC_QUEUE_EMPTY", "No queued YouTube Music item is available. Use `play <target>` first.");
       }
 
       if (state.mode === "paused" && state.currentPid && isYouTubeMusicControllerProcessAlive(state.currentPid)) {
@@ -557,7 +557,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       limit: input.limit,
     });
     if (items.length === 0) {
-      throw new AutoCliError("YTMUSIC_QUEUE_EMPTY", "No playable YouTube Music items were resolved for this target.");
+      throw new MikaCliError("YTMUSIC_QUEUE_EMPTY", "No playable YouTube Music items were resolved for this target.");
     }
 
     state = createEmptyYouTubeMusicControllerState();
@@ -588,7 +588,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
     const current = getYouTubeMusicControllerCurrentItem(state);
 
     if (!current) {
-      throw new AutoCliError("YTMUSIC_CONTROLLER_NOT_RUNNING", "No local YouTube Music playback is active.");
+      throw new MikaCliError("YTMUSIC_CONTROLLER_NOT_RUNNING", "No local YouTube Music playback is active.");
     }
 
     if (state.mode === "paused") {
@@ -665,11 +665,11 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   async next(): Promise<AdapterActionResult> {
     const state = await this.loadControllerState();
     if (state.queue.length === 0) {
-      throw new AutoCliError("YTMUSIC_QUEUE_EMPTY", "The local YouTube Music queue is empty.");
+      throw new MikaCliError("YTMUSIC_QUEUE_EMPTY", "The local YouTube Music queue is empty.");
     }
 
     if (state.currentIndex >= state.queue.length - 1) {
-      throw new AutoCliError("YTMUSIC_QUEUE_ENDED", "There is no next YouTube Music item in the local queue.");
+      throw new MikaCliError("YTMUSIC_QUEUE_ENDED", "There is no next YouTube Music item in the local queue.");
     }
 
     const nextState = await this.startControllerPlayback(state, state.currentIndex + 1);
@@ -694,7 +694,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   async previous(): Promise<AdapterActionResult> {
     const state = await this.loadControllerState();
     if (state.queue.length === 0) {
-      throw new AutoCliError("YTMUSIC_QUEUE_EMPTY", "The local YouTube Music queue is empty.");
+      throw new MikaCliError("YTMUSIC_QUEUE_EMPTY", "The local YouTube Music queue is empty.");
     }
 
     const positionMs = estimateYouTubeMusicPlaybackPositionMs(state);
@@ -749,7 +749,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   async queueAdd(input: YouTubeMusicPlaybackResolveInput): Promise<AdapterActionResult> {
     const items = await this.resolvePlaybackItems(input);
     if (items.length === 0) {
-      throw new AutoCliError("YTMUSIC_QUEUE_EMPTY", "No playable YouTube Music items were resolved for this target.");
+      throw new MikaCliError("YTMUSIC_QUEUE_EMPTY", "No playable YouTube Music items were resolved for this target.");
     }
 
     const state = await this.loadControllerState();
@@ -847,7 +847,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
 
       const likeStatus = this.extractLikeStatus(response);
       if (likeStatus && likeStatus !== options.expectedLikeStatus) {
-        throw new AutoCliError("YTMUSIC_REQUEST_REJECTED", "YouTube Music did not apply the requested preference.", {
+        throw new MikaCliError("YTMUSIC_REQUEST_REJECTED", "YouTube Music did not apply the requested preference.", {
           details: {
             expectedLikeStatus: options.expectedLikeStatus,
             actualLikeStatus: likeStatus,
@@ -875,7 +875,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
     await this.persistSessionState(session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube Music session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube Music session has expired.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -927,7 +927,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   ): Promise<YouTubeMusicControllerState> {
     const current = state.queue[index];
     if (!current) {
-      throw new AutoCliError("YTMUSIC_QUEUE_EMPTY", "No YouTube Music item exists at that queue position.");
+      throw new MikaCliError("YTMUSIC_QUEUE_EMPTY", "No YouTube Music item exists at that queue position.");
     }
 
     await stopYouTubeMusicPlayback(state.currentPid);
@@ -959,7 +959,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   private async resolvePlaybackItems(input: YouTubeMusicPlaybackResolveInput): Promise<YouTubeMusicControllerQueueItem[]> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("INVALID_TARGET", "Expected a YouTube Music target or search query.");
+      throw new MikaCliError("INVALID_TARGET", "Expected a YouTube Music target or search query.");
     }
 
     const limit = this.normalizeLimit(input.limit);
@@ -970,7 +970,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       try {
         return [await this.resolveSinglePlaybackItem(input.account, target)];
       } catch (error) {
-        if (!(isAutoCliError(error) && error.code === "INVALID_TARGET")) {
+        if (!(isMikaCliError(error) && error.code === "INVALID_TARGET")) {
           throw error;
         }
       }
@@ -983,7 +983,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
           return items;
         }
       } catch (error) {
-        if (!(isAutoCliError(error) && error.code === "INVALID_TARGET")) {
+        if (!(isMikaCliError(error) && error.code === "INVALID_TARGET")) {
           throw error;
         }
       }
@@ -1026,7 +1026,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       });
       info = this.parseInfoResponse(response, parsed.videoId, url);
     } catch (error) {
-      if (isAutoCliError(error) && (error.code === "YTMUSIC_ITEM_UNAVAILABLE" || error.code === "YTMUSIC_INFO_MISSING")) {
+      if (isMikaCliError(error) && (error.code === "YTMUSIC_ITEM_UNAVAILABLE" || error.code === "YTMUSIC_INFO_MISSING")) {
         info = await this.loadPublicYouTubeInfo(parsed.videoId, url);
       } else {
         throw error;
@@ -1069,7 +1069,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       .map((item) => this.toControllerQueueItem(item));
 
     if (playable.length === 0) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "YTMUSIC_PLAYBACK_UNSUPPORTED",
         `No directly playable ${type === "artist" ? "songs or videos" : "items"} were found for this YouTube Music target.`,
       );
@@ -1131,7 +1131,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       return this.resolveCollectionPlaybackItems(account, String(collection.url), collection.type, limit);
     }
 
-    throw new AutoCliError("YTMUSIC_PLAYBACK_UNSUPPORTED", `No playable YouTube Music results were found for "${query}".`);
+    throw new MikaCliError("YTMUSIC_PLAYBACK_UNSUPPORTED", `No playable YouTube Music results were found for "${query}".`);
   }
 
   private toControllerQueueItem(item: YouTubeMusicSearchItem): YouTubeMusicControllerQueueItem {
@@ -1200,7 +1200,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
     };
     const streamUrl = parsed.requested_downloads?.[0]?.url ?? parsed.url;
     if (!streamUrl) {
-      throw new AutoCliError("YTMUSIC_STREAM_RESOLVE_FAILED", "yt-dlp did not return a playable audio stream URL.");
+      throw new MikaCliError("YTMUSIC_STREAM_RESOLVE_FAILED", "yt-dlp did not return a playable audio stream URL.");
     }
 
     return {
@@ -1285,7 +1285,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
           message: "YouTube Music auth cookies are present, but homepage validation was unavailable.",
           lastValidatedAt: new Date().toISOString(),
         },
-        metadata: isAutoCliError(error) ? error.details : undefined,
+        metadata: isMikaCliError(error) ? error.details : undefined,
       };
     }
   }
@@ -1334,7 +1334,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       };
     } catch (error) {
       if (
-        !isAutoCliError(error) ||
+        !isMikaCliError(error) ||
         (error.code !== "SESSION_EXPIRED" && error.code !== "SESSION_NOT_FOUND" && error.code !== "SESSION_INVALID")
       ) {
         throw error;
@@ -1379,7 +1379,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
     });
     const page = this.parsePageConfig(html);
     if (requireLogin && page.loggedIn === false) {
-      throw new AutoCliError("SESSION_EXPIRED", "YouTube Music returned a logged-out page. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "YouTube Music returned a logged-out page. Re-import cookies.txt.");
     }
 
     return page;
@@ -1434,7 +1434,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
 
   private requirePageField<T extends string>(value: T | undefined, label: string): T {
     if (!value) {
-      throw new AutoCliError("YTMUSIC_PAGE_CONFIG_MISSING", `Missing ${label} from the YouTube Music page.`);
+      throw new MikaCliError("YTMUSIC_PAGE_CONFIG_MISSING", `Missing ${label} from the YouTube Music page.`);
     }
 
     return value;
@@ -1530,7 +1530,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
   ): Promise<Record<string, string>> {
     const sapisid = await this.getAuthCookieValue(client);
     if (!sapisid && !input.allowAnonymous) {
-      throw new AutoCliError("SESSION_EXPIRED", "YouTube Music SAPISID cookie is missing. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "YouTube Music SAPISID cookie is missing. Re-import cookies.txt.");
     }
 
     return {
@@ -2032,7 +2032,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
         playabilityStatus && "reason" in playabilityStatus && typeof playabilityStatus.reason === "string"
           ? playabilityStatus.reason
           : "YouTube Music item unavailable";
-      throw new AutoCliError("YTMUSIC_ITEM_UNAVAILABLE", reason, {
+      throw new MikaCliError("YTMUSIC_ITEM_UNAVAILABLE", reason, {
         details: {
           videoId,
           playabilityStatus: status,
@@ -2045,7 +2045,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
         ? response.videoDetails
         : undefined;
     if (!videoDetails) {
-      throw new AutoCliError("YTMUSIC_INFO_MISSING", "YouTube Music did not return item details.", {
+      throw new MikaCliError("YTMUSIC_INFO_MISSING", "YouTube Music did not return item details.", {
         details: { videoId },
       });
     }
@@ -2322,7 +2322,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       },
     }).then(async (response) => {
       if (!response.ok) {
-        throw new AutoCliError("HTTP_REQUEST_FAILED", `Request failed with ${response.status} ${response.statusText}`, {
+        throw new MikaCliError("HTTP_REQUEST_FAILED", `Request failed with ${response.status} ${response.statusText}`, {
           details: {
             url: response.url,
             status: response.status,
@@ -2513,7 +2513,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       return JSON.parse(objectText) as Record<string, unknown>;
     }
 
-    throw new AutoCliError("YTMUSIC_PAGE_CONFIG_MISSING", `Missing ${variableName} from the page response.`);
+    throw new MikaCliError("YTMUSIC_PAGE_CONFIG_MISSING", `Missing ${variableName} from the page response.`);
   }
 
   private readBalancedJsonObject(source: string, startIndex: number): string | undefined {
@@ -2560,16 +2560,16 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
     return undefined;
   }
 
-  private mapWriteError(error: unknown, fallbackMessage: string): AutoCliError {
-    if (isAutoCliError(error) && (error.code === "YTMUSIC_REQUEST_REJECTED" || error.code === "YTMUSIC_ITEM_UNAVAILABLE")) {
+  private mapWriteError(error: unknown, fallbackMessage: string): MikaCliError {
+    if (isMikaCliError(error) && (error.code === "YTMUSIC_REQUEST_REJECTED" || error.code === "YTMUSIC_ITEM_UNAVAILABLE")) {
       return error;
     }
 
-    if (isAutoCliError(error) && error.code === "HTTP_REQUEST_FAILED") {
+    if (isMikaCliError(error) && error.code === "HTTP_REQUEST_FAILED") {
       const status = typeof error.details?.status === "number" ? error.details.status : undefined;
 
       if (status === 400) {
-        return new AutoCliError(
+        return new MikaCliError(
           "YTMUSIC_REQUEST_REJECTED",
           "YouTube Music rejected this action request. The item may not allow this action, or the saved cookies need a fresh export.",
           {
@@ -2580,7 +2580,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       }
 
       if (status === 401 || status === 403) {
-        return new AutoCliError(
+        return new MikaCliError(
           "SESSION_EXPIRED",
           "YouTube Music rejected the saved session for this action. Re-export cookies from an active browser session.",
           {
@@ -2591,10 +2591,10 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
       }
     }
 
-    return new AutoCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details:
-        isAutoCliError(error) && error.details
+        isMikaCliError(error) && error.details
           ? error.details
           : error instanceof Error
             ? { message: error.message }
@@ -2652,7 +2652,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
         "code" in error.cause &&
         error.cause.code === "ENOENT"
       ) {
-        throw new AutoCliError(errorCode, errorMessage, {
+        throw new MikaCliError(errorCode, errorMessage, {
           details: {
             command,
           },
@@ -2692,7 +2692,7 @@ export class YouTubeMusicAdapter extends BasePlatformAdapter {
         }
 
         rejectPromise(
-          new AutoCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
+          new MikaCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
             details: {
               command,
               args,

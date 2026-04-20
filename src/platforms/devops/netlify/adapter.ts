@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { BaseApiKeyPlatformAdapter, type LoadedApiKeyConnection } from "../shared/base.js";
 import { NetlifyApiClient } from "./client.js";
 
@@ -140,7 +140,7 @@ export class NetlifyAdapter extends BaseApiKeyPlatformAdapter {
     const active = await this.ensureActiveConnection(input.account);
     const site = input.site ? this.resolveSite(active.sites, input.site) : active.sites[0];
     if (!site?.id) {
-      throw new AutoCliError("NETLIFY_SITE_REQUIRED", "Netlify deploys requires --site when the token does not expose a default site.");
+      throw new MikaCliError("NETLIFY_SITE_REQUIRED", "Netlify deploys requires --site when the token does not expose a default site.");
     }
 
     const deploys = await active.client.listDeploys(site.id, input.limit ?? 20);
@@ -219,7 +219,7 @@ export class NetlifyAdapter extends BaseApiKeyPlatformAdapter {
     );
 
     if (!match) {
-      throw new AutoCliError("NETLIFY_SITE_NOT_FOUND", `No Netlify site matched "${target}".`);
+      throw new MikaCliError("NETLIFY_SITE_NOT_FOUND", `No Netlify site matched "${target}".`);
     }
 
     return match;

@@ -10,9 +10,9 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli data text stats ./notes.txt",
-  "autocli data text replace ./notes.txt --find draft --replace final",
-  "autocli data text dedupe-lines ./list.txt --output ./list.cleaned.txt",
+  "mikacli data text stats ./notes.txt",
+  "mikacli data text replace ./notes.txt --find draft --replace final",
+  "mikacli data text dedupe-lines ./list.txt --output ./list.cleaned.txt",
 ] as const;
 
 function buildTextCommand(options: PlatformCommandBuildOptions = {}): Command {

@@ -3,7 +3,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import WebSocket, { type RawData } from "ws";
 
 import { ensureParentDirectory, getCachePath } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { formatSpotifyDuration, spotifyUriToUrl } from "./helpers.js";
 import {
@@ -134,7 +134,7 @@ export class SpotifyConnectClient {
 
   async search(kind: SpotifyEntityType, query: string, limit = 5, offset = 0): Promise<SpotifyConnectSearchSummary> {
     if (query.trim().length === 0) {
-      throw new AutoCliError("INVALID_TARGET", "Spotify search requires a non-empty query.", {
+      throw new MikaCliError("INVALID_TARGET", "Spotify search requires a non-empty query.", {
         details: {
           kind,
           query,
@@ -161,7 +161,7 @@ export class SpotifyConnectClient {
     const device = this.resolveDevice(state, target);
     const fromId = state.originDeviceId ?? state.activeDeviceId;
     if (!fromId) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "SPOTIFY_CONNECT_TRANSFER_SOURCE_MISSING",
         "Spotify Connect could not determine the current playback source device.",
         {
@@ -244,7 +244,7 @@ export class SpotifyConnectClient {
     const state = await this.getState();
     const fromId = state.originDeviceId ?? state.activeDeviceId;
     if (!fromId || !state.activeDeviceId) {
-      throw new AutoCliError("SPOTIFY_CONNECT_DEVICE_NOT_FOUND", "Spotify Connect could not determine an active device.", {
+      throw new MikaCliError("SPOTIFY_CONNECT_DEVICE_NOT_FOUND", "Spotify Connect could not determine an active device.", {
         details: {
           activeDeviceId: state.activeDeviceId,
           originDeviceId: state.originDeviceId,
@@ -314,7 +314,7 @@ export class SpotifyConnectClient {
   private async sendPlayerCommand(state: SpotifyConnectState, payload: JsonRecord): Promise<void> {
     const fromId = state.originDeviceId ?? this.connectDeviceId ?? state.activeDeviceId;
     if (!fromId || !state.activeDeviceId) {
-      throw new AutoCliError("SPOTIFY_CONNECT_DEVICE_NOT_FOUND", "Spotify Connect could not determine an active device.", {
+      throw new MikaCliError("SPOTIFY_CONNECT_DEVICE_NOT_FOUND", "Spotify Connect could not determine an active device.", {
         details: {
           activeDeviceId: state.activeDeviceId,
           originDeviceId: state.originDeviceId,
@@ -408,7 +408,7 @@ export class SpotifyConnectClient {
           name: SPOTIFY_CONNECT_DEVICE_NAME,
           is_group: false,
           metadata: {},
-          platform_identifier: `web_player ${runtimeOs()};autocli`,
+          platform_identifier: `web_player ${runtimeOs()};mikacli`,
           capabilities: {
             change_volume: true,
             supports_file_media_type: true,
@@ -444,7 +444,7 @@ export class SpotifyConnectClient {
       const timer = setTimeout(() => {
         socket.close();
         reject(
-          new AutoCliError("SPOTIFY_CONNECT_DEALER_TIMEOUT", "Spotify Connect dealer handshake timed out.", {
+          new MikaCliError("SPOTIFY_CONNECT_DEALER_TIMEOUT", "Spotify Connect dealer handshake timed out.", {
             details: {
               url: url.toString(),
             },
@@ -461,7 +461,7 @@ export class SpotifyConnectClient {
           const connectionId = findCaseInsensitiveString(headers, "Spotify-Connection-Id");
           if (!connectionId) {
             reject(
-              new AutoCliError("SPOTIFY_CONNECT_DEALER_INVALID", "Spotify Connect dealer response did not include a connection id.", {
+              new MikaCliError("SPOTIFY_CONNECT_DEALER_INVALID", "Spotify Connect dealer response did not include a connection id.", {
                 details: {
                   payload,
                 },
@@ -473,7 +473,7 @@ export class SpotifyConnectClient {
           resolve(connectionId);
         } catch (error) {
           reject(
-            new AutoCliError("SPOTIFY_CONNECT_DEALER_INVALID", "Spotify Connect dealer returned an invalid handshake payload.", {
+            new MikaCliError("SPOTIFY_CONNECT_DEALER_INVALID", "Spotify Connect dealer returned an invalid handshake payload.", {
               cause: error,
             }),
           );
@@ -485,7 +485,7 @@ export class SpotifyConnectClient {
       socket.once("error", (error: Error) => {
         clearTimeout(timer);
         reject(
-          new AutoCliError("SPOTIFY_CONNECT_DEALER_FAILED", "Spotify Connect dealer handshake failed.", {
+          new MikaCliError("SPOTIFY_CONNECT_DEALER_FAILED", "Spotify Connect dealer handshake failed.", {
             cause: error,
             details: {
               url: url.toString(),
@@ -532,7 +532,7 @@ export class SpotifyConnectClient {
 
     const token = response.granted_token?.token;
     if (!token) {
-      throw new AutoCliError("SPOTIFY_CONNECT_CLIENT_TOKEN_MISSING", "Spotify client-token bootstrap did not return a token.");
+      throw new MikaCliError("SPOTIFY_CONNECT_CLIENT_TOKEN_MISSING", "Spotify client-token bootstrap did not return a token.");
     }
 
     this.clientToken = token;
@@ -562,7 +562,7 @@ export class SpotifyConnectClient {
     const pathfinderErrors = Array.isArray(response.errors) ? response.errors : [];
     if (pathfinderErrors.length > 0) {
       const firstError = asRecord(pathfinderErrors[0]);
-      throw new AutoCliError(
+      throw new MikaCliError(
         "SPOTIFY_PATHFINDER_ERROR",
         typeof firstError?.message === "string" && firstError.message.length > 0 ? firstError.message : "Spotify pathfinder request failed.",
         {
@@ -587,7 +587,7 @@ export class SpotifyConnectClient {
     await this.loadOperationHashes([operation]);
     const resolved = this.operationHashes.get(operation);
     if (!resolved) {
-      throw new AutoCliError("SPOTIFY_PATHFINDER_HASH_NOT_FOUND", `Spotify web-player hash for ${operation} was not found.`, {
+      throw new MikaCliError("SPOTIFY_PATHFINDER_HASH_NOT_FOUND", `Spotify web-player hash for ${operation} was not found.`, {
         details: {
           operation,
         },
@@ -732,7 +732,7 @@ export class SpotifyConnectClient {
     const expected = normalizeExpectedStatus(options.expectedStatus);
     if ((expected.length > 0 && !expected.includes(response.status)) || (expected.length === 0 && !response.ok)) {
       const body = await response.text().catch(() => "");
-      throw new AutoCliError("SPOTIFY_CONNECT_REQUEST_FAILED", `Spotify Connect request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("SPOTIFY_CONNECT_REQUEST_FAILED", `Spotify Connect request failed with ${response.status} ${response.statusText}.`, {
         details: {
           url,
           status: response.status,
@@ -754,7 +754,7 @@ export class SpotifyConnectClient {
     try {
       return JSON.parse(text) as T;
     } catch (error) {
-      throw new AutoCliError("SPOTIFY_CONNECT_INVALID_JSON", "Spotify Connect returned invalid JSON.", {
+      throw new MikaCliError("SPOTIFY_CONNECT_INVALID_JSON", "Spotify Connect returned invalid JSON.", {
         cause: error,
         details: {
           url,
@@ -856,7 +856,7 @@ export class SpotifyConnectClient {
       return partialName;
     }
 
-    throw new AutoCliError("SPOTIFY_DEVICE_NOT_FOUND", `Spotify device "${target}" was not found.`, {
+    throw new MikaCliError("SPOTIFY_DEVICE_NOT_FOUND", `Spotify device "${target}" was not found.`, {
       details: {
         target,
         availableDevices: devices,
@@ -1422,7 +1422,7 @@ function pickWebPlayerBundle(html: string): string {
     }
   }
 
-  throw new AutoCliError("SPOTIFY_PATHFINDER_BUNDLE_NOT_FOUND", "Spotify web-player bundle could not be located.");
+  throw new MikaCliError("SPOTIFY_PATHFINDER_BUNDLE_NOT_FOUND", "Spotify web-player bundle could not be located.");
 }
 
 function bundleBaseUrl(bundleUrl: string): string {
@@ -1432,7 +1432,7 @@ function bundleBaseUrl(bundleUrl: string): string {
 function parseWebpackMaps(js: string): [Map<number, string>, Map<number, string>] {
   const matches = js.match(/\{(?:\d+:"[^"]+",?)+\}/g) ?? [];
   if (matches.length === 0) {
-    throw new AutoCliError("SPOTIFY_PATHFINDER_MAPS_NOT_FOUND", "Spotify webpack chunk maps could not be located.");
+    throw new MikaCliError("SPOTIFY_PATHFINDER_MAPS_NOT_FOUND", "Spotify webpack chunk maps could not be located.");
   }
 
   const hashMaps: Array<{ score: number; values: Map<number, string> }> = [];
@@ -1462,7 +1462,7 @@ function parseWebpackMaps(js: string): [Map<number, string>, Map<number, string>
   const bestNames = nameMaps[0]?.values;
   const bestHashes = hashMaps[0]?.values;
   if (!bestNames || !bestHashes) {
-    throw new AutoCliError("SPOTIFY_PATHFINDER_MAPS_NOT_FOUND", "Spotify webpack chunk maps could not be resolved.");
+    throw new MikaCliError("SPOTIFY_PATHFINDER_MAPS_NOT_FOUND", "Spotify webpack chunk maps could not be resolved.");
   }
 
   return [bestNames, bestHashes];

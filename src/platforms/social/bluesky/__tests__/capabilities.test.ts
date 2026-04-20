@@ -19,7 +19,7 @@ describe("bluesky capability command surface", () => {
   test("uses category-based examples in the manifest", () => {
     const examples = blueskyPlatformDefinition.examples ?? [];
 
-    expect(examples.every((example) => example.startsWith("autocli social bluesky"))).toBe(true);
-    expect(examples).toContain("autocli social bluesky me");
+    expect(examples.every((example) => example.startsWith("mikacli social bluesky"))).toBe(true);
+    expect(examples).toContain("mikacli social bluesky me");
   });
 });

@@ -15,7 +15,7 @@ import {
 
 describe("action log store", () => {
   test("appends, filters, and loads action log entries", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "autocli-action-log-"));
+    const dir = await mkdtemp(join(tmpdir(), "mikacli-action-log-"));
     const logPath = join(dir, "actions.jsonl");
 
     try {
@@ -69,7 +69,7 @@ describe("action log store", () => {
   });
 
   test("clears the action log file", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "autocli-action-log-clear-"));
+    const dir = await mkdtemp(join(tmpdir(), "mikacli-action-log-clear-"));
     const logPath = join(dir, "actions.jsonl");
 
     try {
@@ -95,11 +95,11 @@ describe("action log store", () => {
   test("builds safe command labels without raw user arguments", () => {
     expect(buildActionLogCommandLabel({ platform: "x", action: "post" })).toBe("x/post");
     expect(buildActionLogCommandLabel({ platform: "translate", action: "translate" })).toBe("translate");
-    expect(buildActionLogCommandLabel({ commandPath: "autocli logs show" })).toBe("logs/show");
-    expect(buildActionLogCommandLabel({ commandPath: "autocli jobs download" })).toBe("jobs/download");
-    expect(summarizeCommandPath("autocli social youtube upload")).toBe("youtube/upload");
-    expect(inferSafeCommandPath(["social", "x", "post", "very secret text", "--json"])).toBe("autocli social x post");
-    expect(inferSafeCommandPath(["search", "very secret text", "--json"])).toBe("autocli search");
-    expect(inferSafeCommandPath(["jobs", "download", "job-secret-id"])).toBe("autocli jobs download");
+    expect(buildActionLogCommandLabel({ commandPath: "mikacli logs show" })).toBe("logs/show");
+    expect(buildActionLogCommandLabel({ commandPath: "mikacli jobs download" })).toBe("jobs/download");
+    expect(summarizeCommandPath("mikacli social youtube upload")).toBe("youtube/upload");
+    expect(inferSafeCommandPath(["social", "x", "post", "very secret text", "--json"])).toBe("mikacli social x post");
+    expect(inferSafeCommandPath(["search", "very secret text", "--json"])).toBe("mikacli search");
+    expect(inferSafeCommandPath(["jobs", "download", "job-secret-id"])).toBe("mikacli jobs download");
   });
 });

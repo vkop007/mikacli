@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export const CHEAT_BASE_URL = "https://cht.sh";
 export const CHEAT_MAX_SNIPPET_LENGTH = 4000;
@@ -16,7 +16,7 @@ export function normalizeCheatShell(value?: string): CheatShell | undefined {
     return normalized as CheatShell;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "CHEAT_INVALID_SHELL",
     `Unknown shell "${value}". Supported shells: ${CHEAT_SHELLS.join(", ")}.`,
     {
@@ -35,7 +35,7 @@ export function normalizeCheatLanguage(value?: string): string | undefined {
 
   const normalized = value.trim().toLowerCase();
   if (normalized.includes("/")) {
-    throw new AutoCliError("CHEAT_INVALID_LANGUAGE", "Language cannot contain '/'.");
+    throw new MikaCliError("CHEAT_INVALID_LANGUAGE", "Language cannot contain '/'.");
   }
 
   return normalized;
@@ -44,7 +44,7 @@ export function normalizeCheatLanguage(value?: string): string | undefined {
 export function normalizeCheatTopic(value: string): string {
   const normalized = value.trim();
   if (!normalized) {
-    throw new AutoCliError("CHEAT_TOPIC_REQUIRED", "Provide a cheat topic.");
+    throw new MikaCliError("CHEAT_TOPIC_REQUIRED", "Provide a cheat topic.");
   }
 
   return normalized;

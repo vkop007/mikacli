@@ -87,10 +87,10 @@ export const bandcampPlatformDefinition: PlatformDefinition = {
     }),
   ],
   examples: [
-    'autocli bandcamp search "radiohead"',
-    'autocli bandcamp search "radiohead" --type album',
-    "autocli bandcamp album https://radiohead.bandcamp.com/album/in-rainbows",
-    "autocli bandcamp track https://radiohead.bandcamp.com/track/15-step",
-    "autocli bandcamp artist https://radiohead.bandcamp.com/music",
+    'mikacli bandcamp search "radiohead"',
+    'mikacli bandcamp search "radiohead" --type album',
+    "mikacli bandcamp album https://radiohead.bandcamp.com/album/in-rainbows",
+    "mikacli bandcamp track https://radiohead.bandcamp.com/track/15-step",
+    "mikacli bandcamp artist https://radiohead.bandcamp.com/music",
   ],
 };

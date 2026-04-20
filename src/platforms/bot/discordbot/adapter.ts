@@ -1,5 +1,5 @@
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { readFile } from "node:fs/promises";
 import type {
   AdapterActionResult,
@@ -59,7 +59,7 @@ export class DiscordBotAdapter implements PlatformAdapter {
     const identity = await this.inspectIdentity(api);
 
     if (identity.status.state === "expired") {
-      throw new AutoCliError("DISCORD_BOT_TOKEN_INVALID", identity.status.message ?? "Discord bot token is invalid.", {
+      throw new MikaCliError("DISCORD_BOT_TOKEN_INVALID", identity.status.message ?? "Discord bot token is invalid.", {
         details: {
           platform: this.platform,
         },
@@ -324,7 +324,7 @@ export class DiscordBotAdapter implements PlatformAdapter {
   }
 
   async postMedia(_input: PostMediaInput): Promise<AdapterActionResult> {
-    throw this.unsupported("postMedia", "Discord bot posting does not support media uploads in AutoCLI yet.");
+    throw this.unsupported("postMedia", "Discord bot posting does not support media uploads in MikaCLI yet.");
   }
 
   async postText(_input: TextPostInput): Promise<AdapterActionResult> {
@@ -375,7 +375,7 @@ export class DiscordBotAdapter implements PlatformAdapter {
         },
       };
     } catch (error) {
-      if (error instanceof AutoCliError) {
+      if (error instanceof MikaCliError) {
         if (error.code === "DISCORD_UNAUTHORIZED" || error.code === "DISCORD_FORBIDDEN") {
           return {
             status: {
@@ -569,11 +569,11 @@ export class DiscordBotAdapter implements PlatformAdapter {
       return normalizeDiscordBotToken(token);
     }
 
-    throw new AutoCliError("DISCORD_BOT_TOKEN_REQUIRED", "Provide a Discord bot token with --token.");
+    throw new MikaCliError("DISCORD_BOT_TOKEN_REQUIRED", "Provide a Discord bot token with --token.");
   }
 
-  private unsupported(action: string, message: string): AutoCliError {
-    return new AutoCliError("DISCORD_BOT_UNSUPPORTED", message, {
+  private unsupported(action: string, message: string): MikaCliError {
+    return new MikaCliError("DISCORD_BOT_UNSUPPORTED", message, {
       details: {
         platform: this.platform,
         action,

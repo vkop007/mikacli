@@ -2,13 +2,13 @@ import type { Command } from "commander";
 import type { Ora } from "ora";
 
 import type { AdapterActionResult, CommandContext } from "../types.js";
-import { errorToJson, isAutoCliError } from "../errors.js";
+import { errorToJson, isMikaCliError } from "../errors.js";
 import { printJson } from "./output.js";
 import { setInteractiveProgressHandler } from "./interactive-progress.js";
 import { appendActionLog, buildActionLogCommandLabel, markActionLogCaptured } from "./action-log.js";
 import { transformOutput, validateSelectFields } from "../core/output/output-transform.js";
 import { formatOutput } from "../core/output/format-transformer.js";
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 let currentCommandPath: string | undefined;
 let currentCommandContext: Partial<CommandContext> | undefined;
@@ -36,7 +36,7 @@ export function resolveCommandContext(command: Command): CommandContext {
   const format = options.format as CommandContext['format'] | undefined;
   const validFormats = ['json', 'csv', 'table', 'yaml', 'markdown', 'html'];
   if (format && !validFormats.includes(format)) {
-    throw new AutoCliError("INVALID_FORMAT", `Unknown format: ${format}. Valid options: ${validFormats.join(', ')}`);
+    throw new MikaCliError("INVALID_FORMAT", `Unknown format: ${format}. Valid options: ${validFormats.join(', ')}`);
   }
 
   const context: CommandContext = {
@@ -70,7 +70,7 @@ export function printActionResult(result: AdapterActionResult, json: boolean, co
     if (effectiveContext.select && result.data) {
       const validation = validateSelectFields(result.data, effectiveContext.select);
       if (!validation.valid) {
-        throw new AutoCliError("INVALID_FIELD_SELECTION", `Field(s) not found in results: ${validation.missingFields?.join(", ")}`, {
+        throw new MikaCliError("INVALID_FIELD_SELECTION", `Field(s) not found in results: ${validation.missingFields?.join(", ")}`, {
           details: {
             requested_fields: effectiveContext.select,
             missing_fields: validation.missingFields,
@@ -259,7 +259,7 @@ async function recordFailedAction(
   },
 ): Promise<void> {
   const serialized = errorToJson(error);
-  const details = isAutoCliError(error) ? error.details : undefined;
+  const details = isMikaCliError(error) ? error.details : undefined;
 
   await appendActionLog({
     startedAt: input.startedAt.toISOString(),

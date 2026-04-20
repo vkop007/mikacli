@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { DocsApiClient } from "./client.js";
 import { BaseGooglePlatformAdapter } from "../shared/base.js";
 
@@ -89,7 +89,7 @@ export class DocsAdapter extends BaseGooglePlatformAdapter {
     const active = await this.ensureActiveConnection(input.account);
     const text = input.text.trim();
     if (!text) {
-      throw new AutoCliError("GOOGLE_DOCS_TEXT_REQUIRED", "Google Docs append-text requires text.");
+      throw new MikaCliError("GOOGLE_DOCS_TEXT_REQUIRED", "Google Docs append-text requires text.");
     }
 
     const result = await this.createClient(active.accessToken).appendText({
@@ -121,7 +121,7 @@ export class DocsAdapter extends BaseGooglePlatformAdapter {
   }): Promise<AdapterActionResult> {
     const active = await this.ensureActiveConnection(input.account);
     if (!input.search.trim()) {
-      throw new AutoCliError("GOOGLE_DOCS_SEARCH_REQUIRED", "Google Docs replace-text requires --search.");
+      throw new MikaCliError("GOOGLE_DOCS_SEARCH_REQUIRED", "Google Docs replace-text requires --search.");
     }
 
     const result = await this.createClient(active.accessToken).replaceText({

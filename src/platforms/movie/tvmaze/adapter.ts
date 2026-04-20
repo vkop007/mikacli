@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { decodeHtml, trimSummary } from "../shared/helpers.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -74,7 +74,7 @@ export class TvMazeAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("TVMAZE_QUERY_REQUIRED", "Provide a show query to search TVMaze.");
+      throw new MikaCliError("TVMAZE_QUERY_REQUIRED", "Provide a show query to search TVMaze.");
     }
 
     const response = await this.fetchJson<TvMazeSearchItem[]>(
@@ -102,7 +102,7 @@ export class TvMazeAdapter {
   async titleInfo(input: { target: string }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("TVMAZE_TARGET_REQUIRED", "Provide a TVMaze show URL, show ID, or query.");
+      throw new MikaCliError("TVMAZE_TARGET_REQUIRED", "Provide a TVMaze show URL, show ID, or query.");
     }
 
     const show = await this.resolveShow(target);
@@ -125,7 +125,7 @@ export class TvMazeAdapter {
   async episodes(input: { target: string; season?: number; limit?: number }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("TVMAZE_TARGET_REQUIRED", "Provide a TVMaze show URL, show ID, or query.");
+      throw new MikaCliError("TVMAZE_TARGET_REQUIRED", "Provide a TVMaze show URL, show ID, or query.");
     }
 
     const show = await this.resolveShow(target);
@@ -174,12 +174,12 @@ export class TvMazeAdapter {
     const response = await fetch(url, {
       headers: {
         accept: "application/json",
-        "user-agent": "AutoCLI/1.0 (+https://www.tvmaze.com)",
+        "user-agent": "MikaCLI/1.0 (+https://www.tvmaze.com)",
       },
     });
 
     if (!response.ok) {
-      throw new AutoCliError("TVMAZE_REQUEST_FAILED", "TVMaze request failed.", {
+      throw new MikaCliError("TVMAZE_REQUEST_FAILED", "TVMaze request failed.", {
         details: {
           status: response.status,
           statusText: response.statusText,

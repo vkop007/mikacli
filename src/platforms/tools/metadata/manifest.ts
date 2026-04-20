@@ -9,9 +9,9 @@ import { printMetadataResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli metadata https://example.com",
-  "autocli metadata openai.com",
-  "autocli metadata https://example.com --json",
+  "mikacli metadata https://example.com",
+  "mikacli metadata openai.com",
+  "mikacli metadata https://example.com --json",
 ] as const;
 
 function buildMetadataCommand(options: PlatformCommandBuildOptions = {}): Command {

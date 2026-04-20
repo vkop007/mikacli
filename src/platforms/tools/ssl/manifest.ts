@@ -9,9 +9,9 @@ import { printSslResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli ssl https://example.com",
-  "autocli ssl openai.com",
-  "autocli ssl https://example.com --json",
+  "mikacli ssl https://example.com",
+  "mikacli ssl openai.com",
+  "mikacli ssl https://example.com --json",
 ] as const;
 
 function buildSslCommand(options: PlatformCommandBuildOptions = {}): Command {

@@ -2,7 +2,7 @@
 
 ## Supported Version
 
-Security fixes are applied to the latest mainline version of AutoCLI.
+Security fixes are applied to the latest mainline version of MikaCLI.
 
 ## Reporting a Vulnerability
 

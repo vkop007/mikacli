@@ -14,7 +14,7 @@ export function createGrokCapabilities(adapter: GrokAdapter): readonly PlatformC
   const loginCapability = createAdapterActionCapability({
     id: "login",
     command: "login",
-    description: "Save the Grok session for future CLI use. With no auth flags, AutoCLI opens browser login by default",
+    description: "Save the Grok session for future CLI use. With no auth flags, MikaCLI opens browser login by default",
     spinnerText: "Saving Grok session...",
     successMessage: "Grok session saved.",
     options: createCookieLoginOptions(),

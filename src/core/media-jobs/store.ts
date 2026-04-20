@@ -8,7 +8,7 @@ import {
   ensureParentDirectory,
   sanitizeAccountName,
 } from "../../config.js";
-import { AutoCliError } from "../../errors.js";
+import { MikaCliError } from "../../errors.js";
 import { isPlatform } from "../../platforms/config.js";
 
 import type { Platform } from "../../types.js";
@@ -38,7 +38,7 @@ export interface MediaJobRecord {
 const MediaJobRecordSchema = {
   parse(input: unknown): MediaJobRecord {
     if (!input || typeof input !== "object") {
-      throw new AutoCliError("INVALID_MEDIA_JOB_FILE", "Media job file is not a valid JSON object.");
+      throw new MikaCliError("INVALID_MEDIA_JOB_FILE", "Media job file is not a valid JSON object.");
     }
 
     const record = input as Partial<MediaJobRecord>;
@@ -53,7 +53,7 @@ const MediaJobRecordSchema = {
       typeof record.updatedAt !== "string" ||
       typeof record.status !== "string"
     ) {
-      throw new AutoCliError("INVALID_MEDIA_JOB_FILE", "Media job file is missing required fields.");
+      throw new MikaCliError("INVALID_MEDIA_JOB_FILE", "Media job file is missing required fields.");
     }
 
     return {
@@ -124,7 +124,7 @@ export class MediaJobStore {
   async loadJob(platform: Platform, jobId: string): Promise<{ job: MediaJobRecord; path: string }> {
     const path = this.getJobPath(platform, jobId);
     await access(path, constants.R_OK).catch(() => {
-      throw new AutoCliError("MEDIA_JOB_NOT_FOUND", `No saved ${platform} job was found for ${jobId}.`, {
+      throw new MikaCliError("MEDIA_JOB_NOT_FOUND", `No saved ${platform} job was found for ${jobId}.`, {
         details: {
           platform,
           jobId,
@@ -156,7 +156,7 @@ export class MediaJobStore {
     try {
       return await this.loadJob(platform, normalizedTarget);
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "MEDIA_JOB_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "MEDIA_JOB_NOT_FOUND") {
         throw error;
       }
     }

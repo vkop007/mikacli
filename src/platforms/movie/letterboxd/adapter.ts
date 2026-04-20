@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { fetchPublicHtmlDocument } from "../../tools/shared/html.js";
 import { WebSearchClient } from "../../tools/websearch/client.js";
 import {
@@ -25,7 +25,7 @@ export class LetterboxdAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("LETTERBOXD_QUERY_REQUIRED", "Provide a Letterboxd query to search.");
+      throw new MikaCliError("LETTERBOXD_QUERY_REQUIRED", "Provide a Letterboxd query to search.");
     }
 
     const limit = normalizeLimit(input.limit, 5, 25);
@@ -67,7 +67,7 @@ export class LetterboxdAdapter {
   async profileInfo(input: { target: string }): Promise<AdapterActionResult> {
     const username = normalizeLetterboxdUsername(input.target);
     if (!username) {
-      throw new AutoCliError("LETTERBOXD_PROFILE_TARGET_INVALID", "Provide a Letterboxd profile URL or username.");
+      throw new MikaCliError("LETTERBOXD_PROFILE_TARGET_INVALID", "Provide a Letterboxd profile URL or username.");
     }
 
     const loaded = await this.fetchHtml(buildLetterboxdProfileUrl(username));
@@ -90,7 +90,7 @@ export class LetterboxdAdapter {
   async diary(input: { target: string; limit?: number }): Promise<AdapterActionResult> {
     const username = normalizeLetterboxdUsername(input.target);
     if (!username) {
-      throw new AutoCliError("LETTERBOXD_PROFILE_TARGET_INVALID", "Provide a Letterboxd profile URL or username.");
+      throw new MikaCliError("LETTERBOXD_PROFILE_TARGET_INVALID", "Provide a Letterboxd profile URL or username.");
     }
 
     const limit = normalizeLimit(input.limit, 5, 50);
@@ -120,7 +120,7 @@ export class LetterboxdAdapter {
     const urls = await this.searchFilmUrls(target, 1);
     const first = urls[0];
     if (!first) {
-      throw new AutoCliError("LETTERBOXD_TITLE_NOT_FOUND", "Letterboxd could not find a matching film.", {
+      throw new MikaCliError("LETTERBOXD_TITLE_NOT_FOUND", "Letterboxd could not find a matching film.", {
         details: {
           target,
         },
@@ -210,7 +210,7 @@ export class LetterboxdAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("LETTERBOXD_REQUEST_FAILED", "Failed to reach Letterboxd.", {
+      throw new MikaCliError("LETTERBOXD_REQUEST_FAILED", "Failed to reach Letterboxd.", {
         cause: error,
         details: {
           url,
@@ -219,7 +219,7 @@ export class LetterboxdAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("LETTERBOXD_REQUEST_FAILED", "Letterboxd request failed.", {
+      throw new MikaCliError("LETTERBOXD_REQUEST_FAILED", "Letterboxd request failed.", {
         details: {
           url,
           status: response.status,

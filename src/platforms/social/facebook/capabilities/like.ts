@@ -10,7 +10,7 @@ export const facebookLikeCapability = createAdapterActionCapability({
   successMessage: "Facebook post liked.",
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved Facebook session" },
-    { flags: "--browser", description: "Force the like through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    { flags: "--browser", description: "Force the like through the shared MikaCLI browser profile instead of the invisible browser-backed path" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { normalizeSocialLimit } from "../shared/options.js";
 import {
   buildMastodonProfileUrl,
@@ -57,7 +57,7 @@ export class MastodonService {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("MASTODON_QUERY_REQUIRED", "Provide a Mastodon query to search.");
+      throw new MikaCliError("MASTODON_QUERY_REQUIRED", "Provide a Mastodon query to search.");
     }
 
     const limit = normalizeSocialLimit(input.limit, 5, 25);
@@ -128,7 +128,7 @@ export class MastodonService {
     const account = await this.resolveAccount(resolved);
     const profile = mapAccount(account);
     if (!profile) {
-      throw new AutoCliError("MASTODON_PROFILE_INVALID", "Mastodon returned an unreadable profile.");
+      throw new MikaCliError("MASTODON_PROFILE_INVALID", "Mastodon returned an unreadable profile.");
     }
 
     return {
@@ -184,7 +184,7 @@ export class MastodonService {
     const context = await this.fetchJson<MastodonThreadContext>(`/api/v1/statuses/${encodeURIComponent(resolved.statusId)}/context`, {}, resolved.origin);
     const thread = mapStatus(status, resolved.origin);
     if (!thread) {
-      throw new AutoCliError("MASTODON_THREAD_INVALID", "Mastodon returned an unreadable thread.");
+      throw new MikaCliError("MASTODON_THREAD_INVALID", "Mastodon returned an unreadable thread.");
     }
 
     const replies = (context.descendants ?? [])
@@ -221,7 +221,7 @@ export class MastodonService {
           return account;
         }
       } catch (error) {
-        if (!(error instanceof AutoCliError) || error.details?.status !== 404) {
+        if (!(error instanceof MikaCliError) || error.details?.status !== 404) {
           throw error;
         }
       }
@@ -241,14 +241,14 @@ export class MastodonService {
             return lookup;
           }
         } catch (error) {
-          if (!(error instanceof AutoCliError) || error.details?.status !== 404) {
+          if (!(error instanceof MikaCliError) || error.details?.status !== 404) {
             throw error;
           }
         }
       }
     }
 
-    throw new AutoCliError("MASTODON_PROFILE_NOT_FOUND", "Mastodon could not find a matching profile.", {
+    throw new MikaCliError("MASTODON_PROFILE_NOT_FOUND", "Mastodon could not find a matching profile.", {
       details: {
         target: input.handle ?? input.url ?? input.baseUrl,
       },
@@ -266,11 +266,11 @@ export class MastodonService {
         headers: {
           accept: "application/json",
           "accept-language": "en-US,en;q=0.9",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("MASTODON_REQUEST_FAILED", "Failed to reach Mastodon.", {
+      throw new MikaCliError("MASTODON_REQUEST_FAILED", "Failed to reach Mastodon.", {
         cause: error,
         details: {
           url: url.toString(),
@@ -280,7 +280,7 @@ export class MastodonService {
 
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("MASTODON_REQUEST_FAILED", `Mastodon request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("MASTODON_REQUEST_FAILED", `Mastodon request failed with ${response.status} ${response.statusText}.`, {
         details: {
           url: url.toString(),
           status: response.status,
@@ -293,7 +293,7 @@ export class MastodonService {
     try {
       return JSON.parse(text) as T;
     } catch (error) {
-      throw new AutoCliError("MASTODON_RESPONSE_INVALID", "Mastodon returned invalid JSON.", {
+      throw new MikaCliError("MASTODON_RESPONSE_INVALID", "Mastodon returned invalid JSON.", {
         cause: error,
         details: {
           url: url.toString(),

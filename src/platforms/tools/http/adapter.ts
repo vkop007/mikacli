@@ -4,7 +4,7 @@ import path from "node:path";
 import makeFetchCookie from "fetch-cookie";
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   PLATFORM_CONFIG,
   PLATFORM_NAMES,
@@ -157,7 +157,7 @@ const SESSION_CAPABLE_PLATFORMS = PLATFORM_NAMES.filter((platform) => {
 
 const DEFAULT_CAPTURE_TIMEOUT_SECONDS = 60;
 const DEFAULT_REQUEST_TIMEOUT_MS = 20_000;
-const USER_AGENT = "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/vkop007/autocli)";
+const USER_AGENT = "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/vkop007/mikacli)";
 
 export class SessionHttpAdapter {
   readonly platform = "http" as Platform;
@@ -298,7 +298,7 @@ export class SessionHttpAdapter {
     }
 
     if (!resolved.session) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "TOOLS_HTTP_SESSION_REQUIRED",
         `No saved session was found for ${resolved.displayName}. Log in first or retry with --browser to borrow cookies from the shared browser profile.`,
       );
@@ -545,7 +545,7 @@ export class SessionHttpAdapter {
     const platformOverride = input.platformOverride?.trim();
     if (platformOverride) {
       if (!isPlatform(platformOverride)) {
-        throw new AutoCliError("TOOLS_HTTP_PLATFORM_INVALID", `Unknown platform "${platformOverride}".`);
+        throw new MikaCliError("TOOLS_HTTP_PLATFORM_INVALID", `Unknown platform "${platformOverride}".`);
       }
 
       return this.resolvePlatformTarget(platformOverride, input.rawTarget, input.account);
@@ -553,7 +553,7 @@ export class SessionHttpAdapter {
 
     const rawTarget = input.rawTarget.trim();
     if (!rawTarget) {
-      throw new AutoCliError("TOOLS_HTTP_TARGET_REQUIRED", "Provide a provider name, domain, or URL.");
+      throw new MikaCliError("TOOLS_HTTP_TARGET_REQUIRED", "Provide a provider name, domain, or URL.");
     }
 
     if (isPlatform(rawTarget)) {
@@ -576,7 +576,7 @@ export class SessionHttpAdapter {
       }
 
       if (input.requireResolvablePlatform) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "TOOLS_HTTP_TARGET_AMBIGUOUS",
           `The target "${rawTarget}" matches multiple providers. Re-run with --platform ${candidates[0]} or another explicit provider.`,
           {
@@ -590,9 +590,9 @@ export class SessionHttpAdapter {
     }
 
     if (input.requireResolvablePlatform) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "TOOLS_HTTP_PLATFORM_REQUIRED",
-        `AutoCLI could not resolve "${rawTarget}" to a saved-session provider. Pass a provider name like "github" or use --platform.`,
+        `MikaCLI could not resolve "${rawTarget}" to a saved-session provider. Pass a provider name like "github" or use --platform.`,
       );
     }
 
@@ -745,7 +745,7 @@ export class SessionHttpAdapter {
     }
 
     if (!input.resolved.session) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "TOOLS_HTTP_SESSION_REQUIRED",
         `No saved session was found for ${input.resolved.displayName}. Log in first or retry with --browser to borrow cookies from the shared browser profile.`,
       );
@@ -782,7 +782,7 @@ export class SessionHttpAdapter {
       redirect: "follow",
       signal: AbortSignal.timeout(input.timeoutMs),
     }).catch((error) => {
-      throw new AutoCliError("TOOLS_HTTP_REQUEST_FAILED", "Failed to perform the authenticated HTTP request.", {
+      throw new MikaCliError("TOOLS_HTTP_REQUEST_FAILED", "Failed to perform the authenticated HTTP request.", {
         cause: error,
         details: {
           requestUrl: input.requestUrl,
@@ -836,7 +836,7 @@ export class SessionHttpAdapter {
       redirect: "follow",
       signal: AbortSignal.timeout(input.timeoutMs),
     }).catch((error) => {
-      throw new AutoCliError("TOOLS_HTTP_REQUEST_FAILED", "Failed to perform the authenticated download request.", {
+      throw new MikaCliError("TOOLS_HTTP_REQUEST_FAILED", "Failed to perform the authenticated download request.", {
         cause: error,
         details: {
           requestUrl: input.requestUrl,
@@ -944,7 +944,7 @@ function getSessionBaseUrl(platform: Platform, session?: PlatformSession): strin
 export function buildRequestUrl(pathOrUrl: string, baseUrl: string): string {
   const trimmed = pathOrUrl.trim();
   if (!trimmed) {
-    throw new AutoCliError("TOOLS_HTTP_REQUEST_PATH_REQUIRED", "Provide a request path or full URL.");
+    throw new MikaCliError("TOOLS_HTTP_REQUEST_PATH_REQUIRED", "Provide a request path or full URL.");
   }
 
   if (/^https?:\/\//u.test(trimmed)) {
@@ -957,14 +957,14 @@ export function buildRequestUrl(pathOrUrl: string, baseUrl: string): string {
 
 function parseRequestBody(body: string | undefined, jsonBody: string | undefined): RequestBody {
   if (body && jsonBody) {
-    throw new AutoCliError("TOOLS_HTTP_BODY_CONFLICT", "Use either --body or --json-body, not both.");
+    throw new MikaCliError("TOOLS_HTTP_BODY_CONFLICT", "Use either --body or --json-body, not both.");
   }
 
   if (jsonBody) {
     try {
       JSON.parse(jsonBody);
     } catch (error) {
-      throw new AutoCliError("TOOLS_HTTP_JSON_BODY_INVALID", "The value passed to --json-body is not valid JSON.", {
+      throw new MikaCliError("TOOLS_HTTP_JSON_BODY_INVALID", "The value passed to --json-body is not valid JSON.", {
         cause: error,
       });
     }
@@ -1029,13 +1029,13 @@ async function buildRequestHeaders(input: {
   for (const headerInput of input.headerInputs) {
     const separator = headerInput.indexOf(":");
     if (separator < 1) {
-      throw new AutoCliError("TOOLS_HTTP_HEADER_INVALID", `Invalid header "${headerInput}". Use "Name: value".`);
+      throw new MikaCliError("TOOLS_HTTP_HEADER_INVALID", `Invalid header "${headerInput}". Use "Name: value".`);
     }
 
     const name = headerInput.slice(0, separator).trim().toLowerCase();
     const value = headerInput.slice(separator + 1).trim();
     if (!name) {
-      throw new AutoCliError("TOOLS_HTTP_HEADER_INVALID", `Invalid header "${headerInput}". Use "Name: value".`);
+      throw new MikaCliError("TOOLS_HTTP_HEADER_INVALID", `Invalid header "${headerInput}". Use "Name: value".`);
     }
     headers[name] = value;
   }
@@ -1062,7 +1062,7 @@ function parseResponseBody(body: string, contentType: string | null): unknown {
 function normalizeHttpMethod(method: string): string {
   const normalized = method.trim().toUpperCase();
   if (!normalized) {
-    throw new AutoCliError("TOOLS_HTTP_METHOD_REQUIRED", "Provide an HTTP method like GET or POST.");
+    throw new MikaCliError("TOOLS_HTTP_METHOD_REQUIRED", "Provide an HTTP method like GET or POST.");
   }
   return normalized;
 }
@@ -1073,7 +1073,7 @@ function normalizeCaptureGroupBy(value: SessionHttpCaptureInput["groupBy"]): Ses
     return normalized;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "TOOLS_HTTP_CAPTURE_GROUP_INVALID",
     `Unsupported capture group value "${value}". Use endpoint, full-url, method, or status.`,
   );
@@ -1219,7 +1219,7 @@ function summarizeStorageEntries(storage: Record<string, string>): Array<Record<
 function resolveDownloadOutputPath(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("TOOLS_HTTP_DOWNLOAD_OUTPUT_REQUIRED", "Use --output <path> to save the downloaded response.");
+    throw new MikaCliError("TOOLS_HTTP_DOWNLOAD_OUTPUT_REQUIRED", "Use --output <path> to save the downloaded response.");
   }
 
   return path.resolve(trimmed);
@@ -1233,7 +1233,7 @@ function parseGraphqlVariables(value: string | undefined): unknown {
   try {
     return JSON.parse(value);
   } catch (error) {
-    throw new AutoCliError("TOOLS_HTTP_GRAPHQL_VARIABLES_INVALID", "The value passed to --variables is not valid JSON.", {
+    throw new MikaCliError("TOOLS_HTTP_GRAPHQL_VARIABLES_INVALID", "The value passed to --variables is not valid JSON.", {
       cause: error,
     });
   }

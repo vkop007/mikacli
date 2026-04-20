@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -49,7 +49,7 @@ export const sitemapAdapter = new SitemapAdapter();
 export function normalizeSitemapUrl(value: string): string {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new AutoCliError("SITEMAP_URL_REQUIRED", "Sitemap URL cannot be empty.");
+    throw new MikaCliError("SITEMAP_URL_REQUIRED", "Sitemap URL cannot be empty.");
   }
 
   try {
@@ -122,18 +122,18 @@ async function fetchSitemapXml(url: string): Promise<string> {
       signal: AbortSignal.timeout(12000),
       headers: {
         accept: "application/xml,text/xml,application/xhtml+xml,text/plain;q=0.9,*/*;q=0.8",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("SITEMAP_REQUEST_FAILED", "Unable to reach the sitemap URL.", {
+    throw new MikaCliError("SITEMAP_REQUEST_FAILED", "Unable to reach the sitemap URL.", {
       details: { url },
       cause: error,
     });
   }
 
   if (!response.ok) {
-    throw new AutoCliError("SITEMAP_REQUEST_FAILED", `Sitemap request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("SITEMAP_REQUEST_FAILED", `Sitemap request failed with ${response.status} ${response.statusText}.`, {
       details: { url, status: response.status, statusText: response.statusText },
     });
   }

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 export type CryptoLookupInput = {
@@ -54,7 +54,7 @@ export class CryptoAdapter {
     const matches = await this.fetchCryptoSearch(asset);
     const best = selectBestCryptoMatch(asset, matches);
     if (!best) {
-      throw new AutoCliError("CRYPTO_NOT_FOUND", `Could not resolve crypto asset "${asset}".`);
+      throw new MikaCliError("CRYPTO_NOT_FOUND", `Could not resolve crypto asset "${asset}".`);
     }
 
     return best;
@@ -102,18 +102,18 @@ export class CryptoAdapter {
         signal: AbortSignal.timeout(15000),
         headers: {
           accept: "application/json",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("CRYPTO_LOOKUP_FAILED", "Unable to reach the crypto lookup service.", {
+      throw new MikaCliError("CRYPTO_LOOKUP_FAILED", "Unable to reach the crypto lookup service.", {
         cause: error,
         details: { url: url.toString() },
       });
     }
 
     if (!response.ok) {
-      throw new AutoCliError("CRYPTO_LOOKUP_FAILED", `Crypto lookup failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("CRYPTO_LOOKUP_FAILED", `Crypto lookup failed with ${response.status} ${response.statusText}.`, {
         details: {
           url: url.toString(),
           status: response.status,
@@ -147,7 +147,7 @@ export class CryptoAdapter {
   private async fetchPrice(symbol: string, vsCurrency: string): Promise<{ price: number; change24h?: number; marketCap?: number; source: string }> {
     const price = await this.fetchPriceMaybe(symbol, vsCurrency);
     if (!price) {
-      throw new AutoCliError("CRYPTO_PRICE_NOT_FOUND", `Crypto price not found for "${symbol}".`);
+      throw new MikaCliError("CRYPTO_PRICE_NOT_FOUND", `Crypto price not found for "${symbol}".`);
     }
 
     return price;
@@ -166,18 +166,18 @@ export class CryptoAdapter {
         signal: AbortSignal.timeout(12000),
         headers: {
           accept: "application/json",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("CRYPTO_LOOKUP_FAILED", "Unable to reach the crypto price service.", {
+      throw new MikaCliError("CRYPTO_LOOKUP_FAILED", "Unable to reach the crypto price service.", {
         cause: error,
         details: { url: url.toString() },
       });
     }
 
     if (!response.ok) {
-      throw new AutoCliError("CRYPTO_LOOKUP_FAILED", `Crypto price lookup failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("CRYPTO_LOOKUP_FAILED", `Crypto price lookup failed with ${response.status} ${response.statusText}.`, {
         details: {
           url: url.toString(),
           status: response.status,
@@ -213,7 +213,7 @@ export const cryptoAdapter = new CryptoAdapter();
 export function normalizeCryptoAsset(value: string): string {
   const asset = value.trim().toLowerCase();
   if (!asset) {
-    throw new AutoCliError("CRYPTO_ASSET_REQUIRED", "Crypto asset cannot be empty.");
+    throw new MikaCliError("CRYPTO_ASSET_REQUIRED", "Crypto asset cannot be empty.");
   }
 
   return asset;
@@ -222,7 +222,7 @@ export function normalizeCryptoAsset(value: string): string {
 export function normalizeCryptoCurrency(value?: string): string {
   const currency = (value ?? "usd").trim().toLowerCase();
   if (!currency) {
-    throw new AutoCliError("CRYPTO_CURRENCY_REQUIRED", "Crypto quote currency cannot be empty.");
+    throw new MikaCliError("CRYPTO_CURRENCY_REQUIRED", "Crypto quote currency cannot be empty.");
   }
 
   return currency;

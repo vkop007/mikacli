@@ -15,7 +15,7 @@ import {
   getSessionPath,
   sanitizeAccountName,
 } from "../config.js";
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import { getPlatformCookieDomain, getPlatformHomeUrl, isPlatform, PLATFORM_NAMES } from "../platforms/config.js";
 import { captureBrowserLogin, type BrowserLoginCapture } from "./browser-cookie-login.js";
 import type { Platform, PlatformSession, SessionSource } from "../types.js";
@@ -92,7 +92,7 @@ export class CookieManager {
     ].filter(Boolean);
 
     if (providedInputs.length !== 1) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_LOGIN_INPUT",
         "Provide exactly one of --cookies, --cookie-string, --cookie-json, or --browser.",
         {
@@ -172,7 +172,7 @@ export class CookieManager {
     const sessionPath = getSessionPath(platform, resolvedAccount);
 
     await access(sessionPath, constants.R_OK).catch(() => {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "SESSION_NOT_FOUND",
         `No saved ${platform} session found for account "${resolvedAccount}".`,
         {
@@ -237,7 +237,7 @@ export class CookieManager {
     try {
       parsed = JSON.parse(input);
     } catch (error) {
-      throw new AutoCliError("INVALID_COOKIE_JSON", "Failed to parse cookie JSON.", {
+      throw new MikaCliError("INVALID_COOKIE_JSON", "Failed to parse cookie JSON.", {
         cause: error,
       });
     }
@@ -253,7 +253,7 @@ export class CookieManager {
         : null;
 
     if (!rawCookies) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_COOKIE_JSON",
         "Cookie JSON must be a cookie jar export or an array of cookie objects.",
       );
@@ -270,7 +270,7 @@ export class CookieManager {
       .filter(Boolean);
 
     if (pairs.length === 0) {
-      throw new AutoCliError("INVALID_COOKIE_STRING", "Cookie string is empty.");
+      throw new MikaCliError("INVALID_COOKIE_STRING", "Cookie string is empty.");
     }
 
     for (const pair of pairs) {
@@ -331,7 +331,7 @@ export class CookieManager {
 
     const cookies = await jar.getCookies(platformOrigin(platform));
     if (cookies.length === 0 && !jarContainsPlatformDomainCookies(jar, platform)) {
-      throw new AutoCliError("INVALID_COOKIE_FILE", "No usable cookies were found in the cookies.txt file.");
+      throw new MikaCliError("INVALID_COOKIE_FILE", "No usable cookies were found in the cookies.txt file.");
     }
 
     return jar;
@@ -365,7 +365,7 @@ export class CookieManager {
         const parsed = this.parseSessionFile(raw, path);
         sessions.push({ session: parsed, path });
       } catch (error) {
-        if (error instanceof AutoCliError && error.code === "SESSION_INVALID") {
+        if (error instanceof MikaCliError && error.code === "SESSION_INVALID") {
           continue;
         }
         throw error;
@@ -379,7 +379,7 @@ export class CookieManager {
     try {
       return SessionFileSchema.parse(JSON.parse(raw)) as PlatformSession;
     } catch (error) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "SESSION_INVALID",
         `Saved session file is corrupted: ${path}. Re-import cookies or remove the broken session file.`,
         {
@@ -446,7 +446,7 @@ export function createSessionFile(input: {
 export function serializeCookieJar(jar: CookieJar): SerializedCookieJar {
   const serialized = jar.toJSON();
   if (!serialized) {
-    throw new AutoCliError("COOKIE_SERIALIZATION_FAILED", "Failed to serialize the cookie jar.");
+    throw new MikaCliError("COOKIE_SERIALIZATION_FAILED", "Failed to serialize the cookie jar.");
   }
 
   return serialized;
@@ -458,7 +458,7 @@ export async function createCookieJarFromBrowserCookies(cookies: unknown[], fall
   for (const rawCookie of cookies) {
     const parsedCookie = BrowserCookieSchema.safeParse(rawCookie);
     if (!parsedCookie.success) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "INVALID_COOKIE_JSON",
         "Cookie JSON contains an unsupported cookie object.",
         {
@@ -517,7 +517,7 @@ function parseCookieExpiry(raw: string): Date | "Infinity" {
 
 async function readInputFile(path: string): Promise<string> {
   await access(path, constants.R_OK).catch(() => {
-    throw new AutoCliError("COOKIE_FILE_NOT_FOUND", `Cookie file not found or unreadable: ${path}`, {
+    throw new MikaCliError("COOKIE_FILE_NOT_FOUND", `Cookie file not found or unreadable: ${path}`, {
       details: { path },
     });
   });

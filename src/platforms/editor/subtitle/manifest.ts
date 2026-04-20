@@ -1,7 +1,7 @@
 import { Command } from "commander";
 
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
 import { printSubtitleEditorResult } from "./output.js";
@@ -10,13 +10,13 @@ import { subtitleEditorAdapter } from "./adapter.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli subtitle info ./captions.srt",
-  "autocli subtitle convert ./captions.srt --to vtt",
-  "autocli subtitle shift ./captions.vtt --by 2.5",
-  "autocli subtitle sync ./captions.vtt --by 2.5",
-  "autocli subtitle clean ./captions.srt",
-  "autocli subtitle merge ./chapter1.srt ./chapter2.srt",
-  "autocli subtitle burn ./movie.mp4 --subtitle ./captions.srt --output ./movie.subtitled.mp4",
+  "mikacli subtitle info ./captions.srt",
+  "mikacli subtitle convert ./captions.srt --to vtt",
+  "mikacli subtitle shift ./captions.vtt --by 2.5",
+  "mikacli subtitle sync ./captions.vtt --by 2.5",
+  "mikacli subtitle clean ./captions.srt",
+  "mikacli subtitle merge ./chapter1.srt ./chapter2.srt",
+  "mikacli subtitle burn ./movie.mp4 --subtitle ./captions.srt --output ./movie.subtitled.mp4",
 ] as const;
 
 function buildSubtitleEditorCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -196,7 +196,7 @@ function normalizeSubtitleFormat(value: string): "srt" | "vtt" {
     return normalized;
   }
 
-  throw new AutoCliError("SUBTITLE_FORMAT_INVALID", `Unsupported subtitle format "${value}".`, {
+  throw new MikaCliError("SUBTITLE_FORMAT_INVALID", `Unsupported subtitle format "${value}".`, {
     details: {
       supportedFormats: ["srt", "vtt"],
     },

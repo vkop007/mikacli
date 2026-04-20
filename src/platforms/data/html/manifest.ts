@@ -10,8 +10,8 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli data html text ./page.html",
-  "autocli data html to-markdown ./page.html --output ./page.md",
+  "mikacli data html text ./page.html",
+  "mikacli data html to-markdown ./page.html --output ./page.md",
 ] as const;
 
 function buildHtmlCommand(options: PlatformCommandBuildOptions = {}): Command {

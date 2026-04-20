@@ -7,7 +7,7 @@ import { Cookie, CookieJar } from "tough-cookie";
 import { ModuleClient, SessionClient } from "tlsclientwrapper";
 
 import { ensureParentDirectory, getCachePath } from "../../../config.js";
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { runFirstClassBrowserAction } from "../../../core/runtime/browser-action-runtime.js";
 import { normalizeWhitespace } from "../../data/shared/text.js";
 
@@ -256,7 +256,7 @@ export class GrokService {
         subscriptionTier: inspection.subscriptionTier,
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return {
           status: {
             state: "unknown",
@@ -293,7 +293,7 @@ export class GrokService {
       );
 
       if (!parsed.outputText) {
-        throw new AutoCliError("GROK_EMPTY_RESPONSE", "Grok returned an empty response.", {
+        throw new MikaCliError("GROK_EMPTY_RESPONSE", "Grok returned an empty response.", {
           details: {
             conversationId: parsed.conversationId,
             responseId: parsed.responseId,
@@ -343,7 +343,7 @@ export class GrokService {
       return await withGrokTlsSession(client.jar, async (session) => {
         const outputUrls = dedupeValues(input.outputUrls);
         if (outputUrls.length === 0) {
-          throw new AutoCliError(
+          throw new MikaCliError(
             "GROK_IMAGE_DOWNLOAD_UNAVAILABLE",
             "Grok did not provide any downloadable image asset URLs for this job.",
             {
@@ -473,7 +473,7 @@ export class GrokService {
         });
 
         if (!status.outputUrl) {
-          throw new AutoCliError(
+          throw new MikaCliError(
             "GROK_VIDEO_NOT_READY",
             "Grok has not exposed the final video asset URL yet. Run `grok video-wait` or `grok video-status` again later.",
             {
@@ -616,7 +616,7 @@ export class GrokService {
     });
 
     if (!parsed.outputText) {
-      throw new AutoCliError("GROK_EMPTY_RESPONSE", "Grok returned an empty response.", {
+      throw new MikaCliError("GROK_EMPTY_RESPONSE", "Grok returned an empty response.", {
         details: {
           conversationId: parsed.conversationId,
           responseId: parsed.responseId,
@@ -650,7 +650,7 @@ export class GrokService {
     });
     const outputUrls = resolveBrowserImagineImageUrls(generated);
     if (outputUrls.length === 0) {
-      throw new AutoCliError("GROK_IMAGE_GENERATION_FAILED", "Grok did not return any generated images.", {
+      throw new MikaCliError("GROK_IMAGE_GENERATION_FAILED", "Grok did not return any generated images.", {
         details: {
           outputText: generated.parsed?.outputText,
           prompt: input.prompt,
@@ -767,7 +767,7 @@ export class GrokService {
         },
         {
           source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for Grok: ${GROK_HOME_URL}`,
+          announceLabel: `Opening shared MikaCLI browser profile for Grok: ${GROK_HOME_URL}`,
         },
       ],
       actionFn: async (page) => {
@@ -822,7 +822,7 @@ export class GrokService {
         },
         {
           source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for Grok Imagine: ${GROK_IMAGINE_URL}`,
+          announceLabel: `Opening shared MikaCLI browser profile for Grok Imagine: ${GROK_IMAGINE_URL}`,
         },
       ],
       actionFn: async (page) => {
@@ -867,7 +867,7 @@ export class GrokService {
 
     const url = page.url().toLowerCase();
     if (url.includes("/login") || url.includes("/sign-in")) {
-      throw new AutoCliError("GROK_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into Grok. Run `autocli llm grok login --browser` first.");
+      throw new MikaCliError("GROK_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into Grok. Run `mikacli llm grok login --browser` first.");
     }
 
     const bodyText = normalizeWhitespace(await page.locator("body").innerText().catch(() => ""));
@@ -888,10 +888,10 @@ export class GrokService {
       const match = bodyText.match(pattern);
       if (match) {
         if (/sign in|log in/i.test(match[0])) {
-          throw new AutoCliError("GROK_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into Grok. Run `autocli llm grok login --browser` first.");
+          throw new MikaCliError("GROK_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into Grok. Run `mikacli llm grok login --browser` first.");
         }
 
-        throw new AutoCliError("GROK_BROWSER_ACTION_FAILED", match[0], {
+        throw new MikaCliError("GROK_BROWSER_ACTION_FAILED", match[0], {
           details: {
             url: page.url(),
           },
@@ -1118,10 +1118,10 @@ export function parseGrokConversationStream(stream: string): ParsedGrokConversat
   };
 }
 
-export function mapGrokError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+export function mapGrokError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     if (error.code === "HTTP_REQUEST_FAILED") {
-      return new AutoCliError("GROK_REQUEST_FAILED", fallbackMessage, {
+      return new MikaCliError("GROK_REQUEST_FAILED", fallbackMessage, {
         cause: error,
         details: error.details,
       });
@@ -1131,7 +1131,7 @@ export function mapGrokError(error: unknown, fallbackMessage: string): AutoCliEr
   }
 
   if (error instanceof Error) {
-    return new AutoCliError("GROK_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("GROK_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details: {
         message: error.message,
@@ -1139,7 +1139,7 @@ export function mapGrokError(error: unknown, fallbackMessage: string): AutoCliEr
     });
   }
 
-  return new AutoCliError("GROK_REQUEST_FAILED", fallbackMessage);
+  return new MikaCliError("GROK_REQUEST_FAILED", fallbackMessage);
 }
 
 function buildGrokHeaders(input: {
@@ -1296,13 +1296,13 @@ function parseGrokErrorEnvelope(body: string): GrokErrorEnvelope | undefined {
   }
 }
 
-function createGrokRequestError(status: number, body: string): AutoCliError {
+function createGrokRequestError(status: number, body: string): MikaCliError {
   const parsed = parseGrokErrorEnvelope(body);
   const upstreamCode = parsed?.error?.code;
   const upstreamMessage = (parsed?.error?.message ?? body.slice(0, 300)) || "Unknown Grok error.";
 
   if (status === 401) {
-    return new AutoCliError("GROK_SESSION_EXPIRED", "Grok session expired. Re-import cookies.", {
+    return new MikaCliError("GROK_SESSION_EXPIRED", "Grok session expired. Re-import cookies.", {
       details: {
         status,
         upstreamCode,
@@ -1312,7 +1312,7 @@ function createGrokRequestError(status: number, body: string): AutoCliError {
   }
 
   if (status === 403 && upstreamCode === 7) {
-    return new AutoCliError(
+    return new MikaCliError(
       "GROK_ANTI_BOT_BLOCKED",
       "Grok rejected the browserless request with its current anti-bot rules. The session appears valid in the web app, but Grok is blocking terminal prompts right now.",
       {
@@ -1326,7 +1326,7 @@ function createGrokRequestError(status: number, body: string): AutoCliError {
   }
 
   if (typeof upstreamMessage === "string" && upstreamMessage.includes("invalid-credentials")) {
-    return new AutoCliError("GROK_SESSION_EXPIRED", "Grok session expired. Re-import cookies.", {
+    return new MikaCliError("GROK_SESSION_EXPIRED", "Grok session expired. Re-import cookies.", {
       details: {
         status,
         upstreamCode,
@@ -1336,7 +1336,7 @@ function createGrokRequestError(status: number, body: string): AutoCliError {
   }
 
   if (status === 429) {
-    return new AutoCliError("GROK_RATE_LIMITED", "Grok rate limited this session. Try again later.", {
+    return new MikaCliError("GROK_RATE_LIMITED", "Grok rate limited this session. Try again later.", {
       details: {
         status,
         upstreamCode,
@@ -1345,7 +1345,7 @@ function createGrokRequestError(status: number, body: string): AutoCliError {
     });
   }
 
-  return new AutoCliError("GROK_REQUEST_FAILED", "Grok rejected the request.", {
+  return new MikaCliError("GROK_REQUEST_FAILED", "Grok rejected the request.", {
     details: {
       status,
       upstreamCode,
@@ -1355,9 +1355,9 @@ function createGrokRequestError(status: number, body: string): AutoCliError {
   });
 }
 
-function createGrokChunkError(error: NonNullable<GrokChunkRecord["error"]>): AutoCliError {
+function createGrokChunkError(error: NonNullable<GrokChunkRecord["error"]>): MikaCliError {
   if (String(error.code ?? "") === "7") {
-    return new AutoCliError(
+    return new MikaCliError(
       "GROK_ANTI_BOT_BLOCKED",
       "Grok rejected the browserless request with its current anti-bot rules. The session appears valid in the web app, but Grok is blocking terminal prompts right now.",
       {
@@ -1370,7 +1370,7 @@ function createGrokChunkError(error: NonNullable<GrokChunkRecord["error"]>): Aut
   }
 
   if (typeof error.message === "string" && error.message.includes("invalid-credentials")) {
-    return new AutoCliError("GROK_SESSION_EXPIRED", "Grok session expired. Re-import cookies.", {
+    return new MikaCliError("GROK_SESSION_EXPIRED", "Grok session expired. Re-import cookies.", {
       details: {
         upstreamCode: error.code,
         upstreamMessage: error.message,
@@ -1378,7 +1378,7 @@ function createGrokChunkError(error: NonNullable<GrokChunkRecord["error"]>): Aut
     });
   }
 
-  return new AutoCliError("GROK_STREAM_ERROR", error.message ?? "Grok returned a stream error.", {
+  return new MikaCliError("GROK_STREAM_ERROR", error.message ?? "Grok returned a stream error.", {
     details: {
       upstreamCode: error.code,
       upstreamMessage: error.message,
@@ -1419,7 +1419,7 @@ function buildGrokCreateHeaders(statsigId: string): Record<string, string> {
 }
 
 function shouldRetryGrokBrowserAction(error: unknown): boolean {
-  if (!isAutoCliError(error)) {
+  if (!isMikaCliError(error)) {
     return false;
   }
 
@@ -1529,7 +1529,7 @@ async function postGrokCreateConversation(
     timeoutSeconds?: number;
   },
 ): Promise<string> {
-  let lastError: AutoCliError | undefined;
+  let lastError: MikaCliError | undefined;
 
   for (const statsigId of GROK_CREATE_STATSIG_IDS) {
     const response = await session.post(GROK_CREATE_CONVERSATION_URL, body, {
@@ -1553,7 +1553,7 @@ async function postGrokCreateConversation(
 
   throw (
     lastError ??
-    new AutoCliError("GROK_REQUEST_FAILED", "Grok rejected the request.", {
+    new MikaCliError("GROK_REQUEST_FAILED", "Grok rejected the request.", {
       details: {
         url: GROK_CREATE_CONVERSATION_URL,
       },

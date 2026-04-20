@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
 
 import type { CookieJar } from "tough-cookie";
@@ -9,7 +9,7 @@ const ATLASSIAN_HOST_IGNORE = new Set(["id.atlassian.com", "admin.atlassian.com"
 export function normalizeJiraSiteUrl(input: string): string {
   const trimmed = input.trim();
   if (!trimmed) {
-    throw new AutoCliError("JIRA_SITE_REQUIRED", "Provide a Jira site URL like https://your-workspace.atlassian.net.");
+    throw new MikaCliError("JIRA_SITE_REQUIRED", "Provide a Jira site URL like https://your-workspace.atlassian.net.");
   }
 
   const withProtocol = /^https?:\/\//iu.test(trimmed) ? trimmed : `https://${trimmed}`;
@@ -17,7 +17,7 @@ export function normalizeJiraSiteUrl(input: string): string {
   try {
     url = new URL(withProtocol);
   } catch (error) {
-    throw new AutoCliError("JIRA_SITE_INVALID", `Invalid Jira site URL "${input}".`, {
+    throw new MikaCliError("JIRA_SITE_INVALID", `Invalid Jira site URL "${input}".`, {
       cause: error,
       details: { input },
     });
@@ -51,7 +51,7 @@ export function getStoredJiraSiteUrl(metadata?: Record<string, unknown>): string
 export function normalizeJiraProjectTarget(target: string): string {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("JIRA_PROJECT_TARGET_INVALID", "Jira project target cannot be empty.");
+    throw new MikaCliError("JIRA_PROJECT_TARGET_INVALID", "Jira project target cannot be empty.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
@@ -68,7 +68,7 @@ export function normalizeJiraProjectTarget(target: string): string {
       return decodeURIComponent(projectMatch);
     }
 
-    throw new AutoCliError("JIRA_PROJECT_TARGET_INVALID", `Could not resolve a Jira project from "${target}".`);
+    throw new MikaCliError("JIRA_PROJECT_TARGET_INVALID", `Could not resolve a Jira project from "${target}".`);
   }
 
   return trimmed;
@@ -77,7 +77,7 @@ export function normalizeJiraProjectTarget(target: string): string {
 export function normalizeJiraIssueTarget(target: string): string {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("JIRA_ISSUE_TARGET_INVALID", "Jira issue target cannot be empty.");
+    throw new MikaCliError("JIRA_ISSUE_TARGET_INVALID", "Jira issue target cannot be empty.");
   }
 
   if (/^https?:\/\//iu.test(trimmed)) {
@@ -86,13 +86,13 @@ export function normalizeJiraIssueTarget(target: string): string {
       url.pathname.match(/\/browse\/([A-Z][A-Z0-9]+-\d+)/iu)?.[1] ??
       url.pathname.match(/\/issues\/([A-Z][A-Z0-9]+-\d+)/iu)?.[1];
     if (!match) {
-      throw new AutoCliError("JIRA_ISSUE_TARGET_INVALID", `Could not resolve a Jira issue key from "${target}".`);
+      throw new MikaCliError("JIRA_ISSUE_TARGET_INVALID", `Could not resolve a Jira issue key from "${target}".`);
     }
     return match.toUpperCase();
   }
 
   if (!JIRA_ISSUE_KEY_REGEX.test(trimmed)) {
-    throw new AutoCliError("JIRA_ISSUE_TARGET_INVALID", `Invalid Jira issue target "${target}". Expected an issue key like PROJ-123 or a Jira issue URL.`);
+    throw new MikaCliError("JIRA_ISSUE_TARGET_INVALID", `Invalid Jira issue target "${target}". Expected an issue key like PROJ-123 or a Jira issue URL.`);
   }
 
   return trimmed.toUpperCase();

@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 
 import type { SessionHttpClient } from "../../../utils/http-client.js";
 import type { SessionStatus } from "../../../types.js";
@@ -86,7 +86,7 @@ export class QwenWebClient {
         defaultModel: QWEN_DEFAULT_MODEL,
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return mapQwenSessionInspectionError(error);
       }
 
@@ -128,7 +128,7 @@ export class QwenWebClient {
 
       const parsed = parseQwenCompletionStream(raw);
       if (!parsed.outputText) {
-        throw new AutoCliError("QWEN_EMPTY_RESPONSE", "Qwen returned an empty response.", {
+        throw new MikaCliError("QWEN_EMPTY_RESPONSE", "Qwen returned an empty response.", {
           details: {
             model: parsed.model ?? requestedModel,
           },
@@ -157,7 +157,7 @@ export class QwenWebClient {
     });
 
     if (!created.id) {
-      throw new AutoCliError("QWEN_CHAT_CREATE_FAILED", "Qwen did not return a chat id.", {
+      throw new MikaCliError("QWEN_CHAT_CREATE_FAILED", "Qwen did not return a chat id.", {
         details: {
           response: created,
         },
@@ -235,7 +235,7 @@ export async function extractQwenAuthToken(client: SessionHttpClient): Promise<s
     }
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "QWEN_AUTH_TOKEN_MISSING",
     "Qwen needs an auth token. If your cookie export already includes the `token` cookie, no extra flag is needed. Otherwise pass the bearer token once with --token.",
     {
@@ -250,7 +250,7 @@ export async function extractQwenAuthToken(client: SessionHttpClient): Promise<s
 export function normalizeQwenAuthToken(token: string): string {
   const trimmed = token.trim();
   if (!trimmed) {
-    throw new AutoCliError("QWEN_AUTH_TOKEN_MISSING", "Qwen auth token is empty.");
+    throw new MikaCliError("QWEN_AUTH_TOKEN_MISSING", "Qwen auth token is empty.");
   }
 
   return trimmed.replace(/^Bearer\s+/iu, "").trim().replace(/^"|"$/gu, "");
@@ -314,10 +314,10 @@ export function parseQwenCompletionStream(stream: string): QwenParsedCompletion 
   };
 }
 
-export function mapQwenError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+export function mapQwenError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     if (error.code === "QWEN_AUTH_TOKEN_MISSING") {
-      return new AutoCliError(
+      return new MikaCliError(
         "QWEN_SESSION_EXPIRED",
         "Qwen needs an auth token. If your cookie export already includes the `token` cookie, no extra flag is needed. Otherwise re-import cookies and pass the bearer token with `--token`.",
         {
@@ -329,19 +329,19 @@ export function mapQwenError(error: unknown, fallbackMessage: string): AutoCliEr
     if (error.code === "HTTP_REQUEST_FAILED") {
       const status = Number(error.details?.status);
       if (status === 401 || status === 403) {
-        return new AutoCliError("QWEN_SESSION_EXPIRED", "Qwen session expired. Re-import cookies and token.", {
+        return new MikaCliError("QWEN_SESSION_EXPIRED", "Qwen session expired. Re-import cookies and token.", {
           details: error.details,
         });
       }
 
       if (status === 429) {
-        return new AutoCliError("QWEN_RATE_LIMITED", "Qwen rate limit reached. Try again later.", {
+        return new MikaCliError("QWEN_RATE_LIMITED", "Qwen rate limit reached. Try again later.", {
           details: error.details,
         });
       }
 
       if (status === 504) {
-        return new AutoCliError(
+        return new MikaCliError(
           "QWEN_UPSTREAM_TIMEOUT",
           "Qwen accepted the session, but the generation request timed out upstream. Try again in a moment.",
           {
@@ -354,7 +354,7 @@ export function mapQwenError(error: unknown, fallbackMessage: string): AutoCliEr
     if (error.code === "QWEN_API_REQUEST_FAILED") {
       const message = String(error.details?.message ?? error.message).toLowerCase();
       if (message.includes("login") || message.includes("unauthorized") || message.includes("forbidden")) {
-        return new AutoCliError("QWEN_SESSION_EXPIRED", "Qwen session expired. Re-import cookies and token.", {
+        return new MikaCliError("QWEN_SESSION_EXPIRED", "Qwen session expired. Re-import cookies and token.", {
           details: error.details,
         });
       }
@@ -364,7 +364,7 @@ export function mapQwenError(error: unknown, fallbackMessage: string): AutoCliEr
   }
 
   if (error instanceof Error) {
-    return new AutoCliError("QWEN_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("QWEN_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details: {
         message: error.message,
@@ -372,7 +372,7 @@ export function mapQwenError(error: unknown, fallbackMessage: string): AutoCliEr
     });
   }
 
-  return new AutoCliError("QWEN_REQUEST_FAILED", fallbackMessage);
+  return new MikaCliError("QWEN_REQUEST_FAILED", fallbackMessage);
 }
 
 function buildQwenHeaders(input: {
@@ -476,11 +476,11 @@ function isQwenLogicalError(parsed: QwenApiEnvelope | null): parsed is QwenApiEn
   return Boolean(readString(parsed.message, parsed.error, pickObject(parsed.detail)?.message));
 }
 
-function toQwenRequestError(parsed: QwenApiEnvelope, url: string): AutoCliError {
+function toQwenRequestError(parsed: QwenApiEnvelope, url: string): MikaCliError {
   const message = readString(parsed.message, parsed.error, pickObject(parsed.detail)?.message)
     ?? "Qwen request failed.";
 
-  return new AutoCliError("QWEN_API_REQUEST_FAILED", message, {
+  return new MikaCliError("QWEN_API_REQUEST_FAILED", message, {
     details: {
       url,
       code: parsed.code,
@@ -489,7 +489,7 @@ function toQwenRequestError(parsed: QwenApiEnvelope, url: string): AutoCliError 
   });
 }
 
-function mapQwenSessionInspectionError(error: AutoCliError): QwenInspectionResult {
+function mapQwenSessionInspectionError(error: MikaCliError): QwenInspectionResult {
   if (error.code === "QWEN_AUTH_TOKEN_MISSING" || error.code === "QWEN_SESSION_EXPIRED") {
     return {
       status: {

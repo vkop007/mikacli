@@ -9,7 +9,7 @@ import { printIpResult } from "./output.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-const EXAMPLES = ["autocli ip", "autocli ip --version 4", "autocli ip --version 6", "autocli ip --details"] as const;
+const EXAMPLES = ["mikacli ip", "mikacli ip --version 4", "mikacli ip --version 6", "mikacli ip --details"] as const;
 
 function buildIpCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("ip").description("Resolve your public IP address");

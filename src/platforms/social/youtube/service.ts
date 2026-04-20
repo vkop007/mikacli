@@ -4,7 +4,7 @@ import { access, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join, resolve } from "node:path";
 
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { maybeAutoRefreshSession } from "../../../utils/autorefresh.js";
 import {
   runFirstClassBrowserAction,
@@ -177,7 +177,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -271,7 +271,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         },
         {
           source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for YouTube Studio upload: ${YOUTUBE_STUDIO_ORIGIN}`,
+          announceLabel: `Opening shared MikaCLI browser profile for YouTube Studio upload: ${YOUTUBE_STUDIO_ORIGIN}`,
         },
       ],
       actionFn: async (page, source) => {
@@ -355,7 +355,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     await this.requireCommand("ffmpeg", ["-version"], "FFMPEG_NOT_FOUND", "ffmpeg is required for youtube download.");
     await mkdir(outputDir, { recursive: true });
 
-    const tempDir = await mkdtemp(join(tmpdir(), "autocli-youtube-download-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "mikacli-youtube-download-"));
     const cookiesPath = join(tempDir, "cookies.txt");
 
     try {
@@ -402,11 +402,11 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         },
       };
     } catch (error) {
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         throw error;
       }
 
-      throw new AutoCliError("YOUTUBE_DOWNLOAD_FAILED", "Failed to download the YouTube video.", {
+      throw new MikaCliError("YOUTUBE_DOWNLOAD_FAILED", "Failed to download the YouTube video.", {
         cause: error,
         details: error instanceof Error ? { message: error.message } : undefined,
       });
@@ -422,7 +422,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
     const text = normalizeWhitespace(input.text);
     if (!text) {
-      throw new AutoCliError("INVALID_POST_TEXT", "Expected non-empty text for the YouTube community post.");
+      throw new MikaCliError("INVALID_POST_TEXT", "Expected non-empty text for the YouTube community post.");
     }
     if (input.imagePath) {
       await this.assertReadableUploadFile(
@@ -436,7 +436,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     const steps = input.browser
       ? [{
           source: "shared" as const,
-          announceLabel: `Opening shared AutoCLI browser profile for YouTube community posting: ${YOUTUBE_STUDIO_ORIGIN}`,
+          announceLabel: `Opening shared MikaCLI browser profile for YouTube community posting: ${YOUTUBE_STUDIO_ORIGIN}`,
         }]
       : [
           {
@@ -445,7 +445,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
           },
           {
             source: "shared" as const,
-            announceLabel: `Opening shared AutoCLI browser profile for YouTube community posting: ${YOUTUBE_STUDIO_ORIGIN}`,
+            announceLabel: `Opening shared MikaCLI browser profile for YouTube community posting: ${YOUTUBE_STUDIO_ORIGIN}`,
           },
         ];
 
@@ -492,7 +492,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         await clickYouTubeStudioLocator(submitButton);
         const response = await responsePromise;
         if (!response.ok()) {
-          throw new AutoCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed community post request.", {
+          throw new MikaCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed community post request.", {
             details: {
               url: response.url(),
               status: response.status(),
@@ -540,7 +540,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     const steps = input.browser
       ? [{
           source: "shared" as const,
-          announceLabel: `Opening shared AutoCLI browser profile for YouTube community delete: ${target.url}`,
+          announceLabel: `Opening shared MikaCLI browser profile for YouTube community delete: ${target.url}`,
         }]
       : [
           {
@@ -549,7 +549,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
           },
           {
             source: "shared" as const,
-            announceLabel: `Opening shared AutoCLI browser profile for YouTube community delete: ${target.url}`,
+            announceLabel: `Opening shared MikaCLI browser profile for YouTube community delete: ${target.url}`,
           },
         ];
 
@@ -613,7 +613,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
         const response = await responsePromise;
         if (response && !response.ok()) {
-          throw new AutoCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed community delete request.", {
+          throw new MikaCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed community delete request.", {
             details: {
               url: response.url(),
               status: response.status(),
@@ -796,7 +796,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("INVALID_SEARCH_QUERY", "Expected a non-empty YouTube search query.");
+      throw new MikaCliError("INVALID_SEARCH_QUERY", "Expected a non-empty YouTube search query.");
     }
 
     const limit = this.normalizeSearchLimit(input.limit);
@@ -1164,7 +1164,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     await this.persistSessionState(session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "YouTube session has expired.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -1275,7 +1275,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
           message: "YouTube auth cookies are present, but homepage validation was unavailable.",
           lastValidatedAt: new Date().toISOString(),
         },
-        metadata: isAutoCliError(error) ? error.details : undefined,
+        metadata: isMikaCliError(error) ? error.details : undefined,
       };
     }
   }
@@ -1303,7 +1303,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
   }
 
   private buildNetscapeCookies(session: PlatformSession): string {
-    const header = ["# Netscape HTTP Cookie File", "# This file was generated by AutoCLI.", ""];
+    const header = ["# Netscape HTTP Cookie File", "# This file was generated by MikaCLI.", ""];
     const cookies = Array.isArray(session.cookieJar.cookies) ? session.cookieJar.cookies : [];
 
     const lines = cookies
@@ -1373,7 +1373,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         "code" in error.cause &&
         error.cause.code === "ENOENT"
       ) {
-        throw new AutoCliError(errorCode, errorMessage, {
+        throw new MikaCliError(errorCode, errorMessage, {
           details: {
             command,
           },
@@ -1416,7 +1416,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         }
 
         rejectPromise(
-          new AutoCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
+          new MikaCliError("PROCESS_FAILED", `${command} exited with code ${code ?? "unknown"}.`, {
             details: {
               command,
               args,
@@ -1442,7 +1442,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     try {
       await access(resolve(filePath));
     } catch (error) {
-      throw new AutoCliError(code, message, {
+      throw new MikaCliError(code, message, {
         cause: error,
         details: {
           path: resolve(filePath),
@@ -1518,7 +1518,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
       const likeStatus = this.extractLikeStatus(response);
       if (likeStatus && likeStatus !== input.expectedLikeStatus) {
-        throw new AutoCliError("YOUTUBE_REQUEST_REJECTED", "YouTube did not apply the requested video preference.", {
+        throw new MikaCliError("YOUTUBE_REQUEST_REJECTED", "YouTube did not apply the requested video preference.", {
           details: {
             expectedLikeStatus: input.expectedLikeStatus,
             actualLikeStatus: likeStatus,
@@ -1569,7 +1569,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
       const modalMessage = this.extractSubscriptionErrorMessage(response);
       if (modalMessage) {
-        throw new AutoCliError("YOUTUBE_REQUEST_REJECTED", modalMessage, {
+        throw new MikaCliError("YOUTUBE_REQUEST_REJECTED", modalMessage, {
           details: {
             channelId: input.channelId,
             path: input.path,
@@ -1579,7 +1579,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
       const subscribedState = this.extractSubscribedState(response, input.channelId);
       if (typeof subscribedState === "boolean" && subscribedState !== input.expectedSubscribed) {
-        throw new AutoCliError("YOUTUBE_REQUEST_REJECTED", "YouTube did not apply the requested subscription state.", {
+        throw new MikaCliError("YOUTUBE_REQUEST_REJECTED", "YouTube did not apply the requested subscription state.", {
           details: {
             channelId: input.channelId,
             expectedSubscribed: input.expectedSubscribed,
@@ -1620,7 +1620,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     const html = await this.loadPageHtml(client, url);
     const page = this.parseYouTubePageConfig(html);
     if (page.loggedIn === false) {
-      throw new AutoCliError("SESSION_EXPIRED", "YouTube returned a logged-out page. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "YouTube returned a logged-out page. Re-import cookies.txt.");
     }
 
     return {
@@ -1679,7 +1679,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     message?: string,
   ): T {
     if (!value) {
-      throw new AutoCliError("YOUTUBE_PAGE_CONFIG_MISSING", message ?? `Missing ${fieldLabel} from the YouTube page.`);
+      throw new MikaCliError("YOUTUBE_PAGE_CONFIG_MISSING", message ?? `Missing ${fieldLabel} from the YouTube page.`);
     }
 
     return value;
@@ -1701,7 +1701,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
   ): Promise<Record<string, string>> {
     const sapisid = await this.getAuthCookieValue(client);
     if (!sapisid) {
-      throw new AutoCliError("SESSION_EXPIRED", "YouTube SAPISID cookie is missing. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "YouTube SAPISID cookie is missing. Re-import cookies.txt.");
     }
 
     return {
@@ -1810,7 +1810,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
     const url = page.url();
     if (isYouTubeLoginUrl(url)) {
-      throw new AutoCliError("YOUTUBE_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into YouTube Studio. Re-login with `autocli social youtube login --browser` first.");
+      throw new MikaCliError("YOUTUBE_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into YouTube Studio. Re-login with `mikacli social youtube login --browser` first.");
     }
 
     await this.throwIfStudioBrowserBlocked(page);
@@ -1843,7 +1843,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         },
         {
           source: "shared",
-          announceLabel: `Opening shared AutoCLI browser profile for YouTube commenting: ${input.targetUrl}`,
+          announceLabel: `Opening shared MikaCLI browser profile for YouTube commenting: ${input.targetUrl}`,
         },
       ],
       actionFn: async (page, source) => {
@@ -1862,7 +1862,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         await clickYouTubeStudioLocator(submitButton);
         const response = await responsePromise;
         if (!response.ok()) {
-          throw new AutoCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed comment request.", {
+          throw new MikaCliError("YOUTUBE_BROWSER_ACTION_FAILED", "YouTube rejected the browser-backed comment request.", {
             details: {
               url: response.url(),
               status: response.status(),
@@ -1916,7 +1916,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await this.throwIfStudioBrowserBlocked(page);
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "YOUTUBE_COMMENT_BOX_NOT_FOUND",
       "YouTube never exposed the comment composer in the browser-backed flow.",
       {
@@ -1972,7 +1972,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("YOUTUBE_COMMENT_SUBMIT_DISABLED", "YouTube never enabled the comment submit button.", {
+    throw new MikaCliError("YOUTUBE_COMMENT_SUBMIT_DISABLED", "YouTube never enabled the comment submit button.", {
       details: {
         url: page.url(),
       },
@@ -2030,13 +2030,13 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(500);
     }
 
-    throw new AutoCliError("YOUTUBE_UPLOAD_EDITOR_TIMEOUT", "YouTube Studio never showed the upload editor after selecting the media file.");
+    throw new MikaCliError("YOUTUBE_UPLOAD_EDITOR_TIMEOUT", "YouTube Studio never showed the upload editor after selecting the media file.");
   }
 
   private async fillStudioTitle(page: PlaywrightPage, title: string): Promise<void> {
     const titleBox = await this.getStudioMetadataTextboxes(page).then((boxes) => boxes[0]);
     if (!titleBox) {
-      throw new AutoCliError("YOUTUBE_UPLOAD_TITLE_MISSING", "YouTube Studio did not expose the title field after the upload started.");
+      throw new MikaCliError("YOUTUBE_UPLOAD_TITLE_MISSING", "YouTube Studio did not expose the title field after the upload started.");
     }
 
     await titleBox.click();
@@ -2048,7 +2048,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
   private async fillStudioDescription(page: PlaywrightPage, description: string): Promise<void> {
     const descriptionBox = await this.getStudioMetadataTextboxes(page).then((boxes) => boxes[1]);
     if (!descriptionBox) {
-      throw new AutoCliError("YOUTUBE_UPLOAD_DESCRIPTION_MISSING", "YouTube Studio did not expose the description field after the upload started.");
+      throw new MikaCliError("YOUTUBE_UPLOAD_DESCRIPTION_MISSING", "YouTube Studio did not expose the description field after the upload started.");
     }
 
     await descriptionBox.click();
@@ -2217,7 +2217,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
   private async resolveOwnChannelPostsUrl(page: PlaywrightPage): Promise<string> {
     const channelId = extractStudioChannelId(page.url()) ?? (await this.resolveStudioChannelId(page));
     if (!channelId) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "YOUTUBE_CHANNEL_RESOLUTION_FAILED",
         "Could not resolve the current YouTube channel before opening the Posts tab.",
         {
@@ -2251,7 +2251,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("YOUTUBE_POST_EDITOR_NOT_FOUND", "YouTube never exposed the community post editor.", {
+    throw new MikaCliError("YOUTUBE_POST_EDITOR_NOT_FOUND", "YouTube never exposed the community post editor.", {
       details: {
         url: page.url(),
       },
@@ -2319,7 +2319,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await this.throwIfStudioBrowserBlocked(page);
     }
 
-    throw new AutoCliError("YOUTUBE_POST_IMAGE_UPLOAD_TIMEOUT", "YouTube never showed the image preview for the community post.", {
+    throw new MikaCliError("YOUTUBE_POST_IMAGE_UPLOAD_TIMEOUT", "YouTube never showed the image preview for the community post.", {
       details: {
         url: page.url(),
         path: imagePath,
@@ -2394,7 +2394,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("YOUTUBE_POST_NOT_FOUND", "YouTube never exposed the requested community post.", {
+    throw new MikaCliError("YOUTUBE_POST_NOT_FOUND", "YouTube never exposed the requested community post.", {
       details: {
         postId,
         url: page.url(),
@@ -2432,7 +2432,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("YOUTUBE_POST_ACTIONS_NOT_FOUND", "YouTube never exposed the community post actions menu.", {
+    throw new MikaCliError("YOUTUBE_POST_ACTIONS_NOT_FOUND", "YouTube never exposed the community post actions menu.", {
       details: {
         postId,
         url: page.url(),
@@ -2457,7 +2457,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(500);
     }
 
-    throw new AutoCliError("YOUTUBE_POST_DELETE_TIMEOUT", "YouTube never confirmed that the community post was removed.", {
+    throw new MikaCliError("YOUTUBE_POST_DELETE_TIMEOUT", "YouTube never confirmed that the community post was removed.", {
       details: {
         postId,
         url: page.url(),
@@ -2490,7 +2490,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("YOUTUBE_POST_SUBMIT_DISABLED", "YouTube never enabled the community post button.", {
+    throw new MikaCliError("YOUTUBE_POST_SUBMIT_DISABLED", "YouTube never enabled the community post button.", {
       details: {
         url: page.url(),
       },
@@ -2516,7 +2516,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     for (const pattern of patterns) {
       const match = bodyText.match(pattern);
       if (match) {
-        throw new AutoCliError("YOUTUBE_BROWSER_ACTION_FAILED", match[0], {
+        throw new MikaCliError("YOUTUBE_BROWSER_ACTION_FAILED", match[0], {
           details: {
             url: page.url(),
           },
@@ -2700,7 +2700,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
 
     const channelId = this.extractChannelId(html);
     if (!channelId) {
-      throw new AutoCliError("YOUTUBE_CHANNEL_RESOLUTION_FAILED", "Could not resolve the YouTube channel ID.", {
+      throw new MikaCliError("YOUTUBE_CHANNEL_RESOLUTION_FAILED", "Could not resolve the YouTube channel ID.", {
         details: {
           target,
           url,
@@ -2818,7 +2818,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
         (playabilityStatus && "reason" in playabilityStatus && typeof playabilityStatus.reason === "string"
           ? playabilityStatus.reason
           : undefined) ?? "Video unavailable";
-      throw new AutoCliError("YOUTUBE_VIDEO_UNAVAILABLE", reason, {
+      throw new MikaCliError("YOUTUBE_VIDEO_UNAVAILABLE", reason, {
         details: {
           videoId,
           playabilityStatus: playabilityState,
@@ -2827,7 +2827,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     }
 
     if (!videoDetails) {
-      throw new AutoCliError("YOUTUBE_VIDEO_INFO_MISSING", "YouTube did not return video details.", {
+      throw new MikaCliError("YOUTUBE_VIDEO_INFO_MISSING", "YouTube did not return video details.", {
         details: { videoId },
       });
     }
@@ -3356,7 +3356,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       return JSON.parse(objectText) as Record<string, unknown>;
     }
 
-    throw new AutoCliError("YOUTUBE_PAGE_CONFIG_MISSING", `Missing ${variableName} from the YouTube page.`);
+    throw new MikaCliError("YOUTUBE_PAGE_CONFIG_MISSING", `Missing ${variableName} from the YouTube page.`);
   }
 
   private readBalancedJsonObject(source: string, startIndex: number): string | undefined {
@@ -3442,9 +3442,9 @@ export class YouTubeAdapter extends BasePlatformAdapter {
     return match?.[1];
   }
 
-  private mapYouTubeWriteError(error: unknown, fallbackMessage: string): AutoCliError {
+  private mapYouTubeWriteError(error: unknown, fallbackMessage: string): MikaCliError {
     if (
-      isAutoCliError(error) &&
+      isMikaCliError(error) &&
       (error.code === "YOUTUBE_REQUEST_REJECTED" ||
         error.code === "YOUTUBE_VIDEO_UNAVAILABLE" ||
         error.code === "YOUTUBE_VIDEO_INFO_MISSING")
@@ -3452,11 +3452,11 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       return error;
     }
 
-    if (isAutoCliError(error) && error.code === "HTTP_REQUEST_FAILED") {
+    if (isMikaCliError(error) && error.code === "HTTP_REQUEST_FAILED") {
       const status = typeof error.details?.status === "number" ? error.details.status : undefined;
 
       if (status === 400) {
-        return new AutoCliError(
+        return new MikaCliError(
           "YOUTUBE_REQUEST_REJECTED",
           "YouTube rejected this action request. The video may not allow this action, or the saved cookies need a fresh export.",
           {
@@ -3467,7 +3467,7 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       }
 
       if (status === 401 || status === 403) {
-        return new AutoCliError(
+        return new MikaCliError(
           "SESSION_EXPIRED",
           "YouTube rejected the saved session for this action. Re-export cookies from an active browser session.",
           {
@@ -3478,10 +3478,10 @@ export class YouTubeAdapter extends BasePlatformAdapter {
       }
     }
 
-    return new AutoCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
+    return new MikaCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
       cause: error,
       details:
-        isAutoCliError(error) && error.details
+        isMikaCliError(error) && error.details
           ? error.details
           : error instanceof Error
             ? { message: error.message }
@@ -3553,7 +3553,7 @@ function normalizeYouTubeUploadText(value: string | undefined): string | undefin
 function inferYouTubeUploadTitle(mediaPath: string): string {
   const fileName = basename(mediaPath).replace(/\.[A-Za-z0-9]+$/u, "");
   const normalized = normalizeWhitespace(fileName.replace(/[_-]+/gu, " "));
-  return normalized.length > 0 ? normalized : "AutoCLI upload";
+  return normalized.length > 0 ? normalized : "MikaCLI upload";
 }
 
 function normalizeYouTubeUploadVisibility(value: string | undefined): YouTubeUploadVisibility {
@@ -3566,7 +3566,7 @@ function normalizeYouTubeUploadVisibility(value: string | undefined): YouTubeUpl
     return normalized;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "YOUTUBE_UPLOAD_VISIBILITY_INVALID",
     "Expected YouTube upload visibility to be one of: private, unlisted, public.",
     {
@@ -3582,7 +3582,7 @@ function capitalizeUploadVisibility(value: YouTubeUploadVisibility): string {
 }
 
 function shouldRetryYouTubeBrowserWriteInSharedBrowser(error: unknown): boolean {
-  if (!isAutoCliError(error)) {
+  if (!isMikaCliError(error)) {
     return false;
   }
 
@@ -3682,12 +3682,12 @@ function extractYouTubeCommunityPostId(url: string | undefined): string | undefi
 export function resolveYouTubeCommunityPostTarget(target: string): { postId: string; url: string } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("INVALID_POST_TARGET", "Expected a YouTube community post URL or post ID.");
+    throw new MikaCliError("INVALID_POST_TARGET", "Expected a YouTube community post URL or post ID.");
   }
 
   const postId = extractYouTubeCommunityPostId(trimmed) ?? extractYouTubeCommunityLbId(trimmed) ?? extractBareYouTubeCommunityPostId(trimmed);
   if (!postId) {
-    throw new AutoCliError("INVALID_POST_TARGET", "Expected a YouTube community post URL or post ID.", {
+    throw new MikaCliError("INVALID_POST_TARGET", "Expected a YouTube community post URL or post ID.", {
       details: {
         target: trimmed,
       },
@@ -3739,7 +3739,7 @@ async function firstVisibleYouTubeStudioLocator(page: PlaywrightPage, selectors:
     }
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "YOUTUBE_STUDIO_ELEMENT_NOT_FOUND",
     `Could not find any visible YouTube Studio element for selectors: ${selectors.join(", ")}`,
   );
@@ -3754,7 +3754,7 @@ async function firstPresentYouTubeStudioLocator(page: PlaywrightPage, selectors:
     }
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "YOUTUBE_STUDIO_ELEMENT_NOT_FOUND",
     `Could not find any YouTube Studio element for selectors: ${selectors.join(", ")}`,
   );
@@ -3772,7 +3772,7 @@ async function firstVisibleYouTubeStudioLocatorWithin(root: PlaywrightLocator, s
     }
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "YOUTUBE_STUDIO_ELEMENT_NOT_FOUND",
     `Could not find any visible YouTube Studio element for selectors: ${selectors.join(", ")}`,
   );

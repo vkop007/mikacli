@@ -17,9 +17,9 @@ export const threadsPlatformDefinition: PlatformDefinition = {
     threadDescription: "Load a public Threads post and its top replies by URL or @username/postId",
   }),
   examples: [
-    'autocli threads search "openai"',
-    "autocli threads profile @zuck",
-    "autocli threads posts @zuck --limit 5",
-    "autocli threads thread https://www.threads.net/@zuck/post/DVrwsE5EdSz",
+    'mikacli threads search "openai"',
+    "mikacli threads profile @zuck",
+    "mikacli threads posts @zuck --limit 5",
+    "mikacli threads thread https://www.threads.net/@zuck/post/DVrwsE5EdSz",
   ],
 };

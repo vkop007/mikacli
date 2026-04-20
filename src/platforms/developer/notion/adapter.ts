@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { CookieJar } from "tough-cookie";
 
 import { sanitizeAccountName } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { createSessionFile, CookieManager, serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { NotionWebClient, type NotionWebBlock, type NotionWebCollection, type NotionWebCollectionView, type NotionWebComment, type NotionWebDiscussion, type NotionWebRecordMapShape, type NotionWebSpace, type NotionWebUser } from "./client.js";
@@ -67,7 +67,7 @@ export class NotionAdapter {
 
     const tokenV2 = await this.getCookieValue(imported.jar, "token_v2");
     if (!tokenV2) {
-      throw new AutoCliError("NOTION_TOKEN_V2_MISSING", "Imported cookies did not include Notion's token_v2 cookie.");
+      throw new MikaCliError("NOTION_TOKEN_V2_MISSING", "Imported cookies did not include Notion's token_v2 cookie.");
     }
 
     const hintedUserId = await this.getCookieValue(imported.jar, "notion_user_id");
@@ -120,7 +120,7 @@ export class NotionAdapter {
         lastValidatedAt: active.session.status.lastValidatedAt,
       };
     } catch (error) {
-      if (error instanceof AutoCliError && error.code === "NOTION_SESSION_INVALID") {
+      if (error instanceof MikaCliError && error.code === "NOTION_SESSION_INVALID") {
         const expired = await this.markSessionExpired(session, {
           path,
           message: error.message,
@@ -234,7 +234,7 @@ export class NotionAdapter {
     const active = await this.ensureUsableSession();
     const trimmedTitle = input.title.trim();
     if (!trimmedTitle) {
-      throw new AutoCliError("NOTION_TITLE_REQUIRED", "Title cannot be empty.");
+      throw new MikaCliError("NOTION_TITLE_REQUIRED", "Title cannot be empty.");
     }
 
     const resolvedParent = await this.resolveParent(active, input.parent);
@@ -319,7 +319,7 @@ export class NotionAdapter {
 
   async updatePage(input: { target: string; title?: string; archive?: boolean }): Promise<AdapterActionResult> {
     if (!input.title && !input.archive) {
-      throw new AutoCliError("NOTION_UPDATE_EMPTY", "Provide --title or --archive to update the page.");
+      throw new MikaCliError("NOTION_UPDATE_EMPTY", "Provide --title or --archive to update the page.");
     }
 
     const active = await this.ensureUsableSession();
@@ -394,7 +394,7 @@ export class NotionAdapter {
     const page = await active.client.getBlock(pageId);
     const trimmedText = input.text.trim();
     if (!trimmedText) {
-      throw new AutoCliError("NOTION_APPEND_EMPTY", "Append text cannot be empty.");
+      throw new MikaCliError("NOTION_APPEND_EMPTY", "Append text cannot be empty.");
     }
 
     const operations: NotionOperation[] = [];
@@ -474,7 +474,7 @@ export class NotionAdapter {
     const active = await this.ensureUsableSession();
     const resolved = await this.resolveDatabaseTarget(active, input.target, true);
     if (!resolved.viewId) {
-      throw new AutoCliError("NOTION_DATABASE_VIEW_REQUIRED", "This Notion database needs a view ID. Pass a full Notion database page URL or page ID instead of a raw collection ID.");
+      throw new MikaCliError("NOTION_DATABASE_VIEW_REQUIRED", "This Notion database needs a view ID. Pass a full Notion database page URL or page ID instead of a raw collection ID.");
     }
 
     const response = await active.client.queryCollection({
@@ -513,7 +513,7 @@ export class NotionAdapter {
     const page = await active.client.getBlock(pageId);
     const trimmedText = input.text.trim();
     if (!trimmedText) {
-      throw new AutoCliError("NOTION_COMMENT_EMPTY", "Comment text cannot be empty.");
+      throw new MikaCliError("NOTION_COMMENT_EMPTY", "Comment text cannot be empty.");
     }
 
     const spaceId = page.space_id ?? active.context.spaceId ?? this.requireSpaceId(active.context);
@@ -599,7 +599,7 @@ export class NotionAdapter {
         message: "Imported cookies did not include Notion's token_v2 cookie. Re-import fresh cookies.",
         lastErrorCode: "NOTION_TOKEN_V2_MISSING",
       });
-      throw new AutoCliError("NOTION_SESSION_INVALID", "Imported cookies did not include Notion's token_v2 cookie. Re-import fresh cookies.");
+      throw new MikaCliError("NOTION_SESSION_INVALID", "Imported cookies did not include Notion's token_v2 cookie. Re-import fresh cookies.");
     }
 
     const hintedUserId = this.sessionMetadataString(session, "notionUserId") ?? (await this.getCookieValue(jar, "notion_user_id"));
@@ -626,10 +626,10 @@ export class NotionAdapter {
     } catch (error) {
       const expired = await this.markSessionExpired(session, {
         path,
-        message: error instanceof AutoCliError ? error.message : "Notion rejected the saved web session. Re-import fresh cookies.",
-        lastErrorCode: error instanceof AutoCliError ? error.code : "NOTION_SESSION_INVALID",
+        message: error instanceof MikaCliError ? error.message : "Notion rejected the saved web session. Re-import fresh cookies.",
+        lastErrorCode: error instanceof MikaCliError ? error.code : "NOTION_SESSION_INVALID",
       });
-      throw new AutoCliError("NOTION_SESSION_INVALID", expired.status.message ?? "Notion rejected the saved web session. Re-import fresh cookies.", {
+      throw new MikaCliError("NOTION_SESSION_INVALID", expired.status.message ?? "Notion rejected the saved web session. Re-import fresh cookies.", {
         cause: error,
         details: {
           sessionPath: path,
@@ -730,7 +730,7 @@ export class NotionAdapter {
         const collection = await active.client.getCollection(block.collection_id ?? pageId);
         const titlePropertyId = findCollectionTitlePropertyId(collection.schema);
         if (!titlePropertyId) {
-          throw new AutoCliError("NOTION_DATA_SOURCE_TITLE_MISSING", "Could not find a title property on the target Notion database.");
+          throw new MikaCliError("NOTION_DATA_SOURCE_TITLE_MISSING", "Could not find a title property on the target Notion database.");
         }
 
         const views = await this.loadViews(active.client, block.view_ids ?? []);
@@ -744,7 +744,7 @@ export class NotionAdapter {
         };
       }
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "NOTION_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "NOTION_NOT_FOUND") {
         throw error;
       }
     }
@@ -752,7 +752,7 @@ export class NotionAdapter {
     const collection = await active.client.getCollection(pageId);
     const titlePropertyId = findCollectionTitlePropertyId(collection.schema);
     if (!titlePropertyId) {
-      throw new AutoCliError("NOTION_DATA_SOURCE_TITLE_MISSING", "Could not find a title property on the target Notion database.");
+      throw new MikaCliError("NOTION_DATA_SOURCE_TITLE_MISSING", "Could not find a title property on the target Notion database.");
     }
 
     return {
@@ -772,7 +772,7 @@ export class NotionAdapter {
     try {
       const block = await active.client.getBlock(id);
       if (block.type !== "collection_view" && block.type !== "collection_view_page") {
-        throw new AutoCliError("NOTION_DATABASE_INVALID", "That Notion page is not a database.");
+        throw new MikaCliError("NOTION_DATABASE_INVALID", "That Notion page is not a database.");
       }
 
       const collection = await active.client.getCollection(block.collection_id ?? id);
@@ -780,7 +780,7 @@ export class NotionAdapter {
       const view = viewId ? await active.client.getCollectionView(viewId) : undefined;
 
       if (requireView && !viewId) {
-        throw new AutoCliError("NOTION_DATABASE_VIEW_REQUIRED", "This Notion database needs a view ID. Pass a full Notion database page URL or page ID instead of a raw collection ID.");
+        throw new MikaCliError("NOTION_DATABASE_VIEW_REQUIRED", "This Notion database needs a view ID. Pass a full Notion database page URL or page ID instead of a raw collection ID.");
       }
 
       return {
@@ -791,14 +791,14 @@ export class NotionAdapter {
         viewId,
       };
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "NOTION_NOT_FOUND") {
+      if (!(error instanceof MikaCliError) || error.code !== "NOTION_NOT_FOUND") {
         throw error;
       }
     }
 
     const collection = await active.client.getCollection(id);
     if (requireView && !explicitViewId) {
-      throw new AutoCliError("NOTION_DATABASE_VIEW_REQUIRED", "This Notion database needs a view ID. Pass a full Notion database page URL or page ID instead of a raw collection ID.");
+      throw new MikaCliError("NOTION_DATABASE_VIEW_REQUIRED", "This Notion database needs a view ID. Pass a full Notion database page URL or page ID instead of a raw collection ID.");
     }
 
     const view = explicitViewId ? await active.client.getCollectionView(explicitViewId) : undefined;
@@ -816,7 +816,7 @@ export class NotionAdapter {
       try {
         views.push(await client.getCollectionView(viewId));
       } catch (error) {
-        if (!(error instanceof AutoCliError) || error.code !== "NOTION_NOT_FOUND") {
+        if (!(error instanceof MikaCliError) || error.code !== "NOTION_NOT_FOUND") {
           throw error;
         }
       }
@@ -1041,7 +1041,7 @@ export class NotionAdapter {
 
   private requireSpaceId(context: NotionSessionContext): string {
     if (!context.spaceId) {
-      throw new AutoCliError("NOTION_SPACE_ID_MISSING", "Notion did not expose a workspace/space ID for this session.");
+      throw new MikaCliError("NOTION_SPACE_ID_MISSING", "Notion did not expose a workspace/space ID for this session.");
     }
 
     return context.spaceId;
@@ -1055,7 +1055,7 @@ export class NotionAdapter {
     try {
       return await client.getCollection(collectionId);
     } catch (error) {
-      if (error instanceof AutoCliError && error.code === "NOTION_NOT_FOUND") {
+      if (error instanceof MikaCliError && error.code === "NOTION_NOT_FOUND") {
         return undefined;
       }
       throw error;

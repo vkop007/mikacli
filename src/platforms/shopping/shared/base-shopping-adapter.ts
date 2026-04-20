@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { BasePlatformAdapter } from "../../shared/base-platform-adapter.js";
 
@@ -57,7 +57,7 @@ export abstract class BaseShoppingAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? `${this.displayName} session has expired.`, {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? `${this.displayName} session has expired.`, {
         details: {
           platform: this.platform,
           account,
@@ -136,7 +136,7 @@ export abstract class BaseShoppingAdapter extends BasePlatformAdapter {
     await this.persistSessionState(loaded.session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? `${this.displayName} session has expired.`, {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? `${this.displayName} session has expired.`, {
         details: {
           platform: this.platform,
           account: loaded.session.account,
@@ -163,8 +163,8 @@ export abstract class BaseShoppingAdapter extends BasePlatformAdapter {
     });
   }
 
-  protected createUnsupportedWriteError(action: string): AutoCliError {
-    return new AutoCliError(
+  protected createUnsupportedWriteError(action: string): MikaCliError {
+    return new MikaCliError(
       "UNSUPPORTED_ACTION",
       `${this.displayName} is currently implemented for session import, status, search, product lookup, and orders only.`,
       {

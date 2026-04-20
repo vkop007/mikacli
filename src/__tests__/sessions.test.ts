@@ -194,8 +194,8 @@ describe("sessions command helpers", () => {
       },
     });
     expect(buildSessionRecommendations(summary)).toEqual([
-      "Run `autocli sessions validate` to confirm expired records live, then refresh them with the provider's `login` command.",
-      "Run `autocli sessions validate` to replace unknown saved state with a live provider check.",
+      "Run `mikacli sessions validate` to confirm expired records live, then refresh them with the provider's `login` command.",
+      "Run `mikacli sessions validate` to replace unknown saved state with a live provider check.",
     ]);
   });
 
@@ -239,7 +239,7 @@ describe("sessions command helpers", () => {
         basis: "live",
         connected: false,
         path: "/tmp/connections/github/default.json",
-        next: "autocli developer github login",
+        next: "mikacli developer github login",
       }),
     ]);
     expect(saved).toEqual([
@@ -295,7 +295,7 @@ describe("sessions command helpers", () => {
         account: "default",
         status: "expired",
         basis: "refresh-failed",
-        next: "autocli developer github login",
+        next: "mikacli developer github login",
         refreshError: "network down",
       }),
     ]);
@@ -442,7 +442,7 @@ describe("sessions command helpers", () => {
         outcome: "manual",
         status: "expired",
         repairAction: "browser-login",
-        next: "autocli social x login",
+        next: "mikacli social x login",
       }),
     ]);
     expect(entries[0]?.message).toContain("--browser");

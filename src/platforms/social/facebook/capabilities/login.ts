@@ -5,7 +5,7 @@ import { facebookAdapter } from "../adapter.js";
 export const facebookLoginCapability = createAdapterActionCapability({
   id: "login",
   command: "login",
-  description: "Save the Facebook session for future headless use. With no auth flags, AutoCLI opens browser login by default",
+  description: "Save the Facebook session for future headless use. With no auth flags, MikaCLI opens browser login by default",
   spinnerText: "Saving Facebook session...",
   successMessage: "Facebook session saved.",
   options: createCookieLoginOptions(),

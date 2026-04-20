@@ -4,7 +4,7 @@ import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { normalizeActionResult } from "../../../core/runtime/login-result.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { printSessionHttpResult } from "./output.js";
 import { sessionHttpAdapter } from "./adapter.js";
 
@@ -12,27 +12,27 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli tools http github inspect",
-  "autocli tools http github cookies",
-  "autocli tools http github storage",
-  "autocli tools http github.com capture --browser-timeout 60",
-  "autocli tools http github.com capture --summary --group-by endpoint --browser-timeout 60",
-  "autocli tools http github request GET /settings/profile",
-  "autocli tools http github download /settings/profile --output ./tmp/github-profile.html",
-  "autocli tools http github graphql '{ viewer { login } }' --path /api/graphql",
-  "autocli tools http your-workspace.atlassian.net request GET /rest/api/3/myself --platform jira",
-  "autocli tools http github request POST /session --json-body '{\"ok\":true}' --browser",
+  "mikacli tools http github inspect",
+  "mikacli tools http github cookies",
+  "mikacli tools http github storage",
+  "mikacli tools http github.com capture --browser-timeout 60",
+  "mikacli tools http github.com capture --summary --group-by endpoint --browser-timeout 60",
+  "mikacli tools http github request GET /settings/profile",
+  "mikacli tools http github download /settings/profile --output ./tmp/github-profile.html",
+  "mikacli tools http github graphql '{ viewer { login } }' --path /api/graphql",
+  "mikacli tools http your-workspace.atlassian.net request GET /rest/api/3/myself --platform jira",
+  "mikacli tools http github request POST /session --json-body '{\"ok\":true}' --browser",
 ] as const;
 
 function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
-  const command = new Command("http").description("Inspect, capture, and replay authenticated HTTP traffic with saved AutoCLI sessions");
+  const command = new Command("http").description("Inspect, capture, and replay authenticated HTTP traffic with saved MikaCLI sessions");
   command
     .argument("<target>", "Provider name, domain, or full URL")
     .argument("<operation>", "inspect, capture, or request")
     .argument("[args...]", "Extra args, such as METHOD and path for request")
     .option("--platform <provider>", "Force a provider when a domain matches multiple cookie-backed platforms")
     .option("--account <name>", "Saved session account to use")
-    .option("--browser", "Borrow cookies from the shared AutoCLI browser profile instead of a saved session")
+    .option("--browser", "Borrow cookies from the shared MikaCLI browser profile instead of a saved session")
     .option("--browser-timeout <seconds>", "Browser wait timeout in seconds", (value) => Number.parseInt(value, 10), 60)
     .option("--limit <number>", "Capture result limit (default: 25)", (value) => Number.parseInt(value, 10), 25)
     .option("--filter <text>", "Only include captured requests whose URL contains this text")
@@ -124,7 +124,7 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
         case "request": {
           const [method, pathOrUrl] = args;
           if (!method || !pathOrUrl) {
-            throw new AutoCliError("TOOLS_HTTP_REQUEST_ARGUMENTS_REQUIRED", "Use: autocli tools http <target> request <METHOD> <path-or-url>.");
+            throw new MikaCliError("TOOLS_HTTP_REQUEST_ARGUMENTS_REQUIRED", "Use: mikacli tools http <target> request <METHOD> <path-or-url>.");
           }
 
           return sessionHttpAdapter.request({
@@ -144,10 +144,10 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
         case "download": {
           const [pathOrUrl] = args;
           if (!pathOrUrl) {
-            throw new AutoCliError("TOOLS_HTTP_DOWNLOAD_ARGUMENTS_REQUIRED", "Use: autocli tools http <target> download <path-or-url> --output <path>.");
+            throw new MikaCliError("TOOLS_HTTP_DOWNLOAD_ARGUMENTS_REQUIRED", "Use: mikacli tools http <target> download <path-or-url> --output <path>.");
           }
           if (!input.output) {
-            throw new AutoCliError("TOOLS_HTTP_DOWNLOAD_OUTPUT_REQUIRED", "Use --output <path> to save the downloaded response.");
+            throw new MikaCliError("TOOLS_HTTP_DOWNLOAD_OUTPUT_REQUIRED", "Use --output <path> to save the downloaded response.");
           }
 
           return sessionHttpAdapter.download({
@@ -165,7 +165,7 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
         case "graphql": {
           const query = input.query ?? args.join(" ").trim();
           if (!query) {
-            throw new AutoCliError("TOOLS_HTTP_GRAPHQL_QUERY_REQUIRED", "Use: autocli tools http <target> graphql '<query>' [--variables '{...}'].");
+            throw new MikaCliError("TOOLS_HTTP_GRAPHQL_QUERY_REQUIRED", "Use: mikacli tools http <target> graphql '<query>' [--variables '{...}'].");
           }
 
           return sessionHttpAdapter.graphql({
@@ -183,7 +183,7 @@ function buildHttpCommand(options: PlatformCommandBuildOptions = {}): Command {
           });
         }
         default:
-          throw new AutoCliError("TOOLS_HTTP_OPERATION_INVALID", `Unknown tools http operation "${operation}". Use inspect, cookies, storage, capture, request, download, or graphql.`);
+          throw new MikaCliError("TOOLS_HTTP_OPERATION_INVALID", `Unknown tools http operation "${operation}". Use inspect, cookies, storage, capture, request, download, or graphql.`);
       }
     });
   });

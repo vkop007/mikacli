@@ -6,14 +6,14 @@ import { formsAdapter } from "./adapter.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli google forms login --client-id google-client-id-example --client-secret google-client-secret-example",
-  "autocli google forms auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
-  "autocli google forms forms --limit 10 --json",
-  "autocli google forms form google-form-id-example --json",
-  'autocli google forms create "Launch Survey" --description "Tell us what you think" --json',
-  'autocli google forms add-text-question google-form-id-example --title "What should we improve?" --paragraph --required --json',
-  'autocli google forms add-choice-question google-form-id-example --title "How did we do?" --options "Great|Good|Okay|Needs work" --type RADIO --json',
-  "autocli google forms responses google-form-id-example --limit 20 --json",
+  "mikacli google forms login --client-id google-client-id-example --client-secret google-client-secret-example",
+  "mikacli google forms auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
+  "mikacli google forms forms --limit 10 --json",
+  "mikacli google forms form google-form-id-example --json",
+  'mikacli google forms create "Launch Survey" --description "Tell us what you think" --json',
+  'mikacli google forms add-text-question google-form-id-example --title "What should we improve?" --paragraph --required --json',
+  'mikacli google forms add-choice-question google-form-id-example --title "How did we do?" --options "Great|Good|Okay|Needs work" --type RADIO --json',
+  "mikacli google forms responses google-form-id-example --limit 20 --json",
 ] as const;
 
 function buildFormsCommand(_options: PlatformCommandBuildOptions = {}): Command {

@@ -1,6 +1,6 @@
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { LinearWebClient, type LinearComment, type LinearIssue, type LinearProject, type LinearTeam, type LinearUser } from "./client.js";
@@ -79,7 +79,7 @@ export class LinearAdapter {
         lastValidatedAt: active.session.status.lastValidatedAt,
       };
     } catch (error) {
-      if (error instanceof AutoCliError && error.code === "LINEAR_SESSION_INVALID") {
+      if (error instanceof MikaCliError && error.code === "LINEAR_SESSION_INVALID") {
         const expired = await this.markSessionExpired(session, error.message);
         return {
           platform: this.platform,
@@ -190,7 +190,7 @@ export class LinearAdapter {
     const teamId = await this.resolveTeamId(active.client, input.team);
     const title = input.title.trim();
     if (!title) {
-      throw new AutoCliError("LINEAR_TITLE_REQUIRED", "Issue title cannot be empty.");
+      throw new MikaCliError("LINEAR_TITLE_REQUIRED", "Issue title cannot be empty.");
     }
 
     const issue = await active.client.createIssue({
@@ -215,7 +215,7 @@ export class LinearAdapter {
 
   async updateIssue(input: { target: string; title?: string; description?: string; stateId?: string }): Promise<AdapterActionResult> {
     if (!input.title && !input.description && !input.stateId) {
-      throw new AutoCliError("LINEAR_UPDATE_EMPTY", "Provide --title, --description, or --state-id to update the issue.");
+      throw new MikaCliError("LINEAR_UPDATE_EMPTY", "Provide --title, --description, or --state-id to update the issue.");
     }
 
     const active = await this.ensureUsableSession();
@@ -245,7 +245,7 @@ export class LinearAdapter {
     const issue = await active.client.getIssue(normalizeLinearReference(input.target));
     const body = input.body.trim();
     if (!body) {
-      throw new AutoCliError("LINEAR_COMMENT_EMPTY", "Comment body cannot be empty.");
+      throw new MikaCliError("LINEAR_COMMENT_EMPTY", "Comment body cannot be empty.");
     }
 
     const comment = await active.client.createComment({
@@ -298,10 +298,10 @@ export class LinearAdapter {
         viewer,
       };
     } catch (error) {
-      await this.markSessionExpired(session, error instanceof AutoCliError ? error.message : "Linear rejected the saved web session. Re-import fresh cookies.");
-      throw error instanceof AutoCliError
+      await this.markSessionExpired(session, error instanceof MikaCliError ? error.message : "Linear rejected the saved web session. Re-import fresh cookies.");
+      throw error instanceof MikaCliError
         ? error
-        : new AutoCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
+        : new MikaCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
             cause: error,
           });
     }
@@ -358,7 +358,7 @@ export class LinearAdapter {
     );
 
     if (!team) {
-      throw new AutoCliError("LINEAR_TEAM_NOT_FOUND", `Could not find a Linear team matching "${reference}".`, {
+      throw new MikaCliError("LINEAR_TEAM_NOT_FOUND", `Could not find a Linear team matching "${reference}".`, {
         details: {
           reference,
         },

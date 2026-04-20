@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export const WEB_SEARCH_ENGINES = ["duckduckgo", "bing", "brave", "google", "yahoo", "yandex", "baidu"] as const;
 
@@ -88,7 +88,7 @@ export function normalizeWebSearchEngine(value: string | undefined): WebSearchEn
     return normalized as WebSearchEngine;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "WEBSEARCH_ENGINE_INVALID",
     `Unknown search engine "${value}". Supported engines: ${WEB_SEARCH_ENGINES.join(", ")}.`,
     {

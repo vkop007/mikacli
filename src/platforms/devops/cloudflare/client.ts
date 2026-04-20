@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export interface CloudflareTokenVerification {
   id?: string;
@@ -69,7 +69,7 @@ export class CloudflareApiClient {
         authorization: `Bearer ${this.token}`,
         accept: "application/json",
         "content-type": "application/json",
-        "user-agent": "AutoCLI/0.1 (+https://github.com/vkop007/autocli)",
+        "user-agent": "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)",
       },
     });
 
@@ -77,7 +77,7 @@ export class CloudflareApiClient {
     if (!response.ok || !payload?.success || payload.result === undefined) {
       const message = payload?.errors?.map((error) => error.message).filter((value): value is string => typeof value === "string" && value.length > 0)[0]
         ?? `Cloudflare API request failed with status ${response.status}.`;
-      throw new AutoCliError("CLOUDFLARE_API_ERROR", message, {
+      throw new MikaCliError("CLOUDFLARE_API_ERROR", message, {
         details: {
           status: response.status,
           path,

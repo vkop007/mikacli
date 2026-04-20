@@ -1,11 +1,11 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export const GOOGLE_OPENID_SCOPES = ["openid", "email", "profile"] as const;
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
-const USER_AGENT = "AutoCLI/0.1 (+https://github.com/vkop007/autocli)";
+const USER_AGENT = "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)";
 
 export interface GoogleAuthUrlInput {
   clientId: string;
@@ -38,10 +38,10 @@ export function buildGoogleAuthUrl(input: GoogleAuthUrlInput): string {
   const clientId = input.clientId.trim();
   const redirectUri = input.redirectUri.trim();
   if (!clientId) {
-    throw new AutoCliError("GOOGLE_CLIENT_ID_REQUIRED", "Google OAuth requires --client-id.");
+    throw new MikaCliError("GOOGLE_CLIENT_ID_REQUIRED", "Google OAuth requires --client-id.");
   }
   if (!redirectUri) {
-    throw new AutoCliError("GOOGLE_REDIRECT_URI_REQUIRED", "Google OAuth requires --redirect-uri.");
+    throw new MikaCliError("GOOGLE_REDIRECT_URI_REQUIRED", "Google OAuth requires --redirect-uri.");
   }
 
   const url = new URL(GOOGLE_AUTH_URL);
@@ -77,10 +77,10 @@ export class GoogleOAuthClient {
     const code = input.code.trim();
     const redirectUri = input.redirectUri.trim();
     if (!code) {
-      throw new AutoCliError("GOOGLE_AUTH_CODE_REQUIRED", "Google OAuth login requires --code.");
+      throw new MikaCliError("GOOGLE_AUTH_CODE_REQUIRED", "Google OAuth login requires --code.");
     }
     if (!redirectUri) {
-      throw new AutoCliError("GOOGLE_REDIRECT_URI_REQUIRED", "Google OAuth login with --code also requires --redirect-uri.");
+      throw new MikaCliError("GOOGLE_REDIRECT_URI_REQUIRED", "Google OAuth login with --code also requires --redirect-uri.");
     }
 
     return this.requestToken(new URLSearchParams({
@@ -95,7 +95,7 @@ export class GoogleOAuthClient {
   async refreshAccessToken(input: { refreshToken: string }): Promise<GoogleTokenSet> {
     const refreshToken = input.refreshToken.trim();
     if (!refreshToken) {
-      throw new AutoCliError("GOOGLE_REFRESH_TOKEN_REQUIRED", "Google OAuth refresh requires a saved refresh token.");
+      throw new MikaCliError("GOOGLE_REFRESH_TOKEN_REQUIRED", "Google OAuth refresh requires a saved refresh token.");
     }
 
     return this.requestToken(new URLSearchParams({
@@ -118,7 +118,7 @@ export class GoogleOAuthClient {
 
     const payload = await parseJson(response);
     if (!response.ok) {
-      throw new AutoCliError("GOOGLE_USERINFO_FAILED", extractGoogleErrorMessage(payload, response.status), {
+      throw new MikaCliError("GOOGLE_USERINFO_FAILED", extractGoogleErrorMessage(payload, response.status), {
         details: {
           status: response.status,
         },
@@ -126,12 +126,12 @@ export class GoogleOAuthClient {
     }
 
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-      throw new AutoCliError("GOOGLE_USERINFO_INVALID", "Google userinfo returned an unreadable profile.");
+      throw new MikaCliError("GOOGLE_USERINFO_INVALID", "Google userinfo returned an unreadable profile.");
     }
 
     const record = payload as Record<string, unknown>;
     if (typeof record.sub !== "string") {
-      throw new AutoCliError("GOOGLE_USERINFO_INVALID", "Google userinfo returned an unreadable profile.");
+      throw new MikaCliError("GOOGLE_USERINFO_INVALID", "Google userinfo returned an unreadable profile.");
     }
 
     return {
@@ -159,7 +159,7 @@ export class GoogleOAuthClient {
 
     const payload = await parseJson(response);
     if (!response.ok) {
-      throw new AutoCliError("GOOGLE_TOKEN_REQUEST_FAILED", extractGoogleErrorMessage(payload, response.status), {
+      throw new MikaCliError("GOOGLE_TOKEN_REQUEST_FAILED", extractGoogleErrorMessage(payload, response.status), {
         details: {
           status: response.status,
         },
@@ -167,12 +167,12 @@ export class GoogleOAuthClient {
     }
 
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-      throw new AutoCliError("GOOGLE_TOKEN_INVALID", "Google token exchange returned an unreadable response.");
+      throw new MikaCliError("GOOGLE_TOKEN_INVALID", "Google token exchange returned an unreadable response.");
     }
 
     const record = payload as Record<string, unknown>;
     if (typeof record.access_token !== "string") {
-      throw new AutoCliError("GOOGLE_TOKEN_INVALID", "Google token exchange returned an unreadable response.");
+      throw new MikaCliError("GOOGLE_TOKEN_INVALID", "Google token exchange returned an unreadable response.");
     }
     const expiresIn = typeof record.expires_in === "number" && Number.isFinite(record.expires_in) ? record.expires_in : undefined;
     const scopeText = typeof record.scope === "string" ? record.scope : "";
@@ -189,7 +189,7 @@ export class GoogleOAuthClient {
   private requireClientId(): string {
     const clientId = this.options.clientId?.trim();
     if (!clientId) {
-      throw new AutoCliError("GOOGLE_CLIENT_ID_REQUIRED", "Google OAuth requires --client-id.");
+      throw new MikaCliError("GOOGLE_CLIENT_ID_REQUIRED", "Google OAuth requires --client-id.");
     }
 
     return clientId;
@@ -198,7 +198,7 @@ export class GoogleOAuthClient {
   private requireClientSecret(): string {
     const clientSecret = this.options.clientSecret?.trim();
     if (!clientSecret) {
-      throw new AutoCliError("GOOGLE_CLIENT_SECRET_REQUIRED", "Google OAuth requires --client-secret.");
+      throw new MikaCliError("GOOGLE_CLIENT_SECRET_REQUIRED", "Google OAuth requires --client-secret.");
     }
 
     return clientSecret;
@@ -218,7 +218,7 @@ async function parseJson(response: Response): Promise<unknown> {
   try {
     return JSON.parse(text) as unknown;
   } catch (error) {
-    throw new AutoCliError("GOOGLE_JSON_INVALID", "Google returned a non-JSON response.", {
+    throw new MikaCliError("GOOGLE_JSON_INVALID", "Google returned a non-JSON response.", {
       cause: error,
       details: {
         status: response.status,

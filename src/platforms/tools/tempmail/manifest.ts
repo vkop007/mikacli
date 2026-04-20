@@ -3,7 +3,7 @@ import { Command } from "commander";
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { printTempMailResult } from "./output.js";
 import { tempMailAdapter } from "./adapter.js";
 
@@ -11,14 +11,14 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli tools tempmail domains",
-  "autocli tools tempmail create",
-  "autocli tools tempmail create --name signup-check",
-  "autocli tools tempmail login --address signup-check@example.com --password secret-value",
-  "autocli tools tempmail inbox --limit 10",
-  "autocli tools tempmail wait --timeout 90",
-  "autocli tools tempmail message message-id-example",
-  "autocli tools tempmail delete-inbox",
+  "mikacli tools tempmail domains",
+  "mikacli tools tempmail create",
+  "mikacli tools tempmail create --name signup-check",
+  "mikacli tools tempmail login --address signup-check@example.com --password secret-value",
+  "mikacli tools tempmail inbox --limit 10",
+  "mikacli tools tempmail wait --timeout 90",
+  "mikacli tools tempmail message message-id-example",
+  "mikacli tools tempmail delete-inbox",
 ] as const;
 
 function buildTempMailCommand(options: PlatformCommandBuildOptions = {}): Command {
@@ -37,7 +37,7 @@ function buildTempMailCommand(options: PlatformCommandBuildOptions = {}): Comman
     .description("Create and save a new disposable mailbox")
     .option("--account <name>", "Optional saved mailbox name")
     .option("--name <local-part>", "Optional email local part, for example signup-check")
-    .option("--domain <domain>", "Optional preferred domain from `autocli tools tempmail domains`")
+    .option("--domain <domain>", "Optional preferred domain from `mikacli tools tempmail domains`")
     .option("--password <text>", "Optional mailbox password; defaults to a generated random value")
     .action(async (
       input: {
@@ -214,7 +214,7 @@ async function runTempMailAction(
 function parsePositiveInteger(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new AutoCliError("TEMPMAIL_OPTION_INVALID", `Expected a positive integer, received "${value}".`);
+    throw new MikaCliError("TEMPMAIL_OPTION_INVALID", `Expected a positive integer, received "${value}".`);
   }
 
   return parsed;

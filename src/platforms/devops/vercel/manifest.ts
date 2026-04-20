@@ -12,10 +12,10 @@ export const vercelPlatformDefinition: PlatformDefinition = {
   adapter: vercelAdapter,
   capabilities: vercelCapabilities,
   examples: [
-    "autocli vercel login --token $VERCEL_TOKEN",
-    "autocli vercel me",
-    "autocli vercel teams",
-    "autocli vercel projects",
-    "autocli vercel deployments --project autocli",
+    "mikacli vercel login --token $VERCEL_TOKEN",
+    "mikacli vercel me",
+    "mikacli vercel teams",
+    "mikacli vercel projects",
+    "mikacli vercel deployments --project mikacli",
   ],
 };

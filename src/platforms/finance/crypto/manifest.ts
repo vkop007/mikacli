@@ -9,7 +9,7 @@ import { printCryptoResult } from "./output.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-const EXAMPLES = ["autocli crypto bitcoin", "autocli crypto btc --vs usd", "autocli crypto ethereum --vs inr"] as const;
+const EXAMPLES = ["mikacli crypto bitcoin", "mikacli crypto btc --vs usd", "mikacli crypto ethereum --vs inr"] as const;
 
 function buildCryptoCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("crypto").description("Load crypto prices from a public no-key market feed");

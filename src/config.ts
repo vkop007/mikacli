@@ -4,13 +4,13 @@ import { dirname, join } from "node:path";
 
 import type { Platform } from "./types.js";
 
-export const AUTOCLI_DIR = join(homedir(), ".autocli");
-export const SESSIONS_DIR = join(AUTOCLI_DIR, "sessions");
-export const CONNECTIONS_DIR = join(AUTOCLI_DIR, "connections");
-export const JOBS_DIR = join(AUTOCLI_DIR, "jobs");
-export const CACHE_DIR = join(AUTOCLI_DIR, "cache");
-export const BROWSER_DIR = join(AUTOCLI_DIR, "browser");
-export const LOGS_DIR = join(AUTOCLI_DIR, "logs");
+export const MIKACLI_DIR = join(homedir(), ".mikacli");
+export const SESSIONS_DIR = join(MIKACLI_DIR, "sessions");
+export const CONNECTIONS_DIR = join(MIKACLI_DIR, "connections");
+export const JOBS_DIR = join(MIKACLI_DIR, "jobs");
+export const CACHE_DIR = join(MIKACLI_DIR, "cache");
+export const BROWSER_DIR = join(MIKACLI_DIR, "browser");
+export const LOGS_DIR = join(MIKACLI_DIR, "logs");
 export const ACTION_LOG_PATH = join(LOGS_DIR, "actions.jsonl");
 export const SESSION_FILE_VERSION = 1 as const;
 export const DEFAULT_ACCOUNT_NAME = "default";

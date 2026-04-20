@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { loadTextSource, writeTextOutput } from "../shared/io.js";
 import { collectTextStats, dedupeLines } from "../shared/text.js";
 
@@ -79,7 +79,7 @@ export const textDataAdapter = new TextDataAdapter();
 
 function replaceInText(content: string, find: string, replacement: string, regex: boolean, flags: string | undefined): string {
   if (!find) {
-    throw new AutoCliError("DATA_TEXT_FIND_REQUIRED", "Provide --find with the text or regex to replace.");
+    throw new MikaCliError("DATA_TEXT_FIND_REQUIRED", "Provide --find with the text or regex to replace.");
   }
 
   if (regex) {
@@ -87,7 +87,7 @@ function replaceInText(content: string, find: string, replacement: string, regex
     try {
       return content.replace(new RegExp(find, normalizedFlags), replacement);
     } catch (error) {
-      throw new AutoCliError("DATA_TEXT_REGEX_INVALID", "The provided regular expression is invalid.", {
+      throw new MikaCliError("DATA_TEXT_REGEX_INVALID", "The provided regular expression is invalid.", {
         cause: error,
         details: {
           find,

@@ -2,7 +2,7 @@ import { access, readFile, stat } from "node:fs/promises";
 import { constants, createReadStream, type ReadStream } from "node:fs";
 import { basename, extname } from "node:path";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 export type UploadAssetKind = "image" | "video" | "audio" | "text" | "document" | "archive" | "binary";
 
@@ -57,7 +57,7 @@ export async function readUploadAsset(path: string, options: ReadUploadAssetOpti
   const trimmed = path.trim();
 
   await access(trimmed, constants.R_OK).catch(() => {
-    throw new AutoCliError(
+    throw new MikaCliError(
       options.notFoundCode ?? "FILE_NOT_FOUND",
       options.notFoundMessage ?? `File not found or unreadable: ${trimmed}`,
       {
@@ -84,7 +84,7 @@ export async function readUploadAsset(path: string, options: ReadUploadAssetOpti
   };
 
   if (options.allowedKinds && options.allowedKinds.length > 0 && !options.allowedKinds.includes(asset.kind)) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       options.unsupportedCode ?? "UNSUPPORTED_MEDIA_TYPE",
       options.unsupportedMessage ?? `Unsupported upload asset kind: ${asset.kind}`,
       {
@@ -106,7 +106,7 @@ export async function streamUploadAsset(path: string, options: ReadUploadAssetOp
   const trimmed = path.trim();
 
   await access(trimmed, constants.R_OK).catch(() => {
-    throw new AutoCliError(
+    throw new MikaCliError(
       options.notFoundCode ?? "FILE_NOT_FOUND",
       options.notFoundMessage ?? `File not found or unreadable: ${trimmed}`,
       {
@@ -124,7 +124,7 @@ export async function streamUploadAsset(path: string, options: ReadUploadAssetOp
   const kind = detectUploadAssetKind(mimeType);
 
   if (options.allowedKinds && options.allowedKinds.length > 0 && !options.allowedKinds.includes(kind)) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       options.unsupportedCode ?? "UNSUPPORTED_MEDIA_TYPE",
       options.unsupportedMessage ?? `Unsupported upload asset kind: ${kind}`,
       {
@@ -200,7 +200,7 @@ export function buildMultipartRelatedUpload(input: {
   boundary: string;
   contentType: string;
 } {
-  const boundary = `${input.boundaryPrefix ?? "autocli-upload"}-${Date.now()}`;
+  const boundary = `${input.boundaryPrefix ?? "mikacli-upload"}-${Date.now()}`;
   const prefix = Buffer.from(
     `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(input.metadata)}\r\n--${boundary}\r\nContent-Type: ${input.asset.mimeType}\r\n\r\n`,
     "utf8",

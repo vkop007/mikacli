@@ -315,6 +315,6 @@ describe("twitch service", () => {
         account: "default",
         target: "twitch",
       }),
-    ).rejects.toThrow("shared AutoCLI browser profile");
+    ).rejects.toThrow("shared MikaCLI browser profile");
   });
 });

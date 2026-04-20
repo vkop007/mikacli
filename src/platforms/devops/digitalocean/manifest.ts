@@ -12,10 +12,10 @@ export const digitalOceanPlatformDefinition: PlatformDefinition = {
   adapter: digitalOceanAdapter,
   capabilities: digitalOceanCapabilities,
   examples: [
-    "autocli digitalocean login --token $DIGITALOCEAN_TOKEN",
-    "autocli digitalocean me",
-    "autocli digitalocean apps",
-    "autocli digitalocean deployments my-app",
-    "autocli digitalocean domains",
+    "mikacli digitalocean login --token $DIGITALOCEAN_TOKEN",
+    "mikacli digitalocean me",
+    "mikacli digitalocean apps",
+    "mikacli digitalocean deployments my-app",
+    "mikacli digitalocean domains",
   ],
 };

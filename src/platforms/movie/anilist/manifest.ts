@@ -17,10 +17,10 @@ export const aniListPlatformDefinition: PlatformDefinition = {
     recommendationsDescription: "Load AniList recommendations for an anime",
   }),
   examples: [
-    'autocli anilist search "frieren"',
-    "autocli anilist trending --limit 10",
-    "autocli anilist title 52991",
-    "autocli anilist recommendations 20",
-    "autocli anilist info https://anilist.co/anime/20/Naruto",
+    'mikacli anilist search "frieren"',
+    "mikacli anilist trending --limit 10",
+    "mikacli anilist title 52991",
+    "mikacli anilist recommendations 20",
+    "mikacli anilist info https://anilist.co/anime/20/Naruto",
   ],
 };

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { parseCareersLimitOption, normalizeJobsLimit } from "../shared/options.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -19,7 +19,7 @@ export class ZipRecruiterAdapter {
   }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("ZIPRECRUITER_QUERY_REQUIRED", "Job search query cannot be empty.");
+      throw new MikaCliError("ZIPRECRUITER_QUERY_REQUIRED", "Job search query cannot be empty.");
     }
 
     const limit = input.limit ? parseCareersLimitOption(input.limit.toString()) : 10;
@@ -54,7 +54,7 @@ export class ZipRecruiterAdapter {
         },
       };
     } catch (error) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "ZIPRECRUITER_SEARCH_FAILED",
         `Failed to search ZipRecruiter for "${query}".`,
         {

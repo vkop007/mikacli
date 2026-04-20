@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { GoogleApiClient } from "../shared/client.js";
 
 export interface GoogleFormSummary {
@@ -261,7 +261,7 @@ export class FormsApiClient {
 
     const formId = created.formId?.trim();
     if (!formId) {
-      throw new AutoCliError("GOOGLE_FORM_ID_MISSING", "Google Forms did not return a form id.");
+      throw new MikaCliError("GOOGLE_FORM_ID_MISSING", "Google Forms did not return a form id.");
     }
 
     const description = input.description?.trim();
@@ -290,7 +290,7 @@ export class FormsApiClient {
     }
 
     if (updateMask.length === 0) {
-      throw new AutoCliError("GOOGLE_FORMS_UPDATE_EMPTY", "Google Forms update-info requires at least one change.");
+      throw new MikaCliError("GOOGLE_FORMS_UPDATE_EMPTY", "Google Forms update-info requires at least one change.");
     }
 
     const payload = await this.formsClient.json<GoogleFormsBatchUpdateResponse>(

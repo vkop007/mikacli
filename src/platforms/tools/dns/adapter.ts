@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 export type DnsLookupInput = {
@@ -27,7 +27,7 @@ export class DnsAdapter {
     const statusText = getDnsStatusText(status);
 
     if (answers.length === 0) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "DNS_LOOKUP_FAILED",
         `No DNS answers were returned for ${name}.`,
         {
@@ -75,7 +75,7 @@ export function buildDnsResolveUrl(input: { name: string; type: string }): strin
 export function normalizeDnsName(value: string): string {
   const name = value.trim().replace(/\.+$/u, "");
   if (!name) {
-    throw new AutoCliError("DNS_NAME_REQUIRED", "DNS lookup name cannot be empty.");
+    throw new MikaCliError("DNS_NAME_REQUIRED", "DNS lookup name cannot be empty.");
   }
 
   return name;
@@ -88,7 +88,7 @@ export function normalizeDnsType(value?: string): string {
   }
 
   if (!/^[A-Z0-9]+$/u.test(type)) {
-    throw new AutoCliError("DNS_TYPE_INVALID", `Invalid DNS record type "${value}".`);
+    throw new MikaCliError("DNS_TYPE_INVALID", `Invalid DNS record type "${value}".`);
   }
 
   return type;
@@ -137,11 +137,11 @@ async function fetchDnsJson(url: string): Promise<Record<string, unknown>> {
       signal: AbortSignal.timeout(10000),
       headers: {
         accept: "application/dns-json",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("DNS_LOOKUP_FAILED", "Unable to reach the DNS lookup service.", {
+    throw new MikaCliError("DNS_LOOKUP_FAILED", "Unable to reach the DNS lookup service.", {
       cause: error,
       details: {
         url,
@@ -150,7 +150,7 @@ async function fetchDnsJson(url: string): Promise<Record<string, unknown>> {
   }
 
   if (!response.ok) {
-    throw new AutoCliError("DNS_LOOKUP_FAILED", `DNS lookup failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("DNS_LOOKUP_FAILED", `DNS lookup failed with ${response.status} ${response.statusText}.`, {
       details: {
         url,
         status: response.status,
@@ -162,7 +162,7 @@ async function fetchDnsJson(url: string): Promise<Record<string, unknown>> {
   try {
     return (await response.json()) as Record<string, unknown>;
   } catch (error) {
-    throw new AutoCliError("DNS_RESPONSE_INVALID", "DNS lookup returned invalid JSON.", {
+    throw new MikaCliError("DNS_RESPONSE_INVALID", "DNS lookup returned invalid JSON.", {
       cause: error,
       details: {
         url,

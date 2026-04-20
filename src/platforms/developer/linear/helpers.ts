@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 const LINEAR_ISSUE_REFERENCE_REGEX = /([A-Z][A-Z0-9]+-\d+)/i;
 const LINEAR_UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -11,7 +11,7 @@ export function normalizeLinearAccountName(value: string): string {
 export function normalizeLinearReference(value: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) {
-    throw new AutoCliError("LINEAR_REFERENCE_INVALID", "Linear reference cannot be empty.");
+    throw new MikaCliError("LINEAR_REFERENCE_INVALID", "Linear reference cannot be empty.");
   }
 
   if (LINEAR_UUID_REGEX.test(trimmed)) {

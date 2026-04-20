@@ -6,14 +6,14 @@ import { sheetsAdapter } from "./adapter.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli google sheets login --client-id google-client-id-example --client-secret google-client-secret-example",
-  "autocli google sheets auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
-  "autocli google sheets login --client-id google-client-id-example --client-secret google-client-secret-example --refresh-token google-refresh-token-example",
-  'autocli google sheets create "AutoCLI Demo" --sheet "Sheet1" --json',
-  "autocli google sheets spreadsheet google-sheet-id-example --json",
-  "autocli google sheets values google-sheet-id-example Sheet1!A1:B10 --json",
-  'autocli google sheets append google-sheet-id-example Sheet1!A:B --values "[[\\"Alice\\",42],[\\"Bob\\",7]]" --json',
-  'autocli google sheets update google-sheet-id-example Sheet1!A1:B2 --values "[[\\"Name\\",\\"Score\\"]]" --json',
+  "mikacli google sheets login --client-id google-client-id-example --client-secret google-client-secret-example",
+  "mikacli google sheets auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
+  "mikacli google sheets login --client-id google-client-id-example --client-secret google-client-secret-example --refresh-token google-refresh-token-example",
+  'mikacli google sheets create "MikaCLI Demo" --sheet "Sheet1" --json',
+  "mikacli google sheets spreadsheet google-sheet-id-example --json",
+  "mikacli google sheets values google-sheet-id-example Sheet1!A1:B10 --json",
+  'mikacli google sheets append google-sheet-id-example Sheet1!A:B --values "[[\\"Alice\\",42],[\\"Bob\\",7]]" --json',
+  'mikacli google sheets update google-sheet-id-example Sheet1!A1:B2 --values "[[\\"Name\\",\\"Score\\"]]" --json',
 ] as const;
 
 function buildSheetsCommand(_options: PlatformCommandBuildOptions = {}): Command {

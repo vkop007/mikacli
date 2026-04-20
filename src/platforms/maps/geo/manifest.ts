@@ -87,10 +87,10 @@ export const geoPlatformDefinition: PlatformDefinition = {
     }),
   ],
   examples: [
-    'autocli geo distance "19.0760,72.8777" "28.6139,77.2090"',
-    'autocli geo midpoint "19.0760,72.8777" "28.6139,77.2090"',
-    "autocli geo pluscode-encode 19.0760 72.8777 --length 10",
-    "autocli geo pluscode-decode 7JWV3VGV+9X",
-    "autocli geo elevation 27.9881 86.9250 --dataset mapzen",
+    'mikacli geo distance "19.0760,72.8777" "28.6139,77.2090"',
+    'mikacli geo midpoint "19.0760,72.8777" "28.6139,77.2090"',
+    "mikacli geo pluscode-encode 19.0760 72.8777 --length 10",
+    "mikacli geo pluscode-decode 7JWV3VGV+9X",
+    "mikacli geo elevation 27.9881 86.9250 --dataset mapzen",
   ],
 };

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { getPlatformHomeUrl, getPlatformOrigin } from "../../config.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { parseTikTokTarget } from "../../../utils/targets.js";
@@ -56,7 +56,7 @@ export class TikTokAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "TikTok session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "TikTok session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -104,9 +104,9 @@ export class TikTokAdapter extends BasePlatformAdapter {
 
   async postText(input: TextPostInput): Promise<AdapterActionResult> {
     await this.ensureSavedSession(input.account);
-    throw new AutoCliError(
+    throw new MikaCliError(
       "UNSUPPORTED_ACTION",
-      "TikTok web sessions do not support a text-only post in this CLI. Use `autocli social tiktok post <media-path> --caption ...` once TikTok request signing support is added.",
+      "TikTok web sessions do not support a text-only post in this CLI. Use `mikacli social tiktok post <media-path> --caption ...` once TikTok request signing support is added.",
       {
         details: {
           platform: this.platform,
@@ -142,7 +142,7 @@ export class TikTokAdapter extends BasePlatformAdapter {
     await this.persistSessionState(loaded.session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "TikTok session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "TikTok session has expired.", {
         details: {
           platform: this.platform,
           account: loaded.session.account,
@@ -415,8 +415,8 @@ export class TikTokAdapter extends BasePlatformAdapter {
     return input.match(pattern)?.[1];
   }
 
-  private createWriteSigningError(action: "post" | "like" | "comment", details?: Record<string, unknown>): AutoCliError {
-    return new AutoCliError(
+  private createWriteSigningError(action: "post" | "like" | "comment", details?: Record<string, unknown>): MikaCliError {
+    return new MikaCliError(
       "TIKTOK_SIGNING_REQUIRED",
       `TikTok ${action} is not enabled yet. TikTok web write actions currently require request signing and anti-bot parameters that are not implemented in this adapter yet.`,
       {

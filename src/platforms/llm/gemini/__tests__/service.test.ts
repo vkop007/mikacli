@@ -38,13 +38,13 @@ describe("gemini service helpers", () => {
       ["c_test", "r_test"],
       null,
       null,
-      [["rc_test", ["hi-gemini-autocli"]]],
+      [["rc_test", ["hi-gemini-mikacli"]]],
     ]);
     const chunk = JSON.stringify([["wrb.fr", null, body]]);
     const framed = `)]}'\n\n${chunk.length}\n${chunk}`;
 
     expect(parseGeminiGenerateResponse(framed)).toEqual({
-      outputText: "hi-gemini-autocli",
+      outputText: "hi-gemini-mikacli",
       chatId: "c_test",
       responseId: "r_test",
       candidateId: "rc_test",

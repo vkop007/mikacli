@@ -1,6 +1,6 @@
 import { sanitizeAccountName } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
 import type { AdapterActionResult, AdapterStatusResult, LoginInput, Platform, PlatformSession, SessionStatus, SessionUser } from "../../../types.js";
 import { buildGitHubIssueUrl, buildGitHubRepoUrl, normalizeGitHubToken, parseGitHubRepoTarget } from "./helpers.js";
@@ -628,7 +628,7 @@ export class GitHubAdapter {
     try {
       return await this.validateConnection(loaded);
     } catch (error) {
-      if (error instanceof AutoCliError) {
+      if (error instanceof MikaCliError) {
         await this.markConnectionExpired(loaded, error);
       }
       throw error;
@@ -656,7 +656,7 @@ export class GitHubAdapter {
   private async loadApiKeyConnection(account?: string): Promise<GitHubLoadedConnection> {
     const loaded = await this.connectionStore.loadApiKeyConnection(this.platform, account);
     if (!loaded.auth.token) {
-      throw new AutoCliError("GITHUB_TOKEN_MISSING", "The saved GitHub connection is missing its token.", {
+      throw new MikaCliError("GITHUB_TOKEN_MISSING", "The saved GitHub connection is missing its token.", {
         details: {
           account: loaded.connection.account,
           connectionPath: loaded.path,
@@ -712,7 +712,7 @@ export class GitHubAdapter {
   private async persistConnection(loaded: GitHubLoadedConnection, status: SessionStatus): Promise<void> {
     if (loaded.kind === "cookies") {
       if (!loaded.session || !loaded.jar) {
-        throw new AutoCliError("GITHUB_SESSION_INVALID", "GitHub session data is unavailable for persistence.");
+        throw new MikaCliError("GITHUB_SESSION_INVALID", "GitHub session data is unavailable for persistence.");
       }
 
       const session = createSessionFile({
@@ -731,7 +731,7 @@ export class GitHubAdapter {
     }
 
     if (!loaded.auth) {
-      throw new AutoCliError("GITHUB_TOKEN_MISSING", "The saved GitHub connection is missing its token.");
+      throw new MikaCliError("GITHUB_TOKEN_MISSING", "The saved GitHub connection is missing its token.");
     }
 
     await this.connectionStore.saveApiKeyConnection({
@@ -757,9 +757,9 @@ export class GitHubAdapter {
   private expiredStatus(error: unknown): SessionStatus {
     return {
       state: "expired",
-      message: error instanceof AutoCliError ? error.message : `${this.displayName} session validation failed.`,
+      message: error instanceof MikaCliError ? error.message : `${this.displayName} session validation failed.`,
       lastValidatedAt: new Date().toISOString(),
-      ...(error instanceof AutoCliError ? { lastErrorCode: error.code } : {}),
+      ...(error instanceof MikaCliError ? { lastErrorCode: error.code } : {}),
     };
   }
 

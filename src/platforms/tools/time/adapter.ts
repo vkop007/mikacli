@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 type TimeLookupInput = {
@@ -46,8 +46,8 @@ export class TimeAdapter {
       try {
         return await this.lookupFallback(timezone);
       } catch (fallbackError) {
-        if (worldError instanceof AutoCliError) {
-          throw new AutoCliError(worldError.code, worldError.message, {
+        if (worldError instanceof MikaCliError) {
+          throw new MikaCliError(worldError.code, worldError.message, {
             details: {
               ...(worldError.details ?? {}),
               fallbackError: fallbackError instanceof Error ? fallbackError.message : "unknown fallback error",
@@ -56,7 +56,7 @@ export class TimeAdapter {
           });
         }
 
-        throw new AutoCliError("TIME_REQUEST_FAILED", "Unable to load current time from configured providers.", {
+        throw new MikaCliError("TIME_REQUEST_FAILED", "Unable to load current time from configured providers.", {
           details: {
             timezone: timezone ?? "ip",
             worldError: worldError instanceof Error ? worldError.message : "unknown",
@@ -76,11 +76,11 @@ export class TimeAdapter {
         signal: AbortSignal.timeout(10000),
         headers: {
           accept: "application/json",
-          "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+          "user-agent": "MikaCLI/1.0 (+https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("TIME_REQUEST_FAILED", "Unable to reach worldtimeapi.org.", {
+      throw new MikaCliError("TIME_REQUEST_FAILED", "Unable to reach worldtimeapi.org.", {
         details: { timezone: timezone ?? "ip" },
         cause: error,
       });
@@ -88,12 +88,12 @@ export class TimeAdapter {
 
     if (!response.ok) {
       if (timezone && response.status === 404) {
-        throw new AutoCliError("TIME_TIMEZONE_NOT_FOUND", `Unknown timezone "${timezone}".`, {
+        throw new MikaCliError("TIME_TIMEZONE_NOT_FOUND", `Unknown timezone "${timezone}".`, {
           details: { timezone },
         });
       }
 
-      throw new AutoCliError("TIME_REQUEST_FAILED", `worldtimeapi.org request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("TIME_REQUEST_FAILED", `worldtimeapi.org request failed with ${response.status} ${response.statusText}.`, {
         details: {
           timezone: timezone ?? "ip",
           status: response.status,
@@ -109,7 +109,7 @@ export class TimeAdapter {
     const dayOfWeek = asInteger(record.day_of_week);
 
     if (!localDatetime || !utcOffset || !zone || dayOfWeek === undefined) {
-      throw new AutoCliError("TIME_RESPONSE_INVALID", "worldtimeapi.org response did not include expected time fields.", {
+      throw new MikaCliError("TIME_RESPONSE_INVALID", "worldtimeapi.org response did not include expected time fields.", {
         details: {
           hasDatetime: Boolean(localDatetime),
           hasUtcOffset: Boolean(utcOffset),
@@ -140,7 +140,7 @@ export class TimeAdapter {
     const day = normalizeOptionalString(asString(timePayload.dayOfWeek));
 
     if (!dateTime || !timeZone || !day) {
-      throw new AutoCliError("TIME_RESPONSE_INVALID", "timeapi.io response did not include expected fields.", {
+      throw new MikaCliError("TIME_RESPONSE_INVALID", "timeapi.io response did not include expected fields.", {
         details: {
           timezone: zone,
           hasDateTime: Boolean(dateTime),
@@ -152,7 +152,7 @@ export class TimeAdapter {
 
     const dayIndex = dayNameToIndex(day);
     if (dayIndex === undefined) {
-      throw new AutoCliError("TIME_RESPONSE_INVALID", `Unrecognized weekday "${day}" returned by timeapi.io.`);
+      throw new MikaCliError("TIME_RESPONSE_INVALID", `Unrecognized weekday "${day}" returned by timeapi.io.`);
     }
 
     return {
@@ -173,23 +173,23 @@ export class TimeAdapter {
         signal: AbortSignal.timeout(10000),
         headers: {
           accept: "application/json",
-          "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+          "user-agent": "MikaCLI/1.0 (+https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("TIME_REQUEST_FAILED", "Unable to infer timezone from IP fallback provider.", {
+      throw new MikaCliError("TIME_REQUEST_FAILED", "Unable to infer timezone from IP fallback provider.", {
         cause: error,
       });
     }
 
     if (!response.ok) {
-      throw new AutoCliError("TIME_REQUEST_FAILED", `ipwho.is fallback failed with ${response.status} ${response.statusText}.`);
+      throw new MikaCliError("TIME_REQUEST_FAILED", `ipwho.is fallback failed with ${response.status} ${response.statusText}.`);
     }
 
     const payload = await safeJson(response, "ipwho.is");
     const timezone = normalizeOptionalString(asString(asRecord(asRecord(payload).timezone).id));
     if (!timezone) {
-      throw new AutoCliError("TIME_RESPONSE_INVALID", "ipwho.is fallback did not include timezone metadata.");
+      throw new MikaCliError("TIME_RESPONSE_INVALID", "ipwho.is fallback did not include timezone metadata.");
     }
 
     return timezone;
@@ -203,17 +203,17 @@ export class TimeAdapter {
       signal: AbortSignal.timeout(10000),
       headers: {
         accept: "application/json",
-        "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+        "user-agent": "MikaCLI/1.0 (+https://github.com/)",
       },
     });
 
     if (!response.ok) {
       if (response.status === 404) {
-        throw new AutoCliError("TIME_TIMEZONE_NOT_FOUND", `Unknown timezone "${timezone}".`, {
+        throw new MikaCliError("TIME_TIMEZONE_NOT_FOUND", `Unknown timezone "${timezone}".`, {
           details: { timezone },
         });
       }
-      throw new AutoCliError("TIME_REQUEST_FAILED", `timeapi.io current time request failed with ${response.status} ${response.statusText}.`);
+      throw new MikaCliError("TIME_REQUEST_FAILED", `timeapi.io current time request failed with ${response.status} ${response.statusText}.`);
     }
 
     return asRecord(await safeJson(response, "timeapi.io"));
@@ -227,7 +227,7 @@ export class TimeAdapter {
       signal: AbortSignal.timeout(10000),
       headers: {
         accept: "application/json",
-        "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+        "user-agent": "MikaCLI/1.0 (+https://github.com/)",
       },
     });
 
@@ -336,7 +336,7 @@ async function safeJson(response: Response, label: string): Promise<unknown> {
   try {
     return await response.json();
   } catch (error) {
-    throw new AutoCliError("TIME_RESPONSE_INVALID", `${label} returned invalid JSON.`, {
+    throw new MikaCliError("TIME_RESPONSE_INVALID", `${label} returned invalid JSON.`, {
       cause: error,
     });
   }

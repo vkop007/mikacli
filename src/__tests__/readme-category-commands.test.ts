@@ -12,7 +12,7 @@ describe("README command examples", () => {
     for (const block of extractCodeBlocks(readme)) {
       for (const rawLine of block.split("\n")) {
         const line = rawLine.trim();
-        if (!line.startsWith("autocli ")) {
+        if (!line.startsWith("mikacli ")) {
           continue;
         }
 

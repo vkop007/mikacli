@@ -9,7 +9,7 @@ import { printRobotsResult } from "./output.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-const EXAMPLES = ["autocli robots https://example.com", "autocli robots https://example.com/robots.txt"] as const;
+const EXAMPLES = ["mikacli robots https://example.com", "mikacli robots https://example.com/robots.txt"] as const;
 
 function buildRobotsCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("robots").description("Fetch and parse a robots.txt file");

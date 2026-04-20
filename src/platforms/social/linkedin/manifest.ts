@@ -13,9 +13,9 @@ export const linkedinPlatformDefinition: PlatformDefinition = {
   adapter: linkedinAdapter,
   capabilities: linkedinCapabilities,
   examples: [
-    "autocli linkedin login",
-    "autocli linkedin login --cookies ./linkedin.cookies.json",
-    'autocli linkedin post "Posting from AutoCLI"',
-    "autocli linkedin like https://www.linkedin.com/feed/update/urn:li:activity:1234567890123456789/",
+    "mikacli linkedin login",
+    "mikacli linkedin login --cookies ./linkedin.cookies.json",
+    'mikacli linkedin post "Posting from MikaCLI"',
+    "mikacli linkedin like https://www.linkedin.com/feed/update/urn:li:activity:1234567890123456789/",
   ],
 };

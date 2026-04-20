@@ -135,12 +135,12 @@ describe("bluesky service", () => {
 
     const result = await adapter.postText({
       account: "alice.bsky.social",
-      text: "Hello from AutoCLI",
+      text: "Hello from MikaCLI",
     });
 
     expect(result.ok).toBe(true);
     expect(result.url).toBe("https://bsky.app/profile/alice.bsky.social/post/3lns4example");
     expect(seenBodies[0]).toContain('"collection":"app.bsky.feed.post"');
-    expect(seenBodies[0]).toContain('"text":"Hello from AutoCLI"');
+    expect(seenBodies[0]).toContain('"text":"Hello from MikaCLI"');
   });
 });

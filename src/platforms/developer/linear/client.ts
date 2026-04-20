@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 
 const LINEAR_GRAPHQL_URL = "https://api.linear.app/graphql";
@@ -310,7 +310,7 @@ export class LinearWebClient {
       const message = firstError?.message || "Unknown Linear GraphQL error.";
 
       if (code === "AUTHENTICATION_REQUIRED" || /unauth|authenticate|session/i.test(message)) {
-        throw new AutoCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
+        throw new MikaCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
           details: {
             code,
             message,
@@ -318,7 +318,7 @@ export class LinearWebClient {
         });
       }
 
-      throw new AutoCliError("LINEAR_GRAPHQL_FAILED", `Linear rejected the request: ${message}`, {
+      throw new MikaCliError("LINEAR_GRAPHQL_FAILED", `Linear rejected the request: ${message}`, {
         details: {
           code,
           message,
@@ -327,19 +327,19 @@ export class LinearWebClient {
     }
 
     if (!response.data) {
-      throw new AutoCliError("LINEAR_GRAPHQL_EMPTY", "Linear returned an empty GraphQL response.");
+      throw new MikaCliError("LINEAR_GRAPHQL_EMPTY", "Linear returned an empty GraphQL response.");
     }
 
     return response.data;
   }
 
-  private toLinearError(error: unknown): AutoCliError {
-    if (error instanceof AutoCliError && error.code === "HTTP_REQUEST_FAILED") {
+  private toLinearError(error: unknown): MikaCliError {
+    if (error instanceof MikaCliError && error.code === "HTTP_REQUEST_FAILED") {
       const status = typeof error.details?.status === "number" ? error.details.status : undefined;
       const body = typeof error.details?.body === "string" ? error.details.body : undefined;
 
       if (status === 401 || status === 403) {
-        return new AutoCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
+        return new MikaCliError("LINEAR_SESSION_INVALID", "Linear rejected the saved web session. Re-import fresh cookies.", {
           details: {
             status,
             body,
@@ -347,7 +347,7 @@ export class LinearWebClient {
         });
       }
 
-      return new AutoCliError("LINEAR_REQUEST_FAILED", "Linear request failed.", {
+      return new MikaCliError("LINEAR_REQUEST_FAILED", "Linear request failed.", {
         details: {
           status,
           body,
@@ -356,11 +356,11 @@ export class LinearWebClient {
       });
     }
 
-    if (error instanceof AutoCliError) {
+    if (error instanceof MikaCliError) {
       return error;
     }
 
-    return new AutoCliError("LINEAR_REQUEST_FAILED", error instanceof Error ? error.message : "Linear request failed.", {
+    return new MikaCliError("LINEAR_REQUEST_FAILED", error instanceof Error ? error.message : "Linear request failed.", {
       cause: error,
     });
   }

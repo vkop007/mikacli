@@ -3,7 +3,7 @@ import { access, readFile, unlink, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 
 import { ensureParentDirectory, getCachePath } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export interface YouTubeMusicControllerQueueItem {
   id: string;
@@ -166,7 +166,7 @@ export async function spawnYouTubeMusicPlayback(streamUrl: string): Promise<numb
   child.unref();
 
   if (!child.pid) {
-    throw new AutoCliError("PROCESS_FAILED", "ffplay did not return a process id.");
+    throw new MikaCliError("PROCESS_FAILED", "ffplay did not return a process id.");
   }
 
   return child.pid;
@@ -186,7 +186,7 @@ export async function stopYouTubeMusicPlayback(pid: number | undefined): Promise
 
 export async function pauseYouTubeMusicPlayback(pid: number | undefined): Promise<void> {
   if (!isYouTubeMusicControllerProcessAlive(pid)) {
-    throw new AutoCliError("YTMUSIC_CONTROLLER_NOT_RUNNING", "No active YouTube Music playback process is running.");
+    throw new MikaCliError("YTMUSIC_CONTROLLER_NOT_RUNNING", "No active YouTube Music playback process is running.");
   }
 
   process.kill(pid!, "SIGSTOP");
@@ -194,7 +194,7 @@ export async function pauseYouTubeMusicPlayback(pid: number | undefined): Promis
 
 export async function resumeYouTubeMusicPlayback(pid: number | undefined): Promise<void> {
   if (!isYouTubeMusicControllerProcessAlive(pid)) {
-    throw new AutoCliError("YTMUSIC_CONTROLLER_NOT_RUNNING", "No paused YouTube Music playback process is available.");
+    throw new MikaCliError("YTMUSIC_CONTROLLER_NOT_RUNNING", "No paused YouTube Music playback process is available.");
   }
 
   process.kill(pid!, "SIGCONT");

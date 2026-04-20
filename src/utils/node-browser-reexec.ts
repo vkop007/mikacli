@@ -4,12 +4,12 @@ import { access } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { ensureCacheDirectory, getCachePath } from "../config.js";
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 export const BROWSER_NODE_REEXEC_ERROR_CODE = "BROWSER_NODE_REEXEC_REQUIRED";
 
 export function isBrowserNodeReexecRequired(error: unknown): boolean {
-  return error instanceof AutoCliError && error.code === BROWSER_NODE_REEXEC_ERROR_CODE;
+  return error instanceof MikaCliError && error.code === BROWSER_NODE_REEXEC_ERROR_CODE;
 }
 
 export function resolveNodeCliEntrypoint(moduleUrl: string): string {
@@ -22,7 +22,7 @@ export function buildNodeBrowserReexecArgs(entrypoint: string, argv: readonly st
 
 export async function reexecBrowserCommandInNode(moduleUrl: string, argv: readonly string[]): Promise<number> {
   if (!process.versions.bun) {
-    throw new AutoCliError("NODE_REEXEC_UNNEEDED", "Browser runtime re-exec is only needed when AutoCLI is running under Bun.");
+    throw new MikaCliError("NODE_REEXEC_UNNEEDED", "Browser runtime re-exec is only needed when MikaCLI is running under Bun.");
   }
 
   const entrypoint = resolveNodeCliEntrypoint(moduleUrl);
@@ -31,13 +31,13 @@ export async function reexecBrowserCommandInNode(moduleUrl: string, argv: readon
   const localStorageFile = getCachePath("node-localstorage.json");
 
   return spawnAndWait(
-    process.env.AUTOCLI_NODE_PATH?.trim() || "node",
+    process.env.MIKACLI_NODE_PATH?.trim() || "node",
     buildNodeBrowserReexecArgs(entrypoint, argv, localStorageFile),
     {
     stdio: "inherit",
     env: {
       ...process.env,
-      AUTOCLI_NODE_BROWSER_REEXEC: "1",
+      MIKACLI_NODE_BROWSER_REEXEC: "1",
     },
   });
 }
@@ -71,7 +71,7 @@ async function ensureNodeEntrypointExists(moduleUrl: string, entrypoint: string)
   try {
     await access(entrypoint, constants.R_OK);
   } catch (error) {
-    throw new AutoCliError("NODE_REEXEC_ENTRYPOINT_MISSING", "AutoCLI could not build the Node CLI bundle required for shared-browser actions.", {
+    throw new MikaCliError("NODE_REEXEC_ENTRYPOINT_MISSING", "MikaCLI could not build the Node CLI bundle required for shared-browser actions.", {
       cause: error,
       details: {
         entrypoint,
@@ -97,9 +97,9 @@ function spawnAndWait(
     });
 
     child.on("error", (error) => {
-      rejectPromise(new AutoCliError(
+      rejectPromise(new MikaCliError(
         "NODE_RUNTIME_NOT_FOUND",
-        `AutoCLI could not start Node for the shared-browser fallback. Install Node 20+ or set AUTOCLI_NODE_PATH.`,
+        `MikaCLI could not start Node for the shared-browser fallback. Install Node 20+ or set MIKACLI_NODE_PATH.`,
         {
           cause: error,
           details: {

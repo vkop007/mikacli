@@ -1,6 +1,6 @@
 import { CookieLlmAdapter } from "../shared/base-cookie-llm-adapter.js";
 import { createMediaJobRecord, MediaJobStore } from "../../../core/media-jobs/store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { GeminiService } from "./service.js";
 
 import type { AdapterActionResult, AdapterStatusResult, LoginInput, PlatformSession } from "../../../types.js";
@@ -291,7 +291,7 @@ export class GeminiAdapter extends CookieLlmAdapter {
     });
 
     if (inspection.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", inspection.status.message ?? "Gemini session expired. Re-import cookies.", {
+      throw new MikaCliError("SESSION_EXPIRED", inspection.status.message ?? "Gemini session expired. Re-import cookies.", {
         details: {
           platform: this.platform,
           account: persisted.account,
@@ -311,7 +311,7 @@ export class GeminiAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("INVALID_TARGET", `Expected a Gemini ${input.kind} job target.`);
+      throw new MikaCliError("INVALID_TARGET", `Expected a Gemini ${input.kind} job target.`);
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -321,7 +321,7 @@ export class GeminiAdapter extends CookieLlmAdapter {
     });
 
     if (!existing) {
-      throw new AutoCliError("MEDIA_JOB_NOT_FOUND", `No saved Gemini ${input.kind} job was found for ${target}.`, {
+      throw new MikaCliError("MEDIA_JOB_NOT_FOUND", `No saved Gemini ${input.kind} job was found for ${target}.`, {
         details: {
           platform: this.platform,
           target,
@@ -332,7 +332,7 @@ export class GeminiAdapter extends CookieLlmAdapter {
 
     const outputUrls = existing.job.outputUrls ?? [];
     if (outputUrls.length === 0) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "GEMINI_MEDIA_DOWNLOAD_UNAVAILABLE",
         `The saved Gemini ${input.kind} job does not include any downloadable asset URLs.`,
         {

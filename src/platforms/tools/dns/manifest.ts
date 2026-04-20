@@ -9,7 +9,7 @@ import { printDnsResult } from "./output.js";
 
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
-const EXAMPLES = ["autocli dns openai.com", "autocli dns openai.com --type MX"] as const;
+const EXAMPLES = ["mikacli dns openai.com", "mikacli dns openai.com --type MX"] as const;
 
 function buildDnsCommand(options: PlatformCommandBuildOptions = {}): Command {
   const command = new Command("dns").description("Resolve DNS records through public DNS-over-HTTPS services");

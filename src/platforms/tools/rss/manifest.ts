@@ -10,9 +10,9 @@ import { printRssResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli rss https://hnrss.org/frontpage",
-  "autocli rss https://example.com/feed.xml --limit 5",
-  "autocli rss https://example.com/feed.xml --summary --summary-limit 2",
+  "mikacli rss https://hnrss.org/frontpage",
+  "mikacli rss https://example.com/feed.xml --limit 5",
+  "mikacli rss https://example.com/feed.xml --summary --summary-limit 2",
 ] as const;
 
 function buildRssCommand(options: PlatformCommandBuildOptions = {}): Command {

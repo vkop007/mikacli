@@ -9,9 +9,9 @@ import { printFaviconResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli favicon https://example.com",
-  "autocli favicon openai.com",
-  "autocli favicon https://example.com --json",
+  "mikacli favicon https://example.com",
+  "mikacli favicon openai.com",
+  "mikacli favicon https://example.com --json",
 ] as const;
 
 function buildFaviconCommand(options: PlatformCommandBuildOptions = {}): Command {

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 const DEFAULT_GITLAB_API_BASE_URL = "https://gitlab.com/api/v4";
 const GITLAB_ID_REGEX = /([0-9]+|[a-z0-9_.-]+(?:\/[a-z0-9_.-]+)+)/i;
@@ -19,7 +19,7 @@ export function normalizeGitLabState(value: string | undefined, fallback = "open
 export function normalizeGitLabProjectTarget(target: string): string {
   const trimmed = target.trim();
   if (trimmed.length === 0) {
-    throw new AutoCliError("GITLAB_PROJECT_TARGET_INVALID", "GitLab project target cannot be empty.");
+    throw new MikaCliError("GITLAB_PROJECT_TARGET_INVALID", "GitLab project target cannot be empty.");
   }
 
   if (/^https?:\/\//i.test(trimmed)) {
@@ -27,7 +27,7 @@ export function normalizeGitLabProjectTarget(target: string): string {
     const pathname = url.pathname.replace(/\/+$/, "").replace(/\.git$/i, "");
     const projectPath = extractProjectPathFromUrlPath(pathname);
     if (!projectPath) {
-      throw new AutoCliError("GITLAB_PROJECT_TARGET_INVALID", `Could not resolve a GitLab project from "${target}".`);
+      throw new MikaCliError("GITLAB_PROJECT_TARGET_INVALID", `Could not resolve a GitLab project from "${target}".`);
     }
     return projectPath;
   }
@@ -38,7 +38,7 @@ export function normalizeGitLabProjectTarget(target: string): string {
   }
 
   if (!GITLAB_ID_REGEX.test(compact)) {
-    throw new AutoCliError("GITLAB_PROJECT_TARGET_INVALID", `Invalid GitLab project target "${target}". Expected a numeric ID, path_with_namespace, or project URL.`, {
+    throw new MikaCliError("GITLAB_PROJECT_TARGET_INVALID", `Invalid GitLab project target "${target}". Expected a numeric ID, path_with_namespace, or project URL.`, {
       details: {
         target,
       },
@@ -59,7 +59,7 @@ export function buildGitLabProjectUrl(projectPath: string): string {
 export function resolveGitLabApiBaseUrl(input?: string | null): string {
   const candidate = normalizeBaseUrl(
     input?.trim() ||
-      process.env.AUTOCLI_GITLAB_API_BASE_URL?.trim() ||
+      process.env.MIKACLI_GITLAB_API_BASE_URL?.trim() ||
       process.env.GITLAB_API_BASE_URL?.trim() ||
       DEFAULT_GITLAB_API_BASE_URL,
   );

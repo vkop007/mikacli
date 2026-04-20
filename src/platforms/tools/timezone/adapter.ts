@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -75,7 +75,7 @@ export class TimezoneAdapter {
   private async resolveContext(input: TimezoneInput, timeoutMs: number): Promise<ResolvedTimezoneContext> {
     if (typeof input.lat === "number" || typeof input.lon === "number") {
       if (typeof input.lat !== "number" || typeof input.lon !== "number") {
-        throw new AutoCliError("TIMEZONE_COORDINATES_INVALID", "Provide both --lat and --lon together.");
+        throw new MikaCliError("TIMEZONE_COORDINATES_INVALID", "Provide both --lat and --lon together.");
       }
       return this.resolveFromCoordinates(input.lat, input.lon, timeoutMs);
     }
@@ -105,7 +105,7 @@ export class TimezoneAdapter {
     const response = await fetchJson("https://ipwho.is/", timeoutMs, "TIMEZONE_REQUEST_FAILED", "Unable to infer timezone from IP.");
     const timezone = asString(asRecord(asRecord(response).timezone).id);
     if (!timezone) {
-      throw new AutoCliError("TIMEZONE_RESPONSE_INVALID", "The IP timezone provider did not return a timezone identifier.");
+      throw new MikaCliError("TIMEZONE_RESPONSE_INVALID", "The IP timezone provider did not return a timezone identifier.");
     }
 
     return {
@@ -132,12 +132,12 @@ export class TimezoneAdapter {
       headers: {
         accept: "application/json",
         "accept-language": "en-US,en;q=0.9",
-        "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+        "user-agent": "MikaCLI/1.0 (+https://github.com/)",
       },
     });
 
     if (!response.ok) {
-      throw new AutoCliError("TIMEZONE_REQUEST_FAILED", `Place lookup failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("TIMEZONE_REQUEST_FAILED", `Place lookup failed with ${response.status} ${response.statusText}.`, {
         details: {
           query,
           status: response.status,
@@ -151,7 +151,7 @@ export class TimezoneAdapter {
     const lat = asNumber(first.lat);
     const lon = asNumber(first.lon);
     if (lat === undefined || lon === undefined) {
-      throw new AutoCliError("TIMEZONE_PLACE_NOT_FOUND", `No place match was found for "${query}".`, {
+      throw new MikaCliError("TIMEZONE_PLACE_NOT_FOUND", `No place match was found for "${query}".`, {
         details: {
           query,
         },
@@ -179,7 +179,7 @@ export class TimezoneAdapter {
     timeoutMs: number,
   ): Promise<Extract<ResolvedTimezoneContext, { kind: "coordinates" }>> {
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
-      throw new AutoCliError("TIMEZONE_COORDINATES_INVALID", "Invalid latitude or longitude.");
+      throw new MikaCliError("TIMEZONE_COORDINATES_INVALID", "Invalid latitude or longitude.");
     }
 
     const url = new URL("https://api.open-meteo.com/v1/forecast");
@@ -191,7 +191,7 @@ export class TimezoneAdapter {
     const payload = asRecord(await fetchJson(url.toString(), timeoutMs, "TIMEZONE_REQUEST_FAILED", "Unable to resolve timezone from coordinates."));
     const timezone = asString(payload.timezone);
     if (!timezone) {
-      throw new AutoCliError("TIMEZONE_RESPONSE_INVALID", "Coordinate lookup did not return a timezone.");
+      throw new MikaCliError("TIMEZONE_RESPONSE_INVALID", "Coordinate lookup did not return a timezone.");
     }
 
     return {
@@ -260,18 +260,18 @@ async function fetchJson(url: string, timeoutMs: number, code: string, message: 
       headers: {
         accept: "application/json",
         "accept-language": "en-US,en;q=0.9",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError(code, message, {
+    throw new MikaCliError(code, message, {
       cause: error,
       details: { url },
     });
   }
 
   if (!response.ok) {
-    throw new AutoCliError(code, `${message} (${response.status} ${response.statusText})`, {
+    throw new MikaCliError(code, `${message} (${response.status} ${response.statusText})`, {
       details: {
         url,
         status: response.status,

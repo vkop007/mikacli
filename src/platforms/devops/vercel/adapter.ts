@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { BaseApiKeyPlatformAdapter, type LoadedApiKeyConnection } from "../shared/base.js";
 import { VercelApiClient } from "./client.js";
 
@@ -185,13 +185,13 @@ export class VercelAdapter extends BaseApiKeyPlatformAdapter {
   private async resolveProject(client: VercelApiClient, target: string): Promise<VercelProject> {
     const normalized = target.trim();
     if (!normalized) {
-      throw new AutoCliError("VERCEL_PROJECT_REQUIRED", "Vercel deployments --project requires a project name or project ID.");
+      throw new MikaCliError("VERCEL_PROJECT_REQUIRED", "Vercel deployments --project requires a project name or project ID.");
     }
 
     const projects = await client.listProjects(100);
     const match = projects.find((entry) => entry.id === normalized || entry.name.toLowerCase() === normalized.toLowerCase());
     if (!match) {
-      throw new AutoCliError("VERCEL_PROJECT_NOT_FOUND", `No Vercel project matched "${target}".`);
+      throw new MikaCliError("VERCEL_PROJECT_NOT_FOUND", `No Vercel project matched "${target}".`);
     }
 
     return match;

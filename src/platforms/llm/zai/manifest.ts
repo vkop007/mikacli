@@ -12,9 +12,9 @@ export const zaiPlatformDefinition: PlatformDefinition = {
   adapter: zaiAdapter,
   capabilities: createCookieLlmCapabilities(zaiAdapter),
   examples: [
-    "autocli zai login",
-    "autocli zai login --cookies ./zai.cookies.json",
-    'autocli zai text "Outline a landing page for AutoCLI"',
-    'autocli zai video "Minimal product teaser with neon terminal UI"',
+    "mikacli zai login",
+    "mikacli zai login --cookies ./zai.cookies.json",
+    'mikacli zai text "Outline a landing page for MikaCLI"',
+    'mikacli zai video "Minimal product teaser with neon terminal UI"',
   ],
 };

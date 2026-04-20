@@ -7,10 +7,10 @@ import { dirname, join, resolve } from "node:path";
 import { generateSkillProviderReferences } from "./generate-skill-provider-references.ts";
 
 const projectRoot = resolve(dirname(import.meta.dir));
-const sourceSkillDir = join(projectRoot, "skills", "autocli");
+const sourceSkillDir = join(projectRoot, "skills", "mikacli");
 const codexHome = process.env.CODEX_HOME?.trim() || join(homedir(), ".codex");
 const targetSkillsDir = join(codexHome, "skills");
-const targetSkillDir = join(targetSkillsDir, "autocli");
+const targetSkillDir = join(targetSkillsDir, "mikacli");
 
 async function main(): Promise<void> {
   await generateSkillProviderReferences();
@@ -18,7 +18,7 @@ async function main(): Promise<void> {
   await rm(targetSkillDir, { recursive: true, force: true });
   await cp(sourceSkillDir, targetSkillDir, { recursive: true });
 
-  console.log("AutoCLI skill references regenerated.");
+  console.log("MikaCLI skill references regenerated.");
   console.log(`Installed Codex skill synced to ${targetSkillDir}`);
 }
 

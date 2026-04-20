@@ -56,7 +56,7 @@ export const youtubePostCapability = createAdapterActionCapability({
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved YouTube session" },
     { flags: "--image <path>", description: "Attach one image to the YouTube community post" },
-    { flags: "--browser", description: "Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    { flags: "--browser", description: "Force the post through the shared MikaCLI browser profile instead of the invisible browser-backed path" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",

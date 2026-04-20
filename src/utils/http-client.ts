@@ -1,7 +1,7 @@
 import makeFetchCookie from "fetch-cookie";
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 export interface RequestOptions extends RequestInit {
   responseType?: "json" | "text" | "arrayBuffer";
@@ -112,7 +112,7 @@ export class SessionHttpClient {
         try {
           return JSON.parse(text) as T;
         } catch (error) {
-          throw new AutoCliError("INVALID_JSON_RESPONSE", "Received a non-JSON response from the platform.", {
+          throw new MikaCliError("INVALID_JSON_RESPONSE", "Received a non-JSON response from the platform.", {
             cause: error,
             details: { url, preview: text.slice(0, 200) },
           });
@@ -238,9 +238,9 @@ async function createHttpError(
   url: string,
   response: Response,
   extraDetails: Record<string, unknown> = {},
-): Promise<AutoCliError> {
+): Promise<MikaCliError> {
   const body = await response.text().catch(() => "");
-  return new AutoCliError("HTTP_REQUEST_FAILED", `Request failed with ${response.status} ${response.statusText}`, {
+  return new MikaCliError("HTTP_REQUEST_FAILED", `Request failed with ${response.status} ${response.statusText}`, {
     details: {
       url,
       status: response.status,

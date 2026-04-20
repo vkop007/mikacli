@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   runFirstClassBrowserAction,
   withBrowserActionMetadata,
@@ -235,7 +235,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "Twitch session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "Twitch session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -260,7 +260,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
           validation: probe.status.state === "active" ? "verified" : "partial",
           source: imported.source.kind,
           reused: imported.source.description.includes("existing session"),
-          recommendedNextCommand: `autocli social twitch me${account === "default" ? "" : ` --account ${account}`}`,
+          recommendedNextCommand: `mikacli social twitch me${account === "default" ? "" : ` --account ${account}`}`,
         },
       },
     };
@@ -354,7 +354,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
   async search(input: { account?: string; query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("TWITCH_QUERY_REQUIRED", "Provide a Twitch query to search.");
+      throw new MikaCliError("TWITCH_QUERY_REQUIRED", "Provide a Twitch query to search.");
     }
 
     const limit = normalizeSocialLimit(input.limit, 5, 25);
@@ -367,7 +367,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
           targets: null,
           shouldSkipDiscoveryControl: false,
         },
-        requestID: `autocli-${Date.now()}`,
+        requestID: `mikacli-${Date.now()}`,
       }),
     ]);
     const result = results[0]!;
@@ -417,7 +417,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
           targets: null,
           shouldSkipDiscoveryControl: false,
         },
-        requestID: `autocli-${resolved.username}`,
+        requestID: `mikacli-${resolved.username}`,
       }),
     ]);
     const shellResult = results[0]!;
@@ -429,7 +429,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const homeUser = readPath(homeResult.data, "user");
     const avatarUser = readPath(avatarResult.data, "user");
     if (!shellUser && !homeUser) {
-      throw new AutoCliError("TWITCH_CHANNEL_NOT_FOUND", `Twitch could not find channel ${resolved.username}.`, {
+      throw new MikaCliError("TWITCH_CHANNEL_NOT_FOUND", `Twitch could not find channel ${resolved.username}.`, {
         details: {
           target: input.target,
           username: resolved.username,
@@ -478,7 +478,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
           targets: null,
           shouldSkipDiscoveryControl: false,
         },
-        requestID: `autocli-stream-${resolved.username}`,
+        requestID: `mikacli-stream-${resolved.username}`,
       }),
     ]);
     const shellResult = results[0]!;
@@ -487,7 +487,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
 
     const shellUser = readPath(shellResult.data, "userOrError");
     if (!shellUser) {
-      throw new AutoCliError("TWITCH_CHANNEL_NOT_FOUND", `Twitch could not find channel ${resolved.username}.`, {
+      throw new MikaCliError("TWITCH_CHANNEL_NOT_FOUND", `Twitch could not find channel ${resolved.username}.`, {
         details: {
           target: input.target,
           username: resolved.username,
@@ -639,14 +639,14 @@ export class TwitchAdapter extends BasePlatformAdapter {
         },
       };
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "TWITCH_INTEGRITY_REQUIRED") {
+      if (!(error instanceof MikaCliError) || error.code !== "TWITCH_INTEGRITY_REQUIRED") {
         throw error;
       }
 
       if (!input.browser) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "TWITCH_BROWSER_LOGIN_REQUIRED",
-          "Twitch follow currently needs the shared AutoCLI browser profile to already be logged into twitch.tv. Re-run with `--browser` after `autocli login --browser`.",
+          "Twitch follow currently needs the shared MikaCLI browser profile to already be logged into twitch.tv. Re-run with `--browser` after `mikacli login --browser`.",
           {
             cause: error,
             details: {
@@ -670,7 +670,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
       timeoutSeconds: input.browserTimeoutSeconds ?? TWITCH_DEFAULT_BROWSER_TIMEOUT_SECONDS,
       mode: "required",
       strategy: "shared-only",
-      announceLabel: `Opening shared AutoCLI browser profile for Twitch follow: ${target.url}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Twitch follow: ${target.url}`,
       actionFn: async (page, source) => {
         await this.ensureTwitchBrowserAuthenticated(page);
         await page.goto(target.url, { waitUntil: "domcontentloaded" }).catch(() => undefined);
@@ -683,7 +683,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
 
         if (!response) {
           await this.throwIfTwitchBrowserUnauthenticated(page);
-          throw new AutoCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch did not send the follow request from the browser flow.");
+          throw new MikaCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch did not send the follow request from the browser flow.");
         }
 
         await this.assertTwitchBrowserMutationSucceeded(response, "FollowButton_FollowUser");
@@ -751,14 +751,14 @@ export class TwitchAdapter extends BasePlatformAdapter {
         },
       };
     } catch (error) {
-      if (!(error instanceof AutoCliError) || error.code !== "TWITCH_INTEGRITY_REQUIRED") {
+      if (!(error instanceof MikaCliError) || error.code !== "TWITCH_INTEGRITY_REQUIRED") {
         throw error;
       }
 
       if (!input.browser) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "TWITCH_BROWSER_LOGIN_REQUIRED",
-          "Twitch unfollow currently needs the shared AutoCLI browser profile to already be logged into twitch.tv. Re-run with `--browser` after `autocli login --browser`.",
+          "Twitch unfollow currently needs the shared MikaCLI browser profile to already be logged into twitch.tv. Re-run with `--browser` after `mikacli login --browser`.",
           {
             cause: error,
             details: {
@@ -782,7 +782,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
       timeoutSeconds: input.browserTimeoutSeconds ?? TWITCH_DEFAULT_BROWSER_TIMEOUT_SECONDS,
       mode: "required",
       strategy: "shared-only",
-      announceLabel: `Opening shared AutoCLI browser profile for Twitch unfollow: ${target.url}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Twitch unfollow: ${target.url}`,
       actionFn: async (page, source) => {
         await this.ensureTwitchBrowserAuthenticated(page);
         await page.goto(target.url, { waitUntil: "domcontentloaded" }).catch(() => undefined);
@@ -796,7 +796,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
 
         if (!response) {
           await this.throwIfTwitchBrowserUnauthenticated(page);
-          throw new AutoCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch did not send the unfollow request from the browser flow.");
+          throw new MikaCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch did not send the unfollow request from the browser flow.");
         }
 
         await this.assertTwitchBrowserMutationSucceeded(response, "FollowButton_UnfollowUser");
@@ -834,7 +834,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     });
     const streamEntity = asRecord(stream.data?.stream) ?? asRecord(stream.data?.entity);
     if (!streamEntity || readString(streamEntity.url) !== `${TWITCH_HOME_URL}${resolved.username}` || streamEntity.live !== true) {
-      throw new AutoCliError("TWITCH_CLIP_REQUIRES_LIVE_STREAM", `Twitch can only create clips from a live stream. ${resolved.username} is not live right now.`);
+      throw new MikaCliError("TWITCH_CLIP_REQUIRES_LIVE_STREAM", `Twitch can only create clips from a live stream. ${resolved.username} is not live right now.`);
     }
 
     const targetUrl = readString(streamEntity.url) ?? `${TWITCH_HOME_URL}${resolved.username}`;
@@ -851,7 +851,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
       timeoutSeconds: input.browserTimeoutSeconds ?? TWITCH_DEFAULT_BROWSER_TIMEOUT_SECONDS,
       mode: "required",
       strategy: "shared-only",
-      announceLabel: `Opening shared AutoCLI browser profile for Twitch clip creation: ${targetUrl}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Twitch clip creation: ${targetUrl}`,
       actionFn: async (page, source) => {
         await this.ensureTwitchBrowserAuthenticated(page);
         await page.goto(targetUrl, { waitUntil: "domcontentloaded" }).catch(() => undefined);
@@ -911,7 +911,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const shouldSetMature = typeof input.mature === "boolean";
 
     if (!title && !category && tags.length === 0 && !clearTags && !shouldSetMature) {
-      throw new AutoCliError("TWITCH_UPDATE_STREAM_EMPTY", "Provide at least one Twitch stream field to update.");
+      throw new MikaCliError("TWITCH_UPDATE_STREAM_EMPTY", "Provide at least one Twitch stream field to update.");
     }
 
     const context = await this.loadAuthorizedContext(input.account);
@@ -927,7 +927,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
       timeoutSeconds: input.browserTimeoutSeconds ?? TWITCH_DEFAULT_BROWSER_TIMEOUT_SECONDS,
       mode: "required",
       strategy: "shared-only",
-      announceLabel: `Opening shared AutoCLI browser profile for Twitch stream settings: ${settingsUrl}`,
+      announceLabel: `Opening shared MikaCLI browser profile for Twitch stream settings: ${settingsUrl}`,
       actionFn: async (page, source) => {
         await this.ensureTwitchBrowserAuthenticated(page);
         await page.goto(settingsUrl, { waitUntil: "domcontentloaded" }).catch(() => undefined);
@@ -980,19 +980,19 @@ export class TwitchAdapter extends BasePlatformAdapter {
   }
 
   async postMedia(_input: PostMediaInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Twitch media posting is not implemented yet.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Twitch media posting is not implemented yet.");
   }
 
   async postText(_input: TextPostInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Twitch text posting is not implemented yet.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Twitch text posting is not implemented yet.");
   }
 
   async like(_input: LikeInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Twitch like actions are not implemented yet.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Twitch like actions are not implemented yet.");
   }
 
   async comment(_input: CommentInput): Promise<AdapterActionResult> {
-    throw new AutoCliError("UNSUPPORTED_ACTION", "Twitch comment actions are not implemented yet.");
+    throw new MikaCliError("UNSUPPORTED_ACTION", "Twitch comment actions are not implemented yet.");
   }
 
   private async resolveFollowTarget(context: TwitchAuthContext, targetInput: string): Promise<TwitchFollowTarget> {
@@ -1013,7 +1013,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const user = asRecord(readPath(result.data, "user"));
     const targetId = readString(user?.id);
     if (!user || !targetId) {
-      throw new AutoCliError("TWITCH_CHANNEL_NOT_FOUND", `Twitch could not find channel ${resolved.username}.`, {
+      throw new MikaCliError("TWITCH_CHANNEL_NOT_FOUND", `Twitch could not find channel ${resolved.username}.`, {
         details: {
           target: targetInput,
           username: resolved.username,
@@ -1063,7 +1063,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     });
     const payload = asRecord(readPath(result.data, operationResultKey));
     if (!payload) {
-      throw new AutoCliError("TWITCH_REQUEST_FAILED", `Twitch returned an empty ${action} mutation payload.`, {
+      throw new MikaCliError("TWITCH_REQUEST_FAILED", `Twitch returned an empty ${action} mutation payload.`, {
         details: {
           operationName,
           targetId,
@@ -1073,7 +1073,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
 
     const errorCode = readString(readPath(payload, "error", "code"));
     if (errorCode) {
-      throw new AutoCliError("TWITCH_REQUEST_FAILED", `Twitch rejected the ${action} request with ${errorCode}.`, {
+      throw new MikaCliError("TWITCH_REQUEST_FAILED", `Twitch rejected the ${action} request with ${errorCode}.`, {
         details: {
           operationName,
           targetId,
@@ -1127,7 +1127,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const text = await response.text();
     if (!response.ok) {
       const code = response.status === 401 ? "SESSION_EXPIRED" : "TWITCH_REQUEST_FAILED";
-      throw new AutoCliError(code, "Twitch rejected the GraphQL request.", {
+      throw new MikaCliError(code, "Twitch rejected the GraphQL request.", {
         details: {
           operationName: operationInput.operationName,
           status: response.status,
@@ -1140,7 +1140,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const parsed = parseJson<unknown>(text, "TWITCH_REQUEST_FAILED");
     const record = firstTwitchGraphQlEnvelope(parsed);
     if (!record) {
-      throw new AutoCliError("TWITCH_RESPONSE_INVALID", "Twitch returned an unexpected GraphQL response shape.", {
+      throw new MikaCliError("TWITCH_RESPONSE_INVALID", "Twitch returned an unexpected GraphQL response shape.", {
         details: {
           operationName: operationInput.operationName,
         },
@@ -1153,7 +1153,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     if (errors.length > 0) {
       const firstMessage = readString(errors[0]?.message) ?? "Unknown Twitch GraphQL error.";
       if (hasTwitchIntegrityChallenge(errors)) {
-        throw new AutoCliError("TWITCH_INTEGRITY_REQUIRED", "Twitch rejected the write request behind an integrity challenge.", {
+        throw new MikaCliError("TWITCH_INTEGRITY_REQUIRED", "Twitch rejected the write request behind an integrity challenge.", {
           details: {
             operationName: operationInput.operationName,
             errors,
@@ -1161,7 +1161,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
         });
       }
 
-      throw new AutoCliError(firstMessage.toLowerCase().includes("oauth") ? "SESSION_EXPIRED" : "TWITCH_REQUEST_FAILED", firstMessage, {
+      throw new MikaCliError(firstMessage.toLowerCase().includes("oauth") ? "SESSION_EXPIRED" : "TWITCH_REQUEST_FAILED", firstMessage, {
         details: {
           operationName: operationInput.operationName,
           errors,
@@ -1237,9 +1237,9 @@ export class TwitchAdapter extends BasePlatformAdapter {
   private async throwIfTwitchBrowserUnauthenticated(page: PlaywrightPage): Promise<void> {
     const currentUrl = page.url();
     if (/\/login|\/signup|passport/i.test(currentUrl)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "TWITCH_BROWSER_LOGIN_REQUIRED",
-        "Twitch write actions need the shared AutoCLI browser profile to already be logged into twitch.tv. Run `autocli login --browser` first.",
+        "Twitch write actions need the shared MikaCLI browser profile to already be logged into twitch.tv. Run `mikacli login --browser` first.",
         {
           details: {
             url: currentUrl,
@@ -1256,9 +1256,9 @@ export class TwitchAdapter extends BasePlatformAdapter {
       '[data-a-target="passport-modal"] button:has-text("Log In")',
     ], 1_500).catch(() => null);
     if (unauthenticated) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "TWITCH_BROWSER_LOGIN_REQUIRED",
-        "Twitch write actions need the shared AutoCLI browser profile to already be logged into twitch.tv. Run `autocli login --browser` first.",
+        "Twitch write actions need the shared MikaCLI browser profile to already be logged into twitch.tv. Run `mikacli login --browser` first.",
         {
           details: {
             url: currentUrl,
@@ -1310,7 +1310,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     operationName: string,
   ): Promise<void> {
     if (!response.ok()) {
-      throw new AutoCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch rejected the browser-backed GraphQL request.", {
+      throw new MikaCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch rejected the browser-backed GraphQL request.", {
         details: {
           operationName,
           url: response.url(),
@@ -1323,7 +1323,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const parsed = await response.json().catch(() => null) as unknown;
     const record = firstTwitchGraphQlEnvelope(parsed);
     if (!record) {
-      throw new AutoCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch returned an unreadable browser-backed mutation response.", {
+      throw new MikaCliError("TWITCH_BROWSER_ACTION_FAILED", "Twitch returned an unreadable browser-backed mutation response.", {
         details: {
           operationName,
           url: response.url(),
@@ -1336,7 +1336,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
       .filter(Boolean) as Array<Record<string, unknown>>;
     if (errors.length > 0) {
       if (hasTwitchIntegrityChallenge(errors)) {
-        throw new AutoCliError("TWITCH_INTEGRITY_REQUIRED", "Twitch blocked the browser-backed write behind an integrity challenge.", {
+        throw new MikaCliError("TWITCH_INTEGRITY_REQUIRED", "Twitch blocked the browser-backed write behind an integrity challenge.", {
           details: {
             operationName,
             errors,
@@ -1344,7 +1344,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
         });
       }
 
-      throw new AutoCliError(
+      throw new MikaCliError(
         "TWITCH_BROWSER_ACTION_FAILED",
         readString(errors[0]?.message) ?? "Twitch returned a browser-backed mutation error.",
         {
@@ -1545,7 +1545,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
   private async probeImportedSession(jar: CookieJar): Promise<TwitchProbe> {
     const accessToken = await this.extractCookieValue(jar, "auth-token");
     if (!accessToken) {
-      throw new AutoCliError("TWITCH_AUTH_TOKEN_MISSING", "Expected the Twitch cookie export to include auth-token.", {
+      throw new MikaCliError("TWITCH_AUTH_TOKEN_MISSING", "Expected the Twitch cookie export to include auth-token.", {
         details: {
           cookie: "auth-token",
         },
@@ -1600,7 +1600,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
         },
       };
     } catch (error) {
-      if (error instanceof AutoCliError && error.code === "TWITCH_VALIDATE_FAILED") {
+      if (error instanceof MikaCliError && error.code === "TWITCH_VALIDATE_FAILED") {
         return {
           status: {
             state: "expired",
@@ -1626,7 +1626,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const jar = await this.cookieManager.createJar(session);
     const accessToken = readMetadataString(session.metadata, "accessToken") ?? (await this.extractCookieValue(jar, "auth-token"));
     if (!accessToken) {
-      throw new AutoCliError("TWITCH_AUTH_TOKEN_MISSING", "The saved Twitch session no longer contains auth-token.", {
+      throw new MikaCliError("TWITCH_AUTH_TOKEN_MISSING", "The saved Twitch session no longer contains auth-token.", {
         details: {
           account: session.account,
           sessionPath: path,
@@ -1686,12 +1686,12 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const response = await fetch(TWITCH_VALIDATE_ENDPOINT, {
       headers: {
         authorization: `OAuth ${accessToken}`,
-        "user-agent": "AutoCLI/1.0",
+        "user-agent": "MikaCLI/1.0",
       },
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("TWITCH_VALIDATE_FAILED", "Twitch rejected the saved session during token validation.", {
+      throw new MikaCliError("TWITCH_VALIDATE_FAILED", "Twitch rejected the saved session during token validation.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -1729,7 +1729,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
     const text = await response.text();
     if (!response.ok) {
       const code = response.status === 401 ? "SESSION_EXPIRED" : "TWITCH_REQUEST_FAILED";
-      throw new AutoCliError(code, "Twitch rejected the GraphQL request.", {
+      throw new MikaCliError(code, "Twitch rejected the GraphQL request.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -1740,13 +1740,13 @@ export class TwitchAdapter extends BasePlatformAdapter {
 
     const parsed = parseJson<unknown>(text, "TWITCH_REQUEST_FAILED");
     if (!Array.isArray(parsed)) {
-      throw new AutoCliError("TWITCH_RESPONSE_INVALID", "Twitch returned an unexpected GraphQL response shape.");
+      throw new MikaCliError("TWITCH_RESPONSE_INVALID", "Twitch returned an unexpected GraphQL response shape.");
     }
 
     return parsed.map((entry, index) => {
       const record = asRecord(entry);
       if (!record) {
-        throw new AutoCliError("TWITCH_RESPONSE_INVALID", "Twitch returned an unexpected GraphQL response item.", {
+        throw new MikaCliError("TWITCH_RESPONSE_INVALID", "Twitch returned an unexpected GraphQL response item.", {
           details: {
             index,
           },
@@ -1758,7 +1758,7 @@ export class TwitchAdapter extends BasePlatformAdapter {
         .filter(Boolean) as Array<Record<string, unknown>>;
       if (errors.length > 0) {
         const firstMessage = readString(errors[0]?.message) ?? "Unknown Twitch GraphQL error.";
-        throw new AutoCliError(firstMessage.toLowerCase().includes("oauth") ? "SESSION_EXPIRED" : "TWITCH_REQUEST_FAILED", firstMessage, {
+        throw new MikaCliError(firstMessage.toLowerCase().includes("oauth") ? "SESSION_EXPIRED" : "TWITCH_REQUEST_FAILED", firstMessage, {
           details: {
             operationName: operations[index]?.operationName,
             errors,
@@ -1794,7 +1794,7 @@ export function parseTwitchClipPeriodOption(value: string): TwitchClipPeriod {
     case "last_day":
       return "last-day";
     default:
-      throw new AutoCliError("TWITCH_PERIOD_INVALID", "Expected --period to be all-time, last-week, or last-day.", {
+      throw new MikaCliError("TWITCH_PERIOD_INVALID", "Expected --period to be all-time, last-week, or last-day.", {
         details: { value },
       });
   }
@@ -1985,7 +1985,7 @@ function parseJson<T>(text: string, code: string): T {
   try {
     return JSON.parse(text) as T;
   } catch (error) {
-    throw new AutoCliError(code, "Failed to parse the Twitch response.", {
+    throw new MikaCliError(code, "Failed to parse the Twitch response.", {
       cause: error,
       details: {
         body: text.slice(0, 500),
@@ -2105,7 +2105,7 @@ async function firstVisibleTwitchLocator(
     }
   }
 
-  throw new AutoCliError("TWITCH_BROWSER_TARGET_NOT_FOUND", "Could not find the requested Twitch control in the browser flow.", {
+  throw new MikaCliError("TWITCH_BROWSER_TARGET_NOT_FOUND", "Could not find the requested Twitch control in the browser flow.", {
     details: {
       selectors,
     },
@@ -2139,7 +2139,7 @@ async function findTwitchControlByRoles(
     await page.waitForTimeout(250);
   }
 
-  throw new AutoCliError("TWITCH_BROWSER_TARGET_NOT_FOUND", `Could not find the Twitch ${description} in the shared browser flow.`);
+  throw new MikaCliError("TWITCH_BROWSER_TARGET_NOT_FOUND", `Could not find the Twitch ${description} in the shared browser flow.`);
 }
 
 async function isTwitchLocatorVisible(locator: PlaywrightLocator): Promise<boolean> {

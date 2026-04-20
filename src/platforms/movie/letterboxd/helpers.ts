@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { decodeHtml, trimSummary } from "../shared/helpers.js";
 
 const LETTERBOXD_ORIGIN = "https://letterboxd.com";
@@ -161,7 +161,7 @@ export function parseLetterboxdFilmPage(html: string, url: string): LetterboxdTi
   const titleInfo = parseTitleFromMeta(extractMetaContent(html, "og:title") ?? jsonLd?.name ?? "");
   const title = titleInfo.title.trim();
   if (!title) {
-    throw new AutoCliError("LETTERBOXD_TITLE_PARSE_FAILED", "Letterboxd returned a film page, but the title could not be parsed.", {
+    throw new MikaCliError("LETTERBOXD_TITLE_PARSE_FAILED", "Letterboxd returned a film page, but the title could not be parsed.", {
       details: {
         url,
       },
@@ -201,7 +201,7 @@ export function parseLetterboxdFilmPage(html: string, url: string): LetterboxdTi
 export function parseLetterboxdProfilePage(html: string, url: string): LetterboxdProfile {
   const username = normalizeLetterboxdUsername(url);
   if (!username) {
-    throw new AutoCliError("LETTERBOXD_PROFILE_PARSE_FAILED", "Letterboxd returned a profile page, but the username could not be parsed.", {
+    throw new MikaCliError("LETTERBOXD_PROFILE_PARSE_FAILED", "Letterboxd returned a profile page, but the username could not be parsed.", {
       details: {
         url,
       },

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export interface SupabaseOrganization {
   id: string;
@@ -50,7 +50,7 @@ export class SupabaseApiClient {
         authorization: `Bearer ${this.token}`,
         accept: "application/json",
         "content-type": "application/json",
-        "user-agent": "AutoCLI/0.1 (+https://github.com/vkop007/autocli)",
+        "user-agent": "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)",
       },
     });
 
@@ -60,7 +60,7 @@ export class SupabaseApiClient {
         (isObject(payload) && typeof payload.message === "string" ? payload.message : undefined)
         ?? (isObject(payload) && typeof payload.error === "string" ? payload.error : undefined)
         ?? `Supabase API request failed with status ${response.status}.`;
-      throw new AutoCliError("SUPABASE_API_ERROR", message, {
+      throw new MikaCliError("SUPABASE_API_ERROR", message, {
         details: {
           status: response.status,
           path,
@@ -69,7 +69,7 @@ export class SupabaseApiClient {
     }
 
     if (payload === undefined) {
-      throw new AutoCliError("SUPABASE_API_ERROR", "Supabase returned an empty response.", {
+      throw new MikaCliError("SUPABASE_API_ERROR", "Supabase returned an empty response.", {
         details: { path },
       });
     }

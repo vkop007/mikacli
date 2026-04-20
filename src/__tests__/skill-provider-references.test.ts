@@ -7,9 +7,9 @@ import { describe, expect, test } from "bun:test";
 import { getPlatformDefinitions } from "../platforms/index.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const providerReferenceDir = join(repoRoot, "skills", "autocli", "references", "providers");
+const providerReferenceDir = join(repoRoot, "skills", "mikacli", "references", "providers");
 
-describe("AutoCLI skill provider references", () => {
+describe("MikaCLI skill provider references", () => {
   test("includes a generated provider reference file for every platform", () => {
     for (const definition of getPlatformDefinitions()) {
       expect(existsSync(join(providerReferenceDir, `${definition.id}.md`))).toBe(true);

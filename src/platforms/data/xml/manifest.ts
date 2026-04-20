@@ -10,8 +10,8 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli data xml format ./feed.xml",
-  "autocli data xml to-json ./feed.xml --output ./feed.json",
+  "mikacli data xml format ./feed.xml",
+  "mikacli data xml to-json ./feed.xml --output ./feed.json",
 ] as const;
 
 function buildXmlCommand(options: PlatformCommandBuildOptions = {}): Command {

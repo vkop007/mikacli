@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 import { WebSearchClient } from "./client.js";
 import { getWebSearchEngineInfo, normalizeWebSearchEngine, WEB_SEARCH_ENGINES, type WebSearchEngine } from "./helpers.js";
@@ -37,7 +37,7 @@ export class WebSearchAdapter {
   }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("WEBSEARCH_QUERY_REQUIRED", "Search query cannot be empty.");
+      throw new MikaCliError("WEBSEARCH_QUERY_REQUIRED", "Search query cannot be empty.");
     }
 
     const limit = clamp(input.limit ?? 10, 1, 20);
@@ -76,11 +76,11 @@ export class WebSearchAdapter {
     if (successful.length === 0) {
       if (!input.all && failed.length === 1) {
         const failure = failed[0]?.reason;
-        if (failure instanceof AutoCliError) {
+        if (failure instanceof MikaCliError) {
           throw failure;
         }
 
-        throw new AutoCliError(
+        throw new MikaCliError(
           "WEBSEARCH_ENGINE_FAILED",
           failed[0]?.message ?? "The search engine request failed.",
           {
@@ -93,7 +93,7 @@ export class WebSearchAdapter {
         );
       }
 
-      throw new AutoCliError("WEBSEARCH_FAILED", "Every configured search engine request failed.", {
+      throw new MikaCliError("WEBSEARCH_FAILED", "Every configured search engine request failed.", {
         details: {
           query,
           engines,

@@ -6,14 +6,14 @@ import { docsAdapter } from "./adapter.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli google docs login --client-id google-client-id-example --client-secret google-client-secret-example",
-  "autocli google docs auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
-  "autocli google docs documents --limit 10 --json",
-  "autocli google docs document google-doc-id-example --json",
-  "autocli google docs content google-doc-id-example --json",
-  'autocli google docs create "Launch Notes" --text "Hello from AutoCLI" --json',
-  'autocli google docs append-text google-doc-id-example "More text from AutoCLI" --json',
-  'autocli google docs replace-text google-doc-id-example --search "draft" --replace "published" --json',
+  "mikacli google docs login --client-id google-client-id-example --client-secret google-client-secret-example",
+  "mikacli google docs auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
+  "mikacli google docs documents --limit 10 --json",
+  "mikacli google docs document google-doc-id-example --json",
+  "mikacli google docs content google-doc-id-example --json",
+  'mikacli google docs create "Launch Notes" --text "Hello from MikaCLI" --json',
+  'mikacli google docs append-text google-doc-id-example "More text from MikaCLI" --json',
+  'mikacli google docs replace-text google-doc-id-example --search "draft" --replace "published" --json',
 ] as const;
 
 function buildDocsCommand(_options: PlatformCommandBuildOptions = {}): Command {

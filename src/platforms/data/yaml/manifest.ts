@@ -10,8 +10,8 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli data yaml format ./config.yaml",
-  "autocli data yaml to-json ./config.yaml --output ./config.json",
+  "mikacli data yaml format ./config.yaml",
+  "mikacli data yaml to-json ./config.yaml --output ./config.json",
 ] as const;
 
 function buildYamlCommand(options: PlatformCommandBuildOptions = {}): Command {

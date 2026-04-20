@@ -1,6 +1,6 @@
-# Contributing to AutoCLI
+# Contributing to MikaCLI
 
-Thanks for helping improve AutoCLI.
+Thanks for helping improve MikaCLI.
 
 ## Development Setup
 
@@ -22,7 +22,7 @@ bun run dev status
 
 ```bash
 bun run link:global
-autocli --help
+mikacli --help
 ```
 
 ## Useful Scripts
@@ -39,7 +39,7 @@ bun run sync:docs
 
 - `bun run generate:platform-registry` rebuilds generated platform metadata and runtime registry files.
 - `bun run generate:readme` refreshes the generated sections inside `README.md`.
-- `bun run generate:skill-providers` rebuilds provider reference docs under `skills/autocli/references/providers`.
+- `bun run generate:skill-providers` rebuilds provider reference docs under `skills/mikacli/references/providers`.
 - `bun run sync:skills` regenerates skill provider references and syncs the installed Codex skill.
 - `bun run sync:docs` refreshes the README, regenerates skill provider references, and syncs the installed Codex skill.
 
@@ -101,7 +101,7 @@ bun run build
 ## Docs and Generated Files
 
 - `README.md` contains generated marker-based sections. Use `bun run generate:readme` or `bun run sync:docs` after provider or metadata changes.
-- `skills/autocli/references/providers` is generated. Use `bun run generate:skill-providers` or `bun run sync:skills`.
+- `skills/mikacli/references/providers` is generated. Use `bun run generate:skill-providers` or `bun run sync:skills`.
 - Platform registry files under `src/platforms/generated-*` are generated from provider manifests. Use `bun run generate:platform-registry`.
 - If a generated file changes unexpectedly, review the source manifest or shared runtime metadata first.
 

@@ -1,6 +1,6 @@
 import { sanitizeAccountName } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { emitInteractiveProgress } from "../../../utils/interactive-progress.js";
 import { getPlatformDisplayName } from "../../config.js";
 import { buildGoogleAuthUrl, GOOGLE_OPENID_SCOPES, GoogleOAuthClient, type GoogleUserProfile } from "./oauth.js";
@@ -66,10 +66,10 @@ export abstract class BaseGooglePlatformAdapter {
     const clientId = input.clientId?.trim();
     const redirectUri = input.redirectUri?.trim();
     if (!clientId) {
-      throw new AutoCliError("GOOGLE_CLIENT_ID_REQUIRED", `${this.displayName} auth-url requires --client-id.`);
+      throw new MikaCliError("GOOGLE_CLIENT_ID_REQUIRED", `${this.displayName} auth-url requires --client-id.`);
     }
     if (!redirectUri) {
-      throw new AutoCliError("GOOGLE_REDIRECT_URI_REQUIRED", `${this.displayName} auth-url requires --redirect-uri.`);
+      throw new MikaCliError("GOOGLE_REDIRECT_URI_REQUIRED", `${this.displayName} auth-url requires --redirect-uri.`);
     }
 
     const scopes = this.resolveScopes(input.scopes);
@@ -103,13 +103,13 @@ export abstract class BaseGooglePlatformAdapter {
     const scopes = this.resolveScopes(input.scopes);
 
     if (!clientId) {
-      throw new AutoCliError("GOOGLE_CLIENT_ID_REQUIRED", `${this.displayName} login requires --client-id.`);
+      throw new MikaCliError("GOOGLE_CLIENT_ID_REQUIRED", `${this.displayName} login requires --client-id.`);
     }
     if (!clientSecret) {
-      throw new AutoCliError("GOOGLE_CLIENT_SECRET_REQUIRED", `${this.displayName} login requires --client-secret.`);
+      throw new MikaCliError("GOOGLE_CLIENT_SECRET_REQUIRED", `${this.displayName} login requires --client-secret.`);
     }
     if (code && !redirectUri) {
-      throw new AutoCliError("GOOGLE_REDIRECT_URI_REQUIRED", `${this.displayName} login with --code also requires --redirect-uri.`);
+      throw new MikaCliError("GOOGLE_REDIRECT_URI_REQUIRED", `${this.displayName} login with --code also requires --redirect-uri.`);
     }
 
     let authUrl: string | undefined;
@@ -156,7 +156,7 @@ export abstract class BaseGooglePlatformAdapter {
 
     const resolvedRefreshToken = tokenSet.refreshToken ?? refreshToken;
     if (!resolvedRefreshToken) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "GOOGLE_REFRESH_TOKEN_MISSING",
         "Google did not return a refresh token. Re-run the consent flow with offline access and consent enabled.",
       );
@@ -359,7 +359,7 @@ export abstract class BaseGooglePlatformAdapter {
     const auth = await this.refreshIfNeeded(loaded.auth);
     const accessToken = auth.accessToken?.trim();
     if (!accessToken) {
-      throw new AutoCliError("GOOGLE_ACCESS_TOKEN_MISSING", `No usable ${this.displayName} access token is saved. Log in again.`);
+      throw new MikaCliError("GOOGLE_ACCESS_TOKEN_MISSING", `No usable ${this.displayName} access token is saved. Log in again.`);
     }
 
     const oauth = new GoogleOAuthClient({
@@ -418,7 +418,7 @@ export abstract class BaseGooglePlatformAdapter {
     const clientSecret = auth.clientSecret?.trim();
     const refreshToken = auth.refreshToken?.trim();
     if (!clientId || !clientSecret || !refreshToken) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "GOOGLE_REFRESH_UNAVAILABLE",
         `The saved ${this.displayName} OAuth connection cannot be refreshed. Log in again with a client id, client secret, and refresh token.`,
       );
@@ -542,5 +542,5 @@ function announceGoogleLoopbackLogin(
 
   console.error(`Open this Google consent URL for ${displayName}:`);
   console.error(authUrl);
-  console.error(`AutoCLI will wait up to ${timeout} seconds for the browser callback.`);
+  console.error(`MikaCLI will wait up to ${timeout} seconds for the browser callback.`);
 }

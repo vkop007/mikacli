@@ -5,5 +5,5 @@ export function buildPlatformCommandPrefix(
   categoryOverride?: string,
 ): string {
   const category = categoryOverride ?? definition.commandCategories?.[0] ?? definition.category;
-  return definition.id === category ? `autocli ${category}` : `autocli ${category} ${definition.id}`;
+  return definition.id === category ? `mikacli ${category}` : `mikacli ${category} ${definition.id}`;
 }

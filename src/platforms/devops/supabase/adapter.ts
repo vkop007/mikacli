@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { BaseApiKeyPlatformAdapter, type LoadedApiKeyConnection } from "../shared/base.js";
 import { SupabaseApiClient } from "./client.js";
 
@@ -197,7 +197,7 @@ export class SupabaseAdapter extends BaseApiKeyPlatformAdapter {
   private async resolveProject(projects: SupabaseProject[], target: string): Promise<SupabaseProject> {
     const normalized = target.trim();
     if (!normalized) {
-      throw new AutoCliError("SUPABASE_PROJECT_REQUIRED", "Supabase functions require a project name, ref, or ID.");
+      throw new MikaCliError("SUPABASE_PROJECT_REQUIRED", "Supabase functions require a project name, ref, or ID.");
     }
 
     const match = projects.find((project) =>
@@ -207,11 +207,11 @@ export class SupabaseAdapter extends BaseApiKeyPlatformAdapter {
     );
 
     if (!match) {
-      throw new AutoCliError("SUPABASE_PROJECT_NOT_FOUND", `No Supabase project matched "${target}".`);
+      throw new MikaCliError("SUPABASE_PROJECT_NOT_FOUND", `No Supabase project matched "${target}".`);
     }
 
     if (!(match.ref ?? match.id)) {
-      throw new AutoCliError("SUPABASE_PROJECT_REFERENCE_MISSING", `Supabase project "${match.name}" does not include a project reference.`);
+      throw new MikaCliError("SUPABASE_PROJECT_REFERENCE_MISSING", `Supabase project "${match.name}" does not include a project reference.`);
     }
 
     return match;

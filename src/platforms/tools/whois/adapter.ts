@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 type WhoisTargetKind = "domain" | "ip";
@@ -53,7 +53,7 @@ export const whoisAdapter = new WhoisAdapter();
 export function normalizeWhoisTarget(value: string): string {
   const target = value.trim().toLowerCase();
   if (!target) {
-    throw new AutoCliError("WHOIS_TARGET_REQUIRED", "WHOIS lookup target cannot be empty.");
+    throw new MikaCliError("WHOIS_TARGET_REQUIRED", "WHOIS lookup target cannot be empty.");
   }
 
   return target;
@@ -138,18 +138,18 @@ async function fetchWhoisJson(url: string): Promise<Record<string, unknown>> {
       signal: AbortSignal.timeout(12000),
       headers: {
         accept: "application/rdap+json, application/json;q=0.9, */*;q=0.8",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("WHOIS_LOOKUP_FAILED", "Unable to reach the WHOIS lookup service.", {
+    throw new MikaCliError("WHOIS_LOOKUP_FAILED", "Unable to reach the WHOIS lookup service.", {
       cause: error,
       details: { url },
     });
   }
 
   if (!response.ok) {
-    throw new AutoCliError("WHOIS_LOOKUP_FAILED", `WHOIS lookup failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("WHOIS_LOOKUP_FAILED", `WHOIS lookup failed with ${response.status} ${response.statusText}.`, {
       details: {
         url,
         status: response.status,
@@ -161,7 +161,7 @@ async function fetchWhoisJson(url: string): Promise<Record<string, unknown>> {
   try {
     return (await response.json()) as Record<string, unknown>;
   } catch (error) {
-    throw new AutoCliError("WHOIS_RESPONSE_INVALID", "WHOIS lookup returned invalid JSON.", {
+    throw new MikaCliError("WHOIS_RESPONSE_INVALID", "WHOIS lookup returned invalid JSON.", {
       cause: error,
       details: { url },
     });

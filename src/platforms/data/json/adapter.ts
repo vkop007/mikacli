@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { loadTextSource, loadTextSources, writeTextOutput } from "../shared/io.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -35,7 +35,7 @@ export class JsonDataAdapter {
     const parsed = parseJsonValue(loaded.content);
     const value = getJsonAtPath(parsed, input.path);
     if (typeof value === "undefined") {
-      throw new AutoCliError("DATA_JSON_PATH_NOT_FOUND", `JSON path "${input.path}" did not match anything.`, {
+      throw new MikaCliError("DATA_JSON_PATH_NOT_FOUND", `JSON path "${input.path}" did not match anything.`, {
         details: {
           path: input.path,
           source: loaded.label,
@@ -64,7 +64,7 @@ export class JsonDataAdapter {
 
   async merge(input: { sources: string[]; indent?: number; sortKeys?: boolean; output?: string }): Promise<AdapterActionResult> {
     if (input.sources.length < 2) {
-      throw new AutoCliError("DATA_JSON_MERGE_INPUTS_REQUIRED", "Provide at least two JSON inputs to merge.");
+      throw new MikaCliError("DATA_JSON_MERGE_INPUTS_REQUIRED", "Provide at least two JSON inputs to merge.");
     }
 
     const loadedSources = await loadTextSources(input.sources);
@@ -94,7 +94,7 @@ function parseJsonValue(raw: string): JsonValue {
   try {
     return JSON.parse(raw) as JsonValue;
   } catch (error) {
-    throw new AutoCliError("DATA_JSON_INVALID", "Input is not valid JSON.", {
+    throw new MikaCliError("DATA_JSON_INVALID", "Input is not valid JSON.", {
       cause: error,
     });
   }
@@ -153,7 +153,7 @@ function getJsonAtPath(value: JsonValue, path: string): JsonValue | undefined {
 function parseJsonPath(path: string): Array<string | number> {
   const trimmed = path.trim();
   if (!trimmed) {
-    throw new AutoCliError("DATA_JSON_PATH_INVALID", "Provide a JSON path like data.items[0].title.");
+    throw new MikaCliError("DATA_JSON_PATH_INVALID", "Provide a JSON path like data.items[0].title.");
   }
 
   const segments: Array<string | number> = [];
@@ -177,7 +177,7 @@ function parseJsonPath(path: string): Array<string | number> {
   }
 
   if (segments.length === 0) {
-    throw new AutoCliError("DATA_JSON_PATH_INVALID", "Provide a JSON path like data.items[0].title.");
+    throw new MikaCliError("DATA_JSON_PATH_INVALID", "Provide a JSON path like data.items[0].title.");
   }
 
   return segments;

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { runFirstClassBrowserAction } from "../../../core/runtime/browser-action-runtime.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { parseAmazonProductTarget } from "../../../utils/targets.js";
@@ -154,9 +154,9 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       }
 
       if (!item) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "AMAZON_ADD_TO_CART_NOT_CONFIRMED",
-          `Amazon loaded the cart, but AutoCLI could not confirm that ${parsed.asin} was added.`,
+          `Amazon loaded the cart, but MikaCLI could not confirm that ${parsed.asin} was added.`,
           {
             details: {
               asin: parsed.asin,
@@ -212,7 +212,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       const beforeCart = await this.loadAmazonCartFromPage(page, session);
       const item = findAmazonCartItem(beforeCart, parsed.asin);
       if (!item) {
-        throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${parsed.asin}.`, {
+        throw new MikaCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${parsed.asin}.`, {
           details: {
             asin: parsed.asin,
           },
@@ -225,7 +225,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       const afterCart = await this.loadAmazonCartFromPage(page, session);
 
       if (findAmazonCartItem(afterCart, parsed.asin)) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "AMAZON_REMOVE_FROM_CART_NOT_CONFIRMED",
           `Amazon still shows ${parsed.asin} in the cart after the remove action.`,
           {
@@ -318,7 +318,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
   async orderDetail(input: { target: string; account?: string; browser?: boolean; browserTimeoutSeconds?: number }): Promise<AdapterActionResult> {
     const orderId = input.target.trim();
     if (!orderId) {
-      throw new AutoCliError("AMAZON_ORDER_REQUIRED", "Amazon order ID cannot be empty.");
+      throw new MikaCliError("AMAZON_ORDER_REQUIRED", "Amazon order ID cannot be empty.");
     }
 
     if (input.browser) {
@@ -339,7 +339,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     }
 
     if (!order) {
-      throw new AutoCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not find order ${orderId}.`, {
+      throw new MikaCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not find order ${orderId}.`, {
         details: {
           orderId,
         },
@@ -366,7 +366,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
   async search(input: { query: string; limit?: number; account?: string }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("AMAZON_QUERY_REQUIRED", "Amazon search query cannot be empty.");
+      throw new MikaCliError("AMAZON_QUERY_REQUIRED", "Amazon search query cannot be empty.");
     }
 
     const client = this.createGuestClient();
@@ -418,21 +418,21 @@ export class AmazonAdapter extends BaseShoppingAdapter {
 
     if (isAmazonLoggedOutUrl(response.response.url)) {
       if (await this.isAmazonStillSignedInOutsideOrders(client, session)) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "AMAZON_ORDERS_REAUTH_REQUIRED",
           "Amazon is still signed in for account/cart pages, but orders currently require a real browser-authenticated context beyond imported cookies.",
         );
       }
 
-      throw new AutoCliError("SESSION_EXPIRED", "Amazon redirected the saved session to a sign-in or claim flow. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "Amazon redirected the saved session to a sign-in or claim flow. Re-import cookies.txt.");
     }
 
     const pageSummary = extractAmazonOrdersPageSummary(response.data);
     const orders = extractAmazonOrders(response.data).slice(0, clamp(input.limit ?? 5, 1, 25));
     if (orders.length === 0 && !pageSummary.empty) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "AMAZON_ORDERS_LAYOUT_CHANGED",
-        "Amazon loaded the orders page, but AutoCLI could not extract the order cards from the current layout.",
+        "Amazon loaded the orders page, but MikaCLI could not extract the order cards from the current layout.",
       );
     }
 
@@ -530,7 +530,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
           state: "unknown",
           message: "Amazon validation was unavailable, but the imported session was saved.",
           lastValidatedAt: new Date().toISOString(),
-          lastErrorCode: error instanceof AutoCliError ? error.code : "REQUEST_FAILED",
+          lastErrorCode: error instanceof MikaCliError ? error.code : "REQUEST_FAILED",
         },
       };
     }
@@ -570,7 +570,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       });
 
     if (response.response.url.includes("/errors/validateCaptcha") || response.data.includes("Type the characters you see in this image")) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "AMAZON_ANTI_BOT_BLOCKED",
         "Amazon blocked the request with a validation or anti-bot page. A fresh browser session or slower request cadence may be required.",
       );
@@ -591,7 +591,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       });
 
     if (response.response.url.includes("/errors/validateCaptcha") || response.data.includes("Type the characters you see in this image")) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "AMAZON_ANTI_BOT_BLOCKED",
         "Amazon blocked the request with a validation or anti-bot page. A fresh browser session or slower request cadence may be required.",
       );
@@ -617,7 +617,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       }
     }
 
-    throw lastError instanceof Error ? lastError : new AutoCliError("AMAZON_ACCOUNT_UNAVAILABLE", "Amazon account pages were unavailable for the current session.");
+    throw lastError instanceof Error ? lastError : new MikaCliError("AMAZON_ACCOUNT_UNAVAILABLE", "Amazon account pages were unavailable for the current session.");
   }
 
   private getAmazonOrigin(session?: PlatformSession): string {
@@ -766,7 +766,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       return html;
     }
 
-    throw new AutoCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not load order details for ${orderId}.`, {
+    throw new MikaCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not load order details for ${orderId}.`, {
       details: {
         orderId,
       },
@@ -780,9 +780,9 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     const orders = extractAmazonOrders(page.html).slice(0, clamp(input.limit ?? 5, 1, 25));
 
     if (orders.length === 0 && !pageSummary.empty) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "AMAZON_ORDERS_LAYOUT_CHANGED",
-        "Amazon loaded the orders page in the browser, but AutoCLI could not extract the order cards from the current layout.",
+        "Amazon loaded the orders page in the browser, but MikaCLI could not extract the order cards from the current layout.",
       );
     }
 
@@ -860,7 +860,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     }
 
     if (!order) {
-      throw new AutoCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not find order ${orderId}.`, {
+      throw new MikaCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not find order ${orderId}.`, {
         details: {
           orderId,
         },
@@ -933,7 +933,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
 
     throw lastError instanceof Error
       ? lastError
-      : new AutoCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not load order details for ${orderId}.`, {
+      : new MikaCliError("AMAZON_ORDER_NOT_FOUND", `Amazon could not load order details for ${orderId}.`, {
           details: {
             orderId,
           },
@@ -942,22 +942,22 @@ export class AmazonAdapter extends BaseShoppingAdapter {
 
   private assertAmazonBrowserPageState(html: string, finalUrl: string): void {
     if (finalUrl.includes("/errors/validateCaptcha") || html.includes("Type the characters you see in this image")) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "AMAZON_ANTI_BOT_BLOCKED",
         "Amazon blocked the browser action with a validation or anti-bot page. A fresher browser session may be required.",
       );
     }
 
     if (isAmazonLoggedOutUrl(finalUrl)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "SESSION_EXPIRED",
-        "Amazon redirected the browser session to sign-in or claim verification. Re-import cookies.txt or log into Amazon once with `autocli login --browser --url https://www.amazon.com/` so the shared browser profile can be reused.",
+        "Amazon redirected the browser session to sign-in or claim verification. Re-import cookies.txt or log into Amazon once with `mikacli login --browser --url https://www.amazon.com/` so the shared browser profile can be reused.",
       );
     }
   }
 
   private shouldRetryAmazonBrowserWithProfile(error: unknown): boolean {
-    if (!(error instanceof AutoCliError)) {
+    if (!(error instanceof MikaCliError)) {
       return false;
     }
 
@@ -988,11 +988,11 @@ export class AmazonAdapter extends BaseShoppingAdapter {
         },
         {
           source: "profile",
-          shouldContinueOnError: (error) => error instanceof AutoCliError && error.code === "BROWSER_PROFILE_IN_USE",
+          shouldContinueOnError: (error) => error instanceof MikaCliError && error.code === "BROWSER_PROFILE_IN_USE",
         },
         {
           source: "shared",
-          announceLabel: `Reusing the shared AutoCLI browser profile for Amazon: ${targetUrl}`,
+          announceLabel: `Reusing the shared MikaCLI browser profile for Amazon: ${targetUrl}`,
         },
       ],
       actionFn: action,
@@ -1056,7 +1056,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       return;
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "AMAZON_ADD_TO_CART_UNAVAILABLE",
       `Amazon did not show a usable add-to-cart control for ${asin}.`,
       {
@@ -1097,7 +1097,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     const row = this.getAmazonCartRow(page, asin);
     const rowCount = await row.count().catch(() => 0);
     if (rowCount < 1) {
-      throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${asin}.`, {
+      throw new MikaCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${asin}.`, {
         details: {
           asin,
         },
@@ -1126,7 +1126,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       return;
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "AMAZON_REMOVE_FROM_CART_UNAVAILABLE",
       `Amazon did not show a usable remove control for ${asin}.`,
       {
@@ -1147,7 +1147,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     let cart = await this.loadAmazonCartFromPage(page, session);
     let item = findAmazonCartItem(cart, asin);
     if (!item) {
-      throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${asin}.`, {
+      throw new MikaCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart does not contain ${asin}.`, {
         details: {
           asin,
         },
@@ -1157,7 +1157,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     const previousQuantity = getAmazonCartQuantity(cart, asin);
     let currentQuantity = previousQuantity;
     if (currentQuantity < 1) {
-      throw new AutoCliError("AMAZON_CART_QUANTITY_UNAVAILABLE", `Amazon did not expose a usable cart quantity for ${asin}.`, {
+      throw new MikaCliError("AMAZON_CART_QUANTITY_UNAVAILABLE", `Amazon did not expose a usable cart quantity for ${asin}.`, {
         details: {
           asin,
         },
@@ -1172,7 +1172,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       const row = this.getAmazonCartRow(page, asin);
       const rowCount = await row.count().catch(() => 0);
       if (rowCount < 1) {
-        throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart no longer shows ${asin} while updating quantity.`, {
+        throw new MikaCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart no longer shows ${asin} while updating quantity.`, {
           details: {
             asin,
           },
@@ -1183,7 +1183,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       const stepper = row.locator(`button[data-a-selector='${direction}']`).first();
       const stepperCount = await stepper.count().catch(() => 0);
       if (stepperCount < 1) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "AMAZON_UPDATE_CART_UNAVAILABLE",
           `Amazon did not show a usable ${direction} control for ${asin}.`,
           {
@@ -1206,7 +1206,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
       cart = await this.loadAmazonCartFromPage(page, session);
       item = findAmazonCartItem(cart, asin);
       if (!item) {
-        throw new AutoCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart no longer shows ${asin} after updating quantity.`, {
+        throw new MikaCliError("AMAZON_CART_ITEM_NOT_FOUND", `Amazon cart no longer shows ${asin} after updating quantity.`, {
           details: {
             asin,
             targetQuantity,
@@ -1216,7 +1216,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
 
       currentQuantity = getAmazonCartQuantity(cart, asin);
       if (currentQuantity < 1) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "AMAZON_CART_QUANTITY_UNAVAILABLE",
           `Amazon did not expose the updated quantity for ${asin}.`,
           {
@@ -1230,7 +1230,7 @@ export class AmazonAdapter extends BaseShoppingAdapter {
     }
 
     if (currentQuantity !== targetQuantity) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "AMAZON_UPDATE_CART_NOT_CONFIRMED",
         `Amazon still shows quantity ${currentQuantity} for ${asin} after trying to update it to ${targetQuantity}.`,
         {
@@ -1327,7 +1327,7 @@ function extractAmazonSearchResults(html: string): AmazonSearchResult[] {
 function extractAmazonProduct(html: string, sourceUrl: string, asin: string): AmazonProductInfo {
   const title = collapseWhitespace(extractMatch(html, /<span id="productTitle"[^>]*>(.*?)<\/span>/i));
   if (!title) {
-    throw new AutoCliError("AMAZON_PRODUCT_NOT_FOUND", "Amazon did not return a recognizable product detail page.");
+    throw new MikaCliError("AMAZON_PRODUCT_NOT_FOUND", "Amazon did not return a recognizable product detail page.");
   }
 
   const priceText =
@@ -1701,16 +1701,16 @@ function stripHtml(value: string): string {
 }
 
 function isAmazonAntiBotError(error: unknown): boolean {
-  return error instanceof AutoCliError && error.code === "AMAZON_ANTI_BOT_BLOCKED";
+  return error instanceof MikaCliError && error.code === "AMAZON_ANTI_BOT_BLOCKED";
 }
 
 function normalizeAmazonRequestError(error: unknown): never {
-  if (error instanceof AutoCliError && error.code === "HTTP_REQUEST_FAILED") {
+  if (error instanceof MikaCliError && error.code === "HTTP_REQUEST_FAILED") {
     const body = typeof error.details?.body === "string" ? error.details.body : undefined;
     const status = typeof error.details?.status === "number" ? error.details.status : undefined;
 
     if (status === 503 && isAmazonAutomationBlockBody(body)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "AMAZON_ANTI_BOT_BLOCKED",
         "Amazon blocked the orders request as automated traffic. The browser session is valid, but this surface currently requires a real browser context.",
         {

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
@@ -58,7 +58,7 @@ type OverpassElement = {
 };
 
 const NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org";
-const NOMINATIM_USER_AGENT = "AutoCLI/1.0 (+https://github.com/)";
+const NOMINATIM_USER_AGENT = "MikaCLI/1.0 (+https://github.com/)";
 
 export class OpenStreetMapAdapter {
   readonly platform: Platform = "openstreetmap" as Platform;
@@ -96,7 +96,7 @@ export class OpenStreetMapAdapter {
     const payload = await fetchNominatimJson<Array<NominatimPlace>>(url);
     const place = payload[0];
     if (!place) {
-      throw new AutoCliError("OPENSTREETMAP_NOT_FOUND", `No OpenStreetMap details were found for ${label}.`, {
+      throw new MikaCliError("OPENSTREETMAP_NOT_FOUND", `No OpenStreetMap details were found for ${label}.`, {
         details: {
           target,
           osmIds,
@@ -268,7 +268,7 @@ async function fetchNominatimJson<T>(url: URL): Promise<T> {
       },
     });
   } catch (error) {
-    throw new AutoCliError("OPENSTREETMAP_REQUEST_FAILED", "Unable to reach the OpenStreetMap geocoding service.", {
+    throw new MikaCliError("OPENSTREETMAP_REQUEST_FAILED", "Unable to reach the OpenStreetMap geocoding service.", {
       cause: error,
       details: {
         url: url.toString(),
@@ -277,7 +277,7 @@ async function fetchNominatimJson<T>(url: URL): Promise<T> {
   }
 
   if (!response.ok) {
-    throw new AutoCliError("OPENSTREETMAP_REQUEST_FAILED", `OpenStreetMap request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("OPENSTREETMAP_REQUEST_FAILED", `OpenStreetMap request failed with ${response.status} ${response.statusText}.`, {
       details: {
         url: url.toString(),
         status: response.status,
@@ -289,7 +289,7 @@ async function fetchNominatimJson<T>(url: URL): Promise<T> {
   try {
     return (await response.json()) as T;
   } catch (error) {
-    throw new AutoCliError("OPENSTREETMAP_RESPONSE_INVALID", "OpenStreetMap returned invalid JSON.", {
+    throw new MikaCliError("OPENSTREETMAP_RESPONSE_INVALID", "OpenStreetMap returned invalid JSON.", {
       cause: error,
       details: {
         url: url.toString(),
@@ -311,7 +311,7 @@ async function fetchOverpassJson(url: URL): Promise<{ elements?: OverpassElement
       },
     });
   } catch (error) {
-    throw new AutoCliError("OPENSTREETMAP_NEARBY_FAILED", "Unable to reach the public Overpass service.", {
+    throw new MikaCliError("OPENSTREETMAP_NEARBY_FAILED", "Unable to reach the public Overpass service.", {
       cause: error,
       details: {
         url: url.toString(),
@@ -320,7 +320,7 @@ async function fetchOverpassJson(url: URL): Promise<{ elements?: OverpassElement
   }
 
   if (!response.ok) {
-    throw new AutoCliError("OPENSTREETMAP_NEARBY_FAILED", `Overpass request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("OPENSTREETMAP_NEARBY_FAILED", `Overpass request failed with ${response.status} ${response.statusText}.`, {
       details: {
         url: url.toString(),
         status: response.status,
@@ -332,7 +332,7 @@ async function fetchOverpassJson(url: URL): Promise<{ elements?: OverpassElement
   try {
     return (await response.json()) as { elements?: OverpassElement[] };
   } catch (error) {
-    throw new AutoCliError("OPENSTREETMAP_RESPONSE_INVALID", "Overpass returned invalid JSON.", {
+    throw new MikaCliError("OPENSTREETMAP_RESPONSE_INVALID", "Overpass returned invalid JSON.", {
       cause: error,
       details: {
         url: url.toString(),
@@ -381,7 +381,7 @@ function toPlaceRecord(place: NominatimPlace, zoom?: number, center?: { lat: num
 function normalizeQuery(value: string): string {
   const normalized = value.trim();
   if (!normalized) {
-    throw new AutoCliError("OPENSTREETMAP_QUERY_REQUIRED", "Place search query cannot be empty.");
+    throw new MikaCliError("OPENSTREETMAP_QUERY_REQUIRED", "Place search query cannot be empty.");
   }
 
   return normalized;
@@ -390,7 +390,7 @@ function normalizeQuery(value: string): string {
 function normalizeTarget(value: string): string {
   const normalized = value.trim();
   if (!normalized) {
-    throw new AutoCliError("OPENSTREETMAP_TARGET_REQUIRED", "Provide an OpenStreetMap node, way, relation, or OSM URL.");
+    throw new MikaCliError("OPENSTREETMAP_TARGET_REQUIRED", "Provide an OpenStreetMap node, way, relation, or OSM URL.");
   }
 
   return normalized;
@@ -399,7 +399,7 @@ function normalizeTarget(value: string): string {
 function normalizeLatitude(value: string | number): number {
   const parsed = typeof value === "number" ? value : Number.parseFloat(value);
   if (!Number.isFinite(parsed) || parsed < -90 || parsed > 90) {
-    throw new AutoCliError("OPENSTREETMAP_COORDINATES_INVALID", `Invalid latitude "${value}".`);
+    throw new MikaCliError("OPENSTREETMAP_COORDINATES_INVALID", `Invalid latitude "${value}".`);
   }
 
   return Number(parsed.toFixed(6));
@@ -408,7 +408,7 @@ function normalizeLatitude(value: string | number): number {
 function normalizeLongitude(value: string | number): number {
   const parsed = typeof value === "number" ? value : Number.parseFloat(value);
   if (!Number.isFinite(parsed) || parsed < -180 || parsed > 180) {
-    throw new AutoCliError("OPENSTREETMAP_COORDINATES_INVALID", `Invalid longitude "${value}".`);
+    throw new MikaCliError("OPENSTREETMAP_COORDINATES_INVALID", `Invalid longitude "${value}".`);
   }
 
   return Number(parsed.toFixed(6));
@@ -465,7 +465,7 @@ function parseBoundingBox(value: string): { minLon: number; minLat: number; maxL
     .filter(Boolean);
 
   if (parts.length !== 4) {
-    throw new AutoCliError("OPENSTREETMAP_BBOX_INVALID", `Invalid bounding box "${value}". Expected "minLon,minLat,maxLon,maxLat".`);
+    throw new MikaCliError("OPENSTREETMAP_BBOX_INVALID", `Invalid bounding box "${value}". Expected "minLon,minLat,maxLon,maxLat".`);
   }
 
   const minLon = Number.parseFloat(parts[0] ?? "");
@@ -473,11 +473,11 @@ function parseBoundingBox(value: string): { minLon: number; minLat: number; maxL
   const maxLon = Number.parseFloat(parts[2] ?? "");
   const maxLat = Number.parseFloat(parts[3] ?? "");
   if ([minLon, minLat, maxLon, maxLat].some((entry) => !Number.isFinite(entry))) {
-    throw new AutoCliError("OPENSTREETMAP_BBOX_INVALID", `Invalid bounding box "${value}". Expected four numbers.`);
+    throw new MikaCliError("OPENSTREETMAP_BBOX_INVALID", `Invalid bounding box "${value}". Expected four numbers.`);
   }
 
   if (minLon >= maxLon || minLat >= maxLat) {
-    throw new AutoCliError("OPENSTREETMAP_BBOX_INVALID", `Invalid bounding box "${value}". Ensure min values are smaller than max values.`);
+    throw new MikaCliError("OPENSTREETMAP_BBOX_INVALID", `Invalid bounding box "${value}". Ensure min values are smaller than max values.`);
   }
 
   return {
@@ -679,7 +679,7 @@ function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number)
 function parseOsmTarget(target: string): { osmIds: string; label: string } {
   const normalized = target.trim();
   if (!normalized) {
-    throw new AutoCliError("OPENSTREETMAP_TARGET_REQUIRED", "Provide an OpenStreetMap node, way, relation, or OSM URL.");
+    throw new MikaCliError("OPENSTREETMAP_TARGET_REQUIRED", "Provide an OpenStreetMap node, way, relation, or OSM URL.");
   }
 
   const fullUrl = normalized.match(/^https?:\/\/(?:www\.)?openstreetmap\.org\/(node|way|relation)\/(\d+)(?:[/?#].*)?$/i);
@@ -712,7 +712,7 @@ function parseOsmTarget(target: string): { osmIds: string; label: string } {
     };
   }
 
-  throw new AutoCliError("OPENSTREETMAP_TARGET_INVALID", `Invalid OpenStreetMap target "${target}". Use node/123, way/123, relation/123, or an openstreetmap.org URL.`);
+  throw new MikaCliError("OPENSTREETMAP_TARGET_INVALID", `Invalid OpenStreetMap target "${target}". Use node/123, way/123, relation/123, or an openstreetmap.org URL.`);
 }
 
 function normalizeOsmType(value: string): "N" | "W" | "R" {
@@ -727,5 +727,5 @@ function normalizeOsmType(value: string): "N" | "W" | "R" {
     return "R";
   }
 
-  throw new AutoCliError("OPENSTREETMAP_TARGET_INVALID", `Invalid OpenStreetMap element type "${value}".`);
+  throw new MikaCliError("OPENSTREETMAP_TARGET_INVALID", `Invalid OpenStreetMap element type "${value}".`);
 }

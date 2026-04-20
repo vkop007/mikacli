@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 const NOTION_ID_REGEX = /([0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i;
 const NOTION_VIEW_ID_REGEX = /[?&]v=([0-9a-f]{32}|[0-9a-f-]{36})/i;
@@ -29,21 +29,21 @@ type NotionPropertyValue =
 export function normalizeNotionId(target: string): string {
   const trimmed = target.trim();
   if (trimmed.length === 0) {
-    throw new AutoCliError("NOTION_ID_INVALID", "Notion ID or URL cannot be empty.");
+    throw new MikaCliError("NOTION_ID_INVALID", "Notion ID or URL cannot be empty.");
   }
 
   let candidate = trimmed;
   if (/^https?:\/\//i.test(trimmed)) {
     const match = trimmed.match(NOTION_ID_REGEX);
     if (!match) {
-      throw new AutoCliError("NOTION_ID_INVALID", `Could not find a Notion ID in "${target}".`);
+      throw new MikaCliError("NOTION_ID_INVALID", `Could not find a Notion ID in "${target}".`);
     }
     candidate = match[1] ?? match[0];
   }
 
   const compact = candidate.replace(/-/g, "");
   if (!/^[0-9a-f]{32}$/i.test(compact)) {
-    throw new AutoCliError("NOTION_ID_INVALID", `Invalid Notion ID "${target}". Expected a 32-character UUID or a Notion URL.`, {
+    throw new MikaCliError("NOTION_ID_INVALID", `Invalid Notion ID "${target}". Expected a 32-character UUID or a Notion URL.`, {
       details: {
         target,
       },

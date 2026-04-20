@@ -1,6 +1,6 @@
 import YAML from "yaml";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { loadTextSource, writeTextOutput } from "../shared/io.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -58,7 +58,7 @@ function parseYamlValue(raw: string): unknown {
   try {
     return YAML.parse(raw);
   } catch (error) {
-    throw new AutoCliError("DATA_YAML_INVALID", "Input is not valid YAML.", {
+    throw new MikaCliError("DATA_YAML_INVALID", "Input is not valid YAML.", {
       cause: error,
     });
   }

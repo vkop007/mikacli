@@ -10,9 +10,9 @@ import { printSitemapResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli sitemap https://example.com/sitemap.xml",
-  "autocli sitemap https://example.com --limit 250",
-  "autocli sitemap https://example.com --depth 2",
+  "mikacli sitemap https://example.com/sitemap.xml",
+  "mikacli sitemap https://example.com --limit 250",
+  "mikacli sitemap https://example.com --depth 2",
 ] as const;
 
 function buildSitemapCommand(options: PlatformCommandBuildOptions = {}): Command {

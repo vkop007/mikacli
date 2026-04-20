@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export interface VercelUser {
   id: string;
@@ -54,7 +54,7 @@ export class VercelApiClient {
       return payload as VercelUser;
     }
 
-    throw new AutoCliError("VERCEL_API_ERROR", "Vercel returned an invalid user response.");
+    throw new MikaCliError("VERCEL_API_ERROR", "Vercel returned an invalid user response.");
   }
 
   async listTeams(limit = 20): Promise<VercelTeam[]> {
@@ -82,7 +82,7 @@ export class VercelApiClient {
         authorization: `Bearer ${this.token}`,
         accept: "application/json",
         "content-type": "application/json",
-        "user-agent": "AutoCLI/0.1 (+https://github.com/vkop007/autocli)",
+        "user-agent": "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)",
       },
     });
 
@@ -91,7 +91,7 @@ export class VercelApiClient {
       const message = isObject(payload) && isObject(payload.error) && typeof payload.error.message === "string"
         ? payload.error.message
         : `Vercel API request failed with status ${response.status}.`;
-      throw new AutoCliError("VERCEL_API_ERROR", message, {
+      throw new MikaCliError("VERCEL_API_ERROR", message, {
         details: {
           status: response.status,
           path,
@@ -100,7 +100,7 @@ export class VercelApiClient {
     }
 
     if (payload === undefined) {
-      throw new AutoCliError("VERCEL_API_ERROR", "Vercel returned an empty response.", {
+      throw new MikaCliError("VERCEL_API_ERROR", "Vercel returned an empty response.", {
         details: { path },
       });
     }

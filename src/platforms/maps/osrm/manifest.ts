@@ -128,12 +128,12 @@ export const osrmPlatformDefinition: PlatformDefinition = {
     }),
   ],
   examples: [
-    'autocli osrm route "19.0760,72.8777" "28.6139,77.2090"',
-    'autocli osrm route "19.0760,72.8777" "19.2183,72.9781" --profile driving',
-    'autocli osrm table "19.0760,72.8777" "28.6139,77.2090" "19.2183,72.9781"',
-    'autocli osrm nearest "19.0760,72.8777"',
-    'autocli osrm trip "19.0760,72.8777" "28.6139,77.2090" "19.2183,72.9781"',
-    'autocli osrm match "19.07596,72.87767" "19.07610,72.87780" "19.07622,72.87793"',
+    'mikacli osrm route "19.0760,72.8777" "28.6139,77.2090"',
+    'mikacli osrm route "19.0760,72.8777" "19.2183,72.9781" --profile driving',
+    'mikacli osrm table "19.0760,72.8777" "28.6139,77.2090" "19.2183,72.9781"',
+    'mikacli osrm nearest "19.0760,72.8777"',
+    'mikacli osrm trip "19.0760,72.8777" "28.6139,77.2090" "19.2183,72.9781"',
+    'mikacli osrm match "19.07596,72.87767" "19.07610,72.87780" "19.07622,72.87793"',
   ],
 };
 

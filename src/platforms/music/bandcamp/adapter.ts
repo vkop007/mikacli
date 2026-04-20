@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   decodeBandcampHtml,
   normalizeBandcampLimit,
@@ -41,7 +41,7 @@ export class BandcampAdapter {
   async search(input: { query: string; type?: BandcampSearchType; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("BANDCAMP_QUERY_REQUIRED", "Provide a Bandcamp query to search.");
+      throw new MikaCliError("BANDCAMP_QUERY_REQUIRED", "Provide a Bandcamp query to search.");
     }
 
     const limit = normalizeBandcampLimit(input.limit, 5, 25);
@@ -67,7 +67,7 @@ export class BandcampAdapter {
   async albumInfo(input: { target: string }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("BANDCAMP_TARGET_REQUIRED", "Provide a Bandcamp album URL or search query.");
+      throw new MikaCliError("BANDCAMP_TARGET_REQUIRED", "Provide a Bandcamp album URL or search query.");
     }
 
     const url = await this.resolveResourceUrl(target, "album");
@@ -89,7 +89,7 @@ export class BandcampAdapter {
   async trackInfo(input: { target: string }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("BANDCAMP_TARGET_REQUIRED", "Provide a Bandcamp track URL or search query.");
+      throw new MikaCliError("BANDCAMP_TARGET_REQUIRED", "Provide a Bandcamp track URL or search query.");
     }
 
     const url = await this.resolveResourceUrl(target, "track");
@@ -111,7 +111,7 @@ export class BandcampAdapter {
   async artistInfo(input: { target: string; limit?: number }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("BANDCAMP_TARGET_REQUIRED", "Provide a Bandcamp artist URL or search query.");
+      throw new MikaCliError("BANDCAMP_TARGET_REQUIRED", "Provide a Bandcamp artist URL or search query.");
     }
 
     const limit = normalizeBandcampLimit(input.limit, 10, 50);
@@ -154,7 +154,7 @@ export class BandcampAdapter {
 
     const match = (await this.fetchSearchResults(target)).find((item) => item.type === type);
     if (!match) {
-      throw new AutoCliError("BANDCAMP_RESULT_NOT_FOUND", `Bandcamp could not find a matching ${type}.`, {
+      throw new MikaCliError("BANDCAMP_RESULT_NOT_FOUND", `Bandcamp could not find a matching ${type}.`, {
         details: {
           target,
           type,
@@ -176,7 +176,7 @@ export class BandcampAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("BANDCAMP_REQUEST_FAILED", "Failed to load Bandcamp.", {
+      throw new MikaCliError("BANDCAMP_REQUEST_FAILED", "Failed to load Bandcamp.", {
         cause: error,
         details: {
           url,
@@ -185,7 +185,7 @@ export class BandcampAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("BANDCAMP_REQUEST_FAILED", "Bandcamp request failed.", {
+      throw new MikaCliError("BANDCAMP_REQUEST_FAILED", "Bandcamp request failed.", {
         details: {
           url,
           status: response.status,
@@ -208,7 +208,7 @@ export class BandcampAdapter {
         },
       });
     } catch (error) {
-      throw new AutoCliError("BANDCAMP_READABLE_FAILED", "Failed to load the readable Bandcamp page.", {
+      throw new MikaCliError("BANDCAMP_READABLE_FAILED", "Failed to load the readable Bandcamp page.", {
         cause: error,
         details: {
           url,
@@ -218,7 +218,7 @@ export class BandcampAdapter {
 
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("BANDCAMP_READABLE_FAILED", "Bandcamp readable page request failed.", {
+      throw new MikaCliError("BANDCAMP_READABLE_FAILED", "Bandcamp readable page request failed.", {
         details: {
           url,
           status: response.status,

@@ -1,6 +1,6 @@
 # Careers Category
 
-Job search and recruitment providers for AutoCLI.
+Job search and recruitment providers for MikaCLI.
 
 ## Providers
 
@@ -13,10 +13,10 @@ This category includes job search integrations with popular job boards and recru
 
 ```bash
 # Search for jobs on Indeed
-autocli careers indeed search "software engineer" --location "San Francisco" --limit 10
+mikacli careers indeed search "software engineer" --location "San Francisco" --limit 10
 
 # Search on ZipRecruiter  
-autocli careers ziprecruiter search "data scientist" --limit 5
+mikacli careers ziprecruiter search "data scientist" --limit 5
 ```
 
 ## Common Options
@@ -32,6 +32,6 @@ autocli careers ziprecruiter search "data scientist" --limit 5
 Results can be formatted using the `--format` option:
 
 ```bash
-autocli careers indeed search "developer" --format json
-autocli careers indeed search "developer" --format csv
+mikacli careers indeed search "developer" --format json
+mikacli careers indeed search "developer" --format csv
 ```

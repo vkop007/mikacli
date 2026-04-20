@@ -12,10 +12,10 @@ export const netlifyPlatformDefinition: PlatformDefinition = {
   adapter: netlifyAdapter,
   capabilities: netlifyCapabilities,
   examples: [
-    "autocli netlify login --token $NETLIFY_TOKEN",
-    "autocli netlify me",
-    "autocli netlify accounts",
-    "autocli netlify sites",
-    "autocli netlify deploys --site autocli",
+    "mikacli netlify login --token $NETLIFY_TOKEN",
+    "mikacli netlify me",
+    "mikacli netlify accounts",
+    "mikacli netlify sites",
+    "mikacli netlify deploys --site mikacli",
   ],
 };

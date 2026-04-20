@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, AdapterStatusResult, LoginInput, Platform, SessionStatus, SessionUser } from "../../../types.js";
 import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
 import type { CookieJar } from "tough-cookie";
@@ -229,7 +229,7 @@ export class GitLabAdapter {
     const projectPath = normalizeGitLabProjectTarget(input.project);
     const title = input.title.trim();
     if (!title) {
-      throw new AutoCliError("GITLAB_ISSUE_TITLE_INVALID", "GitLab issue title cannot be empty.");
+      throw new MikaCliError("GITLAB_ISSUE_TITLE_INVALID", "GitLab issue title cannot be empty.");
     }
 
     const issue = await client.createIssue({
@@ -359,7 +359,7 @@ export class GitLabAdapter {
       return;
     }
 
-    throw new AutoCliError("GITLAB_SESSION_COOKIE_MISSING", "Imported cookies did not include GitLab's _gitlab_session cookie.", {
+    throw new MikaCliError("GITLAB_SESSION_COOKIE_MISSING", "Imported cookies did not include GitLab's _gitlab_session cookie.", {
       details: {
         baseUrl,
         cookieNames: cookies.map((cookie) => cookie.key),

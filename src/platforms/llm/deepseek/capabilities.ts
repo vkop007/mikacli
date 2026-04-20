@@ -9,7 +9,7 @@ export function createDeepSeekCapabilities(adapter: CookieLlmAdapter): readonly 
   const loginCapability = createAdapterActionCapability({
     id: "login",
     command: "login",
-    description: "Save the DeepSeek session for future CLI use. With no auth flags, AutoCLI opens browser login by default",
+    description: "Save the DeepSeek session for future CLI use. With no auth flags, MikaCLI opens browser login by default",
     spinnerText: "Saving DeepSeek session...",
     successMessage: "DeepSeek session saved.",
     options: createCookieLoginOptions([{ flags: "--token <value>", description: "DeepSeek userToken from localStorage", required: false }]),

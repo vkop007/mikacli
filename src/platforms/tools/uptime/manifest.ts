@@ -9,9 +9,9 @@ import { printUptimeResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli uptime https://example.com",
-  "autocli uptime openai.com",
-  "autocli uptime https://example.com --method GET --timeout 15000",
+  "mikacli uptime https://example.com",
+  "mikacli uptime openai.com",
+  "mikacli uptime https://example.com --method GET --timeout 15000",
 ] as const;
 
 function buildUptimeCommand(options: PlatformCommandBuildOptions = {}): Command {

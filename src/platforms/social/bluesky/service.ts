@@ -1,6 +1,6 @@
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { parseBlueskyPostTarget, parseBlueskyProfileTarget } from "../../../utils/targets.js";
 import { BasePlatformAdapter } from "../../shared/base-platform-adapter.js";
 import { normalizeSocialLimit } from "../shared/options.js";
@@ -20,7 +20,7 @@ import type {
 const BSKY_PUBLIC_XRPC = "https://public.api.bsky.app/xrpc";
 const BSKY_DEFAULT_SERVICE = "https://bsky.social";
 const BSKY_APP_ORIGIN = "https://bsky.app";
-const BSKY_USER_AGENT = "AutoCLI/1.0 (+https://github.com/vkop007/Pluse)";
+const BSKY_USER_AGENT = "MikaCLI/1.0 (+https://github.com/vkop007/Pluse)";
 
 interface BlueskyActorSearchResponse {
   actors?: Array<Record<string, unknown>>;
@@ -69,9 +69,9 @@ export class BlueskyAdapter extends BasePlatformAdapter {
   readonly platform = "bluesky" as const;
 
   async login(input: LoginInput): Promise<AdapterActionResult> {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "INVALID_LOGIN_INPUT",
-      "Bluesky login uses app-password auth. Run `autocli social bluesky login --handle <handle> --app-password <password>`.",
+      "Bluesky login uses app-password auth. Run `mikacli social bluesky login --handle <handle> --app-password <password>`.",
       {
         details: {
           supportedFlags: ["--handle", "--app-password", "--service", "--account"],
@@ -183,7 +183,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     const context = await this.createAuthorizedContext(account);
     const actor = context.session.user?.id ?? context.session.user?.username ?? readMetadataString(context.session.metadata, "did");
     if (!actor) {
-      throw new AutoCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID/handle.", {
+      throw new MikaCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID/handle.", {
         details: {
           account: context.session.account,
         },
@@ -303,7 +303,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     const thread = asRecord(response.thread);
     const root = mapPost(thread?.post);
     if (!root) {
-      throw new AutoCliError("BLUESKY_THREAD_NOT_FOUND", "Bluesky could not load the requested thread.", {
+      throw new MikaCliError("BLUESKY_THREAD_NOT_FOUND", "Bluesky could not load the requested thread.", {
         details: {
           target: input.target,
           uri: resolved.uri,
@@ -332,9 +332,9 @@ export class BlueskyAdapter extends BasePlatformAdapter {
   }
 
   async postMedia(): Promise<AdapterActionResult> {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "UNSUPPORTED_ACTION",
-      "Bluesky media uploads are not wired yet. Use `autocli social bluesky post <text>` for text posts today.",
+      "Bluesky media uploads are not wired yet. Use `mikacli social bluesky post <text>` for text posts today.",
     );
   }
 
@@ -343,7 +343,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     const context = await this.createAuthorizedContext(input.account);
     const repo = context.session.user?.id ?? readMetadataString(context.session.metadata, "did");
     if (!repo) {
-      throw new AutoCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID.", {
+      throw new MikaCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID.", {
         details: { account: context.session.account },
       });
     }
@@ -386,7 +386,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     const context = await this.createAuthorizedContext(input.account);
     const repo = context.session.user?.id ?? readMetadataString(context.session.metadata, "did");
     if (!repo) {
-      throw new AutoCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID.", {
+      throw new MikaCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID.", {
         details: { account: context.session.account },
       });
     }
@@ -433,7 +433,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     const context = await this.createAuthorizedContext(input.account);
     const repo = context.session.user?.id ?? readMetadataString(context.session.metadata, "did");
     if (!repo) {
-      throw new AutoCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID.", {
+      throw new MikaCliError("BLUESKY_SESSION_INVALID", "Saved Bluesky session is missing the account DID.", {
         details: { account: context.session.account },
       });
     }
@@ -494,7 +494,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     const nextSession = await this.ensureActiveSession(session);
     const accessJwt = readMetadataString(nextSession.metadata, "accessJwt");
     if (!accessJwt) {
-      throw new AutoCliError("SESSION_EXPIRED", "Saved Bluesky session is missing an access token.", {
+      throw new MikaCliError("SESSION_EXPIRED", "Saved Bluesky session is missing an access token.", {
         details: {
           account: nextSession.account,
           sessionPath: path,
@@ -518,7 +518,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
       const expired = await this.persistExistingSession(session, {
         status: buildExpiredStatus("Saved Bluesky session is missing an access token.", "SESSION_EXPIRED"),
       });
-      throw new AutoCliError("SESSION_EXPIRED", "Saved Bluesky session is missing an access token.", {
+      throw new MikaCliError("SESSION_EXPIRED", "Saved Bluesky session is missing an access token.", {
         details: {
           account: expired.account,
         },
@@ -547,7 +547,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
         const expired = await this.persistExistingSession(session, {
           status: buildExpiredStatus("Saved Bluesky session is no longer valid.", extractErrorCode(error)),
         });
-        throw new AutoCliError("SESSION_EXPIRED", "Bluesky session has expired. Re-login with an app password.", {
+        throw new MikaCliError("SESSION_EXPIRED", "Bluesky session has expired. Re-login with an app password.", {
           details: {
             account: expired.account,
             reason: extractErrorCode(error),
@@ -589,7 +589,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     }
 
     if (!parsed.handle || !parsed.rkey) {
-      throw new AutoCliError("BLUESKY_THREAD_TARGET_INVALID", "Expected a Bluesky post URL or at:// URI.", {
+      throw new MikaCliError("BLUESKY_THREAD_TARGET_INVALID", "Expected a Bluesky post URL or at:// URI.", {
         details: { target },
       });
     }
@@ -598,7 +598,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
       actor: parsed.handle,
     });
     if (!profile.did) {
-      throw new AutoCliError("BLUESKY_PROFILE_NOT_FOUND", `Bluesky could not resolve ${parsed.handle}.`, {
+      throw new MikaCliError("BLUESKY_PROFILE_NOT_FOUND", `Bluesky could not resolve ${parsed.handle}.`, {
         details: { target },
       });
     }
@@ -624,7 +624,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
     const uri = stringOrUndefined(post?.uri) ?? resolved.uri;
     const cid = stringOrUndefined(post?.cid);
     if (!cid) {
-      throw new AutoCliError("BLUESKY_THREAD_NOT_FOUND", "Bluesky did not return the post CID needed for this action.", {
+      throw new MikaCliError("BLUESKY_THREAD_NOT_FOUND", "Bluesky did not return the post CID needed for this action.", {
         details: {
           target,
           uri,
@@ -701,7 +701,7 @@ export class BlueskyAdapter extends BasePlatformAdapter {
   private async parseBlueskyJsonResponse<T>(response: Response, method: string): Promise<T> {
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("BLUESKY_REQUEST_FAILED", `Bluesky rejected the ${method} request.`, {
+      throw new MikaCliError("BLUESKY_REQUEST_FAILED", `Bluesky rejected the ${method} request.`, {
         details: {
           method,
           status: response.status,
@@ -851,7 +851,7 @@ function extractRecordKey(uri: string | undefined): string | undefined {
 function normalizeRequiredText(value: string | undefined, code: string, message: string): string {
   const normalized = (value ?? "").trim();
   if (!normalized) {
-    throw new AutoCliError(code, message);
+    throw new MikaCliError(code, message);
   }
 
   return normalized;
@@ -882,7 +882,7 @@ function isUnauthorizedBlueskyError(error: unknown): boolean {
 }
 
 function extractErrorStatus(error: unknown): number | undefined {
-  if (!(error instanceof AutoCliError)) {
+  if (!(error instanceof MikaCliError)) {
     return undefined;
   }
 
@@ -890,7 +890,7 @@ function extractErrorStatus(error: unknown): number | undefined {
 }
 
 function extractErrorCode(error: unknown): string | undefined {
-  if (!(error instanceof AutoCliError)) {
+  if (!(error instanceof MikaCliError)) {
     return undefined;
   }
 

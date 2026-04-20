@@ -1,7 +1,7 @@
 import { CookieJar } from "tough-cookie";
 
 import { sanitizeAccountName } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { CookieManager, createSessionFile, serializeCookieJar } from "../../../utils/cookie-manager.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { buildConfluencePageUrl, getStoredConfluenceSiteUrl, inferConfluenceSiteUrlFromJar, normalizeConfluencePageTarget, normalizeConfluenceSiteUrl } from "./helpers.js";
@@ -90,7 +90,7 @@ export class ConfluenceAdapter {
         lastValidatedAt: active.session.status.lastValidatedAt,
       };
     } catch (error) {
-      if (error instanceof AutoCliError && error.code === "CONFLUENCE_SESSION_INVALID") {
+      if (error instanceof MikaCliError && error.code === "CONFLUENCE_SESSION_INVALID") {
         const expired = await this.markSessionExpired(session, error.message);
         return {
           platform: this.platform,
@@ -150,7 +150,7 @@ export class ConfluenceAdapter {
     const active = await this.ensureUsableSession();
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("CONFLUENCE_QUERY_REQUIRED", "Provide a Confluence search query.");
+      throw new MikaCliError("CONFLUENCE_QUERY_REQUIRED", "Provide a Confluence search query.");
     }
 
     const items = await active.client.searchPages({
@@ -328,10 +328,10 @@ export class ConfluenceAdapter {
         siteUrl,
       };
     } catch (error) {
-      await this.markSessionExpired(session, error instanceof AutoCliError ? error.message : "Confluence rejected the saved web session. Re-import fresh cookies.");
-      throw error instanceof AutoCliError
+      await this.markSessionExpired(session, error instanceof MikaCliError ? error.message : "Confluence rejected the saved web session. Re-import fresh cookies.");
+      throw error instanceof MikaCliError
         ? error
-        : new AutoCliError("CONFLUENCE_SESSION_INVALID", "Confluence rejected the saved web session. Re-import fresh cookies.", {
+        : new MikaCliError("CONFLUENCE_SESSION_INVALID", "Confluence rejected the saved web session. Re-import fresh cookies.", {
             cause: error,
           });
     }
@@ -347,7 +347,7 @@ export class ConfluenceAdapter {
       return inferred;
     }
 
-    throw new AutoCliError(
+    throw new MikaCliError(
       "CONFLUENCE_SITE_REQUIRED",
       "Could not infer the Confluence site from the imported cookies. Re-run login with --site https://your-workspace.atlassian.net/wiki.",
     );
@@ -405,13 +405,13 @@ export class ConfluenceAdapter {
     } catch {
       const query = target.trim();
       if (!query) {
-        throw new AutoCliError("CONFLUENCE_PAGE_TARGET_INVALID", "Confluence page target cannot be empty.");
+        throw new MikaCliError("CONFLUENCE_PAGE_TARGET_INVALID", "Confluence page target cannot be empty.");
       }
 
       const match = await active.client.searchPages({ query, limit: 1 });
       const first = match[0];
       if (!first?.id) {
-        throw new AutoCliError("CONFLUENCE_PAGE_NOT_FOUND", `Confluence could not find a page for "${target}".`, {
+        throw new MikaCliError("CONFLUENCE_PAGE_NOT_FOUND", `Confluence could not find a page for "${target}".`, {
           details: {
             target,
           },

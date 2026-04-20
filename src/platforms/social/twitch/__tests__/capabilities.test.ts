@@ -33,8 +33,8 @@ describe("twitch capability command surface", () => {
   test("uses category-based examples in the manifest", () => {
     const examples = twitchPlatformDefinition.examples ?? [];
 
-    expect(examples.every((example) => example.startsWith("autocli social twitch"))).toBe(true);
-    expect(examples).toContain("autocli social twitch me");
-    expect(examples).toContain("autocli social twitch follow twitch");
+    expect(examples.every((example) => example.startsWith("mikacli social twitch"))).toBe(true);
+    expect(examples).toContain("mikacli social twitch me");
+    expect(examples).toContain("mikacli social twitch follow twitch");
   });
 });

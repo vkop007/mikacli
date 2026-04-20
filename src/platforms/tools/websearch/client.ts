@@ -7,7 +7,7 @@ import {
   type WebSearchEngine,
   type WebSearchResult,
 } from "./helpers.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export class WebSearchClient {
   async search(input: {
@@ -24,7 +24,7 @@ export class WebSearchClient {
       response = await fetch(searchUrl, {
         signal: AbortSignal.timeout(12000),
         headers: {
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
           accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
           "accept-language": "en-US,en;q=0.9",
         },
@@ -34,7 +34,7 @@ export class WebSearchClient {
     }
 
     if (!response.ok) {
-      throw new AutoCliError("WEBSEARCH_ENGINE_HTTP_ERROR", `${engineInfo.label} search returned ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("WEBSEARCH_ENGINE_HTTP_ERROR", `${engineInfo.label} search returned ${response.status} ${response.statusText}.`, {
         details: {
           engine: input.engine,
           query: input.query,
@@ -47,7 +47,7 @@ export class WebSearchClient {
 
     const html = await response.text();
     if (response.headers.get("x-yandex-captcha") === "captcha" || isBlockedSearchResponse(input.engine, html)) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "WEBSEARCH_ENGINE_BLOCKED",
         `${engineInfo.label} returned an anti-bot or JavaScript fallback page instead of real search results.`,
         {
@@ -92,7 +92,7 @@ export class WebSearchClient {
         redirect: "follow",
         signal: AbortSignal.timeout(8000),
         headers: {
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
           accept: "text/html,application/xhtml+xml,application/xml;q=0.9,text/plain;q=0.8,*/*;q=0.5",
           "accept-language": "en-US,en;q=0.9",
         },
@@ -508,14 +508,14 @@ function createSearchFetchError(
   searchUrl: string,
   query: string,
   error: unknown,
-): AutoCliError {
+): MikaCliError {
   const message = error instanceof Error ? error.message : String(error);
   const name = error instanceof Error ? error.name : "Error";
   const lowered = `${name} ${message}`.toLowerCase();
   const timedOut = lowered.includes("timeout") || lowered.includes("timed out") || lowered.includes("abort");
 
   if (engine === "baidu" && timedOut) {
-    return new AutoCliError(
+    return new MikaCliError(
       "WEBSEARCH_ENGINE_UNREACHABLE",
       "Baidu did not respond before the request timed out. It may be blocked or unreachable from the current network.",
       {
@@ -530,7 +530,7 @@ function createSearchFetchError(
     );
   }
 
-  return new AutoCliError(
+  return new MikaCliError(
     "WEBSEARCH_ENGINE_UNREACHABLE",
     timedOut ? `${label} did not respond before the request timed out.` : `Unable to reach ${label}.`,
     {

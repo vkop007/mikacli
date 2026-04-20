@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 
 import { inspectGrokHomeHtml, mapGrokError, parseGrokConversationStream } from "../service.js";
-import { AutoCliError } from "../../../../errors.js";
+import { MikaCliError } from "../../../../errors.js";
 
 describe("grok service helpers", () => {
   test("detects an authenticated Grok homepage from subscription state", () => {
@@ -136,7 +136,7 @@ describe("grok service helpers", () => {
 
   test("maps Grok anti-bot errors to a provider-specific code", () => {
     const mapped = mapGrokError(
-      new AutoCliError(
+      new MikaCliError(
         "GROK_ANTI_BOT_BLOCKED",
         "Grok rejected the browserless request with its current anti-bot rules.",
       ),

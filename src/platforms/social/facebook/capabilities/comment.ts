@@ -10,7 +10,7 @@ export const facebookCommentCapability = createAdapterActionCapability({
   successMessage: "Facebook comment sent.",
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved Facebook session" },
-    { flags: "--browser", description: "Force the comment through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    { flags: "--browser", description: "Force the comment through the shared MikaCLI browser profile instead of the invisible browser-backed path" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",

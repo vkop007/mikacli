@@ -29,7 +29,7 @@ describe("facebook capability command surface", () => {
   test("uses category-based examples in the manifest", () => {
     const examples = facebookPlatformDefinition.examples ?? [];
 
-    expect(examples.every((example) => example.startsWith("autocli social facebook"))).toBe(true);
-    expect(examples).toContain("autocli social facebook status");
+    expect(examples.every((example) => example.startsWith("mikacli social facebook"))).toBe(true);
+    expect(examples).toContain("mikacli social facebook status");
   });
 });

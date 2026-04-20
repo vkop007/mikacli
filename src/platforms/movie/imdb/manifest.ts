@@ -15,8 +15,8 @@ export const imdbPlatformDefinition: PlatformDefinition = {
     titleDescription: "Load an IMDb title by URL, title ID, or query",
   }),
   examples: [
-    'autocli imdb search "inception"',
-    "autocli imdb title tt1375666",
-    "autocli imdb info https://www.imdb.com/title/tt1375666/",
+    'mikacli imdb search "inception"',
+    "mikacli imdb title tt1375666",
+    "mikacli imdb info https://www.imdb.com/title/tt1375666/",
   ],
 };

@@ -1,7 +1,7 @@
 import makeFetchCookie from "fetch-cookie";
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 const GITHUB_API_BASE_URL = "https://api.github.com";
 const GITHUB_API_VERSION = "2022-11-28";
@@ -355,12 +355,12 @@ export class GitHubApiClient {
     const response = await this.fetchImpl(GITHUB_SETTINGS_PROFILE_URL, {
       headers: {
         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "user-agent": "AutoCLI",
+        "user-agent": "MikaCLI",
       },
     });
 
     if (response.url.includes("/login")) {
-      throw new AutoCliError("GITHUB_SESSION_INVALID", "GitHub rejected the saved web session.", {
+      throw new MikaCliError("GITHUB_SESSION_INVALID", "GitHub rejected the saved web session.", {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -372,7 +372,7 @@ export class GitHubApiClient {
     const html = await response.text();
     const parsedViewer = extractViewerFromSettingsHtml(html);
     if (!parsedViewer.login) {
-      throw new AutoCliError("GITHUB_VIEWER_PARSE_FAILED", "GitHub settings loaded, but AutoCLI could not determine the signed-in account.", {
+      throw new MikaCliError("GITHUB_VIEWER_PARSE_FAILED", "GitHub settings loaded, but MikaCLI could not determine the signed-in account.", {
         details: {
           url: response.url,
         },
@@ -420,7 +420,7 @@ export class GitHubApiClient {
     const parsed = raw.length > 0 ? tryParseJson(raw) : undefined;
 
     if (!response.ok) {
-      throw new AutoCliError(this.mapErrorCode(response.status), this.buildErrorMessage(response.status, parsed), {
+      throw new MikaCliError(this.mapErrorCode(response.status), this.buildErrorMessage(response.status, parsed), {
         details: {
           status: response.status,
           statusText: response.statusText,
@@ -442,7 +442,7 @@ export class GitHubApiClient {
     const headers = new Headers(init.headers);
     headers.set("accept", "application/vnd.github+json");
     headers.set("x-github-api-version", GITHUB_API_VERSION);
-    headers.set("user-agent", "AutoCLI");
+    headers.set("user-agent", "MikaCLI");
 
     if (init.body) {
       headers.set("content-type", "application/json; charset=utf-8");

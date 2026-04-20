@@ -5,12 +5,12 @@ import { twitchAdapter } from "../adapter.js";
 export const twitchFollowCapability = createAdapterActionCapability({
   id: "follow",
   command: "follow <target>",
-  description: "Follow a Twitch channel by URL, @handle, or login. AutoCLI tries the web mutation first and can switch to the shared browser when needed",
+  description: "Follow a Twitch channel by URL, @handle, or login. MikaCLI tries the web mutation first and can switch to the shared browser when needed",
   spinnerText: "Following Twitch channel...",
   successMessage: "Twitch follow completed.",
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved Twitch session" },
-    { flags: "--browser", description: "Force the follow through the shared AutoCLI browser profile instead of trying the direct web mutation first" },
+    { flags: "--browser", description: "Force the follow through the shared MikaCLI browser profile instead of trying the direct web mutation first" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",
@@ -34,7 +34,7 @@ export const twitchUnfollowCapability = createAdapterActionCapability({
   successMessage: "Twitch unfollow completed.",
   options: [
     { flags: "--account <name>", description: "Optional override for a specific saved Twitch session" },
-    { flags: "--browser", description: "Force the unfollow through the shared AutoCLI browser profile instead of trying the direct web mutation first" },
+    { flags: "--browser", description: "Force the unfollow through the shared MikaCLI browser profile instead of trying the direct web mutation first" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",
@@ -54,7 +54,7 @@ export const twitchCreateClipCapability = createAdapterActionCapability({
   id: "create-clip",
   command: "create-clip <target>",
   aliases: ["clip"],
-  description: "Create a Twitch clip for a live channel through the shared AutoCLI browser profile",
+  description: "Create a Twitch clip for a live channel through the shared MikaCLI browser profile",
   spinnerText: "Creating Twitch clip...",
   successMessage: "Twitch clip started.",
   options: [
@@ -77,7 +77,7 @@ export const twitchUpdateStreamCapability = createAdapterActionCapability({
   id: "update-stream",
   command: "update-stream",
   aliases: ["stream-update"],
-  description: "Update Twitch stream settings like title, category, tags, or the mature toggle through the shared AutoCLI browser profile",
+  description: "Update Twitch stream settings like title, category, tags, or the mature toggle through the shared MikaCLI browser profile",
   spinnerText: "Updating Twitch stream settings...",
   successMessage: "Twitch stream settings updated.",
   options: [

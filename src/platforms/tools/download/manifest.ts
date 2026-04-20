@@ -2,7 +2,7 @@ import { Command } from "commander";
 
 import { buildExamplesHelpText } from "../../../core/runtime/example-help.js";
 import { Logger } from "../../../logger.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { serializeCliError } from "../../../utils/error-recovery.js";
 import { readBatchTargets } from "../../../utils/batch.js";
 import { resolveCommandContext, runCommandAction } from "../../../utils/cli.js";
@@ -13,21 +13,21 @@ import type { AdapterActionResult } from "../../../types.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "autocli tools download stream https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-  "autocli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5",
-  "autocli tools download channel @RickAstleyYT --mode info --limit 5",
-  "autocli tools download channel @RickAstleyYT --limit 10",
-  "autocli tools download video https://www.youtube.com/watch?v=dQw4w9WgXcQ --quality 720p",
-  "autocli tools download video 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 3",
-  "autocli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3",
-  "autocli tools download batch ./urls.txt --mode video --quality 720p",
-  "autocli tools download video https://x.com/user/status/123 --platform x",
-  "autocli tools download video https://www.instagram.com/reel/abc123/ --platform instagram --account jieunyourgirl",
+  "mikacli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "mikacli tools download stream https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  "mikacli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5",
+  "mikacli tools download channel @RickAstleyYT --mode info --limit 5",
+  "mikacli tools download channel @RickAstleyYT --limit 10",
+  "mikacli tools download video https://www.youtube.com/watch?v=dQw4w9WgXcQ --quality 720p",
+  "mikacli tools download video 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 3",
+  "mikacli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3",
+  "mikacli tools download batch ./urls.txt --mode video --quality 720p",
+  "mikacli tools download video https://x.com/user/status/123 --platform x",
+  "mikacli tools download video https://www.instagram.com/reel/abc123/ --platform instagram --account jieunyourgirl",
 ] as const;
 
 function buildDownloadCommand(options: PlatformCommandBuildOptions = {}): Command {
-  const command = new Command("download").description("Download media from most sites supported by yt-dlp, with optional AutoCLI session cookies");
+  const command = new Command("download").description("Download media from most sites supported by yt-dlp, with optional MikaCLI session cookies");
 
   command.addCommand(buildInfoCommand());
   command.addCommand(buildStreamCommand());
@@ -336,14 +336,14 @@ async function executeBatchTarget(
         limit: input.limit,
       });
     default:
-      throw new AutoCliError("DOWNLOAD_BATCH_MODE_INVALID", `Unknown batch mode "${mode}".`);
+      throw new MikaCliError("DOWNLOAD_BATCH_MODE_INVALID", `Unknown batch mode "${mode}".`);
   }
 }
 
 function addAuthOptions(command: Command): void {
   command.option("--cookies <path>", "Path to cookies.txt or a yt-dlp-compatible cookies file");
-  command.option("--platform <provider>", "Reuse a saved AutoCLI session for this provider as yt-dlp cookies");
-  command.option("--account <name>", "Saved AutoCLI session account to use with --platform");
+  command.option("--platform <provider>", "Reuse a saved MikaCLI session for this provider as yt-dlp cookies");
+  command.option("--account <name>", "Saved MikaCLI session account to use with --platform");
 }
 
 function addOutputOptions(command: Command): void {
@@ -396,7 +396,7 @@ export const downloadPlatformDefinition: PlatformDefinition = {
   id: "download" as PlatformDefinition["id"],
   category: "tools",
   displayName: "Download",
-  description: "Download media from most URLs supported by yt-dlp, with optional saved-session cookies from AutoCLI",
+  description: "Download media from most URLs supported by yt-dlp, with optional saved-session cookies from MikaCLI",
   authStrategies: ["none", "cookies"],
   buildCommand: buildDownloadCommand,
   adapter: downloadToolsAdapter,

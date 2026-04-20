@@ -15,7 +15,7 @@ export const xLikeCapability: PlatformCapability = {
       .command("like <target>")
       .description("Like an X post by URL or tweet ID through a browser-backed action flow")
       .option("--account <name>", "Optional override for a specific saved X session")
-      .option("--browser", "Force the like through the shared AutoCLI browser profile instead of the invisible browser-backed path")
+      .option("--browser", "Force the like through the shared MikaCLI browser profile instead of the invisible browser-backed path")
       .option("--browser-timeout <seconds>", "Maximum seconds to allow the browser action to complete", parseBrowserTimeoutSeconds)
       .action(async (target, options, cmd) => {
         const ctx = resolveCommandContext(cmd);

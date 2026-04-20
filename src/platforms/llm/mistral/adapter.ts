@@ -1,5 +1,5 @@
 import { CookieLlmAdapter } from "../shared/base-cookie-llm-adapter.js";
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import { MistralService, mapMistralError } from "./service.js";
 
@@ -53,7 +53,7 @@ export class MistralAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
-      throw new AutoCliError("INVALID_PROMPT", "Expected a non-empty Mistral text prompt.");
+      throw new MikaCliError("INVALID_PROMPT", "Expected a non-empty Mistral text prompt.");
     }
 
     const loaded = await this.tryLoadPromptSession(input.account);
@@ -89,7 +89,7 @@ export class MistralAdapter extends CookieLlmAdapter {
   }
 
   protected async executeText(_session: PlatformSession): Promise<AdapterActionResult> {
-    throw new AutoCliError("MISTRAL_TEXT_INTERNAL_MISMATCH", "Mistral text dispatch should use the dedicated adapter flow.");
+    throw new MikaCliError("MISTRAL_TEXT_INTERNAL_MISMATCH", "Mistral text dispatch should use the dedicated adapter flow.");
   }
 
   private async refreshSavedSession(account: string, sessionPath?: string): Promise<AdapterActionResult> {
@@ -135,7 +135,7 @@ export class MistralAdapter extends CookieLlmAdapter {
     try {
       return await this.loadSession(account);
     } catch (error) {
-      if (!account && isAutoCliError(error) && error.code === "SESSION_NOT_FOUND") {
+      if (!account && isMikaCliError(error) && error.code === "SESSION_NOT_FOUND") {
         return null;
       }
 
@@ -178,6 +178,6 @@ export class MistralAdapter extends CookieLlmAdapter {
 
 export const mistralAdapter = new MistralAdapter();
 
-export function mapMistralAdapterError(error: unknown): AutoCliError {
+export function mapMistralAdapterError(error: unknown): MikaCliError {
   return mapMistralError(error, "Failed to complete the Mistral prompt.");
 }

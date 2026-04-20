@@ -6,14 +6,14 @@ import { driveAdapter } from "./adapter.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli google drive login --client-id google-client-id-example --client-secret google-client-secret-example",
-  "autocli google drive auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
-  "autocli google drive login --client-id google-client-id-example --client-secret google-client-secret-example --refresh-token google-refresh-token-example",
-  "autocli google drive files --limit 10 --json",
-  "autocli google drive files --query \"mimeType != 'application/vnd.google-apps.folder'\" --json",
-  "autocli google drive create-folder Reports --json",
-  "autocli google drive upload ./report.pdf --parent google-folder-id-example --json",
-  "autocli google drive download google-file-id-example --output ./downloads/report.pdf --json",
+  "mikacli google drive login --client-id google-client-id-example --client-secret google-client-secret-example",
+  "mikacli google drive auth-url --client-id google-client-id-example --redirect-uri http://127.0.0.1:3333/callback",
+  "mikacli google drive login --client-id google-client-id-example --client-secret google-client-secret-example --refresh-token google-refresh-token-example",
+  "mikacli google drive files --limit 10 --json",
+  "mikacli google drive files --query \"mimeType != 'application/vnd.google-apps.folder'\" --json",
+  "mikacli google drive create-folder Reports --json",
+  "mikacli google drive upload ./report.pdf --parent google-folder-id-example --json",
+  "mikacli google drive download google-file-id-example --output ./downloads/report.pdf --json",
 ] as const;
 
 function buildDriveCommand(_options: PlatformCommandBuildOptions = {}): Command {

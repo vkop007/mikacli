@@ -17,8 +17,8 @@ describe("instagram capability command surface", () => {
   test("uses category-based examples in the manifest", () => {
     const examples = instagramPlatformDefinition.examples ?? [];
 
-    expect(examples.every((example) => example.startsWith("autocli social instagram") || example.startsWith("autocli tools download"))).toBe(true);
-    expect(examples).toContain("autocli social instagram status");
+    expect(examples.every((example) => example.startsWith("mikacli social instagram") || example.startsWith("mikacli tools download"))).toBe(true);
+    expect(examples).toContain("mikacli social instagram status");
   });
 
   test("exposes delete and delete-comment commands for cleanup flows", () => {

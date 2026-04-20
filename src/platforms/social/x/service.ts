@@ -1,7 +1,7 @@
 import { readMediaFile } from "../../../utils/media.js";
 import { appendUploadFileField } from "../../../utils/upload-pipeline.js";
 import { parseXProfileTarget, parseXTarget } from "../../../utils/targets.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { maybeAutoRefreshSession } from "../../../utils/autorefresh.js";
 import { serializeCookieJar } from "../../../utils/cookie-manager.js";
 import {
@@ -198,7 +198,7 @@ export class XAdapter extends BasePlatformAdapter {
     });
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "X session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "X session has expired.", {
         details: {
           platform: this.platform,
           account,
@@ -307,9 +307,9 @@ export class XAdapter extends BasePlatformAdapter {
         if (!response) {
           await page.waitForTimeout(1_500);
           await this.throwIfBrowserBlocked(page);
-          throw new AutoCliError(
+          throw new MikaCliError(
             "X_BROWSER_CREATE_TWEET_TIMEOUT",
-            "X never sent the compose request from the browser-backed post flow. Retry once, or re-login with `autocli social x login --browser` if the problem persists.",
+            "X never sent the compose request from the browser-backed post flow. Retry once, or re-login with `mikacli social x login --browser` if the problem persists.",
             {
               details: {
                 url: page.url(),
@@ -321,7 +321,7 @@ export class XAdapter extends BasePlatformAdapter {
         const payload = (await response.json().catch(() => null)) as XCreateTweetGraphQlResponse | null;
 
         if (!payload) {
-          throw new AutoCliError("X_BROWSER_ACTION_FAILED", "X submitted the browser post, but AutoCLI could not read the resulting response.");
+          throw new MikaCliError("X_BROWSER_ACTION_FAILED", "X submitted the browser post, but MikaCLI could not read the resulting response.");
         }
 
         this.throwOnGraphQlErrors(payload, X_CREATE_TWEET_OPERATION);
@@ -381,7 +381,7 @@ export class XAdapter extends BasePlatformAdapter {
       await page.waitForTimeout(250);
     }
 
-    throw new AutoCliError("X_BROWSER_POST_BUTTON_DISABLED", "X never enabled the browser post button for the composed text.", {
+    throw new MikaCliError("X_BROWSER_POST_BUTTON_DISABLED", "X never enabled the browser post button for the composed text.", {
       details: {
         url: page.url(),
       },
@@ -412,7 +412,7 @@ export class XAdapter extends BasePlatformAdapter {
     const steps = input.browser
       ? [{
           source: "shared" as const,
-          announceLabel: `Opening shared AutoCLI browser profile for X deleting: ${targetUrl}`,
+          announceLabel: `Opening shared MikaCLI browser profile for X deleting: ${targetUrl}`,
         }]
       : [{ source: "headless" as const }];
 
@@ -451,7 +451,7 @@ export class XAdapter extends BasePlatformAdapter {
         const response = await this.readBrowserMutationPayloadIfReady(page, responsePromise);
         await this.throwIfBrowserBlocked(page);
         if (!liked) {
-          throw new AutoCliError("X_BROWSER_ACTION_FAILED", "X did not confirm the like action in the browser flow.", {
+          throw new MikaCliError("X_BROWSER_ACTION_FAILED", "X did not confirm the like action in the browser flow.", {
             details: {
               tweetId: target.tweetId,
               url: page.url(),
@@ -462,7 +462,7 @@ export class XAdapter extends BasePlatformAdapter {
         if (response) {
           const payload = await this.readBrowserMutationPayload<XFavoriteTweetGraphQlResponse>(
             response,
-            "X liked the post in the browser flow, but AutoCLI could not read the resulting response.",
+            "X liked the post in the browser flow, but MikaCLI could not read the resulting response.",
           );
           this.throwOnGraphQlErrors(payload, X_FAVORITE_TWEET_OPERATION);
         }
@@ -538,7 +538,7 @@ export class XAdapter extends BasePlatformAdapter {
         const response = await this.readBrowserMutationPayloadIfReady(page, responsePromise);
         await this.throwIfBrowserBlocked(page);
         if (!unliked) {
-          throw new AutoCliError("X_BROWSER_ACTION_FAILED", "X did not confirm the unlike action in the browser flow.", {
+          throw new MikaCliError("X_BROWSER_ACTION_FAILED", "X did not confirm the unlike action in the browser flow.", {
             details: {
               tweetId: target.tweetId,
               url: page.url(),
@@ -549,7 +549,7 @@ export class XAdapter extends BasePlatformAdapter {
         if (response) {
           const payload = await this.readBrowserMutationPayload<XBasicMutationResponse>(
             response,
-            "X unliked the post in the browser flow, but AutoCLI could not read the resulting response.",
+            "X unliked the post in the browser flow, but MikaCLI could not read the resulting response.",
           );
           this.throwOnGraphQlErrors(payload, X_UNFAVORITE_TWEET_OPERATION);
         }
@@ -622,9 +622,9 @@ export class XAdapter extends BasePlatformAdapter {
         if (!response) {
           await page.waitForTimeout(1_500);
           await this.throwIfBrowserBlocked(page);
-          throw new AutoCliError(
+          throw new MikaCliError(
             "X_BROWSER_CREATE_TWEET_TIMEOUT",
-            "X never sent the reply request from the browser-backed flow. Retry once, or re-login with `autocli social x login --browser` if the problem persists.",
+            "X never sent the reply request from the browser-backed flow. Retry once, or re-login with `mikacli social x login --browser` if the problem persists.",
             {
               details: {
                 url: page.url(),
@@ -636,7 +636,7 @@ export class XAdapter extends BasePlatformAdapter {
 
         const payload = await this.readBrowserMutationPayload<XCreateTweetGraphQlResponse>(
           response,
-          "X submitted the browser reply, but AutoCLI could not read the resulting response.",
+          "X submitted the browser reply, but MikaCLI could not read the resulting response.",
         );
         this.throwOnGraphQlErrors(payload, X_CREATE_TWEET_OPERATION);
         const tweetId = this.extractTweetId(payload);
@@ -680,7 +680,7 @@ export class XAdapter extends BasePlatformAdapter {
     const steps = input.browser
       ? [{
           source: "shared" as const,
-          announceLabel: `Opening shared AutoCLI browser profile for X deleting: ${targetUrl}`,
+          announceLabel: `Opening shared MikaCLI browser profile for X deleting: ${targetUrl}`,
         }]
       : [{ source: "headless" as const }];
 
@@ -723,7 +723,7 @@ export class XAdapter extends BasePlatformAdapter {
         if (response) {
           const payload = await this.readBrowserMutationPayload<XBasicMutationResponse>(
             response,
-            "X deleted the post in the browser flow, but AutoCLI could not read the resulting response.",
+            "X deleted the post in the browser flow, but MikaCLI could not read the resulting response.",
           );
           this.throwOnGraphQlErrors(payload, X_DELETE_TWEET_OPERATION);
         }
@@ -768,7 +768,7 @@ export class XAdapter extends BasePlatformAdapter {
     const query = input.query.trim();
 
     if (!query) {
-      throw new AutoCliError("INVALID_SEARCH_QUERY", "Expected a non-empty X search query.");
+      throw new MikaCliError("INVALID_SEARCH_QUERY", "Expected a non-empty X search query.");
     }
 
     const limit = this.normalizeSearchLimit(input.limit);
@@ -819,7 +819,7 @@ export class XAdapter extends BasePlatformAdapter {
 
     const tweet = this.extractTweetSummaries(response, 1)[0];
     if (!tweet) {
-      throw new AutoCliError("X_TWEET_NOT_FOUND", "X could not load that post.", {
+      throw new MikaCliError("X_TWEET_NOT_FOUND", "X could not load that post.", {
         details: {
           target: input.target,
           tweetId: target.tweetId,
@@ -917,7 +917,7 @@ export class XAdapter extends BasePlatformAdapter {
     await this.persistSessionState(session, probe);
 
     if (probe.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", probe.status.message ?? "X session has expired.", {
+      throw new MikaCliError("SESSION_EXPIRED", probe.status.message ?? "X session has expired.", {
         details: {
           platform: this.platform,
           account: session.account,
@@ -994,7 +994,7 @@ export class XAdapter extends BasePlatformAdapter {
       responseType: "text",
       expectedStatus: 200,
       headers: {
-        "user-agent": "Mozilla/5.0 AutoCLI/0.1",
+        "user-agent": "Mozilla/5.0 MikaCLI/0.1",
       },
     });
 
@@ -1059,7 +1059,7 @@ export class XAdapter extends BasePlatformAdapter {
     return this.createClient(session, {
       accept: "application/json, text/plain, */*",
       origin: X_ORIGIN,
-      "user-agent": "Mozilla/5.0 AutoCLI/0.1",
+      "user-agent": "Mozilla/5.0 MikaCLI/0.1",
     });
   }
 
@@ -1068,7 +1068,7 @@ export class XAdapter extends BasePlatformAdapter {
     client: Awaited<ReturnType<XAdapter["createXClient"]>>,
     metadata?: Record<string, unknown>,
   ): Promise<string> {
-    const configured = process.env.AUTOCLI_X_BEARER_TOKEN;
+    const configured = process.env.MIKACLI_X_BEARER_TOKEN;
     if (configured) {
       return configured;
     }
@@ -1085,14 +1085,14 @@ export class XAdapter extends BasePlatformAdapter {
     const mainScriptUrl = homeHtml.match(/https:\/\/abs\.twimg\.com\/responsive-web\/client-web\/main\.[^"]+\.js/u)?.[0];
 
     if (!mainScriptUrl) {
-      throw new AutoCliError("X_BEARER_TOKEN_NOT_FOUND", "Failed to locate the X main web bundle.");
+      throw new MikaCliError("X_BEARER_TOKEN_NOT_FOUND", "Failed to locate the X main web bundle.");
     }
 
     const scriptBody = await fetch(mainScriptUrl).then((response) => response.text());
     const token = scriptBody.match(/AAAA[A-Za-z0-9%]{80,}/u)?.[0];
 
     if (!token) {
-      throw new AutoCliError("X_BEARER_TOKEN_NOT_FOUND", "Failed to extract the X web bearer token.");
+      throw new MikaCliError("X_BEARER_TOKEN_NOT_FOUND", "Failed to extract the X web bearer token.");
     }
 
     const decoded = decodeURIComponent(token);
@@ -1121,7 +1121,7 @@ export class XAdapter extends BasePlatformAdapter {
     const csrfToken = await client.getCookieValue("ct0", X_ORIGIN);
 
     if (!csrfToken) {
-      throw new AutoCliError("SESSION_EXPIRED", "X csrf token is missing. Re-import cookies.txt.");
+      throw new MikaCliError("SESSION_EXPIRED", "X csrf token is missing. Re-import cookies.txt.");
     }
 
     return {
@@ -1175,7 +1175,7 @@ export class XAdapter extends BasePlatformAdapter {
 
     const mediaId = initResponse.media_id_string;
     if (!mediaId) {
-      throw new AutoCliError("MEDIA_UPLOAD_FAILED", "X media upload did not return a media ID.");
+      throw new MikaCliError("MEDIA_UPLOAD_FAILED", "X media upload did not return a media ID.");
     }
 
     const appendHeaders = await this.buildXUploadHeaders(client, bearerToken, X_HOME);
@@ -1216,7 +1216,7 @@ export class XAdapter extends BasePlatformAdapter {
     );
 
     if (finalizeResponse.processing_info?.state && finalizeResponse.processing_info.state !== "succeeded") {
-      throw new AutoCliError("MEDIA_UPLOAD_PROCESSING", "X media upload is still processing. Retry in a few seconds.", {
+      throw new MikaCliError("MEDIA_UPLOAD_PROCESSING", "X media upload is still processing. Retry in a few seconds.", {
         details: {
           state: finalizeResponse.processing_info.state,
           mediaId,
@@ -1336,14 +1336,14 @@ export class XAdapter extends BasePlatformAdapter {
     });
     const mainScriptUrl = homeHtml.match(/https:\/\/abs\.twimg\.com\/responsive-web\/client-web\/main\.[^"]+\.js/u)?.[0];
     if (!mainScriptUrl) {
-      throw new AutoCliError("X_WEB_BUNDLE_NOT_FOUND", "Failed to locate the X web app bundle.");
+      throw new MikaCliError("X_WEB_BUNDLE_NOT_FOUND", "Failed to locate the X web app bundle.");
     }
 
     const scriptBody = await fetch(mainScriptUrl).then((response) => response.text());
     const pattern = new RegExp(`queryId:"([^"]+)",operationName:"${operationName}"`, "u");
     const queryId = scriptBody.match(pattern)?.[1];
     if (!queryId) {
-      throw new AutoCliError("X_GRAPHQL_OPERATION_NOT_FOUND", `Failed to locate the X ${operationName} operation ID.`);
+      throw new MikaCliError("X_GRAPHQL_OPERATION_NOT_FOUND", `Failed to locate the X ${operationName} operation ID.`);
     }
 
     const jar = await this.cookieManager.createJar(session);
@@ -1375,7 +1375,7 @@ export class XAdapter extends BasePlatformAdapter {
     }
 
     if (firstError.code === 34) {
-      throw new AutoCliError("X_RESOURCE_NOT_FOUND", `X could not find the requested resource for ${operationName} (code 34).`, {
+      throw new MikaCliError("X_RESOURCE_NOT_FOUND", `X could not find the requested resource for ${operationName} (code 34).`, {
         details: {
           operation: operationName,
           code: firstError.code,
@@ -1385,7 +1385,7 @@ export class XAdapter extends BasePlatformAdapter {
     }
 
     if (firstError.code === 144) {
-      throw new AutoCliError("X_TWEET_NOT_FOUND", "X could not find the target tweet (code 144).", {
+      throw new MikaCliError("X_TWEET_NOT_FOUND", "X could not find the target tweet (code 144).", {
         details: {
           operation: operationName,
           code: firstError.code,
@@ -1395,7 +1395,7 @@ export class XAdapter extends BasePlatformAdapter {
     }
 
     if (firstError.code === 344) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "X_DAILY_LIMIT_REACHED",
         "X says this account has reached its daily posting/message limit (code 344).",
         {
@@ -1409,7 +1409,7 @@ export class XAdapter extends BasePlatformAdapter {
     }
 
     if (firstError.code === 226) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "X_AUTOMATION_BLOCKED",
         "X blocked this write as suspected automation (code 226). The session is valid, but the platform rejected the action.",
         {
@@ -1422,7 +1422,7 @@ export class XAdapter extends BasePlatformAdapter {
       );
     }
 
-    throw new AutoCliError(`X_${operationName.toUpperCase()}_FAILED`, firstError.message ?? `X ${operationName} failed.`, {
+    throw new MikaCliError(`X_${operationName.toUpperCase()}_FAILED`, firstError.message ?? `X ${operationName} failed.`, {
       details: {
         operation: operationName,
         code: firstError.code,
@@ -1438,7 +1438,7 @@ export class XAdapter extends BasePlatformAdapter {
   private buildBrowserWriteSteps(actionLabel: string, targetUrl: string, forceShared: boolean) {
     const sharedStep = {
       source: "shared" as const,
-      announceLabel: `Opening shared AutoCLI browser profile for X ${actionLabel}: ${targetUrl}`,
+      announceLabel: `Opening shared MikaCLI browser profile for X ${actionLabel}: ${targetUrl}`,
     };
 
     if (forceShared) {
@@ -1483,7 +1483,7 @@ export class XAdapter extends BasePlatformAdapter {
   private async readBrowserMutationPayload<T>(response: PlaywrightResponse, errorMessage: string): Promise<T> {
     const payload = (await response.json().catch(() => null)) as T | null;
     if (!payload || typeof payload !== "object") {
-      throw new AutoCliError("X_BROWSER_ACTION_FAILED", errorMessage, {
+      throw new MikaCliError("X_BROWSER_ACTION_FAILED", errorMessage, {
         details: {
           status: response.status(),
           url: response.url(),
@@ -1499,12 +1499,12 @@ export class XAdapter extends BasePlatformAdapter {
     await page.waitForTimeout(1_000);
 
     if (isXLoginUrl(page.url())) {
-      throw new AutoCliError("X_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into X. Run `autocli social x login --browser` first.");
+      throw new MikaCliError("X_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into X. Run `mikacli social x login --browser` first.");
     }
 
     const loginInputs = page.locator('input[autocomplete="username"], input[name="text"], input[autocomplete="current-password"]');
     if ((await loginInputs.count().catch(() => 0)) > 0) {
-      throw new AutoCliError("X_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into X. Run `autocli social x login --browser` first.");
+      throw new MikaCliError("X_BROWSER_NOT_LOGGED_IN", "The browser session is not logged into X. Run `mikacli social x login --browser` first.");
     }
 
     await this.throwIfBrowserBlocked(page);
@@ -1549,7 +1549,7 @@ export class XAdapter extends BasePlatformAdapter {
   private async attachBrowserComposerImage(page: PlaywrightPage, imagePath: string): Promise<void> {
     const input = page.locator('input[data-testid="fileInput"], input[type="file"]').first();
     if (!(await input.count().catch(() => 0))) {
-      throw new AutoCliError("X_BROWSER_UPLOAD_INPUT_MISSING", "X did not show an image upload field in the browser composer.");
+      throw new MikaCliError("X_BROWSER_UPLOAD_INPUT_MISSING", "X did not show an image upload field in the browser composer.");
     }
 
     await input.setInputFiles(imagePath);
@@ -1566,7 +1566,7 @@ export class XAdapter extends BasePlatformAdapter {
       await article.waitFor({ state: "visible", timeout: 15_000 });
       return article;
     } catch (error) {
-      throw new AutoCliError("X_BROWSER_TWEET_NOT_FOUND", "X did not render the target post in the browser view.", {
+      throw new MikaCliError("X_BROWSER_TWEET_NOT_FOUND", "X did not render the target post in the browser view.", {
         cause: error,
         details: {
           url: page.url(),
@@ -1650,7 +1650,7 @@ export class XAdapter extends BasePlatformAdapter {
     for (const pattern of knownPatterns) {
       const match = bodyText.match(pattern);
       if (match) {
-        throw new AutoCliError("X_BROWSER_ACTION_FAILED", match[0], {
+        throw new MikaCliError("X_BROWSER_ACTION_FAILED", match[0], {
           details: {
             url: page.url(),
           },
@@ -1743,7 +1743,7 @@ export class XAdapter extends BasePlatformAdapter {
 
     const user = this.extractUserSummaries(response, 1)[0];
     if (!user) {
-      throw new AutoCliError("X_PROFILE_NOT_FOUND", "X could not load that profile.", {
+      throw new MikaCliError("X_PROFILE_NOT_FOUND", "X could not load that profile.", {
         details: {
           target,
           userId: parsed.userId,
@@ -2032,7 +2032,7 @@ export class XAdapter extends BasePlatformAdapter {
       return null as T;
     }
 
-    throw new AutoCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
+    throw new MikaCliError("PLATFORM_REQUEST_FAILED", fallbackMessage, {
       cause: lastError,
       details: lastError instanceof Error ? { message: lastError.message } : undefined,
     });
@@ -2051,7 +2051,7 @@ async function firstVisibleXLocator(page: PlaywrightPage, selectors: readonly st
     }
   }
 
-  throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible X browser element for selectors: ${selectors.join(", ")}`);
+  throw new MikaCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible X browser element for selectors: ${selectors.join(", ")}`);
 }
 
 async function firstVisibleXLocatorWithin(root: PlaywrightPage | PlaywrightLocator, selectors: readonly string[]) {
@@ -2066,7 +2066,7 @@ async function firstVisibleXLocatorWithin(root: PlaywrightPage | PlaywrightLocat
     }
   }
 
-  throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible X browser element for selectors: ${selectors.join(", ")}`);
+  throw new MikaCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find any visible X browser element for selectors: ${selectors.join(", ")}`);
 }
 
 async function hasVisibleXLocatorWithin(root: PlaywrightPage | PlaywrightLocator, selectors: readonly string[]): Promise<boolean> {
@@ -2093,7 +2093,7 @@ function isXLoginUrl(url: string): boolean {
 }
 
 function shouldRetryXBrowserWrite(error: unknown): boolean {
-  if (!(error instanceof AutoCliError)) {
+  if (!(error instanceof MikaCliError)) {
     return false;
   }
 
@@ -2118,7 +2118,7 @@ async function firstVisibleXMenuItem(page: PlaywrightPage, namePattern: RegExp):
     }
   }
 
-  throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find a visible X menu item matching ${namePattern}.`);
+  throw new MikaCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find a visible X menu item matching ${namePattern}.`);
 }
 
 async function firstVisibleXDialogButton(page: PlaywrightPage, namePattern: RegExp): Promise<PlaywrightLocator> {
@@ -2132,5 +2132,5 @@ async function firstVisibleXDialogButton(page: PlaywrightPage, namePattern: RegE
     }
   }
 
-  throw new AutoCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find a visible X dialog button matching ${namePattern}.`);
+  throw new MikaCliError("X_BROWSER_ELEMENT_NOT_FOUND", `Could not find a visible X dialog button matching ${namePattern}.`);
 }

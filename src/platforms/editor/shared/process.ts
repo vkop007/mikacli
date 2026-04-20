@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export async function runEditorBinary(input: {
   command: string;
@@ -29,7 +29,7 @@ export async function runEditorBinary(input: {
 
     child.on("error", (error) => {
       rejectPromise(
-        new AutoCliError(input.missingCode, input.missingMessage, {
+        new MikaCliError(input.missingCode, input.missingMessage, {
           details: {
             command: input.command,
           },
@@ -45,7 +45,7 @@ export async function runEditorBinary(input: {
       }
 
       rejectPromise(
-        new AutoCliError(
+        new MikaCliError(
           input.failureCode ?? "EDITOR_COMMAND_FAILED",
           input.failureMessage ?? `${input.command} exited with code ${code}.`,
           {

@@ -11,7 +11,7 @@ export const facebookPostCapability = createAdapterActionCapability({
   options: [
     { flags: "--image <path>", description: "Optional image path to attach to the Facebook post" },
     { flags: "--account <name>", description: "Optional override for a specific saved Facebook session" },
-    { flags: "--browser", description: "Force the post through the shared AutoCLI browser profile instead of the invisible browser-backed path" },
+    { flags: "--browser", description: "Force the post through the shared MikaCLI browser profile instead of the invisible browser-backed path" },
     {
       flags: "--browser-timeout <seconds>",
       description: "Maximum seconds to allow the browser action to complete",

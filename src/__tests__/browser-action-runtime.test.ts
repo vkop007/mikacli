@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 import {
   normalizeBrowserActionRuntimeError,
   resolveBrowserActionStrategySteps,
@@ -71,15 +71,15 @@ describe("browser action runtime", () => {
         targetUrl: "https://www.linkedin.com/feed/",
         actionFn: async () => ({ ok: true }),
       },
-      new AutoCliError("BROWSER_NOT_RUNNING", "No shared browser profile is open.", {
+      new MikaCliError("BROWSER_NOT_RUNNING", "No shared browser profile is open.", {
         details: {
           profile: "default",
         },
       }),
     );
 
-    expect(error).toBeInstanceOf(AutoCliError);
-    expect((error as AutoCliError).code).toBe("BROWSER_ACTION_SHARED_REQUIRED");
-    expect((error as AutoCliError).message).toContain("LinkedIn media publish requires the shared AutoCLI browser");
+    expect(error).toBeInstanceOf(MikaCliError);
+    expect((error as MikaCliError).code).toBe("BROWSER_ACTION_SHARED_REQUIRED");
+    expect((error as MikaCliError).message).toContain("LinkedIn media publish requires the shared MikaCLI browser");
   });
 });

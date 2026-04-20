@@ -94,9 +94,9 @@ export const justWatchPlatformDefinition: PlatformDefinition = {
     }),
   ],
   examples: [
-    "autocli justwatch title https://www.justwatch.com/us/movie/inception",
-    "autocli justwatch availability /us/movie/inception",
-    "autocli justwatch trending --country US --type movie",
-    "autocli justwatch new --country IN --type all --limit 10",
+    "mikacli justwatch title https://www.justwatch.com/us/movie/inception",
+    "mikacli justwatch availability /us/movie/inception",
+    "mikacli justwatch trending --country US --type movie",
+    "mikacli justwatch new --country IN --type all --limit 10",
   ],
 };

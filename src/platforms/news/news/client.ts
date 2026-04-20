@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult } from "../../../types.js";
 import {
   buildGdeltUrl,
@@ -104,12 +104,12 @@ export class NewsClient {
     const query = input.query.trim();
 
     if (!query) {
-      throw new AutoCliError("NEWS_QUERY_REQUIRED", "News search query cannot be empty.");
+      throw new MikaCliError("NEWS_QUERY_REQUIRED", "News search query cannot be empty.");
     }
 
     const requestedSources: readonly NewsSourceId[] = scope === "all" ? ["google", "gdelt", "reddit"] : [scope];
     if (requestedSources.includes("hn")) {
-      throw new AutoCliError("NEWS_SOURCE_UNSUPPORTED", "Hacker News does not offer official query search through its public API.", {
+      throw new MikaCliError("NEWS_SOURCE_UNSUPPORTED", "Hacker News does not offer official query search through its public API.", {
         details: {
           source: "hn",
           query,
@@ -145,18 +145,18 @@ export class NewsClient {
         signal: AbortSignal.timeout(12000),
         headers: {
           accept: "application/rss+xml,application/atom+xml,text/xml,application/xml,text/plain;q=0.9,*/*;q=0.8",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("NEWS_FEED_REQUEST_FAILED", "Unable to reach the news feed URL.", {
+      throw new MikaCliError("NEWS_FEED_REQUEST_FAILED", "Unable to reach the news feed URL.", {
         details: { feedUrl },
         cause: error,
       });
     }
 
     if (!response.ok) {
-      throw new AutoCliError("NEWS_FEED_REQUEST_FAILED", `Feed request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("NEWS_FEED_REQUEST_FAILED", `Feed request failed with ${response.status} ${response.statusText}.`, {
         details: {
           feedUrl,
           status: response.status,
@@ -209,7 +209,7 @@ export class NewsClient {
       case "reddit":
         return this.fetchRedditTopBatch(input);
       case "rss":
-        throw new AutoCliError("NEWS_SOURCE_UNSUPPORTED", "Generic RSS feeds are only available through the `feed` command.");
+        throw new MikaCliError("NEWS_SOURCE_UNSUPPORTED", "Generic RSS feeds are only available through the `feed` command.");
     }
   }
 
@@ -223,7 +223,7 @@ export class NewsClient {
         return this.fetchRedditSearchBatch(input);
       case "hn":
       case "rss":
-        throw new AutoCliError("NEWS_SOURCE_UNSUPPORTED", `${NEWS_SOURCE_INFO[source].label} is not available for query search.`);
+        throw new MikaCliError("NEWS_SOURCE_UNSUPPORTED", `${NEWS_SOURCE_INFO[source].label} is not available for query search.`);
     }
   }
 
@@ -504,11 +504,11 @@ export class NewsClient {
     );
 
     if (successful.length === 0) {
-      if (failed.length === 1 && failed[0]?.reason instanceof AutoCliError) {
+      if (failed.length === 1 && failed[0]?.reason instanceof MikaCliError) {
         throw failed[0].reason;
       }
 
-      throw new AutoCliError("NEWS_REQUEST_FAILED", "All requested news sources failed.", {
+      throw new MikaCliError("NEWS_REQUEST_FAILED", "All requested news sources failed.", {
         details: {
           scope: formatNewsSourceScope(input.scope),
           query: input.query ?? input.topic ?? null,
@@ -562,18 +562,18 @@ export class NewsClient {
         signal: AbortSignal.timeout(12000),
         headers: {
           accept: "application/rss+xml,application/atom+xml,text/xml,application/xml,text/plain;q=0.9,*/*;q=0.8",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("NEWS_REQUEST_FAILED", `Unable to reach ${label}.`, {
+      throw new MikaCliError("NEWS_REQUEST_FAILED", `Unable to reach ${label}.`, {
         details: { url },
         cause: error,
       });
     }
 
     if (!response.ok) {
-      throw new AutoCliError("NEWS_REQUEST_FAILED", `${label} request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("NEWS_REQUEST_FAILED", `${label} request failed with ${response.status} ${response.statusText}.`, {
         details: { url, status: response.status },
       });
     }
@@ -588,18 +588,18 @@ export class NewsClient {
         signal: AbortSignal.timeout(12000),
         headers: {
           accept: "application/json,text/plain;q=0.9,*/*;q=0.8",
-          "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+          "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("NEWS_REQUEST_FAILED", `Unable to reach ${label}.`, {
+      throw new MikaCliError("NEWS_REQUEST_FAILED", `Unable to reach ${label}.`, {
         details: { url },
         cause: error,
       });
     }
 
     if (!response.ok) {
-      throw new AutoCliError("NEWS_REQUEST_FAILED", `${label} request failed with ${response.status} ${response.statusText}.`, {
+      throw new MikaCliError("NEWS_REQUEST_FAILED", `${label} request failed with ${response.status} ${response.statusText}.`, {
         details: { url, status: response.status },
       });
     }
@@ -607,7 +607,7 @@ export class NewsClient {
     try {
       return await response.json();
     } catch (error) {
-      throw new AutoCliError("NEWS_RESPONSE_INVALID", `${label} returned invalid JSON.`, {
+      throw new MikaCliError("NEWS_RESPONSE_INVALID", `${label} returned invalid JSON.`, {
         details: { url },
         cause: error,
       });
@@ -617,21 +617,21 @@ export class NewsClient {
   private normalizeFeedUrl(value: string): string {
     const trimmed = value.trim();
     if (!trimmed) {
-      throw new AutoCliError("NEWS_FEED_URL_REQUIRED", "Feed URL cannot be empty.");
+      throw new MikaCliError("NEWS_FEED_URL_REQUIRED", "Feed URL cannot be empty.");
     }
 
     try {
       const url = new URL(trimmed);
       if (url.protocol !== "http:" && url.protocol !== "https:") {
-        throw new AutoCliError("NEWS_FEED_URL_INVALID", "Feed URL must use http or https.");
+        throw new MikaCliError("NEWS_FEED_URL_INVALID", "Feed URL must use http or https.");
       }
       return url.toString();
     } catch (error) {
-      if (error instanceof AutoCliError) {
+      if (error instanceof MikaCliError) {
         throw error;
       }
 
-      throw new AutoCliError("NEWS_FEED_URL_INVALID", `Invalid feed URL "${value}".`, {
+      throw new MikaCliError("NEWS_FEED_URL_INVALID", `Invalid feed URL "${value}".`, {
         details: { feedUrl: value },
       });
     }

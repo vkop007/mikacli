@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { normalizePublicHttpUrl } from "../shared/url.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -58,11 +58,11 @@ async function fetchPage(target: string, timeoutMs: number): Promise<{
       headers: {
         accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "accept-language": "en-US,en;q=0.9",
-        "user-agent": "Mozilla/5.0 (compatible; AutoCLI/1.0; +https://github.com/)",
+        "user-agent": "Mozilla/5.0 (compatible; MikaCLI/1.0; +https://github.com/)",
       },
     });
   } catch (error) {
-    throw new AutoCliError("METADATA_REQUEST_FAILED", "Unable to reach the target URL.", {
+    throw new MikaCliError("METADATA_REQUEST_FAILED", "Unable to reach the target URL.", {
       cause: error,
       details: {
         target,
@@ -71,7 +71,7 @@ async function fetchPage(target: string, timeoutMs: number): Promise<{
   }
 
   if (!response.ok) {
-    throw new AutoCliError("METADATA_REQUEST_FAILED", `Metadata request failed with ${response.status} ${response.statusText}.`, {
+    throw new MikaCliError("METADATA_REQUEST_FAILED", `Metadata request failed with ${response.status} ${response.statusText}.`, {
       details: {
         status: response.status,
         statusText: response.statusText,

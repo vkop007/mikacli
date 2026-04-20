@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { SessionHttpClient } from "../../../utils/http-client.js";
 import {
   buildConfluencePageUrl,
@@ -163,7 +163,7 @@ export class ConfluenceWebClient {
   async createPage(input: { space: string; title: string; body?: string; parentId?: string }): Promise<ConfluencePage> {
     const title = input.title.trim();
     if (!title) {
-      throw new AutoCliError("CONFLUENCE_TITLE_REQUIRED", "Confluence page title cannot be empty.");
+      throw new MikaCliError("CONFLUENCE_TITLE_REQUIRED", "Confluence page title cannot be empty.");
     }
 
     const body = confluenceStorageFromPlainText(input.body) ?? "<p></p>";
@@ -226,7 +226,7 @@ export class ConfluenceWebClient {
     const pageId = normalizeConfluencePageTarget(input.target);
     const body = confluenceStorageFromPlainText(input.text);
     if (!body) {
-      throw new AutoCliError("CONFLUENCE_COMMENT_REQUIRED", "Confluence comment text cannot be empty.");
+      throw new MikaCliError("CONFLUENCE_COMMENT_REQUIRED", "Confluence comment text cannot be empty.");
     }
 
     return this.request<ConfluenceComment>(`/rest/api/content/${encodeURIComponent(pageId)}/child/comment`, {
@@ -328,7 +328,7 @@ export class ConfluenceWebClient {
           ...(input.body ? { "content-type": "application/json" } : {}),
           "x-atlassian-token": "no-check",
           "x-requested-with": "XMLHttpRequest",
-          "user-agent": "AutoCLI",
+          "user-agent": "MikaCLI",
         },
         ...(input.body ? { body: JSON.stringify(input.body) } : {}),
       });
@@ -339,7 +339,7 @@ export class ConfluenceWebClient {
       }
 
       if (text.startsWith("<")) {
-        throw new AutoCliError("CONFLUENCE_SESSION_INVALID", "Confluence redirected the saved web session to an HTML page. Re-import fresh cookies.", {
+        throw new MikaCliError("CONFLUENCE_SESSION_INVALID", "Confluence redirected the saved web session to an HTML page. Re-import fresh cookies.", {
           details: {
             url,
             preview: text.slice(0, 200),
@@ -350,7 +350,7 @@ export class ConfluenceWebClient {
       try {
         return JSON.parse(text) as T;
       } catch (error) {
-        throw new AutoCliError("CONFLUENCE_RESPONSE_INVALID", "Confluence returned a non-JSON response.", {
+        throw new MikaCliError("CONFLUENCE_RESPONSE_INVALID", "Confluence returned a non-JSON response.", {
           cause: error,
           details: {
             url,
@@ -363,9 +363,9 @@ export class ConfluenceWebClient {
     }
   }
 
-  private normalizeError(error: unknown): AutoCliError {
-    if (!(error instanceof AutoCliError)) {
-      return new AutoCliError("CONFLUENCE_REQUEST_FAILED", "Confluence request failed.", { cause: error });
+  private normalizeError(error: unknown): MikaCliError {
+    if (!(error instanceof MikaCliError)) {
+      return new MikaCliError("CONFLUENCE_REQUEST_FAILED", "Confluence request failed.", { cause: error });
     }
 
     if (error.code !== "HTTP_REQUEST_FAILED") {
@@ -392,7 +392,7 @@ export class ConfluenceWebClient {
       : code === "CONFLUENCE_VALIDATION_FAILED" ? message || "Confluence rejected the request payload."
       : message || "Confluence request failed.";
 
-    return new AutoCliError(code, friendly, {
+    return new MikaCliError(code, friendly, {
       details: {
         ...(error.details ?? {}),
         upstreamMessage: message || undefined,

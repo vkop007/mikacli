@@ -1,13 +1,13 @@
-# AutoCLI
+# MikaCLI
 
 <!-- GENERATED:badges:start -->
-[![npm version](https://img.shields.io/npm/v/%40vk007%2Fautocli)](https://www.npmjs.com/package/@vk007/autocli)
-[![license](https://img.shields.io/github/license/vkop007/autocli)](./LICENSE)
+[![npm version](https://img.shields.io/npm/v/%40vk007%2Fmikacli)](https://www.npmjs.com/package/@vk007/mikacli)
+[![license](https://img.shields.io/github/license/vkop007/mikacli)](./LICENSE)
 [![providers](https://img.shields.io/badge/providers-117-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-16-6f42c1)](#category-overview)
 <!-- GENERATED:badges:end -->
 
-AutoCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
+MikaCLI is a terminal automation toolkit for developers and AI agents that turns websites, LLMs, developer platforms, editors, and utilities into one reusable CLI.
 
 The core idea is simple:
 
@@ -16,7 +16,7 @@ The core idea is simple:
 - keep using the provider headlessly from the terminal
 - return clean `--json` output for scripts, agents, and orchestration
 
-What makes AutoCLI especially useful is that it does not stop at API tokens. It works across cookies, saved browser sessions, user sessions, bot tokens, local tools, and public services, so the same CLI can drive GitHub, ChatGPT, Jira, Reddit, ffmpeg, DNS lookups, and more without switching tools.
+What makes MikaCLI especially useful is that it does not stop at API tokens. It works across cookies, saved browser sessions, user sessions, bot tokens, local tools, and public services, so the same CLI can drive GitHub, ChatGPT, Jira, Reddit, ffmpeg, DNS lookups, and more without switching tools.
 
 ## Why It Matters
 
@@ -25,14 +25,14 @@ What makes AutoCLI especially useful is that it does not stop at API tokens. It 
 <!-- GENERATED:why-it-matters-count:end -->
 - Shared browser login means less manual cookie exporting for cookie-backed platforms.
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
-- Category-based routing stays predictable as the tool grows: `autocli llm ...`, `autocli google ...`, `autocli social ...`, `autocli developer ...`, `autocli devops ...`.
+- Category-based routing stays predictable as the tool grows: `mikacli llm ...`, `mikacli google ...`, `mikacli social ...`, `mikacli developer ...`, `mikacli devops ...`.
 - Every provider is designed to be script-friendly, with strong `--json` support.
 - Provider capability metadata helps agents see auth type, stability, browser support, and read/write boundaries before they guess.
 - Shared result normalization adds stable JSON aliases like `data.items`, `data.entity`, and `data.guidance`.
 
 ## Auto Browser Login
 
-AutoCLI can keep a shared browser profile under its own control, let you sign in once, then reuse that browser state for later provider logins.
+MikaCLI can keep a shared browser profile under its own control, let you sign in once, then reuse that browser state for later provider logins.
 
 That means you can:
 
@@ -44,18 +44,18 @@ That means you can:
 Typical flow:
 
 ```bash
-autocli login --browser
-autocli developer github login --browser
-autocli social x login --browser
-autocli llm qwen login --browser
+mikacli login --browser
+mikacli developer github login --browser
+mikacli social x login --browser
+mikacli llm qwen login --browser
 ```
 
 After the provider session is saved, normal commands stay headless:
 
 ```bash
-autocli developer github me --json
-autocli social x post "Shipping from AutoCLI"
-autocli llm qwen text "Summarize this changelog"
+mikacli developer github me --json
+mikacli social x post "Shipping from MikaCLI"
+mikacli llm qwen text "Summarize this changelog"
 ```
 
 ## At a Glance
@@ -63,12 +63,12 @@ autocli llm qwen text "Summarize this changelog"
 <!-- GENERATED:at-a-glance:start -->
 | Item | Value |
 | --- | --- |
-| Package | `@vk007/autocli` |
-| CLI command | `autocli` |
+| Package | `@vk007/mikacli` |
+| CLI command | `mikacli` |
 | Providers | `117` |
 | Categories | `16` |
-| npm install | `npm install -g @vk007/autocli` |
-| bun install | `bun install -g @vk007/autocli` |
+| npm install | `npm install -g @vk007/mikacli` |
+| bun install | `bun install -g @vk007/mikacli` |
 | Local setup | `bun install` |
 | Docs sync | `bun run sync:docs` |
 <!-- GENERATED:at-a-glance:end -->
@@ -78,16 +78,16 @@ autocli llm qwen text "Summarize this changelog"
 Install globally with npm or Bun:
 
 ```bash
-npm install -g @vk007/autocli
-bun install -g @vk007/autocli
+npm install -g @vk007/mikacli
+bun install -g @vk007/mikacli
 ```
 
 Validate the install right away:
 
 ```bash
-autocli --version
-autocli doctor
-autocli doctor --fix
+mikacli --version
+mikacli doctor
+mikacli doctor --fix
 ```
 
 Set up the repo locally with Bun:
@@ -100,41 +100,41 @@ bun run build
 Bootstrap the shared browser once if you want browser-assisted logins:
 
 ```bash
-autocli login --browser
+mikacli login --browser
 ```
 
 Clear saved state when you want to sign back out:
 
 ```bash
-autocli logout
-autocli logout x default
-autocli logout --browser
+mikacli logout
+mikacli logout x default
+mikacli logout --browser
 ```
 
 Typical commands:
 
 ```bash
-autocli status
-autocli sessions validate
-autocli sessions repair
-autocli jobs
-autocli logout x default
-autocli search "youtube download"
-autocli llm chatgpt text "Write release notes for AutoCLI"
-autocli developer github login --browser
-autocli developer github me --json
-autocli developer github capabilities --json
-autocli devops cloudflare zones --json
-autocli devops render services --json
-autocli jobs show job-id-example
-autocli google gmail labels --json
-autocli google calendar today --json
-autocli google docs documents --json
-autocli google forms forms --json
-autocli google drive files --json
-autocli google sheets values google-sheet-id-example Sheet1!A1:B5 --json
-autocli tools page-links https://example.com --json
-autocli tools http github inspect --json
+mikacli status
+mikacli sessions validate
+mikacli sessions repair
+mikacli jobs
+mikacli logout x default
+mikacli search "youtube download"
+mikacli llm chatgpt text "Write release notes for MikaCLI"
+mikacli developer github login --browser
+mikacli developer github me --json
+mikacli developer github capabilities --json
+mikacli devops cloudflare zones --json
+mikacli devops render services --json
+mikacli jobs show job-id-example
+mikacli google gmail labels --json
+mikacli google calendar today --json
+mikacli google docs documents --json
+mikacli google forms forms --json
+mikacli google drive files --json
+mikacli google sheets values google-sheet-id-example Sheet1!A1:B5 --json
+mikacli tools page-links https://example.com --json
+mikacli tools http github inspect --json
 ```
 
 Every provider help page now includes:
@@ -143,7 +143,7 @@ Every provider help page now includes:
 - a `Support Profile` with auth, discovery, mutation, browser, and async support
 - a `Stability Guide` so agents can tell whether a provider is `stable`, `partial`, or `experimental`
 
-## Why Use AutoCLI
+## Why Use MikaCLI
 
 - Sign into real web apps once, then reuse the saved session from the terminal.
 - Use the same CLI for LLMs, socials, job search, developer tools, devops platforms, editors, and public utilities.
@@ -153,49 +153,49 @@ Every provider help page now includes:
 
 ## Command Model
 
-AutoCLI is category-only. Provider commands never live at the root.
+MikaCLI is category-only. Provider commands never live at the root.
 
 <!-- GENERATED:command-model-categories:start -->
-- `autocli llm ...`
-- `autocli editor ...`
-- `autocli finance ...`
-- `autocli data ...`
-- `autocli google ...`
-- `autocli maps ...`
-- `autocli movie ...`
-- `autocli news ...`
-- `autocli music ...`
-- `autocli social ...`
-- `autocli careers ...`
-- `autocli shopping ...`
-- `autocli developer ...`
-- `autocli devops ...`
-- `autocli bot ...`
-- `autocli tools ...`
+- `mikacli llm ...`
+- `mikacli editor ...`
+- `mikacli finance ...`
+- `mikacli data ...`
+- `mikacli google ...`
+- `mikacli maps ...`
+- `mikacli movie ...`
+- `mikacli news ...`
+- `mikacli music ...`
+- `mikacli social ...`
+- `mikacli careers ...`
+- `mikacli shopping ...`
+- `mikacli developer ...`
+- `mikacli devops ...`
+- `mikacli bot ...`
+- `mikacli tools ...`
 <!-- GENERATED:command-model-categories:end -->
 
 Examples:
 
 ```bash
-autocli llm chatgpt text "Write release notes for AutoCLI"
-autocli google gmail labels
-autocli google calendar today
-autocli google docs documents
-autocli google forms forms
-autocli google drive files
-autocli google sheets values google-sheet-id-example Sheet1!A1:B10
-autocli social x post "Shipping AutoCLI today"
-autocli developer confluence search "release process"
-autocli developer github me
-autocli devops vercel projects
-autocli bot telegrambot send 123456789 "Build finished"
-autocli news top "AI"
-autocli tools translate "hello world" --to hi
-autocli tools timezone "Mumbai"
-autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
-autocli tools http github request GET /settings/profile
-autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ
-autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ
+mikacli llm chatgpt text "Write release notes for MikaCLI"
+mikacli google gmail labels
+mikacli google calendar today
+mikacli google docs documents
+mikacli google forms forms
+mikacli google drive files
+mikacli google sheets values google-sheet-id-example Sheet1!A1:B10
+mikacli social x post "Shipping MikaCLI today"
+mikacli developer confluence search "release process"
+mikacli developer github me
+mikacli devops vercel projects
+mikacli bot telegrambot send 123456789 "Build finished"
+mikacli news top "AI"
+mikacli tools translate "hello world" --to hi
+mikacli tools timezone "Mumbai"
+mikacli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
+mikacli tools http github request GET /settings/profile
+mikacli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ
+mikacli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ
 ```
 
 ## Google Workspace
@@ -218,129 +218,129 @@ Common APIs to enable:
 Typical login flow:
 
 ```bash
-autocli google gmail login --client-id <id> --client-secret <secret>
-autocli google calendar login --client-id <id> --client-secret <secret>
-autocli google docs login --client-id <id> --client-secret <secret>
-autocli google forms login --client-id <id> --client-secret <secret>
-autocli google drive login --client-id <id> --client-secret <secret>
-autocli google sheets login --client-id <id> --client-secret <secret>
+mikacli google gmail login --client-id <id> --client-secret <secret>
+mikacli google calendar login --client-id <id> --client-secret <secret>
+mikacli google docs login --client-id <id> --client-secret <secret>
+mikacli google forms login --client-id <id> --client-secret <secret>
+mikacli google drive login --client-id <id> --client-secret <secret>
+mikacli google sheets login --client-id <id> --client-secret <secret>
 ```
 
 Docs examples:
 
 ```bash
-autocli google docs documents --limit 10 --json
-autocli google docs document google-doc-id-example --json
-autocli google docs content google-doc-id-example --json
-autocli google docs create "Launch Notes" --text "Hello from AutoCLI" --json
-autocli google docs append-text google-doc-id-example "More text from AutoCLI" --json
-autocli google docs replace-text google-doc-id-example --search "draft" --replace "published" --json
+mikacli google docs documents --limit 10 --json
+mikacli google docs document google-doc-id-example --json
+mikacli google docs content google-doc-id-example --json
+mikacli google docs create "Launch Notes" --text "Hello from MikaCLI" --json
+mikacli google docs append-text google-doc-id-example "More text from MikaCLI" --json
+mikacli google docs replace-text google-doc-id-example --search "draft" --replace "published" --json
 ```
 
 Forms examples:
 
 ```bash
-autocli google forms forms --limit 10 --json
-autocli google forms form google-form-id-example --json
-autocli google forms create "Launch Survey" --description "Tell us what you think" --json
-autocli google forms add-text-question google-form-id-example --title "What should we improve?" --paragraph --required --json
-autocli google forms add-choice-question google-form-id-example --title "How did we do?" --options "Great|Good|Okay|Needs work" --type RADIO --json
-autocli google forms responses google-form-id-example --limit 20 --json
-autocli google forms publish google-form-id-example --published true --accepting-responses true --json
+mikacli google forms forms --limit 10 --json
+mikacli google forms form google-form-id-example --json
+mikacli google forms create "Launch Survey" --description "Tell us what you think" --json
+mikacli google forms add-text-question google-form-id-example --title "What should we improve?" --paragraph --required --json
+mikacli google forms add-choice-question google-form-id-example --title "How did we do?" --options "Great|Good|Okay|Needs work" --type RADIO --json
+mikacli google forms responses google-form-id-example --limit 20 --json
+mikacli google forms publish google-form-id-example --published true --accepting-responses true --json
 ```
 
 Calendar examples:
 
 ```bash
-autocli google calendar calendars --json
-autocli google calendar today --calendar primary --json
-autocli google calendar events --calendar primary --time-min 2026-04-12T00:00:00+05:30 --time-max 2026-04-12T23:59:59+05:30 --json
-autocli google calendar create-event --calendar primary --summary "Launch review" --start 2026-04-12T10:00:00+05:30 --end 2026-04-12T10:30:00+05:30 --json
-autocli google calendar update-event google-event-id-example --calendar primary --location "Zoom" --json
-autocli google calendar delete-event google-event-id-example --calendar primary --json
+mikacli google calendar calendars --json
+mikacli google calendar today --calendar primary --json
+mikacli google calendar events --calendar primary --time-min 2026-04-12T00:00:00+05:30 --time-max 2026-04-12T23:59:59+05:30 --json
+mikacli google calendar create-event --calendar primary --summary "Launch review" --start 2026-04-12T10:00:00+05:30 --end 2026-04-12T10:30:00+05:30 --json
+mikacli google calendar update-event google-event-id-example --calendar primary --location "Zoom" --json
+mikacli google calendar delete-event google-event-id-example --calendar primary --json
 ```
 
 ## Cross-Site Downloads
 
-Use `autocli tools download` for multi-site media downloads powered by `yt-dlp`, with optional saved-session cookies from AutoCLI when a site needs auth.
+Use `mikacli tools download` for multi-site media downloads powered by `yt-dlp`, with optional saved-session cookies from MikaCLI when a site needs auth.
 
 Examples:
 
 ```bash
-autocli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ --json
-autocli tools download video https://x.com/user/status/123 --platform x
-autocli tools download video https://www.instagram.com/reel/SHORTCODE/ --platform instagram --account default
-autocli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3
-autocli tools download batch ./urls.txt --mode video --quality 720p
-autocli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5
+mikacli tools download info https://www.youtube.com/watch?v=dQw4w9WgXcQ --json
+mikacli tools download video https://x.com/user/status/123 --platform x
+mikacli tools download video https://www.instagram.com/reel/SHORTCODE/ --platform instagram --account default
+mikacli tools download audio https://www.youtube.com/watch?v=dQw4w9WgXcQ --audio-format mp3
+mikacli tools download batch ./urls.txt --mode video --quality 720p
+mikacli tools download info 'https://www.youtube.com/playlist?list=PLFgquLnL59alCl_2TQvOiD5Vgm1hCaGSI' --playlist --limit 5
 ```
 
 ## Command Search
 
-Use `autocli search` to find providers and exact runnable commands across AutoCLI's built-in command surface.
+Use `mikacli search` to find providers and exact runnable commands across MikaCLI's built-in command surface.
 
 Examples:
 
 ```bash
-autocli search github
-autocli search "youtube download"
-autocli search uptime --category devops
-autocli search gmail --category google
-autocli search transcript --json
+mikacli search github
+mikacli search "youtube download"
+mikacli search uptime --category devops
+mikacli search gmail --category google
+mikacli search transcript --json
 ```
 
 ## Session Validation
 
-Use `autocli sessions validate` when you want a live provider check instead of the last saved session state.
+Use `mikacli sessions validate` when you want a live provider check instead of the last saved session state.
 
 Examples:
 
 ```bash
-autocli sessions validate
-autocli sessions validate x
-autocli sessions validate youtube default --json
+mikacli sessions validate
+mikacli sessions validate x
+mikacli sessions validate youtube default --json
 ```
 
-Use `autocli sessions repair` when you want AutoCLI to validate first, then replay safe login paths like stored tokens or browser-assisted cookie repair.
+Use `mikacli sessions repair` when you want MikaCLI to validate first, then replay safe login paths like stored tokens or browser-assisted cookie repair.
 
 Examples:
 
 ```bash
-autocli sessions repair
-autocli sessions repair x --browser
-autocli sessions repair discordbot default --json
+mikacli sessions repair
+mikacli sessions repair x --browser
+mikacli sessions repair discordbot default --json
 ```
 
 ## Saved Jobs
 
-Use `autocli jobs` to inspect saved media and async jobs across providers, then reopen, watch, download, or cancel them from one root command surface.
+Use `mikacli jobs` to inspect saved media and async jobs across providers, then reopen, watch, download, or cancel them from one root command surface.
 
 Examples:
 
 ```bash
-autocli jobs
-autocli jobs --platform grok
-autocli jobs show job-id-example
-autocli jobs watch job-id-example
-autocli jobs download job-id-example --output-dir ./renders
-autocli jobs cancel job-id-example --platform grok
+mikacli jobs
+mikacli jobs --platform grok
+mikacli jobs show job-id-example
+mikacli jobs watch job-id-example
+mikacli jobs download job-id-example --output-dir ./renders
+mikacli jobs cancel job-id-example --platform grok
 ```
 
 ## Cross-Site Transcripts
 
-Use `autocli tools transcript` to pull subtitles or transcripts from media pages supported by `yt-dlp`, with plain text by default and subtitle formats when you need them.
+Use `mikacli tools transcript` to pull subtitles or transcripts from media pages supported by `yt-dlp`, with plain text by default and subtitle formats when you need them.
 
 Examples:
 
 ```bash
-autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ
-autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --lang en --format srt
-autocli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --auto --format json --json
+mikacli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ
+mikacli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --lang en --format srt
+mikacli tools transcript https://www.youtube.com/watch?v=dQw4w9WgXcQ --auto --format json --json
 ```
 
 ## Agent JSON Conventions
 
-AutoCLI keeps provider-specific fields, but it also adds a few stable JSON aliases so agents can plan and transform results more reliably:
+MikaCLI keeps provider-specific fields, but it also adds a few stable JSON aliases so agents can plan and transform results more reliably:
 
 - `data.items` for list-style results, even when the provider also returns keys like `repos`, `projects`, `posts`, or `recommendations`
 - `data.entity` for singular objects, even when the provider also returns keys like `profile`, `page`, `movie`, or `project`
@@ -350,9 +350,9 @@ AutoCLI keeps provider-specific fields, but it also adds a few stable JSON alias
 Example:
 
 ```bash
-autocli social reddit search "bun cli" --json
-autocli movie tmdb title 27205 --json
-autocli developer github capabilities --json
+mikacli social reddit search "bun cli" --json
+mikacli movie tmdb title 27205 --json
+mikacli developer github capabilities --json
 ```
 ## Output Filtering & Field Selection
 
@@ -361,22 +361,22 @@ Use `--filter` and `--select` global flags to transform JSON results without ext
 ### Filter by conditions
 
 ```bash
-autocli developer github repos --json --filter 'stargazers_count > 100'
-autocli developer github repos --json --filter 'language = "TypeScript" AND stargazers_count > 1000'
-autocli social x posts --json --filter 'public_metrics.likes > 5000'
+mikacli developer github repos --json --filter 'stargazers_count > 100'
+mikacli developer github repos --json --filter 'language = "TypeScript" AND stargazers_count > 1000'
+mikacli social x posts --json --filter 'public_metrics.likes > 5000'
 ```
 
 ### Select specific fields
 
 ```bash
-autocli developer github repos --json --select name,stargazers_count,language
-autocli social linkedin posts --json --select content,engagement_count,timestamp
+mikacli developer github repos --json --select name,stargazers_count,language
+mikacli social linkedin posts --json --select content,engagement_count,timestamp
 ```
 
 ### Combine filtering and selection
 
 ```bash
-autocli developer github repos --json \
+mikacli developer github repos --json \
   --filter 'stargazers_count > 100 AND language = "TypeScript"' \
   --select name,stargazers_count,url
 ```
@@ -407,32 +407,32 @@ Transform JSON results into different formats without external tools using `--fo
 
 ```bash
 # Export to CSV for Excel
-autocli developer github repos --json --format csv > repos.csv
+mikacli developer github repos --json --format csv > repos.csv
 
 # Display as formatted table in terminal
-autocli social reddit search "ai" --json --format table --filter 'score > 100'
+mikacli social reddit search "ai" --json --format table --filter 'score > 100'
 
 # Generate markdown table for documentation
-autocli developer github repos --json --format markdown --select name,language,stargazers_count
+mikacli developer github repos --json --format markdown --select name,language,stargazers_count
 
 # Create HTML report
-autocli devops vercel projects --json --format html --select name,updated_at > report.html
+mikacli devops vercel projects --json --format html --select name,updated_at > report.html
 
 # YAML for configuration/infrastructure
-autocli devops railway services --json --format yaml > services.yaml
+mikacli devops railway services --json --format yaml > services.yaml
 ```
 
 ### Combine Formats with Filtering & Selection
 
 ```bash
 # High-star TypeScript repos as CSV
-autocli developer github repos --json \
+mikacli developer github repos --json \
   --filter 'language = "TypeScript" AND stargazers_count > 100000' \
   --select name,stargazers_count,forks_count \
   --format csv > top-ts-repos.csv
 
 # Popular posts as markdown table
-autocli social reddit search "bun cli" --json \
+mikacli social reddit search "bun cli" --json \
   --filter 'score > 500' \
   --select title,author,score \
   --format markdown
@@ -447,9 +447,9 @@ autocli social reddit search "bun cli" --json \
 To inspect a provider before acting:
 
 ```bash
-autocli developer github capabilities --json
-autocli social reddit capabilities --json
-autocli devops railway capabilities --json
+mikacli developer github capabilities --json
+mikacli social reddit capabilities --json
+mikacli devops railway capabilities --json
 ```
 
 ## Category Overview
@@ -459,24 +459,24 @@ This inventory is generated from the live platform registry.
 
 | Category | Representative providers | Count | Auth modes | Use it for | Route |
 | --- | --- | ---: | --- | --- | --- |
-| `llm` | `chatgpt`, `claude`, `deepseek`, `gemini`, `grok`, +4 more | 9 | `cookies` | Prompting, chat, image, and generation workflows. | `autocli llm ...` |
-| `editor` | `archive`, `audio`, `document`, `gif`, `image`, +3 more | 8 | `none` | Local file, media, and document transformations. | `autocli editor ...` |
-| `finance` | `crypto`, `currency`, `stocks` | 3 | `none` | Market, forex, and crypto lookups. | `autocli finance ...` |
-| `data` | `csv`, `html`, `json`, `markdown`, `text`, +2 more | 7 | `none` | Structured data cleanup, conversion, filtering, and extraction. | `autocli data ...` |
-| `google` | `calendar`, `docs`, `drive`, `forms`, `gmail`, +1 more | 6 | `oauth2` | Google Workspace APIs and account-backed productivity flows. | `autocli google ...` |
-| `maps` | `geo`, `openstreetmap`, `osrm` | 3 | `none` | Geocoding, routing, elevation, and geometry helpers. | `autocli maps ...` |
-| `movie` | `anilist`, `imdb`, `justwatch`, `kitsu`, `letterboxd`, +3 more | 8 | `cookies`, `none` | Title lookup, recommendations, and streaming availability. | `autocli movie ...` |
-| `news` | `news` | 1 | `none` | Headline discovery, source search, and feed aggregation. | `autocli news ...` |
-| `music` | `bandcamp`, `deezer`, `soundcloud`, `spotify`, `youtube-music` | 5 | `cookies`, `none` | Music discovery, playback, and library-style workflows. | `autocli music ...` |
-| `social` | `bluesky`, `facebook`, `instagram`, `linkedin`, `mastodon`, +9 more | 14 | `cookies`, `none`, `session` | Posting, profile lookup, messaging, and public social reads. | `autocli social ...` |
-| `careers` | `indeed`, `ziprecruiter` | 2 | `none` | Job search and hiring discovery workflows. | `autocli careers ...` |
-| `shopping` | `amazon`, `ebay`, `etsy`, `flipkart` | 4 | `cookies`, `none` | Product discovery plus cart and order surfaces where supported. | `autocli shopping ...` |
-| `developer` | `confluence`, `github`, `gitlab`, `jira`, `linear`, +2 more | 7 | `cookies` | Code hosting, issues, docs, and workspace automation. | `autocli developer ...` |
-| `devops` | `cloudflare`, `digitalocean`, `fly`, `netlify`, `railway`, +4 more | 9 | `api token` | Infrastructure, deployments, DNS, and uptime automation. | `autocli devops ...` |
-| `bot` | `discordbot`, `githubbot`, `slackbot`, `telegrambot` | 4 | `api token`, `bot token` | Bot-token messaging and chat ops. | `autocli bot ...` |
-| `tools` | `cheat`, `dns`, `download`, `favicon`, `headers`, +22 more | 27 | `cookies`, `none`, `session` | Public utilities, temp mail, downloads, transcripts, and web helpers. | `autocli tools ...` |
+| `llm` | `chatgpt`, `claude`, `deepseek`, `gemini`, `grok`, +4 more | 9 | `cookies` | Prompting, chat, image, and generation workflows. | `mikacli llm ...` |
+| `editor` | `archive`, `audio`, `document`, `gif`, `image`, +3 more | 8 | `none` | Local file, media, and document transformations. | `mikacli editor ...` |
+| `finance` | `crypto`, `currency`, `stocks` | 3 | `none` | Market, forex, and crypto lookups. | `mikacli finance ...` |
+| `data` | `csv`, `html`, `json`, `markdown`, `text`, +2 more | 7 | `none` | Structured data cleanup, conversion, filtering, and extraction. | `mikacli data ...` |
+| `google` | `calendar`, `docs`, `drive`, `forms`, `gmail`, +1 more | 6 | `oauth2` | Google Workspace APIs and account-backed productivity flows. | `mikacli google ...` |
+| `maps` | `geo`, `openstreetmap`, `osrm` | 3 | `none` | Geocoding, routing, elevation, and geometry helpers. | `mikacli maps ...` |
+| `movie` | `anilist`, `imdb`, `justwatch`, `kitsu`, `letterboxd`, +3 more | 8 | `cookies`, `none` | Title lookup, recommendations, and streaming availability. | `mikacli movie ...` |
+| `news` | `news` | 1 | `none` | Headline discovery, source search, and feed aggregation. | `mikacli news ...` |
+| `music` | `bandcamp`, `deezer`, `soundcloud`, `spotify`, `youtube-music` | 5 | `cookies`, `none` | Music discovery, playback, and library-style workflows. | `mikacli music ...` |
+| `social` | `bluesky`, `facebook`, `instagram`, `linkedin`, `mastodon`, +9 more | 14 | `cookies`, `none`, `session` | Posting, profile lookup, messaging, and public social reads. | `mikacli social ...` |
+| `careers` | `indeed`, `ziprecruiter` | 2 | `none` | Job search and hiring discovery workflows. | `mikacli careers ...` |
+| `shopping` | `amazon`, `ebay`, `etsy`, `flipkart` | 4 | `cookies`, `none` | Product discovery plus cart and order surfaces where supported. | `mikacli shopping ...` |
+| `developer` | `confluence`, `github`, `gitlab`, `jira`, `linear`, +2 more | 7 | `cookies` | Code hosting, issues, docs, and workspace automation. | `mikacli developer ...` |
+| `devops` | `cloudflare`, `digitalocean`, `fly`, `netlify`, `railway`, +4 more | 9 | `api token` | Infrastructure, deployments, DNS, and uptime automation. | `mikacli devops ...` |
+| `bot` | `discordbot`, `githubbot`, `slackbot`, `telegrambot` | 4 | `api token`, `bot token` | Bot-token messaging and chat ops. | `mikacli bot ...` |
+| `tools` | `cheat`, `dns`, `download`, `favicon`, `headers`, +22 more | 27 | `cookies`, `none`, `session` | Public utilities, temp mail, downloads, transcripts, and web helpers. | `mikacli tools ...` |
 
-AutoCLI currently exposes `117` providers across `16` active command groups.
+MikaCLI currently exposes `117` providers across `16` active command groups.
 <!-- GENERATED:category-overview:end -->
 
 ## Access Modes
@@ -485,7 +485,7 @@ AutoCLI currently exposes `117` providers across `16` active command groups.
 | --- | --- |
 | `none` | Public or local functionality. No cookies, no token, no API key. |
 | `local tools` | Uses binaries already installed on the machine, like `ffmpeg`, `ffprobe`, `qpdf`, or `yt-dlp`. |
-| `cookies` | Import a browser session with `login --cookies ...` or let AutoCLI open a browser with `login --browser`, then reuse it headlessly. |
+| `cookies` | Import a browser session with `login --cookies ...` or let MikaCLI open a browser with `login --browser`, then reuse it headlessly. |
 | `session` | Do one interactive login once, save the resulting user session locally, then reuse it headlessly. |
 | `cookies + local token` | Cookie session plus a token the site keeps in localStorage or a similar client store. |
 | `api token` | A personal or service token saved once with `login --token ...`. |
@@ -499,22 +499,22 @@ AutoCLI currently exposes `117` providers across `16` active command groups.
 Use the published package as the primary supported install path:
 
 ```bash
-npm install -g @vk007/autocli
-bun install -g @vk007/autocli
+npm install -g @vk007/mikacli
+bun install -g @vk007/mikacli
 ```
 
 After install, verify the command and your local environment:
 
 ```bash
-autocli --version
-autocli doctor
-autocli doctor --fix
-autocli status
+mikacli --version
+mikacli doctor
+mikacli doctor --fix
+mikacli status
 ```
 
-`autocli doctor` checks the shared browser setup plus optional local tools such as `ffmpeg`, `yt-dlp`, `qpdf`, `poppler`, `7z`, and macOS-native helpers when relevant.
+`mikacli doctor` checks the shared browser setup plus optional local tools such as `ffmpeg`, `yt-dlp`, `qpdf`, `poppler`, `7z`, and macOS-native helpers when relevant.
 
-On macOS, `autocli doctor --fix` can install all supported missing browser and local-tool dependencies automatically with Homebrew, then rerun the health check.
+On macOS, `mikacli doctor --fix` can install all supported missing browser and local-tool dependencies automatically with Homebrew, then rerun the health check.
 
 ### Local Development Setup
 
@@ -542,7 +542,7 @@ This path is still experimental. The supported production install remains the np
 
 ### Local Development Linking
 
-Link `autocli` globally for local development:
+Link `mikacli` globally for local development:
 
 ```bash
 bun run link:global
@@ -563,7 +563,7 @@ bun run sync:skills
 
 `bun run generate:readme` refreshes the marker-based sections in this README from the live provider registry.
 
-`bun run sync:docs` runs the README generator, refreshes the generated files under [`skills/autocli/references/providers`](./skills/autocli/references/providers), and copies the repo skill into your local Codex skill directory (defaults to `~/.codex/skills/autocli` unless `CODEX_HOME` is set).
+`bun run sync:docs` runs the README generator, refreshes the generated files under [`skills/mikacli/references/providers`](./skills/mikacli/references/providers), and copies the repo skill into your local Codex skill directory (defaults to `~/.codex/skills/mikacli` unless `CODEX_HOME` is set).
 
 `npm publish` now runs this automatically through `prepublishOnly`, so release builds regenerate and sync the docs before typecheck, tests, and build.
 
@@ -582,19 +582,19 @@ Common scripts such as `dev`, `start`, `typecheck`, `test`, `build`, and `genera
 - [LICENSE](./LICENSE)
 - [Contributing Guide](./CONTRIBUTING.md)
 - [Security Policy](./SECURITY.md)
-- [AI Agent Skill](./skills/autocli/SKILL.md)
+- [AI Agent Skill](./skills/mikacli/SKILL.md)
 
-If you plan to contribute, please do not commit live cookies, tokens, QR session state, or personal exports. AutoCLI should only store those locally on the contributor machine, never in the repository.
+If you plan to contribute, please do not commit live cookies, tokens, QR session state, or personal exports. MikaCLI should only store those locally on the contributor machine, never in the repository.
 
 ## Quick Start
 
 Check global status:
 
 ```bash
-autocli status
-autocli status --json
-autocli doctor
-autocli sessions
+mikacli status
+mikacli status --json
+mikacli doctor
+mikacli sessions
 ```
 
 If you have not linked the CLI globally yet:
@@ -606,16 +606,16 @@ bun run dev status
 Typical first-run flows:
 
 ```bash
-autocli social x login --cookies ./x.cookies.json
-autocli developer github login --browser
-autocli llm chatgpt text "Summarize this changelog"
-autocli developer github login --cookies ./github.cookies.json
-autocli devops cloudflare login --token $CLOUDFLARE_API_TOKEN
-autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
-autocli bot telegrambot login --token 123456:ABCDEF --name alerts-bot
-autocli news top "AI"
-autocli tools websearch search "bun commander zod"
-autocli tools http github inspect
+mikacli social x login --cookies ./x.cookies.json
+mikacli developer github login --browser
+mikacli llm chatgpt text "Summarize this changelog"
+mikacli developer github login --cookies ./github.cookies.json
+mikacli devops cloudflare login --token $CLOUDFLARE_API_TOKEN
+mikacli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
+mikacli bot telegrambot login --token 123456:ABCDEF --name alerts-bot
+mikacli news top "AI"
+mikacli tools websearch search "bun commander zod"
+mikacli tools http github inspect
 ```
 
 ## Best Example Workflows
@@ -623,112 +623,112 @@ autocli tools http github inspect
 ### Cookie-backed social posting
 
 ```bash
-autocli social instagram login --cookies ./instagram.cookies.txt
-autocli social instagram post ./photo.jpg --caption "Shipping from the terminal"
-autocli social x login --cookies ./x.cookies.json
-autocli social x post "Launching AutoCLI" --image ./launch.png
+mikacli social instagram login --cookies ./instagram.cookies.txt
+mikacli social instagram post ./photo.jpg --caption "Shipping from the terminal"
+mikacli social x login --cookies ./x.cookies.json
+mikacli social x post "Launching MikaCLI" --image ./launch.png
 ```
 
 If you do not want to export cookies manually, many cookie-backed providers now also support:
 
 ```bash
-autocli login --browser
-autocli developer github login --browser
-autocli social x login --browser
-autocli llm qwen login --browser
+mikacli login --browser
+mikacli developer github login --browser
+mikacli social x login --browser
+mikacli llm qwen login --browser
 ```
 
-`autocli login --browser` opens AutoCLI's shared browser profile so you can sign into Google or other identity providers once. Later provider logins reuse that same saved browser profile, and `autocli <category> <provider> login --browser` still skips opening the browser entirely when an already-saved active provider session is available.
+`mikacli login --browser` opens MikaCLI's shared browser profile so you can sign into Google or other identity providers once. Later provider logins reuse that same saved browser profile, and `mikacli <category> <provider> login --browser` still skips opening the browser entirely when an already-saved active provider session is available.
 
 ### LLM prompting and generation
 
 ```bash
-autocli llm chatgpt text "Write release notes for AutoCLI"
-autocli llm deepseek login --cookies ./deepseek.cookies.json --token <userToken>
-autocli llm deepseek text "Explain retrieval-augmented generation"
-autocli llm grok image "Minimal orange fox logo on white background"
-autocli llm grok video "Minimal orange fox logo with subtle camera motion"
+mikacli llm chatgpt text "Write release notes for MikaCLI"
+mikacli llm deepseek login --cookies ./deepseek.cookies.json --token <userToken>
+mikacli llm deepseek text "Explain retrieval-augmented generation"
+mikacli llm grok image "Minimal orange fox logo on white background"
+mikacli llm grok video "Minimal orange fox logo with subtle camera motion"
 ```
 
 ### Developer and bot automation
 
 ```bash
-autocli developer confluence search "deploy backend"
-autocli developer github me
-autocli developer gitlab projects "autocli" --limit 10
-autocli developer jira projects
-autocli developer linear issues --team ENG --limit 20
-autocli developer trello boards
-autocli devops netlify sites
-autocli devops railway projects
-autocli devops fly apps --org personal
-autocli devops digitalocean apps
-autocli bot telegrambot send 123456789 "Build finished"
-autocli bot discordbot send 123456789012345678 "nightly deploy complete"
+mikacli developer confluence search "deploy backend"
+mikacli developer github me
+mikacli developer gitlab projects "mikacli" --limit 10
+mikacli developer jira projects
+mikacli developer linear issues --team ENG --limit 20
+mikacli developer trello boards
+mikacli devops netlify sites
+mikacli devops railway projects
+mikacli devops fly apps --org personal
+mikacli devops digitalocean apps
+mikacli bot telegrambot send 123456789 "Build finished"
+mikacli bot discordbot send 123456789012345678 "nightly deploy complete"
 ```
 
 ### Google workspace automation
 
 ```bash
-autocli google gmail labels --json
-autocli google calendar today --calendar primary --json
-autocli google docs documents --limit 10 --json
-autocli google forms forms --limit 10 --json
-autocli google drive files --limit 10 --json
-autocli google sheets values google-sheet-id-example Sheet1!A1:B10 --json
+mikacli google gmail labels --json
+mikacli google calendar today --calendar primary --json
+mikacli google docs documents --limit 10 --json
+mikacli google forms forms --limit 10 --json
+mikacli google drive files --limit 10 --json
+mikacli google sheets values google-sheet-id-example Sheet1!A1:B10 --json
 ```
 
 ### Session-backed messaging
 
 ```bash
-autocli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
-autocli social telegram send me "Hello from AutoCLI"
-autocli social reddit search "bun cli"
-autocli social reddit post programming "Launching AutoCLI" "Now with Reddit support."
-autocli social whatsapp login
-autocli social whatsapp send 919876543210 "Ping from AutoCLI"
+mikacli social telegram login --api-id 123456 --api-hash abcdef123456 --qr
+mikacli social telegram send me "Hello from MikaCLI"
+mikacli social reddit search "bun cli"
+mikacli social reddit post programming "Launching MikaCLI" "Now with Reddit support."
+mikacli social whatsapp login
+mikacli social whatsapp send 919876543210 "Ping from MikaCLI"
 ```
 
 ### Public utilities
 
 ```bash
-autocli news top "AI" --source google
-autocli news search "typescript cli"
-autocli news feed https://hnrss.org/frontpage --limit 5
-autocli tools translate "hello world" --to hi
-autocli tools websearch search "typescript cli bun"
-autocli tools screenshot https://example.com --output-dir ./shots
-autocli tools favicon openai.com
-autocli tools page-links https://example.com --type external
-autocli tools timezone "Mumbai"
-autocli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
-autocli login --browser
-autocli tools http github.com capture --browser-timeout 60
-autocli tools http github.com capture --summary --group-by endpoint --browser-timeout 60
-autocli tools uptime https://example.com --json
-autocli tools rss https://hnrss.org/frontpage --limit 5
+mikacli news top "AI" --source google
+mikacli news search "typescript cli"
+mikacli news feed https://hnrss.org/frontpage --limit 5
+mikacli tools translate "hello world" --to hi
+mikacli tools websearch search "typescript cli bun"
+mikacli tools screenshot https://example.com --output-dir ./shots
+mikacli tools favicon openai.com
+mikacli tools page-links https://example.com --type external
+mikacli tools timezone "Mumbai"
+mikacli tools oembed https://www.youtube.com/watch?v=dQw4w9WgXcQ
+mikacli login --browser
+mikacli tools http github.com capture --browser-timeout 60
+mikacli tools http github.com capture --summary --group-by endpoint --browser-timeout 60
+mikacli tools uptime https://example.com --json
+mikacli tools rss https://hnrss.org/frontpage --limit 5
 ```
 
 ### Music discovery and download
 
 ```bash
-autocli music bandcamp search "radiohead"
-autocli music bandcamp album https://radiohead.bandcamp.com/album/in-rainbows
-autocli music soundcloud search "dandelions"
-autocli music soundcloud user aviciiofficial
-autocli music soundcloud playlist https://soundcloud.com/lofi-hip-hop-music/sets/lofi-lofi
-autocli music soundcloud download "dandelions" --output-dir ./downloads
+mikacli music bandcamp search "radiohead"
+mikacli music bandcamp album https://radiohead.bandcamp.com/album/in-rainbows
+mikacli music soundcloud search "dandelions"
+mikacli music soundcloud user aviciiofficial
+mikacli music soundcloud playlist https://soundcloud.com/lofi-hip-hop-music/sets/lofi-lofi
+mikacli music soundcloud download "dandelions" --output-dir ./downloads
 ```
 
 ### Local editing
 
 ```bash
-autocli editor image resize ./photo.png --width 1200
-autocli editor video split ./clip.mp4 --every 30
-autocli editor video blur ./clip.mp4 --x 120 --y 80 --width 360 --height 200 --start 00:00:05 --duration 3 --corner-radius 24
-autocli editor audio loudness-report ./podcast.wav
-autocli editor pdf watermark ./deck.pdf --text "Internal"
-autocli editor subtitle burn ./video.mp4 --subtitle ./captions.srt
+mikacli editor image resize ./photo.png --width 1200
+mikacli editor video split ./clip.mp4 --every 30
+mikacli editor video blur ./clip.mp4 --x 120 --y 80 --width 360 --height 200 --start 00:00:05 --duration 3 --corner-radius 24
+mikacli editor audio loudness-report ./podcast.wav
+mikacli editor pdf watermark ./deck.pdf --text "Internal"
+mikacli editor subtitle burn ./video.mp4 --subtitle ./captions.srt
 ```
 
 ## Sessions And Connections
@@ -736,91 +736,91 @@ autocli editor subtitle burn ./video.mp4 --subtitle ./captions.srt
 Cookie sessions are stored under:
 
 ```text
-~/.autocli/sessions/<platform>/<account>.json
+~/.mikacli/sessions/<platform>/<account>.json
 ```
 
 Token, bot, and saved session connections are stored under:
 
 ```text
-~/.autocli/connections/<platform>/<account>.json
+~/.mikacli/connections/<platform>/<account>.json
 ```
 
-AutoCLI supports importing:
+MikaCLI supports importing:
 
 - Netscape `cookies.txt`
 - raw cookie strings
 - JSON cookie arrays
 - serialized `tough-cookie` jars
 
-After the first `login`, later commands normally omit `--account` or `--bot` and AutoCLI uses the most recently saved connection for that provider.
+After the first `login`, later commands normally omit `--account` or `--bot` and MikaCLI uses the most recently saved connection for that provider.
 
 ## Provider Matrix
 
 <!-- GENERATED:provider-matrix:start -->
-The tables below are generated from provider manifests and runtime capability metadata, so they stay aligned with `autocli <category> <provider> capabilities --json`.
+The tables below are generated from provider manifests and runtime capability metadata, so they stay aligned with `mikacli <category> <provider> capabilities --json`.
 
 ### LLM
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| ChatGPT | `stable` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm chatgpt` |
-| Claude | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm claude` |
-| DeepSeek | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm deepseek` |
-| Gemini | `stable` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm gemini` |
-| Grok | `partial` | `cookies` | `supported` | `supported` | `supported` | `supported` | `autocli llm grok` |
-| Mistral | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm mistral` |
-| Perplexity | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm perplexity` |
-| Qwen | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm qwen` |
-| Z.ai | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `autocli llm zai` |
+| ChatGPT | `stable` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm chatgpt` |
+| Claude | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm claude` |
+| DeepSeek | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm deepseek` |
+| Gemini | `stable` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm gemini` |
+| Grok | `partial` | `cookies` | `supported` | `supported` | `supported` | `supported` | `mikacli llm grok` |
+| Mistral | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm mistral` |
+| Perplexity | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm perplexity` |
+| Qwen | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm qwen` |
+| Z.ai | `partial` | `cookies` | `supported` | `supported` | `supported` | `partial` | `mikacli llm zai` |
 
 Notes:
 - `chatgpt`: Shared browser login works well for cookie capture and reuse.
 - `deepseek`: Some flows also need a token recovered from browser storage.
-- `grok`: AutoCLI can fall back to an in-browser Grok request path when the browserless endpoint is blocked.
+- `grok`: MikaCLI can fall back to an in-browser Grok request path when the browserless endpoint is blocked.
 
 ### Editor
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Archive Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor archive` |
-| Audio Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor audio` |
-| Document Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor document` |
-| GIF Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor gif` |
-| Image Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor image` |
-| PDF Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor pdf` |
-| Subtitle Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor subtitle` |
-| Video Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli editor video` |
+| Archive Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor archive` |
+| Audio Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor audio` |
+| Document Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor document` |
+| GIF Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor gif` |
+| Image Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor image` |
+| PDF Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor pdf` |
+| Subtitle Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor subtitle` |
+| Video Editor | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli editor video` |
 
 ### Finance
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Crypto | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli finance crypto` |
-| Currency | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli finance currency` |
-| Stocks | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli finance stocks` |
+| Crypto | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli finance crypto` |
+| Currency | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli finance currency` |
+| Stocks | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli finance stocks` |
 
 ### Data
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| CSV | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli data csv` |
-| HTML | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli data html` |
-| JSON | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli data json` |
-| Markdown | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli data markdown` |
-| Text | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli data text` |
-| XML | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli data xml` |
-| YAML | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli data yaml` |
+| CSV | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli data csv` |
+| HTML | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli data html` |
+| JSON | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli data json` |
+| Markdown | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli data markdown` |
+| Text | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli data text` |
+| XML | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli data xml` |
+| YAML | `stable` | `none` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli data yaml` |
 
 ### Google
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Gmail | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli google gmail` |
-| Google Calendar | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli google calendar` |
-| Google Docs | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli google docs` |
-| Google Drive | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli google drive` |
-| Google Forms | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli google forms` |
-| Google Sheets | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli google sheets` |
+| Gmail | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli google gmail` |
+| Google Calendar | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli google calendar` |
+| Google Docs | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli google docs` |
+| Google Drive | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli google drive` |
+| Google Forms | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli google forms` |
+| Google Sheets | `stable` | `oauth2` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli google sheets` |
 
 Notes:
 - `gmail`: Uses Google's OAuth2 flow and stores refresh tokens locally for headless reuse.
@@ -834,86 +834,86 @@ Notes:
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Geo | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli maps geo` |
-| OpenStreetMap | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli maps openstreetmap` |
-| OSRM | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli maps osrm` |
+| Geo | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli maps geo` |
+| OpenStreetMap | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli maps openstreetmap` |
+| OSRM | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli maps osrm` |
 
 ### Movie
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| AniList | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie anilist` |
-| IMDb | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie imdb` |
-| JustWatch | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie justwatch` |
-| Kitsu | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie kitsu` |
-| Letterboxd | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie letterboxd` |
-| MyAnimeList | `stable` | `cookies`, `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie myanimelist` |
-| TMDb | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie tmdb` |
-| TVMaze | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli movie tvmaze` |
+| AniList | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie anilist` |
+| IMDb | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie imdb` |
+| JustWatch | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie justwatch` |
+| Kitsu | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie kitsu` |
+| Letterboxd | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie letterboxd` |
+| MyAnimeList | `stable` | `cookies`, `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie myanimelist` |
+| TMDb | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie tmdb` |
+| TVMaze | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli movie tvmaze` |
 
 ### News
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| News | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli news` |
+| News | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli news` |
 
 ### Music
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Bandcamp | `stable` | `none` | `supported` | `unsupported` | `partial` | `unsupported` | `autocli music bandcamp` |
-| Deezer | `stable` | `none` | `supported` | `unsupported` | `partial` | `unsupported` | `autocli music deezer` |
-| SoundCloud | `stable` | `none` | `supported` | `partial` | `partial` | `unsupported` | `autocli music soundcloud` |
-| Spotify | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli music spotify` |
-| YouTube Music | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli music youtube-music` |
+| Bandcamp | `stable` | `none` | `supported` | `unsupported` | `partial` | `unsupported` | `mikacli music bandcamp` |
+| Deezer | `stable` | `none` | `supported` | `unsupported` | `partial` | `unsupported` | `mikacli music deezer` |
+| SoundCloud | `stable` | `none` | `supported` | `partial` | `partial` | `unsupported` | `mikacli music soundcloud` |
+| Spotify | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli music spotify` |
+| YouTube Music | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli music youtube-music` |
 
 ### Social
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Bluesky | `stable` | `none`, `session` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli social bluesky` |
-| Facebook | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli social facebook` |
-| Instagram | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli social instagram` |
-| LinkedIn | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `autocli social linkedin` |
-| Mastodon | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli social mastodon` |
-| Pinterest | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli social pinterest` |
-| Reddit | `partial` | `none`, `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli social reddit` |
-| Telegram | `partial` | `session` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli social telegram` |
-| Threads | `partial` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli social threads` |
-| TikTok | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `autocli social tiktok` |
-| Twitch | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `autocli social twitch` |
-| WhatsApp | `partial` | `session` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli social whatsapp` |
-| X | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli social x` |
-| YouTube | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `autocli social youtube` |
+| Bluesky | `stable` | `none`, `session` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli social bluesky` |
+| Facebook | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli social facebook` |
+| Instagram | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli social instagram` |
+| LinkedIn | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `mikacli social linkedin` |
+| Mastodon | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli social mastodon` |
+| Pinterest | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli social pinterest` |
+| Reddit | `partial` | `none`, `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli social reddit` |
+| Telegram | `partial` | `session` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli social telegram` |
+| Threads | `partial` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli social threads` |
+| TikTok | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `mikacli social tiktok` |
+| Twitch | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `mikacli social twitch` |
+| WhatsApp | `partial` | `session` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli social whatsapp` |
+| X | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli social x` |
+| YouTube | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `mikacli social youtube` |
 
 Notes:
 - `bluesky`: Public reads stay available without auth. App-password login enables saved-session `me`, `post`, `comment`, and `like` commands without browser automation.
-- `facebook`: Facebook writes now run through browser-backed post, like, and comment flows. Use `--browser` to jump straight into the shared AutoCLI browser profile when you want the visible browser path.
+- `facebook`: Facebook writes now run through browser-backed post, like, and comment flows. Use `--browser` to jump straight into the shared MikaCLI browser profile when you want the visible browser path.
 - `instagram`: Reads and image/comment writes are browserless; post and comment deletion can fall back to browser-backed flows when Instagram's web APIs get flaky.
 - `reddit`: Public reads are stable; writes can use a saved session or the shared browser profile.
 - `telegram`: Uses saved MTProto sessions instead of browser cookies.
 - `twitch`: Uses Twitch's authenticated web GraphQL surface for channel, stream, video, and clip lookups.
-- `twitch`: Follow and unfollow try Twitch's web mutation path first, then can fall back to the shared AutoCLI browser profile when Twitch enforces an integrity challenge.
-- `twitch`: Clip creation and stream settings updates currently run through the shared AutoCLI browser profile.
+- `twitch`: Follow and unfollow try Twitch's web mutation path first, then can fall back to the shared MikaCLI browser profile when Twitch enforces an integrity challenge.
+- `twitch`: Clip creation and stream settings updates currently run through the shared MikaCLI browser profile.
 - `whatsapp`: Uses QR or pairing-code session state instead of browser cookies.
-- `x`: X write actions run through browser-backed flows. Use `--browser` to force the shared AutoCLI browser profile immediately when you want the live browser path.
+- `x`: X write actions run through browser-backed flows. Use `--browser` to force the shared MikaCLI browser profile immediately when you want the live browser path.
 - `youtube`: Studio uploads are browser-backed. Watch-page likes, dislikes, comments, and subscriptions still use request tokens from the saved session.
 
 ### Careers
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Indeed | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli careers indeed` |
-| ZipRecruiter | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli careers ziprecruiter` |
+| Indeed | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli careers indeed` |
+| ZipRecruiter | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli careers ziprecruiter` |
 
 ### Shopping
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Amazon | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `autocli shopping amazon` |
-| eBay | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli shopping ebay` |
-| Etsy | `partial` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli shopping etsy` |
-| Flipkart | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli shopping flipkart` |
+| Amazon | `partial` | `cookies` | `supported` | `partial` | `supported` | `unsupported` | `mikacli shopping amazon` |
+| eBay | `stable` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli shopping ebay` |
+| Etsy | `partial` | `none` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli shopping etsy` |
+| Flipkart | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli shopping flipkart` |
 
 Notes:
 - `amazon`: `add-to-cart`, `remove-from-cart`, `update-cart`, `orders`, `order`, and `cart` support browser-backed execution when the saved session alone is not enough.
@@ -923,13 +923,13 @@ Notes:
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Confluence | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli developer confluence` |
-| GitHub | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli developer github` |
-| GitLab | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli developer gitlab` |
-| Jira | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli developer jira` |
-| Linear | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli developer linear` |
-| Notion | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli developer notion` |
-| Trello | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `autocli developer trello` |
+| Confluence | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli developer confluence` |
+| GitHub | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli developer github` |
+| GitLab | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli developer gitlab` |
+| Jira | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli developer jira` |
+| Linear | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli developer linear` |
+| Notion | `partial` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli developer notion` |
+| Trello | `stable` | `cookies` | `supported` | `supported` | `supported` | `unsupported` | `mikacli developer trello` |
 
 Notes:
 - `github`: Uses a saved GitHub web session for browserless repository automation.
@@ -938,15 +938,15 @@ Notes:
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Cloudflare | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops cloudflare` |
-| DigitalOcean | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops digitalocean` |
-| Fly.io | `partial` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops fly` |
-| Netlify | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops netlify` |
-| Railway | `partial` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops railway` |
-| Render | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops render` |
-| Supabase | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops supabase` |
-| UptimeRobot | `stable` | `api token` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli devops uptimerobot` |
-| Vercel | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `autocli devops vercel` |
+| Cloudflare | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops cloudflare` |
+| DigitalOcean | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops digitalocean` |
+| Fly.io | `partial` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops fly` |
+| Netlify | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops netlify` |
+| Railway | `partial` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops railway` |
+| Render | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops render` |
+| Supabase | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops supabase` |
+| UptimeRobot | `stable` | `api token` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli devops uptimerobot` |
+| Vercel | `stable` | `api token` | `supported` | `unsupported` | `unsupported` | `unsupported` | `mikacli devops vercel` |
 
 Notes:
 - `fly`: Org-aware app listing may require an explicit --org slug for some tokens.
@@ -957,42 +957,42 @@ Notes:
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Discord Bot | `stable` | `bot token` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli bot discordbot` |
-| GitHub Bot | `stable` | `api token` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli bot githubbot` |
-| Slack Bot | `stable` | `bot token` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli bot slackbot` |
-| Telegram Bot | `stable` | `bot token` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli bot telegrambot` |
+| Discord Bot | `stable` | `bot token` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli bot discordbot` |
+| GitHub Bot | `stable` | `api token` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli bot githubbot` |
+| Slack Bot | `stable` | `bot token` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli bot slackbot` |
+| Telegram Bot | `stable` | `bot token` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli bot telegrambot` |
 
 ### Tools
 
 | Provider | Stability | Auth | Read | Write | Browser login | Async jobs | Command |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Cheat | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools cheat` |
-| DNS | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools dns` |
-| Download | `stable` | `none`, `cookies` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools download` |
-| Favicon | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools favicon` |
-| Headers | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools headers` |
-| HTTP Toolkit | `stable` | `none`, `cookies` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli tools http` |
-| IP | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools ip` |
-| Markdown Fetch | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools markdown-fetch` |
-| Metadata | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools metadata` |
-| oEmbed | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools oembed` |
-| Page Links | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools page-links` |
-| QR | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools qr` |
-| Redirect | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools redirect` |
-| Robots | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools robots` |
-| RSS | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools rss` |
-| Screenshot | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools screenshot` |
-| Sitemap | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools sitemap` |
-| SSL | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools ssl` |
-| Temp Mail | `stable` | `session` | `supported` | `supported` | `unsupported` | `unsupported` | `autocli tools tempmail` |
-| Time | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools time` |
-| Timezone | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools timezone` |
-| Transcript | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools transcript` |
-| Translate | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools translate` |
-| Uptime | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools uptime` |
-| Weather | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools weather` |
-| Web Search | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools websearch` |
-| Whois | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `autocli tools whois` |
+| Cheat | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools cheat` |
+| DNS | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools dns` |
+| Download | `stable` | `none`, `cookies` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools download` |
+| Favicon | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools favicon` |
+| Headers | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools headers` |
+| HTTP Toolkit | `stable` | `none`, `cookies` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli tools http` |
+| IP | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools ip` |
+| Markdown Fetch | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools markdown-fetch` |
+| Metadata | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools metadata` |
+| oEmbed | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools oembed` |
+| Page Links | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools page-links` |
+| QR | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools qr` |
+| Redirect | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools redirect` |
+| Robots | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools robots` |
+| RSS | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools rss` |
+| Screenshot | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools screenshot` |
+| Sitemap | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools sitemap` |
+| SSL | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools ssl` |
+| Temp Mail | `stable` | `session` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli tools tempmail` |
+| Time | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools time` |
+| Timezone | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools timezone` |
+| Transcript | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools transcript` |
+| Translate | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools translate` |
+| Uptime | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools uptime` |
+| Weather | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools weather` |
+| Web Search | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools websearch` |
+| Whois | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools whois` |
 
 Notes:
 - `http`: Best used with saved sessions or the shared browser profile for authenticated request inspection and replay.
@@ -1029,7 +1029,7 @@ Error shape:
 }
 ```
 
-This makes AutoCLI friendly for:
+This makes MikaCLI friendly for:
 
 - shell scripts
 - CI jobs
@@ -1038,7 +1038,7 @@ This makes AutoCLI friendly for:
 
 ## Session Refresh
 
-AutoCLI includes a refresh layer in `src/utils/autorefresh.ts`.
+MikaCLI includes a refresh layer in `src/utils/autorefresh.ts`.
 
 - Instagram, X, and YouTube can use lightweight authenticated keepalive checks before normal actions.
 - Rotated cookies are persisted back into the saved session file when the platform returns them.
@@ -1046,7 +1046,7 @@ AutoCLI includes a refresh layer in `src/utils/autorefresh.ts`.
 
 This is the most practical browserless approach for copied web sessions, but it is not a universal guarantee for every website.
 
-For cookie-backed providers that support interactive capture, you can also use `login --browser` to open a real browser, complete the sign-in flow manually, and let AutoCLI save the session automatically.
+For cookie-backed providers that support interactive capture, you can also use `login --browser` to open a real browser, complete the sign-in flow manually, and let MikaCLI save the session automatically.
 
 ## Project Structure
 
@@ -1114,8 +1114,8 @@ bun test
 - Cookie-backed private web flows can drift as providers change internal endpoints.
 - Token-backed developer and bot providers are usually the most stable long-term.
 - Local editor and public utility providers are the least fragile because they do not depend on private web sessions.
-- The category model is intentionally strict so provider names do not collide as AutoCLI grows.
+- The category model is intentionally strict so provider names do not collide as MikaCLI grows.
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=vkop007/autocli&type=Date)](https://star-history.com/#vkop007/autocli&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=vkop007/mikacli&type=Date)](https://star-history.com/#vkop007/mikacli&Date)

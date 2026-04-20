@@ -10,10 +10,10 @@ import { printWeatherResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli weather",
-  "autocli weather London",
-  'autocli weather "San Francisco" --days 3',
-  "autocli weather Tokyo --lang ja",
+  "mikacli weather",
+  "mikacli weather London",
+  'mikacli weather "San Francisco" --days 3',
+  "mikacli weather Tokyo --lang ja",
 ] as const;
 
 function buildWeatherCommand(options: PlatformCommandBuildOptions = {}): Command {

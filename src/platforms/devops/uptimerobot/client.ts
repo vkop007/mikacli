@@ -1,6 +1,6 @@
 import { basename } from "node:path";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { appendUploadFileField, readUploadAsset } from "../../../utils/upload-pipeline.js";
 
 type QueryValue = string | number | boolean | null | undefined;
@@ -372,7 +372,7 @@ export class UptimeRobotApiClient {
     const body = await normalizeBody(init.body, headers);
     headers.set("authorization", `Bearer ${this.token}`);
     headers.set("accept", "application/json");
-    headers.set("user-agent", "AutoCLI/0.1 (+https://github.com/vkop007/autocli)");
+    headers.set("user-agent", "MikaCLI/0.1 (+https://github.com/vkop007/mikacli)");
 
     const response = await this.fetchImpl(url, {
       ...init,
@@ -384,7 +384,7 @@ export class UptimeRobotApiClient {
     const payload = text.length > 0 ? safeJsonParse(text) : {};
 
     if (!response.ok) {
-      throw new AutoCliError("UPTIMEROBOT_API_ERROR", extractErrorMessage(payload, response.status), {
+      throw new MikaCliError("UPTIMEROBOT_API_ERROR", extractErrorMessage(payload, response.status), {
         details: {
           path,
           status: response.status,
@@ -393,7 +393,7 @@ export class UptimeRobotApiClient {
     }
 
     if (text.length > 0 && payload === undefined) {
-      throw new AutoCliError("UPTIMEROBOT_API_ERROR", "UptimeRobot returned a non-JSON response.", {
+      throw new MikaCliError("UPTIMEROBOT_API_ERROR", "UptimeRobot returned a non-JSON response.", {
         details: { path },
       });
     }

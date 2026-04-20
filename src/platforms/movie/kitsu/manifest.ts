@@ -15,8 +15,8 @@ export const kitsuPlatformDefinition: PlatformDefinition = {
     titleDescription: "Load a Kitsu anime by URL, anime ID, or query",
   }),
   examples: [
-    'autocli kitsu search "naruto"',
-    "autocli kitsu title 1555",
-    "autocli kitsu info https://kitsu.io/anime/naruto-shippuden",
+    'mikacli kitsu search "naruto"',
+    "mikacli kitsu title 1555",
+    "mikacli kitsu info https://kitsu.io/anime/naruto-shippuden",
   ],
 };

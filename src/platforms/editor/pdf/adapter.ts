@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join, parse, resolve } from "node:path";
 
 import { ensureParentDirectory } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { degrees, PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import { runEditorBinary } from "../shared/process.js";
 
@@ -124,10 +124,10 @@ type PdfMetadata = {
   modificationDate: string | null;
 };
 
-const QPDF_BIN = process.env.AUTOCLI_QPDF_BIN || "qpdf";
-const PDFTOPPM_BIN = process.env.AUTOCLI_PDFTOPPM_BIN || "pdftoppm";
-const QLMANAGE_BIN = process.env.AUTOCLI_QLMANAGE_BIN || "qlmanage";
-const SIPS_BIN = process.env.AUTOCLI_SIPS_BIN || "sips";
+const QPDF_BIN = process.env.MIKACLI_QPDF_BIN || "qpdf";
+const PDFTOPPM_BIN = process.env.MIKACLI_PDFTOPPM_BIN || "pdftoppm";
+const QLMANAGE_BIN = process.env.MIKACLI_QLMANAGE_BIN || "qlmanage";
+const SIPS_BIN = process.env.MIKACLI_SIPS_BIN || "sips";
 
 export class PdfEditorAdapter {
   readonly platform: Platform = "pdf" as unknown as Platform;
@@ -152,7 +152,7 @@ export class PdfEditorAdapter {
 
   async merge(input: PdfMergeInput): Promise<AdapterActionResult> {
     if (input.inputPaths.length < 2) {
-      throw new AutoCliError("PDF_MERGE_NEEDS_INPUTS", "Merge needs at least two input PDFs.");
+      throw new MikaCliError("PDF_MERGE_NEEDS_INPUTS", "Merge needs at least two input PDFs.");
     }
 
     const outputPath = resolve(input.outputPath);
@@ -246,7 +246,7 @@ export class PdfEditorAdapter {
 
     const ranges = parsePageSpec(input.pages);
     if (ranges.length === 0) {
-      throw new AutoCliError("PDF_PAGES_REQUIRED", "At least one page range is required.");
+      throw new MikaCliError("PDF_PAGES_REQUIRED", "At least one page range is required.");
     }
 
     const pageArgs = ranges.flatMap((range) => [resolvedInput, `${range.start}-${range.end}`]);
@@ -274,13 +274,13 @@ export class PdfEditorAdapter {
     const removedPages = expandOrderedPageSpec(input.pages, totalPages);
     const removedSet = new Set(removedPages);
     if (removedSet.size === 0) {
-      throw new AutoCliError("PDF_PAGES_REQUIRED", "At least one page is required for remove-pages.");
+      throw new MikaCliError("PDF_PAGES_REQUIRED", "At least one page is required for remove-pages.");
     }
 
     const selectedPages = Array.from(removedSet).sort((left, right) => left - right);
     const keptPages = Array.from({ length: totalPages }, (_value, index) => index + 1).filter((page) => !removedSet.has(page));
     if (keptPages.length === 0) {
-      throw new AutoCliError("PDF_REMOVE_PAGES_EMPTY", "remove-pages would remove every page from the PDF.");
+      throw new MikaCliError("PDF_REMOVE_PAGES_EMPTY", "remove-pages would remove every page from the PDF.");
     }
 
     const output = await PDFDocument.create();
@@ -386,7 +386,7 @@ export class PdfEditorAdapter {
     await ensureParentDirectory(outputPath);
 
     const bits = normalizeEncryptionBits(input.bits ?? 256);
-    const userPassword = normalizePassword(input.userPassword ?? "autocli") ?? "autocli";
+    const userPassword = normalizePassword(input.userPassword ?? "mikacli") ?? "mikacli";
     const ownerPassword = normalizePassword(input.ownerPassword ?? generatePassword()) ?? generatePassword();
     const args = buildEncryptArgs({
       inputPath: resolvedInput,
@@ -520,7 +520,7 @@ export class PdfEditorAdapter {
     const source = await PDFDocument.load(await readFile(resolvedInput));
     const pageOrder = expandOrderedPageSpec(input.pages, source.getPageCount());
     if (pageOrder.length === 0) {
-      throw new AutoCliError("PDF_PAGES_REQUIRED", "At least one target page is required for reorder-pages.");
+      throw new MikaCliError("PDF_PAGES_REQUIRED", "At least one target page is required for reorder-pages.");
     }
 
     const destination = await PDFDocument.create();
@@ -569,7 +569,7 @@ export async function readPdfInfo(inputPath: string): Promise<PdfInfo> {
   const [pagesText, encryptionText, fileStat] = await Promise.all([
     runQpdf(["--show-npages", resolvedInput]),
     runQpdf(["--show-encryption", resolvedInput]).catch((error) => {
-      if (error instanceof AutoCliError && error.code === "PDF_QPDF_NOT_AVAILABLE") {
+      if (error instanceof MikaCliError && error.code === "PDF_QPDF_NOT_AVAILABLE") {
         throw error;
       }
       return "";
@@ -599,7 +599,7 @@ export function parsePageSpec(value: string): Array<{ start: number; end: number
 
     const match = /^(\d+)(?:-(\d+))?$/.exec(trimmed);
     if (!match) {
-      throw new AutoCliError("PDF_PAGE_SPEC_INVALID", `Invalid page spec "${value}".`, {
+      throw new MikaCliError("PDF_PAGE_SPEC_INVALID", `Invalid page spec "${value}".`, {
         details: {
           value,
         },
@@ -609,7 +609,7 @@ export function parsePageSpec(value: string): Array<{ start: number; end: number
     const start = parseInteger(match[1]!, "page start");
     const end = parseInteger(match[2] ?? match[1]!, "page end");
     if (start <= 0 || end <= 0 || end < start) {
-      throw new AutoCliError("PDF_PAGE_SPEC_INVALID", `Invalid page range "${trimmed}".`, {
+      throw new MikaCliError("PDF_PAGE_SPEC_INVALID", `Invalid page range "${trimmed}".`, {
         details: {
           value,
         },
@@ -624,11 +624,11 @@ export function parsePageSpec(value: string): Array<{ start: number; end: number
 
 export function normalizeRotationAngle(angle: number): string {
   if (!Number.isFinite(angle)) {
-    throw new AutoCliError("PDF_ROTATE_INVALID", "Rotation angle must be a finite number.");
+    throw new MikaCliError("PDF_ROTATE_INVALID", "Rotation angle must be a finite number.");
   }
 
   if (angle % 90 !== 0) {
-    throw new AutoCliError("PDF_ROTATE_INVALID", "Rotation angle must be a multiple of 90 degrees.", {
+    throw new MikaCliError("PDF_ROTATE_INVALID", "Rotation angle must be a multiple of 90 degrees.", {
       details: {
         angle,
       },
@@ -706,7 +706,7 @@ function normalizePdfImageFormat(value: string): "png" | "jpg" {
     return "jpg";
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported PDF image format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported PDF image format "${value}".`, {
     details: {
       supportedFormats: ["png", "jpg", "jpeg"],
     },
@@ -725,7 +725,7 @@ function clampPositiveNumber(value: number | string | undefined, fallback: numbe
 
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a positive number.`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} must be a positive number.`, {
       details: {
         label,
         value,
@@ -754,7 +754,7 @@ function clampBetween(
 
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `${label} must be between ${min} and ${max}.`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `${label} must be between ${min} and ${max}.`, {
       details: {
         label,
         value,
@@ -772,7 +772,7 @@ function toFiniteNumber(value: number | string | undefined, fallback: number): n
 
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Value must be a finite number.", {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Value must be a finite number.", {
       details: {
         value,
       },
@@ -793,7 +793,7 @@ function clampPage(value: number, min: number, max: number): number {
 function parseInteger(value: string, label: string): number {
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed <= 0) {
-    throw new AutoCliError("PDF_PAGE_SPEC_INVALID", `${label} must be a positive integer.`, {
+    throw new MikaCliError("PDF_PAGE_SPEC_INVALID", `${label} must be a positive integer.`, {
       details: {
         value,
       },
@@ -925,7 +925,7 @@ function normalizeMetadataDate(value: string | undefined): Date | undefined {
 
   const parsed = new Date(trimmed);
   if (Number.isNaN(parsed.getTime())) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Invalid date value "${value}".`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Invalid date value "${value}".`, {
       details: {
         value,
       },
@@ -991,7 +991,7 @@ function normalizeEncryptionBits(value: number): PdfEncryptionBits {
     return value;
   }
 
-  throw new AutoCliError("PDF_ENCRYPT_BITS_INVALID", "Encryption bits must be one of 40, 128, or 256.", {
+  throw new MikaCliError("PDF_ENCRYPT_BITS_INVALID", "Encryption bits must be one of 40, 128, or 256.", {
     details: {
       value,
     },
@@ -1010,7 +1010,7 @@ async function renderPdfImages(input: {
   size: number;
 }): Promise<{ outputPaths: string[]; renderer: string; partial: boolean }> {
   if (await commandExists(PDFTOPPM_BIN)) {
-    const tempDir = await mkdtemp(join(tmpdir(), "autocli-pdf-images-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "mikacli-pdf-images-"));
     const prefixBase = join(tempDir, input.prefix);
 
     try {
@@ -1069,7 +1069,7 @@ async function renderPdfPreviewImage(input: {
   size: number;
 }): Promise<void> {
   if (await commandExists(QLMANAGE_BIN)) {
-    const tempDir = await mkdtemp(join(tmpdir(), "autocli-pdf-preview-"));
+    const tempDir = await mkdtemp(join(tmpdir(), "mikacli-pdf-preview-"));
     const expectedPreviewPath = join(tempDir, `${parse(input.inputPath).base}.png`);
 
     try {
@@ -1139,7 +1139,7 @@ function expandOrderedPageSpec(value: string, totalPages: number): number[] {
   for (const range of parsePageSpec(value)) {
     for (let page = range.start; page <= range.end; page += 1) {
       if (page > totalPages) {
-        throw new AutoCliError("PDF_PAGE_SPEC_INVALID", `Page ${page} is outside the PDF page count (${totalPages}).`, {
+        throw new MikaCliError("PDF_PAGE_SPEC_INVALID", `Page ${page} is outside the PDF page count (${totalPages}).`, {
           details: {
             value,
             totalPages,
@@ -1164,7 +1164,7 @@ function expandPageNumberSet(value: string, totalPages: number): Set<number> {
   for (const range of parsePageSpec(value)) {
     for (let page = range.start; page <= range.end; page += 1) {
       if (page > totalPages) {
-        throw new AutoCliError("PDF_PAGE_SPEC_INVALID", `Page ${page} is outside the PDF page count (${totalPages}).`, {
+        throw new MikaCliError("PDF_PAGE_SPEC_INVALID", `Page ${page} is outside the PDF page count (${totalPages}).`, {
           details: {
             value,
             totalPages,
@@ -1181,7 +1181,7 @@ function parsePdfColor(value: string | undefined): ReturnType<typeof rgb> {
   const normalized = value?.trim() || "#808080";
   const hex = normalized.startsWith("#") ? normalized.slice(1) : normalized;
   if (!/^[0-9a-f]{6}$/i.test(hex)) {
-    throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported PDF color "${value}".`, {
+    throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported PDF color "${value}".`, {
       details: {
         supportedFormats: ["#RRGGBB"],
       },
@@ -1199,7 +1199,7 @@ async function assertReadableFile(inputPath: string): Promise<string> {
   try {
     await stat(resolved);
   } catch (error) {
-    throw new AutoCliError("PDF_INPUT_NOT_FOUND", `Input file does not exist: ${inputPath}`, {
+    throw new MikaCliError("PDF_INPUT_NOT_FOUND", `Input file does not exist: ${inputPath}`, {
       details: {
         inputPath,
         resolvedPath: resolved,
@@ -1230,7 +1230,7 @@ async function runQpdf(args: readonly string[]): Promise<string> {
 
     child.on("error", (error) => {
       rejectPromise(
-        new AutoCliError("PDF_QPDF_NOT_AVAILABLE", "qpdf is not installed or not available in PATH.", {
+        new MikaCliError("PDF_QPDF_NOT_AVAILABLE", "qpdf is not installed or not available in PATH.", {
           details: {
             command: QPDF_BIN,
           },
@@ -1246,7 +1246,7 @@ async function runQpdf(args: readonly string[]): Promise<string> {
       }
 
       rejectPromise(
-        new AutoCliError("PDF_QPDF_FAILED", `qpdf exited with code ${code}.`, {
+        new MikaCliError("PDF_QPDF_FAILED", `qpdf exited with code ${code}.`, {
           details: {
             command: QPDF_BIN,
             args,

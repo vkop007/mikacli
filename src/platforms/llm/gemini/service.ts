@@ -3,7 +3,7 @@ import { writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 
 import { ensureDirectory, getCachePath } from "../../../config.js";
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { readMediaFile } from "../../../utils/media.js";
 import { appendUploadFileField } from "../../../utils/upload-pipeline.js";
 
@@ -123,7 +123,7 @@ export class GeminiService {
         };
       }
 
-      if (isAutoCliError(error)) {
+      if (isMikaCliError(error)) {
         return {
           status: {
             state: "unknown",
@@ -153,7 +153,7 @@ export class GeminiService {
       });
 
       if (!result.outputText) {
-        throw new AutoCliError("GEMINI_EMPTY_RESPONSE", "Gemini returned an empty response.", {
+        throw new MikaCliError("GEMINI_EMPTY_RESPONSE", "Gemini returned an empty response.", {
           details: {
             model: result.model,
           },
@@ -188,7 +188,7 @@ export class GeminiService {
       });
 
       if (!result.outputText && (!result.outputUrls || result.outputUrls.length === 0)) {
-        throw new AutoCliError("GEMINI_EMPTY_RESPONSE", "Gemini returned an empty response for the uploaded image.", {
+        throw new MikaCliError("GEMINI_EMPTY_RESPONSE", "Gemini returned an empty response for the uploaded image.", {
           details: {
             model: result.model,
           },
@@ -215,7 +215,7 @@ export class GeminiService {
       });
 
       if (!result.outputUrls || result.outputUrls.length === 0) {
-        throw new AutoCliError("GEMINI_VIDEO_NOT_RETURNED", "Gemini did not return a video for this prompt.", {
+        throw new MikaCliError("GEMINI_VIDEO_NOT_RETURNED", "Gemini did not return a video for this prompt.", {
           details: {
             model: result.model,
             outputText: result.outputText || undefined,
@@ -241,7 +241,7 @@ export class GeminiService {
     try {
       const outputUrls = dedupeGeminiValues(input.outputUrls);
       if (outputUrls.length === 0) {
-        throw new AutoCliError(
+        throw new MikaCliError(
           "GEMINI_MEDIA_DOWNLOAD_UNAVAILABLE",
           `Gemini did not provide any downloadable ${input.kind} URLs for this job.`,
           {
@@ -369,7 +369,7 @@ export class GeminiService {
 
     const uploadedFile = response.trim();
     if (!uploadedFile) {
-      throw new AutoCliError("GEMINI_FILE_UPLOAD_FAILED", "Gemini did not return an uploaded file reference.");
+      throw new MikaCliError("GEMINI_FILE_UPLOAD_FAILED", "Gemini did not return an uploaded file reference.");
     }
 
     return uploadedFile;
@@ -388,7 +388,7 @@ export class GeminiService {
     });
 
     if (!response.url.startsWith("https://gemini.google.com/")) {
-      throw new AutoCliError("GEMINI_SESSION_EXPIRED", "Gemini redirected away from the app. Re-import cookies.", {
+      throw new MikaCliError("GEMINI_SESSION_EXPIRED", "Gemini redirected away from the app. Re-import cookies.", {
         details: {
           redirectedUrl: response.url,
         },
@@ -401,7 +401,7 @@ export class GeminiService {
         bootstrap.buildLabel || bootstrap.sessionId
           ? "Gemini loaded, but the exported cookies did not expose a live request token. Re-export cookies from a currently working Gemini tab."
           : "Gemini redirected away from the authenticated app bootstrap. Re-import cookies.";
-      throw new AutoCliError("GEMINI_SESSION_EXPIRED", message, {
+      throw new MikaCliError("GEMINI_SESSION_EXPIRED", message, {
         details: {
           hasAccessToken: Boolean(bootstrap.accessToken),
           hasBuildLabel: Boolean(bootstrap.buildLabel),
@@ -471,7 +471,7 @@ function resolveGeminiModel(name?: string): { name: string; header: string } {
   const key = name.trim().toLowerCase();
   const resolved = GEMINI_MODEL_HEADERS[key];
   if (!resolved) {
-    throw new AutoCliError(
+    throw new MikaCliError(
       "GEMINI_MODEL_UNSUPPORTED",
       `Unsupported Gemini model "${name}".`,
       {
@@ -731,19 +731,19 @@ function dedupeGeminiValues(values: readonly string[] | undefined): string[] {
 }
 
 function isGeminiExpiredError(error: unknown): boolean {
-  return isAutoCliError(error) && ["GEMINI_SESSION_EXPIRED", "HTTP_REQUEST_FAILED"].includes(error.code);
+  return isMikaCliError(error) && ["GEMINI_SESSION_EXPIRED", "HTTP_REQUEST_FAILED"].includes(error.code);
 }
 
-function mapGeminiError(error: unknown, fallbackMessage: string): AutoCliError {
-  if (isAutoCliError(error)) {
+function mapGeminiError(error: unknown, fallbackMessage: string): MikaCliError {
+  if (isMikaCliError(error)) {
     return error;
   }
 
   if (error instanceof Error) {
-    return new AutoCliError("GEMINI_REQUEST_FAILED", error.message || fallbackMessage, {
+    return new MikaCliError("GEMINI_REQUEST_FAILED", error.message || fallbackMessage, {
       cause: error,
     });
   }
 
-  return new AutoCliError("GEMINI_REQUEST_FAILED", fallbackMessage);
+  return new MikaCliError("GEMINI_REQUEST_FAILED", fallbackMessage);
 }

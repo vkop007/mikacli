@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { clamp, collapseWhitespace } from "../shared/helpers.js";
 
 import type { AdapterActionResult } from "../../../types.js";
@@ -29,7 +29,7 @@ export class EtsyAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("ETSY_QUERY_REQUIRED", "Provide an Etsy query to search.");
+      throw new MikaCliError("ETSY_QUERY_REQUIRED", "Provide an Etsy query to search.");
     }
 
     const limit = clamp(input.limit ?? 5, 1, 25);
@@ -127,7 +127,7 @@ export class EtsyAdapter {
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("ETSY_DISCOVERY_FAILED", "Failed to load Etsy discovery results.", {
+      throw new MikaCliError("ETSY_DISCOVERY_FAILED", "Failed to load Etsy discovery results.", {
         details: {
           query,
           status: response.status,
@@ -258,7 +258,7 @@ function resolveEtsyProductTarget(target: string): {
 } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("ETSY_TARGET_REQUIRED", "Provide an Etsy listing URL, numeric listing ID, or search query.");
+    throw new MikaCliError("ETSY_TARGET_REQUIRED", "Provide an Etsy listing URL, numeric listing ID, or search query.");
   }
 
   const urlMatch = trimmed.match(/etsy\.com\/listing\/(\d+)\/([^?#]+)/i);
@@ -289,7 +289,7 @@ function resolveEtsyProductTarget(target: string): {
 function resolveEtsyShopTarget(target: string): { shopName: string; url?: string } {
   const trimmed = target.trim();
   if (!trimmed) {
-    throw new AutoCliError("ETSY_SHOP_REQUIRED", "Provide an Etsy shop URL or shop name.");
+    throw new MikaCliError("ETSY_SHOP_REQUIRED", "Provide an Etsy shop URL or shop name.");
   }
 
   const urlMatch = trimmed.match(/etsy\.com\/shop\/([^/?#]+)/i);

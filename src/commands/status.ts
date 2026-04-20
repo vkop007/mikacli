@@ -43,10 +43,10 @@ export function createStatusCommand(): Command {
       "after",
       `
 Examples:
-  autocli status
-  autocli status --refresh
-  autocli status --json
-  autocli status --refresh --json
+  mikacli status
+  mikacli status --refresh
+  mikacli status --json
+  mikacli status --refresh --json
 `,
     )
     .action(async function statusAction(this: Command) {
@@ -75,7 +75,7 @@ Examples:
         );
       } else {
         console.log(
-          `Saved records: ${summary.total}. Showing last-known saved status; use \`autocli status --refresh\` for live validation.`,
+          `Saved records: ${summary.total}. Showing last-known saved status; use \`mikacli status --refresh\` for live validation.`,
         );
       }
 
@@ -92,7 +92,7 @@ Examples:
 
       if (!options.refresh && sessions.length > 0) {
         console.log("");
-        console.log("hint: use `autocli status --refresh` to re-check providers live before doing write actions.");
+        console.log("hint: use `mikacli status --refresh` to re-check providers live before doing write actions.");
       }
     });
 }

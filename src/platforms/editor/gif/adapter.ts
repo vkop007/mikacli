@@ -1,6 +1,6 @@
 import { basename, extname } from "node:path";
 
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import {
   clampNumber,
   parseRate,
@@ -49,7 +49,7 @@ export class GifEditorAdapter {
     const probe = await runFfprobe(input.inputPath);
     const stream = (probe.streams ?? []).find((entry) => entry.codec_type === "video");
     if (!stream) {
-      throw new AutoCliError("GIF_INFO_UNAVAILABLE", "Could not read GIF/video stream information from the file.", {
+      throw new MikaCliError("GIF_INFO_UNAVAILABLE", "Could not read GIF/video stream information from the file.", {
         details: {
           inputPath: input.inputPath,
         },
@@ -201,7 +201,7 @@ export function normalizeGifVideoFormat(value: string): GifVideoFormat {
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported GIF video format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported GIF video format "${value}".`, {
     details: {
       supportedFormats: ["mp4", "mov", "webm"],
     },

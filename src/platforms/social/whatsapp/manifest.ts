@@ -11,12 +11,12 @@ import type { AdapterActionResult, AdapterStatusResult } from "../../../types.js
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli social whatsapp login",
-  "autocli social whatsapp login --phone +911234567890",
-  "autocli social whatsapp me",
-  "autocli social whatsapp chats --limit 10",
-  "autocli social whatsapp history 919876543210 --limit 20",
-  'autocli social whatsapp send 919876543210 "Hello from AutoCLI"',
+  "mikacli social whatsapp login",
+  "mikacli social whatsapp login --phone +911234567890",
+  "mikacli social whatsapp me",
+  "mikacli social whatsapp chats --limit 10",
+  "mikacli social whatsapp history 919876543210 --limit 20",
+  'mikacli social whatsapp send 919876543210 "Hello from MikaCLI"',
 ] as const;
 
 function buildWhatsAppCommand(options: PlatformCommandBuildOptions = {}): Command {

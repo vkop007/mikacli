@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { CookieJar } from "tough-cookie";
 
-import { AutoCliError } from "../../../../errors.js";
+import { MikaCliError } from "../../../../errors.js";
 import { SessionHttpClient } from "../../../../utils/http-client.js";
 import {
   extractDeepSeekAuthToken,
@@ -71,7 +71,7 @@ data: {"p":"response/status","v":"FINISHED"}
 
   test("maps missing-token responses to expired sessions", () => {
     const mapped = mapDeepSeekError(
-      new AutoCliError("DEEPSEEK_API_REQUEST_FAILED", "Missing Token", {
+      new MikaCliError("DEEPSEEK_API_REQUEST_FAILED", "Missing Token", {
         details: {
           code: 40002,
         },

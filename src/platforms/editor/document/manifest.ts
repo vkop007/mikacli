@@ -9,12 +9,12 @@ import { printDocumentEditorResult } from "./output.js";
 import type { PlatformCommandBuildOptions, PlatformDefinition } from "../../../core/runtime/platform-definition.js";
 
 const EXAMPLES = [
-  "autocli document info ./notes.docx",
-  "autocli document convert ./notes.docx --to txt",
-  "autocli document extract-text ./notes.docx",
-  "autocli document ocr ./scan.pdf",
-  "autocli document to-markdown ./notes.docx",
-  "autocli document metadata ./notes.docx",
+  "mikacli document info ./notes.docx",
+  "mikacli document convert ./notes.docx --to txt",
+  "mikacli document extract-text ./notes.docx",
+  "mikacli document ocr ./scan.pdf",
+  "mikacli document to-markdown ./notes.docx",
+  "mikacli document metadata ./notes.docx",
 ] as const;
 
 function buildDocumentEditorCommand(options: PlatformCommandBuildOptions = {}): Command {

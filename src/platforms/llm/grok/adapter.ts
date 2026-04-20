@@ -1,6 +1,6 @@
 import { CookieLlmAdapter } from "../shared/base-cookie-llm-adapter.js";
 import { createMediaJobRecord, MediaJobStore } from "../../../core/media-jobs/store.js";
-import { AutoCliError, isAutoCliError } from "../../../errors.js";
+import { MikaCliError, isMikaCliError } from "../../../errors.js";
 import { GrokService } from "./service.js";
 
 import type {
@@ -65,7 +65,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
-      throw new AutoCliError("INVALID_PROMPT", "Expected a non-empty Grok text prompt.");
+      throw new MikaCliError("INVALID_PROMPT", "Expected a non-empty Grok text prompt.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -85,7 +85,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
-      throw new AutoCliError("INVALID_PROMPT", "Expected a non-empty Grok image prompt.");
+      throw new MikaCliError("INVALID_PROMPT", "Expected a non-empty Grok image prompt.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -147,7 +147,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const prompt = input.prompt.trim();
     if (!prompt) {
-      throw new AutoCliError("INVALID_PROMPT", "Expected a non-empty Grok video prompt.");
+      throw new MikaCliError("INVALID_PROMPT", "Expected a non-empty Grok video prompt.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -214,7 +214,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("INVALID_TARGET", "Expected a Grok image job target.");
+      throw new MikaCliError("INVALID_TARGET", "Expected a Grok image job target.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -222,7 +222,7 @@ export class GrokAdapter extends CookieLlmAdapter {
     const existing = await this.findImageJob(target);
 
     if (!existing) {
-      throw new AutoCliError("MEDIA_JOB_NOT_FOUND", `No saved ${this.platform} image job was found for ${target}.`, {
+      throw new MikaCliError("MEDIA_JOB_NOT_FOUND", `No saved ${this.platform} image job was found for ${target}.`, {
         details: {
           platform: this.platform,
           target,
@@ -233,7 +233,7 @@ export class GrokAdapter extends CookieLlmAdapter {
 
     const outputUrls = existing.job.outputUrls ?? [];
     if (outputUrls.length === 0) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "GROK_IMAGE_DOWNLOAD_UNAVAILABLE",
         "The saved Grok image job does not include any downloadable asset URLs.",
         {
@@ -306,7 +306,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("INVALID_TARGET", "Expected a Grok video job target.");
+      throw new MikaCliError("INVALID_TARGET", "Expected a Grok video job target.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -336,7 +336,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("INVALID_TARGET", "Expected a Grok video job target.");
+      throw new MikaCliError("INVALID_TARGET", "Expected a Grok video job target.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -376,7 +376,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("INVALID_TARGET", "Expected a Grok video job target.");
+      throw new MikaCliError("INVALID_TARGET", "Expected a Grok video job target.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -414,7 +414,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }): Promise<AdapterActionResult> {
     const target = input.target.trim();
     if (!target) {
-      throw new AutoCliError("INVALID_TARGET", "Expected a Grok video job target.");
+      throw new MikaCliError("INVALID_TARGET", "Expected a Grok video job target.");
     }
 
     const session = await this.ensureActiveSession(input.account);
@@ -517,7 +517,7 @@ export class GrokAdapter extends CookieLlmAdapter {
     });
 
     if (inspection.status.state === "expired") {
-      throw new AutoCliError("SESSION_EXPIRED", inspection.status.message ?? "Grok session expired. Re-import cookies.", {
+      throw new MikaCliError("SESSION_EXPIRED", inspection.status.message ?? "Grok session expired. Re-import cookies.", {
         details: {
           platform: this.platform,
           account: persisted.account,
@@ -588,7 +588,7 @@ export class GrokAdapter extends CookieLlmAdapter {
   }
 
   private async persistFailureState(session: PlatformSession, error: unknown): Promise<void> {
-    if (!isAutoCliError(error)) {
+    if (!isMikaCliError(error)) {
       return;
     }
 

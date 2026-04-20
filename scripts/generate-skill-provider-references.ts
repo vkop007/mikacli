@@ -14,7 +14,7 @@ import type { PlatformDefinition } from "../src/core/runtime/platform-definition
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = dirname(__dirname);
-const skillRoot = join(repoRoot, "skills", "autocli");
+const skillRoot = join(repoRoot, "skills", "mikacli");
 const providerDir = join(skillRoot, "references", "providers");
 const providerIndexPath = join(providerDir, "index.md");
 
@@ -73,7 +73,7 @@ function renderProviderReference(definition: PlatformDefinition): string {
 
   return `# ${definition.displayName}
 
-Generated from the real AutoCLI provider definition and command tree.
+Generated from the real MikaCLI provider definition and command tree.
 
 - Provider: \`${definition.id}\`
 - Category: \`${definition.category}\`
@@ -116,11 +116,11 @@ ${subcommands}`.trimEnd() + "\n";
 function renderProviderIndex(): string {
   const categories = getPlatformCategories();
   const lines = [
-    "# AutoCLI Provider References",
+    "# MikaCLI Provider References",
     "",
-    "Generated provider-specific references for every AutoCLI provider.",
+    "Generated provider-specific references for every MikaCLI provider.",
     "",
-    "Use these files when the main `$autocli` skill already knows the provider and needs its exact command surface quickly.",
+    "Use these files when the main `$mikacli` skill already knows the provider and needs its exact command surface quickly.",
     "",
   ];
 

@@ -1,5 +1,5 @@
 import { evaluateFilter } from "./filter-expression-parser.js";
-import { AutoCliError } from "../../errors.js";
+import { MikaCliError } from "../../errors.js";
 
 export interface OutputTransformOptions {
   select?: string[];
@@ -33,7 +33,7 @@ export function transformOutput(
         try {
           return evaluateFilter(options.filter!, item);
         } catch (error) {
-          throw new AutoCliError("FILTER_EVALUATION_ERROR", `Failed to evaluate filter for item`, {
+          throw new MikaCliError("FILTER_EVALUATION_ERROR", `Failed to evaluate filter for item`, {
             details: {
               filter: options.filter,
               error: error instanceof Error ? error.message : String(error),
@@ -75,7 +75,7 @@ export function transformOutput(
           };
         }
       } catch (error) {
-        throw new AutoCliError("FILTER_EVALUATION_ERROR", `Failed to evaluate filter for entity`, {
+        throw new MikaCliError("FILTER_EVALUATION_ERROR", `Failed to evaluate filter for entity`, {
           details: {
             filter: options.filter,
             error: error instanceof Error ? error.message : String(error),
@@ -104,7 +104,7 @@ export function transformOutput(
           return null;
         }
       } catch (error) {
-        throw new AutoCliError("FILTER_EVALUATION_ERROR", `Failed to evaluate filter`, {
+        throw new MikaCliError("FILTER_EVALUATION_ERROR", `Failed to evaluate filter`, {
           details: {
             filter: options.filter,
             error: error instanceof Error ? error.message : String(error),

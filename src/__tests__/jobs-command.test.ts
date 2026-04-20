@@ -12,7 +12,7 @@ import {
   waitForStoredMediaJob,
 } from "../commands/jobs.js";
 import { createMediaJobRecord, MediaJobStore } from "../core/media-jobs/store.js";
-import { AutoCliError } from "../errors.js";
+import { MikaCliError } from "../errors.js";
 
 describe("jobs command", () => {
   test("registers the expected subcommands", () => {
@@ -73,7 +73,7 @@ describe("jobs command", () => {
   });
 
   test("lists jobs and annotates available root actions", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "autocli-jobs-list-"));
+    const dir = await mkdtemp(join(tmpdir(), "mikacli-jobs-list-"));
     const store = new MediaJobStore(dir);
 
     try {
@@ -123,7 +123,7 @@ describe("jobs command", () => {
   });
 
   test("finds saved jobs by job id and provider identifiers", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "autocli-jobs-find-"));
+    const dir = await mkdtemp(join(tmpdir(), "mikacli-jobs-find-"));
     const store = new MediaJobStore(dir);
 
     try {
@@ -148,7 +148,7 @@ describe("jobs command", () => {
   });
 
   test("throws on ambiguous saved job targets", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "autocli-jobs-ambiguous-"));
+    const dir = await mkdtemp(join(tmpdir(), "mikacli-jobs-ambiguous-"));
     const store = new MediaJobStore(dir);
 
     try {
@@ -172,7 +172,7 @@ describe("jobs command", () => {
       );
 
       await expect(findSavedMediaJob({ target: "shared-target", store, platforms: ["grok", "gemini"] })).rejects.toThrow(
-        AutoCliError,
+        MikaCliError,
       );
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -180,7 +180,7 @@ describe("jobs command", () => {
   });
 
   test("waits until a stored job reaches a terminal state", async () => {
-    const dir = await mkdtemp(join(tmpdir(), "autocli-jobs-watch-"));
+    const dir = await mkdtemp(join(tmpdir(), "mikacli-jobs-watch-"));
     const store = new MediaJobStore(dir);
 
     try {

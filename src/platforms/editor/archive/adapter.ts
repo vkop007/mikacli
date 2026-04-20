@@ -4,7 +4,7 @@ import { createWriteStream } from "node:fs";
 import { mkdir, stat } from "node:fs/promises";
 
 import { ensureParentDirectory } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { assertLocalInputFile, normalizeOutputExtension } from "../shared/ffmpeg.js";
 import { runEditorBinary } from "../shared/process.js";
 
@@ -41,12 +41,12 @@ type ArchiveGunzipInput = {
 
 type ArchiveFormat = "zip" | "tar" | "tar.gz" | "tgz" | "gz" | "7z";
 
-const ZIP_BIN = process.env.AUTOCLI_ZIP_BIN || "zip";
-const UNZIP_BIN = process.env.AUTOCLI_UNZIP_BIN || "unzip";
-const TAR_BIN = process.env.AUTOCLI_TAR_BIN || "tar";
-const GZIP_BIN = process.env.AUTOCLI_GZIP_BIN || "gzip";
-const GUNZIP_BIN = process.env.AUTOCLI_GUNZIP_BIN || "gunzip";
-const SEVEN_Z_BIN = process.env.AUTOCLI_7Z_BIN || "7z";
+const ZIP_BIN = process.env.MIKACLI_ZIP_BIN || "zip";
+const UNZIP_BIN = process.env.MIKACLI_UNZIP_BIN || "unzip";
+const TAR_BIN = process.env.MIKACLI_TAR_BIN || "tar";
+const GZIP_BIN = process.env.MIKACLI_GZIP_BIN || "gzip";
+const GUNZIP_BIN = process.env.MIKACLI_GUNZIP_BIN || "gunzip";
+const SEVEN_Z_BIN = process.env.MIKACLI_7Z_BIN || "7z";
 
 export class ArchiveEditorAdapter {
   readonly platform: Platform = "archive" as unknown as Platform;
@@ -89,7 +89,7 @@ export class ArchiveEditorAdapter {
 
   async create(input: ArchiveCreateInput): Promise<AdapterActionResult> {
     if (input.inputPaths.length === 0) {
-      throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Archive create needs at least one input path.");
+      throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Archive create needs at least one input path.");
     }
 
     const resolvedInputs = await Promise.all(input.inputPaths.map((inputPath) => assertLocalInputFile(inputPath)));
@@ -114,7 +114,7 @@ export class ArchiveEditorAdapter {
         break;
       case "gz":
         if (resolvedInputs.length !== 1) {
-          throw new AutoCliError("EDITOR_INVALID_ARGUMENT", "Gzip archive creation only supports one input file.");
+          throw new MikaCliError("EDITOR_INVALID_ARGUMENT", "Gzip archive creation only supports one input file.");
         }
         return this.gzip({
           inputPath: resolvedInputs[0]!,
@@ -294,7 +294,7 @@ export function detectArchiveFormat(inputPath: string): ArchiveFormat {
     return "gz";
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Could not infer archive format from "${inputPath}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Could not infer archive format from "${inputPath}".`, {
     details: {
       supportedFormats: ["zip", "tar", "tar.gz", "tgz", "gz", "7z"],
     },
@@ -319,7 +319,7 @@ function normalizeArchiveFormat(value: string): ArchiveFormat {
     return normalized;
   }
 
-  throw new AutoCliError("EDITOR_INVALID_ARGUMENT", `Unsupported archive format "${value}".`, {
+  throw new MikaCliError("EDITOR_INVALID_ARGUMENT", `Unsupported archive format "${value}".`, {
     details: {
       supportedFormats: ["zip", "tar", "tar.gz", "tgz", "gz", "7z"],
     },
@@ -395,7 +395,7 @@ async function pipeBinaryToFile(input: {
     child.on("error", (error) => {
       outputStream.destroy();
       rejectPromise(
-        new AutoCliError(input.missingCode, input.missingMessage, {
+        new MikaCliError(input.missingCode, input.missingMessage, {
           details: {
             command: input.command,
           },
@@ -412,7 +412,7 @@ async function pipeBinaryToFile(input: {
       }
 
       rejectPromise(
-        new AutoCliError(input.failureCode, input.failureMessage, {
+        new MikaCliError(input.failureCode, input.failureMessage, {
           details: {
             command: input.command,
             args: input.args,

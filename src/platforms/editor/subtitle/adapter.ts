@@ -2,7 +2,7 @@ import { basename, dirname, extname, resolve } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 
 import { ensureParentDirectory } from "../../../config.js";
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { assertLocalInputFile, normalizeOutputExtension, runFfmpegEdit } from "../shared/ffmpeg.js";
 
 import type { AdapterActionResult, Platform } from "../../../types.js";
@@ -157,7 +157,7 @@ export class SubtitleEditorAdapter {
 
   async merge(input: SubtitleMergeInput): Promise<AdapterActionResult> {
     if (input.inputPaths.length < 2) {
-      throw new AutoCliError("SUBTITLE_MERGE_REQUIRES_MULTIPLE_INPUTS", "Merge needs at least two subtitle files.");
+      throw new MikaCliError("SUBTITLE_MERGE_REQUIRES_MULTIPLE_INPUTS", "Merge needs at least two subtitle files.");
     }
 
     const documents = await Promise.all(input.inputPaths.map((inputPath) => loadSubtitleDocument(inputPath)));
@@ -165,7 +165,7 @@ export class SubtitleEditorAdapter {
 
     for (const document of documents) {
       if (document.format !== format) {
-        throw new AutoCliError("SUBTITLE_FORMAT_MISMATCH", "All subtitle files must use the same format to merge.", {
+        throw new MikaCliError("SUBTITLE_FORMAT_MISMATCH", "All subtitle files must use the same format to merge.", {
           details: {
             formats: documents.map((entry) => entry.format),
           },
@@ -176,7 +176,7 @@ export class SubtitleEditorAdapter {
     const mergedCues = documents.flatMap((document) => document.cues).sort((left, right) => left.startMs - right.startMs);
     const firstInputPath = input.inputPaths[0];
     if (!firstInputPath) {
-      throw new AutoCliError("SUBTITLE_MERGE_REQUIRES_MULTIPLE_INPUTS", "Merge needs at least two subtitle files.");
+      throw new MikaCliError("SUBTITLE_MERGE_REQUIRES_MULTIPLE_INPUTS", "Merge needs at least two subtitle files.");
     }
 
     const outputPath = resolveSubtitleOutputPath(firstInputPath, input.output, "merged", format);
@@ -305,7 +305,7 @@ export function cleanSubtitleDocument(document: SubtitleDocument): SubtitleDocum
 
 export function mergeSubtitleDocuments(documents: SubtitleDocument[]): SubtitleDocument {
   if (documents.length === 0) {
-    throw new AutoCliError("SUBTITLE_MERGE_REQUIRES_MULTIPLE_INPUTS", "Merge needs at least two subtitle files.");
+    throw new MikaCliError("SUBTITLE_MERGE_REQUIRES_MULTIPLE_INPUTS", "Merge needs at least two subtitle files.");
   }
 
   const format = documents[0]?.format ?? "srt";
@@ -362,7 +362,7 @@ export async function loadSubtitleDocument(inputPath: string): Promise<SubtitleD
   try {
     content = await readFile(resolved, "utf8");
   } catch (error) {
-    throw new AutoCliError("SUBTITLE_INPUT_NOT_FOUND", `Subtitle file does not exist: ${inputPath}`, {
+    throw new MikaCliError("SUBTITLE_INPUT_NOT_FOUND", `Subtitle file does not exist: ${inputPath}`, {
       details: {
         inputPath,
         resolvedPath: resolved,
@@ -473,7 +473,7 @@ export function serializeSubtitleDocument(cues: SubtitleCue[], format: SubtitleF
 function parseShiftToMs(value: string | number): number {
   if (typeof value === "number") {
     if (!Number.isFinite(value)) {
-      throw new AutoCliError("SUBTITLE_SHIFT_INVALID", "Subtitle shift must be a finite number.");
+      throw new MikaCliError("SUBTITLE_SHIFT_INVALID", "Subtitle shift must be a finite number.");
     }
 
     return Math.round(value * 1000);
@@ -504,7 +504,7 @@ function parseSubtitleTimestampToMs(value: string): number {
   const seconds = Number(secondsRaw ?? "0");
 
   if (!Number.isFinite(hours) || !Number.isFinite(minutes) || !Number.isFinite(seconds)) {
-    throw new AutoCliError("SUBTITLE_TIMESTAMP_INVALID", `Invalid subtitle timestamp "${value}".`);
+    throw new MikaCliError("SUBTITLE_TIMESTAMP_INVALID", `Invalid subtitle timestamp "${value}".`);
   }
 
   return Math.round(hours * 3_600_000 + minutes * 60_000 + seconds * 1000);
@@ -513,7 +513,7 @@ function parseSubtitleTimestampToMs(value: string): number {
 function parseSecondsPart(value: string): number {
   const seconds = Number(value.replace(",", "."));
   if (!Number.isFinite(seconds)) {
-    throw new AutoCliError("SUBTITLE_TIMESTAMP_INVALID", `Invalid subtitle timestamp "${value}".`);
+    throw new MikaCliError("SUBTITLE_TIMESTAMP_INVALID", `Invalid subtitle timestamp "${value}".`);
   }
 
   return Math.round(seconds * 1000);

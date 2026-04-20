@@ -80,9 +80,9 @@ describe("doctor summary helpers", () => {
     });
 
     expect(recommendations).toEqual([
-      "Fix the failing AutoCLI directories first so sessions, browser state, and jobs can be saved correctly.",
-      "Run `autocli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.",
-      "Run `autocli login --browser` or a provider-specific `login` command to save your first reusable account.",
+      "Fix the failing MikaCLI directories first so sessions, browser state, and jobs can be saved correctly.",
+      "Run `mikacli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.",
+      "Run `mikacli login --browser` or a provider-specific `login` command to save your first reusable account.",
       "Install FFmpeg with `brew install ffmpeg`.",
     ]);
   });
@@ -96,7 +96,7 @@ describe("doctor summary helpers", () => {
           status: "warn",
           message: "missing",
           details: {
-            installHint: "Install Google Chrome or Chromium, then re-run `autocli doctor`.",
+            installHint: "Install Google Chrome or Chromium, then re-run `mikacli doctor`.",
           },
         },
         {
@@ -119,9 +119,9 @@ describe("doctor summary helpers", () => {
     );
 
     expect(recommendations).toEqual([
-      "Run `autocli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.",
-      "Install a Chrome/Chromium browser for browser-backed actions. Install Google Chrome or Chromium, then re-run `autocli doctor`.",
-      "Run `autocli login --browser` once to create the shared AutoCLI browser profile before using browser-backed actions.",
+      "Run `mikacli doctor --fix` to install all supported missing browser and local-tool dependencies automatically.",
+      "Install a Chrome/Chromium browser for browser-backed actions. Install Google Chrome or Chromium, then re-run `mikacli doctor`.",
+      "Run `mikacli login --browser` once to create the shared MikaCLI browser profile before using browser-backed actions.",
     ]);
   });
 

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 
 export type SoundCloudSearchType = "track" | "playlist" | "user" | "all";
 
@@ -8,7 +8,7 @@ export function parseSoundCloudSearchType(value: string): SoundCloudSearchType {
     return normalized;
   }
 
-  throw new AutoCliError(
+  throw new MikaCliError(
     "SOUNDCLOUD_SEARCH_TYPE_INVALID",
     "SoundCloud search type must be one of: track, playlist, user, or all.",
     {
@@ -22,7 +22,7 @@ export function parseSoundCloudSearchType(value: string): SoundCloudSearchType {
 export function parseSoundCloudLimitOption(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isFinite(parsed) || parsed <= 0) {
-    throw new AutoCliError("SOUNDCLOUD_LIMIT_INVALID", "SoundCloud limit must be a positive integer.", {
+    throw new MikaCliError("SOUNDCLOUD_LIMIT_INVALID", "SoundCloud limit must be a positive integer.", {
       details: {
         value,
       },

@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { BaseApiKeyPlatformAdapter, type LoadedApiKeyConnection } from "../shared/base.js";
 import { DigitalOceanApiClient } from "./client.js";
 
@@ -120,7 +120,7 @@ export class DigitalOceanAdapter extends BaseApiKeyPlatformAdapter {
     const active = await this.ensureActiveConnection(input.account);
     const app = this.resolveApp(active.apps, input.app);
     if (!app.id) {
-      throw new AutoCliError("DIGITALOCEAN_APP_ID_MISSING", `DigitalOcean app "${app.spec?.name ?? input.app}" does not include an ID.`);
+      throw new MikaCliError("DIGITALOCEAN_APP_ID_MISSING", `DigitalOcean app "${app.spec?.name ?? input.app}" does not include an ID.`);
     }
 
     const deployments = await active.client.listDeployments(app.id, input.limit ?? 20);
@@ -192,7 +192,7 @@ export class DigitalOceanAdapter extends BaseApiKeyPlatformAdapter {
     );
 
     if (!match) {
-      throw new AutoCliError("DIGITALOCEAN_APP_NOT_FOUND", `No DigitalOcean app matched "${target}".`);
+      throw new MikaCliError("DIGITALOCEAN_APP_NOT_FOUND", `No DigitalOcean app matched "${target}".`);
     }
 
     return match;

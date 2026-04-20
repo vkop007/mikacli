@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import { parseThreadsPostTarget, parseThreadsProfileTarget } from "../../../utils/targets.js";
 import { collapseWhitespace } from "../../shopping/shared/helpers.js";
 import { normalizeSocialLimit } from "../shared/options.js";
@@ -35,7 +35,7 @@ export class ThreadsAdapter {
   async search(input: { query: string; limit?: number }): Promise<AdapterActionResult> {
     const query = input.query.trim();
     if (!query) {
-      throw new AutoCliError("THREADS_QUERY_REQUIRED", "Provide a Threads query to search.");
+      throw new MikaCliError("THREADS_QUERY_REQUIRED", "Provide a Threads query to search.");
     }
 
     const limit = normalizeSocialLimit(input.limit, 5, 25);
@@ -109,7 +109,7 @@ export class ThreadsAdapter {
     const posts = parseThreadsPostBlocks(markdown);
     const root = posts[0];
     if (!root) {
-      throw new AutoCliError("THREADS_THREAD_NOT_FOUND", "Threads could not load the requested post.", {
+      throw new MikaCliError("THREADS_THREAD_NOT_FOUND", "Threads could not load the requested post.", {
         details: {
           target: input.target,
           url,
@@ -142,7 +142,7 @@ export class ThreadsAdapter {
     });
     const text = await response.text();
     if (!response.ok) {
-      throw new AutoCliError("THREADS_REQUEST_FAILED", "Failed to load Threads' public page.", {
+      throw new MikaCliError("THREADS_REQUEST_FAILED", "Failed to load Threads' public page.", {
         details: {
           sourceUrl,
           status: response.status,

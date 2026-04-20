@@ -75,7 +75,7 @@ data: {"message":{"id":"assistant-123","author":{"role":"assistant"},"content":{
 
   test("builds the authenticated conversation body with snake_case fields", () => {
     const payload = buildChatGptAuthenticatedTextConversationBody({
-      prompt: "Hello from AutoCLI",
+      prompt: "Hello from MikaCLI",
       model: "auto",
       parentMessageId: "client-created-root",
     });
@@ -103,7 +103,7 @@ data: {"message":{"id":"assistant-123","author":{"role":"assistant"},"content":{
       },
       content: {
         content_type: "text",
-        parts: ["Hello from AutoCLI"],
+        parts: ["Hello from MikaCLI"],
       },
       metadata: {
         serialization_metadata: {

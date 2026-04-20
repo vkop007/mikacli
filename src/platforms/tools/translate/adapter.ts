@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 type TranslateInput = {
@@ -67,11 +67,11 @@ export class TranslateAdapter {
         signal: AbortSignal.timeout(10000),
         headers: {
           accept: "application/json",
-          "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+          "user-agent": "MikaCLI/1.0 (+https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("TRANSLATE_REQUEST_FAILED", "Unable to reach MyMemory translation service.", {
+      throw new MikaCliError("TRANSLATE_REQUEST_FAILED", "Unable to reach MyMemory translation service.", {
         cause: error,
         details: {
           sourceUrl,
@@ -80,7 +80,7 @@ export class TranslateAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "TRANSLATE_REQUEST_FAILED",
         `MyMemory returned HTTP ${response.status} ${response.statusText}.`,
         {
@@ -97,7 +97,7 @@ export class TranslateAdapter {
     try {
       payload = await response.json();
     } catch (error) {
-      throw new AutoCliError("TRANSLATE_RESPONSE_INVALID", "MyMemory returned invalid JSON.", {
+      throw new MikaCliError("TRANSLATE_RESPONSE_INVALID", "MyMemory returned invalid JSON.", {
         cause: error,
         details: {
           sourceUrl,
@@ -107,7 +107,7 @@ export class TranslateAdapter {
 
     const parsed = parseMyMemoryResponse(payload);
     if (!parsed.translatedText) {
-      throw new AutoCliError("TRANSLATE_RESPONSE_INVALID", "MyMemory response did not include translated text.", {
+      throw new MikaCliError("TRANSLATE_RESPONSE_INVALID", "MyMemory response did not include translated text.", {
         details: {
           sourceUrl,
         },
@@ -194,7 +194,7 @@ function buildMyMemoryUrl(input: { text: string; from: string; to: string }): st
 function normalizeText(value: string): string {
   const text = value.trim();
   if (!text) {
-    throw new AutoCliError("INVALID_TEXT", "Expected text to translate.");
+    throw new MikaCliError("INVALID_TEXT", "Expected text to translate.");
   }
 
   return text;

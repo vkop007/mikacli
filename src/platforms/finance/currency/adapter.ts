@@ -1,4 +1,4 @@
-import { AutoCliError } from "../../../errors.js";
+import { MikaCliError } from "../../../errors.js";
 import type { AdapterActionResult, Platform } from "../../../types.js";
 
 type CurrencyLookupInput = {
@@ -33,7 +33,7 @@ export class CurrencyAdapter {
     const targets = normalizeCurrencyCodes(input.to);
 
     if (targets.length === 0) {
-      throw new AutoCliError("CURRENCY_TARGET_REQUIRED", "Expected at least one target currency code.");
+      throw new MikaCliError("CURRENCY_TARGET_REQUIRED", "Expected at least one target currency code.");
     }
 
     const quote = await this.lookupRates(from);
@@ -41,7 +41,7 @@ export class CurrencyAdapter {
     const missing = conversions.filter((conversion) => !Number.isFinite(conversion.rate));
 
     if (missing.length > 0) {
-      throw new AutoCliError("CURRENCY_RATE_MISSING", "One or more requested currencies were not returned by the rate provider.", {
+      throw new MikaCliError("CURRENCY_RATE_MISSING", "One or more requested currencies were not returned by the rate provider.", {
         details: {
           missing: missing.map((entry) => entry.code),
           from,
@@ -83,11 +83,11 @@ export class CurrencyAdapter {
         signal: AbortSignal.timeout(10000),
         headers: {
           accept: "application/json",
-          "user-agent": "AutoCLI/1.0 (+https://github.com/)",
+          "user-agent": "MikaCLI/1.0 (+https://github.com/)",
         },
       });
     } catch (error) {
-      throw new AutoCliError("CURRENCY_REQUEST_FAILED", "Unable to reach the public exchange-rate endpoint.", {
+      throw new MikaCliError("CURRENCY_REQUEST_FAILED", "Unable to reach the public exchange-rate endpoint.", {
         cause: error,
         details: {
           sourceUrl,
@@ -96,7 +96,7 @@ export class CurrencyAdapter {
     }
 
     if (!response.ok) {
-      throw new AutoCliError(
+      throw new MikaCliError(
         "CURRENCY_REQUEST_FAILED",
         `The exchange-rate endpoint returned HTTP ${response.status} ${response.statusText}.`,
         {
@@ -113,7 +113,7 @@ export class CurrencyAdapter {
     try {
       payload = (await response.json()) as OpenErApiResponse;
     } catch (error) {
-      throw new AutoCliError("CURRENCY_RESPONSE_INVALID", "The exchange-rate endpoint returned invalid JSON.", {
+      throw new MikaCliError("CURRENCY_RESPONSE_INVALID", "The exchange-rate endpoint returned invalid JSON.", {
         cause: error,
         details: {
           sourceUrl,
@@ -123,7 +123,7 @@ export class CurrencyAdapter {
 
     const parsed = parseOpenErApiResponse(payload);
     if (!parsed.rates) {
-      throw new AutoCliError("CURRENCY_RESPONSE_INVALID", "The exchange-rate response did not include rate data.", {
+      throw new MikaCliError("CURRENCY_RESPONSE_INVALID", "The exchange-rate response did not include rate data.", {
         details: {
           sourceUrl,
         },
@@ -242,7 +242,7 @@ function parseRates(value: unknown): Record<string, number> | undefined {
 function normalizeAmount(value: number | string): number {
   const amount = typeof value === "number" ? value : Number.parseFloat(value);
   if (!Number.isFinite(amount) || amount <= 0) {
-    throw new AutoCliError("CURRENCY_AMOUNT_INVALID", `Invalid currency amount "${value}".`);
+    throw new MikaCliError("CURRENCY_AMOUNT_INVALID", `Invalid currency amount "${value}".`);
   }
 
   return amount;
@@ -251,7 +251,7 @@ function normalizeAmount(value: number | string): number {
 function normalizeCurrencyCode(value: string): string {
   const code = value.trim().toUpperCase();
   if (!code) {
-    throw new AutoCliError("CURRENCY_CODE_INVALID", "Expected a currency code.");
+    throw new MikaCliError("CURRENCY_CODE_INVALID", "Expected a currency code.");
   }
 
   return code;

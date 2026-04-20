@@ -95,12 +95,12 @@ export const openStreetMapPlatformDefinition: PlatformDefinition = {
     }),
   ],
   examples: [
-    'autocli openstreetmap search "Mumbai"',
-    "autocli openstreetmap search \"Bandra West Mumbai\" --limit 3",
-    "autocli openstreetmap reverse 19.0760 72.8777",
-    'autocli openstreetmap details node/16173235',
-    'autocli openstreetmap bbox "72.85,19.05,72.89,19.09" "cafe"',
-    'autocli openstreetmap nearby 19.0760 72.8777 "cafe" --radius 1000',
+    'mikacli openstreetmap search "Mumbai"',
+    "mikacli openstreetmap search \"Bandra West Mumbai\" --limit 3",
+    "mikacli openstreetmap reverse 19.0760 72.8777",
+    'mikacli openstreetmap details node/16173235',
+    'mikacli openstreetmap bbox "72.85,19.05,72.89,19.09" "cafe"',
+    'mikacli openstreetmap nearby 19.0760 72.8777 "cafe" --radius 1000',
   ],
 };
 
