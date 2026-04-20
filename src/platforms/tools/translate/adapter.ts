@@ -35,7 +35,17 @@ export class TranslateAdapter {
     const text = normalizeText(input.text);
     const from = normalizeLanguageCode(input.from ?? "auto");
     const to = normalizeLanguageCode(input.to ?? "en");
-    const translation = await this.lookupMyMemory({ text, from, to });
+    
+    let translation: TranslationResult;
+    try {
+      translation = await this.lookupGoogleTranslate({ text, from, to });
+    } catch (googleError) {
+      try {
+        translation = await this.lookupMyMemory({ text, from, to });
+      } catch (myMemoryError) {
+        throw googleError; // Prefer the Google error if both fail
+      }
+    }
 
     const sourceLabel = from === "auto" ? `${translation.sourceLanguage} (detected)` : from;
 
@@ -53,6 +63,73 @@ export class TranslateAdapter {
         confidence: translation.confidence ?? null,
       },
     });
+  }
+
+  private async lookupGoogleTranslate(input: { text: string; from: string; to: string }): Promise<TranslationResult> {
+    const sourceUrl = buildGoogleTranslateUrl(input);
+
+    let response: Response;
+    try {
+      response = await fetch(sourceUrl, {
+        signal: AbortSignal.timeout(10000),
+        headers: {
+          accept: "application/json",
+          "user-agent": "MikaCLI/1.0 (+https://github.com/)",
+        },
+      });
+    } catch (error) {
+      throw new MikaCliError("TRANSLATE_REQUEST_FAILED", "Unable to reach Google Translate service.", {
+        cause: error,
+        details: {
+          sourceUrl,
+        },
+      });
+    }
+
+    if (!response.ok) {
+      throw new MikaCliError(
+        "TRANSLATE_REQUEST_FAILED",
+        `Google Translate returned HTTP ${response.status} ${response.statusText}.`,
+        {
+          details: {
+            sourceUrl,
+            status: response.status,
+            statusText: response.statusText,
+          },
+        },
+      );
+    }
+
+    let payload: unknown;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      throw new MikaCliError("TRANSLATE_RESPONSE_INVALID", "Google Translate returned invalid JSON.", {
+        cause: error,
+        details: {
+          sourceUrl,
+        },
+      });
+    }
+
+    const parsed = parseGoogleTranslateResponse(payload);
+    if (!parsed.translatedText) {
+      throw new MikaCliError("TRANSLATE_RESPONSE_INVALID", "Google Translate response did not include translated text.", {
+        details: {
+          sourceUrl,
+        },
+      });
+    }
+
+    return {
+      provider: "google",
+      sourceUrl,
+      inputText: input.text,
+      translatedText: parsed.translatedText,
+      sourceLanguage: parsed.detectedSourceLanguage ?? input.from,
+      requestedSourceLanguage: input.from,
+      targetLanguage: input.to,
+    };
   }
 
   private async lookupMyMemory(input: { text: string; from: string; to: string }): Promise<TranslationResult> {
@@ -170,17 +247,49 @@ export function parseMyMemoryResponse(payload: unknown): {
 }
 
 export function buildTranslateUrl(input: { text: string; from: string; to: string }): string {
-  return buildMyMemoryUrl(input);
+  return buildGoogleTranslateUrl(input);
 }
 
 export function parseTranslateResponse(payload: unknown): {
   translatedText: string;
   detectedSourceLanguage?: string;
 } {
-  const parsed = parseMyMemoryResponse(payload);
+  return parseGoogleTranslateResponse(payload);
+}
+
+export function buildGoogleTranslateUrl(input: { text: string; from: string; to: string }): string {
+  const url = new URL("https://translate.googleapis.com/translate_a/single");
+  url.searchParams.set("client", "gtx");
+  url.searchParams.set("sl", input.from);
+  url.searchParams.set("tl", input.to);
+  url.searchParams.set("dt", "t");
+  url.searchParams.set("q", input.text);
+  return url.toString();
+}
+
+export function parseGoogleTranslateResponse(payload: unknown): {
+  translatedText: string;
+  detectedSourceLanguage?: string;
+} {
+  if (!Array.isArray(payload)) {
+    return { translatedText: "" };
+  }
+
+  const segments = payload[0];
+  if (!Array.isArray(segments) || segments.length === 0) {
+    return { translatedText: "" };
+  }
+
+  const translatedText = segments
+    .map((s) => (Array.isArray(s) && typeof s[0] === "string" ? s[0] : ""))
+    .join("")
+    .trim();
+
+  const detectedSourceLanguage = typeof payload[2] === "string" ? payload[2] : undefined;
+
   return {
-    translatedText: parsed.translatedText,
-    detectedSourceLanguage: parsed.sourceLanguage,
+    translatedText,
+    detectedSourceLanguage,
   };
 }
 
