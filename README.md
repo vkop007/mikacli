@@ -1,7 +1,7 @@
 # MikaCLI
 
 <!-- GENERATED:badges:start -->
-[![npm version](https://img.shields.io/npm/v/%40vk007%2Fmikacli)](https://www.npmjs.com/package/@vk007/mikacli)
+[![npm version](https://img.shields.io/npm/v/mikacli)](https://www.npmjs.com/package/mikacli)
 [![license](https://img.shields.io/github/license/vkop007/mikacli)](./LICENSE)
 [![providers](https://img.shields.io/badge/providers-117-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-16-6f42c1)](#category-overview)
@@ -63,12 +63,12 @@ mikacli llm qwen text "Summarize this changelog"
 <!-- GENERATED:at-a-glance:start -->
 | Item | Value |
 | --- | --- |
-| Package | `@vk007/mikacli` |
+| Package | `mikacli` |
 | CLI command | `mikacli` |
 | Providers | `117` |
 | Categories | `16` |
-| npm install | `npm install -g @vk007/mikacli` |
-| bun install | `bun install -g @vk007/mikacli` |
+| npm install | `npm install -g mikacli` |
+| bun install | `bun install -g mikacli` |
 | Local setup | `bun install` |
 | Docs sync | `bun run sync:docs` |
 <!-- GENERATED:at-a-glance:end -->
@@ -78,8 +78,8 @@ mikacli llm qwen text "Summarize this changelog"
 Install globally with npm or Bun:
 
 ```bash
-npm install -g @vk007/mikacli
-bun install -g @vk007/mikacli
+npm install -g mikacli
+bun install -g mikacli
 ```
 
 Validate the install right away:
@@ -499,8 +499,8 @@ MikaCLI currently exposes `117` providers across `16` active command groups.
 Use the published package as the primary supported install path:
 
 ```bash
-npm install -g @vk007/mikacli
-bun install -g @vk007/mikacli
+npm install -g mikacli
+bun install -g mikacli
 ```
 
 After install, verify the command and your local environment:

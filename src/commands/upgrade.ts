@@ -20,8 +20,8 @@ export function createUpgradeCommand(): Command {
         // npm is universally safe and likely what they used to install globally if not bun
         const commandStr = isBun ? "bun" : "npm";
         const args = isBun 
-           ? ["add", "--global", "@vk007/mikacli@latest"] 
-           : ["install", "-g", "@vk007/mikacli@latest"];
+            ? ["add", "--global", "mikacli@latest"] 
+            : ["install", "-g", "mikacli@latest"];
         
         const child = spawn(commandStr, args, { 
             stdio: "ignore", // standard npm install can be noisy, keep it clean

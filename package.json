@@ -1,5 +1,5 @@
 {
-  "name": "@vk007/mikacli",
+  "name": "mikacli",
   "version": "1.0.0",
   "description": "Terminal automation toolkit for developers and AI agents across LLMs, social platforms, developer tools, editors, data tools, and public utilities.",
   "type": "module",

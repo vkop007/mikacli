@@ -14,6 +14,8 @@ import type { PlatformCategory, PlatformDefinition } from "../src/core/runtime/p
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = dirname(__dirname);
 const readmePath = resolve(repoRoot, "README.md");
+const packageJsonPath = resolve(repoRoot, "package.json");
+const DEFAULT_PACKAGE_NAME = "mikacli";
 
 const GENERATED_BLOCKS = {
   badges: "badges",
@@ -62,14 +64,19 @@ interface ReadmeContext {
   categories: readonly PlatformCategory[];
   providerCount: number;
   categoryCount: number;
+  packageName: string;
 }
 
 export async function renderReadme(): Promise<string> {
-  const template = await readFile(readmePath, "utf8");
-  return renderReadmeFromTemplate(template);
+  const [template, packageJsonRaw] = await Promise.all([
+    readFile(readmePath, "utf8"),
+    readFile(packageJsonPath, "utf8").catch(() => ""),
+  ]);
+  const packageName = parsePackageName(packageJsonRaw) ?? DEFAULT_PACKAGE_NAME;
+  return renderReadmeFromTemplate(template, { packageName });
 }
 
-export function renderReadmeFromTemplate(template: string): string {
+export function renderReadmeFromTemplate(template: string, options: { packageName?: string } = {}): string {
   const normalizedTemplate = template.replace(/\r\n/g, "\n");
   const definitions = [...getPlatformDefinitions()];
   const categories = [...getPlatformCategories()];
@@ -77,6 +84,7 @@ export function renderReadmeFromTemplate(template: string): string {
     categories,
     providerCount: definitions.length,
     categoryCount: categories.length,
+    packageName: options.packageName ?? DEFAULT_PACKAGE_NAME,
   };
 
   let output = normalizedTemplate;
@@ -96,8 +104,10 @@ export async function generateReadme(): Promise<void> {
 }
 
 function renderBadges(context: ReadmeContext): string {
+  const encodedPackageName = encodeURIComponent(context.packageName);
+
   return [
-    `[![npm version](https://img.shields.io/npm/v/%40vk007%2Fmikacli)](https://www.npmjs.com/package/@vk007/mikacli)`,
+    `[![npm version](https://img.shields.io/npm/v/${encodedPackageName})](https://www.npmjs.com/package/${context.packageName})`,
     `[![license](https://img.shields.io/github/license/vkop007/mikacli)](./LICENSE)`,
     `[![providers](https://img.shields.io/badge/providers-${context.providerCount}-blue)](#category-overview)`,
     `[![categories](https://img.shields.io/badge/categories-${context.categoryCount}-6f42c1)](#category-overview)`,
@@ -112,12 +122,12 @@ function renderAtAGlance(context: ReadmeContext): string {
   return [
     "| Item | Value |",
     "| --- | --- |",
-    "| Package | `@vk007/mikacli` |",
+    `| Package | \`${context.packageName}\` |`,
     "| CLI command | `mikacli` |",
     `| Providers | \`${context.providerCount}\` |`,
     `| Categories | \`${context.categoryCount}\` |`,
-    "| npm install | `npm install -g @vk007/mikacli` |",
-    "| bun install | `bun install -g @vk007/mikacli` |",
+    `| npm install | \`npm install -g ${context.packageName}\` |`,
+    `| bun install | \`bun install -g ${context.packageName}\` |`,
     "| Local setup | `bun install` |",
     "| Docs sync | `bun run sync:docs` |",
   ].join("\n");
@@ -245,6 +255,24 @@ function toTitleCase(value: string): string {
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
+}
+
+function parsePackageName(rawPackageJson: string): string | null {
+  if (!rawPackageJson.trim()) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawPackageJson) as { name?: unknown };
+    if (typeof parsed.name !== "string") {
+      return null;
+    }
+
+    const packageName = parsed.name.trim();
+    return packageName.length > 0 ? packageName : null;
+  } catch {
+    return null;
+  }
 }
 
 if (import.meta.main) {
