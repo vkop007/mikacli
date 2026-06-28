@@ -15,10 +15,17 @@ export class JwtAdapter {
       throw new MikaCliError("JWT_INVALID_FORMAT", "JWT must contain three parts separated by dots.");
     }
 
+    const headerPart = parts[0];
+    const payloadPart = parts[1];
+    const signaturePart = parts[2];
+    if (!headerPart || !payloadPart || !signaturePart) {
+      throw new MikaCliError("JWT_INVALID_FORMAT", "JWT must contain three non-empty parts separated by dots.");
+    }
+
     try {
-      const header = JSON.parse(Buffer.from(parts[0], "base64url").toString("utf8"));
-      const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
-      const signatureHex = Buffer.from(parts[2], "base64url").toString("hex");
+      const header = JSON.parse(Buffer.from(headerPart, "base64url").toString("utf8"));
+      const payload = JSON.parse(Buffer.from(payloadPart, "base64url").toString("utf8"));
+      const signatureHex = Buffer.from(signaturePart, "base64url").toString("hex");
 
       const issuedAt = payload.iat ? new Date(payload.iat * 1000).toISOString() : undefined;
       const expiresAt = payload.exp ? new Date(payload.exp * 1000).toISOString() : undefined;
