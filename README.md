@@ -3,7 +3,7 @@
 <!-- GENERATED:badges:start -->
 [![npm version](https://img.shields.io/npm/v/%40vk007%2Fmikacli)](https://www.npmjs.com/package/@vk007/mikacli)
 [![license](https://img.shields.io/github/license/vkop007/mikacli)](./LICENSE)
-[![providers](https://img.shields.io/badge/providers-119-blue)](#category-overview)
+[![providers](https://img.shields.io/badge/providers-120-blue)](#category-overview)
 [![categories](https://img.shields.io/badge/categories-17-6f42c1)](#category-overview)
 <!-- GENERATED:badges:end -->
 
@@ -21,7 +21,7 @@ What makes MikaCLI especially useful is that it does not stop at API tokens. It 
 ## Why It Matters
 
 <!-- GENERATED:why-it-matters-count:start -->
-- One command surface across `119` providers.
+- One command surface across `120` providers.
 <!-- GENERATED:why-it-matters-count:end -->
 - Shared browser login means less manual cookie exporting for cookie-backed platforms.
 - Sessions and tokens stay local, so follow-up commands are short and automation-friendly.
@@ -65,7 +65,7 @@ mikacli llm qwen text "Summarize this changelog"
 | --- | --- |
 | Package | `@vk007/mikacli` |
 | CLI command | `mikacli` |
-| Providers | `119` |
+| Providers | `120` |
 | Categories | `17` |
 | npm install | `npm install -g @vk007/mikacli` |
 | bun install | `bun install -g @vk007/mikacli` |
@@ -476,9 +476,9 @@ This inventory is generated from the live platform registry.
 | `developer` | `confluence`, `github`, `gitlab`, `jira`, `linear`, +2 more | 7 | `cookies` | Code hosting, issues, docs, and workspace automation. | `mikacli developer ...` |
 | `devops` | `cloudflare`, `digitalocean`, `fly`, `netlify`, `railway`, +4 more | 9 | `api token` | Infrastructure, deployments, DNS, and uptime automation. | `mikacli devops ...` |
 | `bot` | `discordbot`, `githubbot`, `slackbot`, `telegrambot` | 4 | `api token`, `bot token` | Bot-token messaging and chat ops. | `mikacli bot ...` |
-| `tools` | `cheat`, `dns`, `download`, `favicon`, `headers`, +22 more | 27 | `cookies`, `none`, `session` | Public utilities, temp mail, downloads, transcripts, and web helpers. | `mikacli tools ...` |
+| `tools` | `cheat`, `dns`, `download`, `favicon`, `headers`, +23 more | 28 | `cookies`, `none`, `session` | Public utilities, temp mail, downloads, transcripts, and web helpers. | `mikacli tools ...` |
 
-MikaCLI currently exposes `119` providers across `17` active command groups.
+MikaCLI currently exposes `120` providers across `17` active command groups.
 <!-- GENERATED:category-overview:end -->
 
 ## Access Modes
@@ -986,6 +986,7 @@ Notes:
 | Headers | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools headers` |
 | HTTP Toolkit | `stable` | `none`, `cookies` | `supported` | `supported` | `unsupported` | `unsupported` | `mikacli tools http` |
 | IP | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools ip` |
+| JWT Analyzer | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools jwt` |
 | Markdown Fetch | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools markdown-fetch` |
 | Metadata | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools metadata` |
 | oEmbed | `stable` | `none` | `supported` | `unknown` | `unsupported` | `unsupported` | `mikacli tools oembed` |

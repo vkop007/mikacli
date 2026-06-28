@@ -153,6 +153,7 @@ Use these files when the main `$mikacli` skill already knows the provider and ne
 - [Headers](./headers.md)
 - [HTTP Toolkit](./http.md)
 - [IP](./ip.md)
+- [JWT Analyzer](./jwt.md)
 - [Markdown Fetch](./markdown-fetch.md)
 - [Metadata](./metadata.md)
 - [oEmbed](./oembed.md)
