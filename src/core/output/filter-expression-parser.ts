@@ -219,7 +219,7 @@ export class FilterExpressionParser {
 
   private parseValue(valueStr: string): unknown {
     if (/^'.*'$/.test(valueStr) || /^".*"$/.test(valueStr)) {
-      return valueStr.slice(1, -1);
+      return valueStr.slice(1, -1).replace(/\\(.)/gu, "$1");
     }
 
     if (/^\d+$/.test(valueStr)) {
