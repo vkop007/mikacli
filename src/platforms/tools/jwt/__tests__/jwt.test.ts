@@ -10,9 +10,11 @@ describe("jwt offline tool", () => {
 
     const result = await jwtAdapter.decode({ token });
     expect(result.ok).toBe(true);
-    expect(result.data.header).toEqual({ alg: "HS256", typ: "JWT" });
-    expect(result.data.payload).toEqual({ sub: "1234567890", name: "John Doe", iat: 1516239022 });
-    expect(result.data.timing.expired).toBe(false);
+
+    const data = result.data as any;
+    expect(data.header).toEqual({ alg: "HS256", typ: "JWT" });
+    expect(data.payload).toEqual({ sub: "1234567890", name: "John Doe", iat: 1516239022 });
+    expect(data.timing.expired).toBe(false);
   });
 
   test("throws error on invalid token format", async () => {
