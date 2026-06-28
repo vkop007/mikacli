@@ -194,6 +194,7 @@ describe("platform category routing", () => {
     expect(toolIds).toContain("transcript");
     expect(toolIds).toContain("markdown-fetch");
     expect(toolIds).toContain("uptime");
+    expect(toolIds).toContain("jwt");
     expect(toolIds).not.toContain("news");
   });
 });
