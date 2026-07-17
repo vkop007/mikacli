@@ -69,6 +69,10 @@ type ImageCompressInput = {
   inputPath: string;
   quality?: number | string;
   output?: string;
+  format?: string;
+  lossless?: boolean | string;
+  scale?: number | string;
+  keepMetadata?: boolean | string;
 };
 
 type ImageBlurInput = {
@@ -302,25 +306,68 @@ export class ImageEditorAdapter {
 
   async compress(input: ImageCompressInput): Promise<AdapterActionResult> {
     const quality = clampNumber(Math.round(toNumber(input.quality) ?? 82), 1, 100);
+
+    let ext = "jpg";
+    if (input.format) {
+      ext = input.format.trim().toLowerCase();
+    } else if (input.output) {
+      const match = input.output.match(/\.([a-zA-Z0-9]+)$/);
+      if (match && match[1]) {
+        ext = match[1].toLowerCase();
+      }
+    } else {
+      const match = input.inputPath.match(/\.([a-zA-Z0-9]+)$/);
+      if (match && match[1]) {
+        ext = match[1].toLowerCase();
+      }
+    }
+    if (ext === "jpeg") ext = "jpg";
+
     const outputPath = resolveEditorOutputPath({
       inputPath: input.inputPath,
       output: input.output,
       suffix: "compressed",
-      extension: "jpg",
+      extension: ext,
     });
+
+    const args: string[] = ["-i", "{input}"];
+
+    // Scale / Resize
+    if (input.scale) {
+      const factor = toNumber(input.scale);
+      if (factor && factor > 0 && factor !== 1) {
+        args.push("-vf", `scale=trunc(iw*${factor}/2)*2:trunc(ih*${factor}/2)*2`);
+      }
+    }
+
+    // Encoder-specific parameters
+    const isLossless = input.lossless === true || String(input.lossless).toLowerCase() === "true";
+    if (ext === "webp") {
+      args.push("-c:v", "libwebp");
+      if (isLossless) {
+        args.push("-lossless", "1");
+      } else {
+        args.push("-q:v", String(quality));
+      }
+    } else if (ext === "png") {
+      const compLevel = Math.round((quality / 100) * 9);
+      args.push("-compression_level", String(compLevel));
+    } else {
+      args.push("-q:v", String(convertQualityToQscale(quality)));
+    }
+
+    // Metadata preservation
+    const keepMeta = input.keepMetadata === true || String(input.keepMetadata).toLowerCase() === "true";
+    if (!keepMeta) {
+      args.push("-map_metadata", "-1");
+    }
+
+    args.push("{output}");
 
     const resolvedOutput = await runFfmpegEdit({
       inputPath: input.inputPath,
       outputPath,
-      args: [
-        "-i",
-        "{input}",
-        "-q:v",
-        String(convertQualityToQscale(quality)),
-        "-map_metadata",
-        "-1",
-        "{output}",
-      ],
+      args,
     });
 
     return this.buildResult({
@@ -330,6 +377,10 @@ export class ImageEditorAdapter {
         inputPath: input.inputPath,
         outputPath: resolvedOutput,
         quality,
+        format: ext,
+        lossless: isLossless,
+        scale: input.scale,
+        keepMetadata: keepMeta,
       },
     });
   }
