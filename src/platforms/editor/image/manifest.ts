@@ -195,26 +195,47 @@ function buildImageEditorCommand(options: PlatformCommandBuildOptions = {}): Com
 
   command
     .command("compress")
-    .description("Compress an image to a smaller JPEG output")
+    .description("Compress an image (JPEG, WebP, PNG) with options")
     .argument("<inputPath>", "Input image path")
-    .option("--quality <value>", "JPEG quality from 1 to 100", "82")
+    .option("--quality <value>", "Compression quality from 1 to 100", "82")
+    .option("--format <value>", "Target format (jpg, webp, png)")
+    .option("--lossless", "Use lossless compression (for webp/png)")
+    .option("--scale <factor>", "Image scale factor (e.g. 0.5 for half size)")
+    .option("--keep-metadata", "Keep original metadata")
     .option("--output <path>", "Exact output file path")
-    .action(async (inputPath: string, input: { quality?: string; output?: string }, cmd: Command) => {
-      const ctx = resolveCommandContext(cmd);
-      const logger = new Logger(ctx);
-      const spinner = logger.spinner("Compressing image...");
-      await runCommandAction({
-        spinner,
-        successMessage: "Image compressed.",
-        action: () =>
-          imageEditorAdapter.compress({
-            inputPath,
-            quality: input.quality,
-            output: input.output,
-          }),
-        onSuccess: (result) => printImageEditorResult(result, ctx.json),
-      });
-    });
+    .action(
+      async (
+        inputPath: string,
+        input: {
+          quality?: string;
+          format?: string;
+          lossless?: boolean;
+          scale?: string;
+          keepMetadata?: boolean;
+          output?: string;
+        },
+        cmd: Command,
+      ) => {
+        const ctx = resolveCommandContext(cmd);
+        const logger = new Logger(ctx);
+        const spinner = logger.spinner("Compressing image...");
+        await runCommandAction({
+          spinner,
+          successMessage: "Image compressed.",
+          action: () =>
+            imageEditorAdapter.compress({
+              inputPath,
+              quality: input.quality,
+              format: input.format,
+              lossless: input.lossless,
+              scale: input.scale,
+              keepMetadata: input.keepMetadata,
+              output: input.output,
+            }),
+          onSuccess: (result) => printImageEditorResult(result, ctx.json),
+        });
+      },
+    );
 
   command
     .command("grayscale")
