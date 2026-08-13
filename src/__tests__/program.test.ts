@@ -16,6 +16,7 @@ describe("root program routing", () => {
       "sessions",
       "logs",
       "jobs",
+      "serve",
       "llm",
       "ai",
       "editor",
