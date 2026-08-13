@@ -18,6 +18,7 @@ describe("root program routing", () => {
       "jobs",
       "serve",
       "mimika",
+      "platforms",
       "llm",
       "ai",
       "editor",

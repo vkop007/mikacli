@@ -8,7 +8,22 @@ import { execFile } from "node:child_process";
 
 import { MikaCliError } from "../errors.js";
 import { emitInteractiveProgress } from "./interactive-progress.js";
-import { findMimikaCdpEndpoint } from "./mimika-bridge.js";
+import {
+  MIMIKA_BROWSER_PROFILE_URI,
+  MimikaBrowserGatewayClient,
+  assertMimikaRichBrowserUnsupported,
+  isMimikaManagedMode,
+  normalizeMimikaBrowserOrigin,
+} from "./mimika-browser-client.js";
+import type {
+  MimikaBrowserGateway,
+  MimikaBrowserSession,
+  MimikaBrowserTabHandle,
+} from "./mimika-browser-client.js";
+import {
+  createMimikaRemotePage,
+  disposeMimikaRemotePage,
+} from "./mimika-browser-page.js";
 import {
   DEFAULT_BROWSER_PROFILE,
   ensureBrowserDirectory,
@@ -126,6 +141,7 @@ export interface BrowserActionPlanInput<T> {
   locale?: string;
   steps: readonly BrowserActionPlanStep[];
   action: (page: PlaywrightPage, source: BrowserActionSource) => Promise<T>;
+  managedGatewayClient?: MimikaBrowserGatewayClient;
 }
 
 type ManagedBrowserState = {
@@ -195,11 +211,216 @@ const FALSEY_AUTH_COOKIE_VALUES = new Set([
   "undefined",
 ]);
 
+async function captureMimikaBrowserLogin(input: {
+  platform: Platform;
+  displayName: string;
+  startUrl: string;
+  timeoutMs: number;
+  pollIntervalMs?: number;
+  authCookieNames: readonly string[];
+  browserReadyCookieNames: readonly string[];
+  authStorageKeys: readonly string[];
+  expectedDomain: string;
+  client: MimikaBrowserGateway;
+}): Promise<BrowserLoginCapture> {
+  const origin = normalizeMimikaBrowserOrigin(input.startUrl);
+  await input.client.getCapabilities();
+  const tabHandle = await input.client.openTab(input.startUrl, Math.min(input.timeoutMs, 15_000));
+  const deadline = Date.now() + input.timeoutMs;
+  const pollIntervalMs = Math.max(10, input.pollIntervalMs ?? 1_000);
+
+  announceBrowserLogin(
+    `Mimika opened ${input.displayName} in its browser. Complete the sign-in flow there; MikaCLI will import only the ${origin} session once login is detected.`,
+  );
+
+  try {
+    while (Date.now() < deadline) {
+      const session = await tryExportMimikaOriginSession(input.client, origin, tabHandle);
+      if (session && hasDetectedAuthenticatedState(
+        session.cookies,
+        input.authCookieNames,
+        input.authStorageKeys,
+        input.expectedDomain,
+        {
+          localStorage: session.local_storage,
+          sessionStorage: session.session_storage,
+        },
+        input.browserReadyCookieNames,
+      )) {
+        return browserLoginCaptureFromMimikaSession(session);
+      }
+
+      await sleepUntilNextPoll(deadline, pollIntervalMs);
+    }
+
+    throw buildBrowserLoginTimeoutError({
+      platform: input.platform,
+      displayName: input.displayName,
+      startUrl: input.startUrl,
+      timeoutMs: input.timeoutMs,
+      browserProfilePath: MIMIKA_BROWSER_PROFILE_URI,
+    });
+  } finally {
+    await input.client.closeTab(tabHandle).catch(() => {});
+  }
+}
+
+async function openMimikaBrowserProfile(input: {
+  startUrl: string;
+  timeoutMs: number;
+  pollIntervalMs?: number;
+  client: MimikaBrowserGateway;
+}): Promise<{
+  browserProfilePath: string;
+  startUrl: string;
+  timedOut: boolean;
+  detected: boolean;
+  detector?: string;
+  finalUrl?: string;
+}> {
+  const origin = normalizeMimikaBrowserOrigin(input.startUrl);
+  await input.client.getCapabilities();
+  const tabHandle = await input.client.openTab(input.startUrl, Math.min(input.timeoutMs, 15_000));
+  const detector = resolveSharedBrowserBootstrapDetector(input.startUrl);
+
+  announceBrowserLogin(
+    "Mimika opened its managed browser. Sign into Google or another identity provider there; MikaCLI will never open a separate browser in managed mode.",
+  );
+
+  // There is no safe, origin-agnostic signal for an arbitrary identity
+  // provider. Leave the tab open for the user and report that no detector was
+  // available instead of exporting a broader cookie jar.
+  if (!detector) {
+    return {
+      browserProfilePath: MIMIKA_BROWSER_PROFILE_URI,
+      startUrl: input.startUrl,
+      timedOut: false,
+      detected: false,
+      finalUrl: input.startUrl,
+    };
+  }
+
+  const deadline = Date.now() + input.timeoutMs;
+  const pollIntervalMs = Math.max(10, input.pollIntervalMs ?? 1_000);
+  let finalUrl = input.startUrl;
+  try {
+    while (Date.now() < deadline) {
+      const session = await tryExportMimikaOriginSession(input.client, origin, tabHandle);
+      if (session) {
+        finalUrl = session.current_url;
+        if (hasDetectedSharedBrowserBootstrap(detector, {
+          finalUrl,
+          cookies: session.cookies,
+          storage: {
+            localStorage: session.local_storage,
+            sessionStorage: session.session_storage,
+          },
+        })) {
+          return {
+            browserProfilePath: MIMIKA_BROWSER_PROFILE_URI,
+            startUrl: input.startUrl,
+            timedOut: false,
+            detected: true,
+            detector: detector.id,
+            finalUrl,
+          };
+        }
+      }
+
+      await sleepUntilNextPoll(deadline, pollIntervalMs);
+    }
+
+    return {
+      browserProfilePath: MIMIKA_BROWSER_PROFILE_URI,
+      startUrl: input.startUrl,
+      timedOut: true,
+      detected: false,
+      detector: detector.id,
+      finalUrl,
+    };
+  } finally {
+    await input.client.closeTab(tabHandle).catch(() => {});
+  }
+}
+
+async function inspectMimikaBrowserTarget(input: {
+  targetUrl: string;
+  timeoutMs: number;
+  pollIntervalMs?: number;
+  client: MimikaBrowserGateway;
+}): Promise<BrowserTargetInspection> {
+  const origin = normalizeMimikaBrowserOrigin(input.targetUrl);
+  await input.client.getCapabilities();
+  const tabHandle = await input.client.openTab(input.targetUrl, Math.min(input.timeoutMs, 15_000));
+  const deadline = Date.now() + input.timeoutMs;
+  const pollIntervalMs = Math.max(10, input.pollIntervalMs ?? 250);
+
+  try {
+    while (Date.now() < deadline) {
+      const session = await tryExportMimikaOriginSession(input.client, origin, tabHandle);
+      if (session) {
+        return {
+          browserProfilePath: MIMIKA_BROWSER_PROFILE_URI,
+          finalUrl: session.current_url,
+          cookies: session.cookies,
+          localStorage: session.local_storage,
+          sessionStorage: session.session_storage,
+          launchedFresh: false,
+        };
+      }
+      await sleepUntilNextPoll(deadline, pollIntervalMs);
+    }
+  } finally {
+    await input.client.closeTab(tabHandle).catch(() => {});
+  }
+
+  throw new MikaCliError(
+    "MIMIKA_BROWSER_ORIGIN_TIMEOUT",
+    `Timed out waiting for Mimika's browser tab to reach ${origin}.`,
+    { details: { origin, timeoutSeconds: Math.round(input.timeoutMs / 1000) } },
+  );
+}
+
+async function tryExportMimikaOriginSession(
+  client: MimikaBrowserGateway,
+  origin: string,
+  tabHandle: MimikaBrowserTabHandle,
+): Promise<MimikaBrowserSession | null> {
+  try {
+    return await client.exportOriginSession(origin, tabHandle);
+  } catch (error) {
+    // SSO commonly leaves the approved origin temporarily. The gateway's 409
+    // is the only retryable export failure; every unavailable/malformed/scope
+    // error remains explicit and can never trigger a local-browser fallback.
+    if (error instanceof MikaCliError && error.code === "MIMIKA_BROWSER_ORIGIN_MISMATCH") {
+      return null;
+    }
+    throw error;
+  }
+}
+
+function browserLoginCaptureFromMimikaSession(session: MimikaBrowserSession): BrowserLoginCapture {
+  return {
+    cookies: session.cookies,
+    finalUrl: session.current_url,
+    localStorage: session.local_storage,
+    sessionStorage: session.session_storage,
+  };
+}
+
+async function sleepUntilNextPoll(deadline: number, pollIntervalMs: number): Promise<void> {
+  const remaining = deadline - Date.now();
+  if (remaining <= 0) return;
+  await sleep(Math.min(pollIntervalMs, remaining));
+}
+
 export async function captureBrowserLogin(
   platform: Platform,
   input: {
     browserUrl?: string;
     timeoutSeconds?: number;
+    gatewayClient?: MimikaBrowserGateway;
+    pollIntervalMs?: number;
   } = {},
 ): Promise<BrowserLoginCapture> {
   const displayName = getPlatformDisplayName(platform);
@@ -209,6 +430,21 @@ export async function captureBrowserLogin(
   const browserReadyCookieNames = getPlatformBrowserReadyCookieNames(platform);
   const authStorageKeys = getPlatformBrowserAuthStorageKeys(platform);
   const expectedDomain = getPlatformCookieDomain(platform);
+
+  if (isMimikaManagedMode()) {
+    return captureMimikaBrowserLogin({
+      platform,
+      displayName,
+      startUrl,
+      timeoutMs,
+      pollIntervalMs: input.pollIntervalMs,
+      authCookieNames,
+      browserReadyCookieNames,
+      authStorageKeys,
+      expectedDomain,
+      client: input.gatewayClient ?? MimikaBrowserGatewayClient.fromEnvironment(),
+    });
+  }
 
   const managed = await ensureManagedBrowser({
     browserUrl: startUrl,
@@ -299,6 +535,8 @@ export async function openSharedBrowserProfile(
   input: {
     browserUrl?: string;
     timeoutSeconds?: number;
+    gatewayClient?: MimikaBrowserGateway;
+    pollIntervalMs?: number;
   } = {},
 ): Promise<{
   browserProfilePath: string;
@@ -310,6 +548,15 @@ export async function openSharedBrowserProfile(
 }> {
   const startUrl = input.browserUrl?.trim() || "https://accounts.google.com/";
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 600) * 1000;
+
+  if (isMimikaManagedMode()) {
+    return openMimikaBrowserProfile({
+      startUrl,
+      timeoutMs,
+      pollIntervalMs: input.pollIntervalMs,
+      client: input.gatewayClient ?? MimikaBrowserGatewayClient.fromEnvironment(),
+    });
+  }
 
   const managed = await ensureManagedBrowser({
     browserUrl: startUrl,
@@ -405,8 +652,20 @@ export async function openSharedBrowserProfile(
 export async function inspectSharedBrowserTarget(input: {
   targetUrl: string;
   timeoutSeconds?: number;
+  gatewayClient?: MimikaBrowserGateway;
+  pollIntervalMs?: number;
 }): Promise<BrowserTargetInspection> {
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+
+  if (isMimikaManagedMode()) {
+    return inspectMimikaBrowserTarget({
+      targetUrl: input.targetUrl,
+      timeoutMs,
+      pollIntervalMs: input.pollIntervalMs,
+      client: input.gatewayClient ?? MimikaBrowserGatewayClient.fromEnvironment(),
+    });
+  }
+
   const managed = await requireManagedBrowser({
     announceLabel: `Attaching to the shared MikaCLI browser profile for inspection: ${input.targetUrl}`,
   });
@@ -443,7 +702,74 @@ export async function captureSharedBrowserNetwork(input: {
   filterDomain?: string;
   filterText?: string;
   limit?: number;
+  gatewayClient?: MimikaBrowserGatewayClient;
 }): Promise<BrowserNetworkCapture> {
+  if (isMimikaManagedMode()) {
+    const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+    const limit = Math.max(1, Math.min(200, input.limit ?? 25));
+    const targetUrl = new URL(input.targetUrl).href;
+    const origin = normalizeMimikaBrowserOrigin(targetUrl);
+    const client = input.gatewayClient ?? MimikaBrowserGatewayClient.fromEnvironment(process.env, {
+      requestTimeoutMs: Math.min(10 * 60 * 1000, timeoutMs + 15_000),
+    });
+    await client.getCapabilities();
+    const tabHandle = await client.openTab(targetUrl, Math.min(timeoutMs, 30_000));
+    const page = createMimikaRemotePage({
+      client,
+      origin,
+      tabHandle,
+      timeoutMs,
+      initialUrl: targetUrl,
+    });
+    const requests: CapturedBrowserRequest[] = [];
+    let nextId = 1;
+    const onResponse = (response: PlaywrightResponse) => {
+      // Managed capture is deliberately metadata-only. Query strings,
+      // fragments, headers, response bodies, and request postData can contain
+      // credentials and never cross the broker boundary for this tool.
+      let sanitized: URL;
+      try { sanitized = new URL(response.url()); } catch { return; }
+      if (sanitized.origin !== origin) return;
+      if (input.filterDomain) {
+        const expected = input.filterDomain.toLowerCase().replace(/^\./u, "");
+        const hostname = sanitized.hostname.toLowerCase();
+        if (hostname !== expected && !hostname.endsWith(`.${expected}`)) return;
+      }
+      sanitized.search = "";
+      sanitized.hash = "";
+      if (input.filterText && !sanitized.href.toLowerCase().includes(input.filterText.toLowerCase())) return;
+      requests.push({
+        id: nextId++,
+        method: response.request().method(),
+        url: sanitized.href,
+        resourceType: "other",
+        requestHeaders: {},
+        responseHeaders: {},
+        status: response.status(),
+        statusText: response.statusText(),
+      });
+      if (requests.length > limit * 4) requests.splice(0, requests.length - limit * 4);
+    };
+    page.on("response", onResponse);
+    try {
+      announceBrowserLogin("Interact in the Mimika browser tab. MikaCLI is capturing sanitized same-origin request metadata now.");
+      await page.waitForTimeout(timeoutMs);
+      const finalUrl = await page.evaluate(() => location.href).catch(() => page.url());
+      return {
+        browserProfilePath: MIMIKA_BROWSER_PROFILE_URI,
+        finalUrl,
+        requests: requests.slice(-limit),
+        timedOut: true,
+        launchedFresh: false,
+      };
+    } finally {
+      page.off("response", onResponse);
+      await disposeMimikaRemotePage(page).catch(() => {});
+      await client.closeTab(tabHandle).catch(() => {});
+    }
+  }
+
+  assertMimikaRichBrowserUnsupported("Browser network capture");
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
   const limit = Math.max(1, Math.min(200, input.limit ?? 25));
   const managed = await requireManagedBrowser({
@@ -490,6 +816,7 @@ export async function captureSharedBrowserNetwork(input: {
 }
 
 export async function runSharedBrowserAction<T>(input: SharedBrowserActionInput<T>): Promise<T> {
+  assertMimikaRichBrowserUnsupported("Shared browser actions");
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
   const managed = await ensureManagedBrowser({
     browserUrl: input.targetUrl,
@@ -517,6 +844,7 @@ export async function runSharedBrowserAction<T>(input: SharedBrowserActionInput<
 }
 
 export async function runBackgroundBrowserAction<T>(input: BackgroundBrowserActionInput<T>): Promise<T> {
+  assertMimikaRichBrowserUnsupported("Background browser actions");
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
   const executablePath = await resolveBrowserExecutable();
   const { chromium } = await import("playwright-core");
@@ -546,6 +874,7 @@ export async function runBackgroundBrowserAction<T>(input: BackgroundBrowserActi
 }
 
 export async function runBackgroundBrowserProfileAction<T>(input: BackgroundBrowserProfileActionInput<T>): Promise<T> {
+  assertMimikaRichBrowserUnsupported("Persistent-profile browser actions");
   const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
   const profile = input.profile ?? DEFAULT_BROWSER_PROFILE;
   await ensureBrowserDirectory(profile);
@@ -584,6 +913,31 @@ export async function runBackgroundBrowserProfileAction<T>(input: BackgroundBrow
 }
 
 export async function runBrowserActionPlan<T>(input: BrowserActionPlanInput<T>): Promise<T> {
+  if (isMimikaManagedMode()) {
+    const timeoutMs = Math.max(1, input.timeoutSeconds ?? 60) * 1000;
+    const client = input.managedGatewayClient ?? MimikaBrowserGatewayClient.fromEnvironment(process.env, {
+      requestTimeoutMs: Math.min(10 * 60 * 1000, timeoutMs + 15_000),
+    });
+    await client.getCapabilities();
+    const targetUrl = new URL(input.targetUrl).href;
+    const origin = normalizeMimikaBrowserOrigin(targetUrl);
+    const tabHandle = await client.openTab(targetUrl, Math.min(timeoutMs, 30_000));
+    const page = createMimikaRemotePage({
+      client,
+      origin,
+      tabHandle,
+      timeoutMs,
+      initialUrl: targetUrl,
+    });
+    try {
+      return await input.action(page, "shared");
+    } finally {
+      await disposeMimikaRemotePage(page).catch(() => {});
+      await client.closeTab(tabHandle).catch(() => {});
+    }
+  }
+
+  assertMimikaRichBrowserUnsupported("Provider browser action plans");
   let lastError: unknown;
 
   for (const step of input.steps) {
@@ -741,6 +1095,7 @@ async function ensureManagedBrowser(input: {
   announceLabel: string;
   profile?: string;
 }): Promise<ManagedBrowserHandle> {
+  assertMimikaRichBrowserUnsupported("MikaCLI-owned shared browser startup");
   if (process.versions.bun && process.env.MIKACLI_NODE_BROWSER_REEXEC !== "1") {
     throw new MikaCliError(
       BROWSER_NODE_REEXEC_ERROR_CODE,
@@ -751,31 +1106,6 @@ async function ensureManagedBrowser(input: {
   const profile = input.profile ?? DEFAULT_BROWSER_PROFILE;
   await ensureBrowserDirectory(profile);
   const browserProfilePath = getBrowserProfileDir(profile);
-
-  // Prefer a Mimika browser that is already up.
-  //
-  // Cookie capture exists to obtain a session the user already has, and Mimika's
-  // browser is the one they have been signing into. Launching our own here gives
-  // them a second, empty Chrome and asks them to sign in to Linear twice for no
-  // benefit. When Mimika is not running, or is in extension mode where no CDP
-  // endpoint exists, this returns null and the normal path runs unchanged.
-  const mimika = await findMimikaCdpEndpoint();
-  if (mimika) {
-    announceBrowserLogin(input.announceLabel);
-    return {
-      state: {
-        // Not our process. `pid: 0` and `launchedFresh: false` together are what
-        // stop the teardown paths from closing a browser the user is using.
-        pid: 0,
-        port: mimika.port,
-        cdpUrl: mimika.browserUrl,
-        browserProfilePath,
-        executablePath: "",
-        startedAt: new Date().toISOString(),
-      },
-      launchedFresh: false,
-    };
-  }
 
   const existing = await readManagedBrowserState(profile);
   const reusableExisting = await prepareReusableManagedBrowserState(profile, existing, {
@@ -966,6 +1296,7 @@ async function requireManagedBrowser(input: {
   announceLabel: string;
   profile?: string;
 }): Promise<ManagedBrowserHandle> {
+  assertMimikaRichBrowserUnsupported("MikaCLI-owned shared browser attachment");
   if (process.versions.bun && process.env.MIKACLI_NODE_BROWSER_REEXEC !== "1") {
     throw new MikaCliError(
       BROWSER_NODE_REEXEC_ERROR_CODE,

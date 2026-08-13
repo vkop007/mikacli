@@ -1,10 +1,10 @@
 import { Command } from "commander";
 
-import { getBrowserProfileDir } from "../config.js";
 import { parseBrowserTimeoutSeconds } from "../platforms/shared/cookie-login.js";
 import { resolveCommandContext } from "../utils/cli.js";
 import { printJson } from "../utils/output.js";
 import { openSharedBrowserProfile } from "../utils/browser-cookie-login.js";
+import { MIMIKA_BROWSER_PROFILE_URI } from "../utils/mimika-browser-client.js";
 
 export function createLoginCommand(): Command {
   return new Command("login")
@@ -34,11 +34,12 @@ Examples:
         browserUrl: options.url,
         timeoutSeconds: options.browserTimeout,
       });
+      const managedByMimika = result.browserProfilePath === MIMIKA_BROWSER_PROFILE_URI;
 
       const payload = {
         ok: true,
         action: "login",
-        mode: "browser",
+        mode: managedByMimika ? "mimika-browser" : "browser",
         browserProfilePath: result.browserProfilePath,
         startUrl: result.startUrl,
         timedOut: result.timedOut,
@@ -50,10 +51,16 @@ Examples:
           "mikacli social reddit login --browser",
           "mikacli llm chatgpt login --browser",
         ],
-        message: result.detected
+        message: managedByMimika
+          ? result.detected
+            ? `Mimika's managed browser detected a ready ${result.detector ?? "browser"} login. MikaCLI did not launch or own a browser.`
+            : result.timedOut
+              ? "Mimika's managed browser login stayed open for the full timeout. MikaCLI did not launch or own a browser."
+              : "Mimika's managed browser opened the requested login page. MikaCLI did not launch or own a browser."
+          : result.detected
           ? `Shared MikaCLI browser profile auto-detected a ready ${result.detector ?? "browser"} login and saved it at ${result.browserProfilePath}.`
           : result.timedOut
-            ? `Shared MikaCLI browser profile stayed open for the full timeout. Profile remains saved at ${getBrowserProfileDir()}.`
+            ? `Shared MikaCLI browser profile stayed open for the full timeout. Profile remains saved at ${result.browserProfilePath}.`
             : `Shared MikaCLI browser profile is ready for reuse at ${result.browserProfilePath}.`,
       };
 

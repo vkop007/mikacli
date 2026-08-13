@@ -1,10 +1,44 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { createServer } from "node:http";
 
 import { MikaCliError } from "../../../../errors.js";
+import { openManagedGoogleOAuthConsent } from "../base.js";
 import { startGoogleLoopbackAuthorization } from "../loopback.js";
 
+import type { MimikaBrowserGateway } from "../../../../utils/mimika-browser-client.js";
+
 const LOOPBACK_AVAILABLE = await probeLoopbackAvailability();
+const previousManaged = process.env.MIMIKA_MIKACLI_MANAGED;
+
+afterEach(() => {
+  if (previousManaged === undefined) delete process.env.MIMIKA_MIKACLI_MANAGED;
+  else process.env.MIMIKA_MIKACLI_MANAGED = previousManaged;
+});
+
+test("managed Google OAuth opens and closes only the consent tab in Mimika", async () => {
+  process.env.MIMIKA_MIKACLI_MANAGED = "1";
+  const calls: string[] = [];
+  const gateway = {
+    async getCapabilities() { calls.push("capabilities"); return {} as never; },
+    async openTab(url: string) { calls.push(`open:${url}`); return "pw:google_oauth" as const; },
+    async closeTab(handle: string) { calls.push(`close:${handle}`); },
+    async exportOriginSession() { throw new Error("OAuth must not export a cookie session"); },
+  } satisfies MimikaBrowserGateway;
+
+  const close = await openManagedGoogleOAuthConsent(
+    "https://accounts.google.com/o/oauth2/v2/auth?client_id=example",
+    gateway,
+  );
+  await close();
+  expect(calls).toEqual([
+    "capabilities",
+    "open:https://accounts.google.com/o/oauth2/v2/auth?client_id=example",
+    "close:pw:google_oauth",
+  ]);
+  await expect(openManagedGoogleOAuthConsent("https://evil.example/oauth", gateway)).rejects.toMatchObject({
+    code: "MIMIKA_BROWSER_SCOPE_VIOLATION",
+  });
+});
 
 describe("Google loopback authorization", () => {
   if (!LOOPBACK_AVAILABLE) {

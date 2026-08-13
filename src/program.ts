@@ -13,6 +13,7 @@ import { createLogsCommand } from "./commands/logs.js";
 import { createJobsCommand } from "./commands/jobs.js";
 import { createServeCommand } from "./commands/serve.js";
 import { createMimikaCommand } from "./commands/mimika.js";
+import { createPlatformsCommand } from "./commands/platforms.js";
 import { MikaCliError } from "./errors.js";
 import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
 import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
@@ -93,7 +94,8 @@ Format Transformations (with or without --json):
     .addCommand(createLogsCommand())
     .addCommand(createJobsCommand())
     .addCommand(createServeCommand())
-    .addCommand(createMimikaCommand());
+    .addCommand(createMimikaCommand())
+    .addCommand(createPlatformsCommand());
 
   for (const category of getPlatformCategories()) {
     const definitions = getPlatformDefinitionsByCategory(category);
@@ -135,7 +137,7 @@ function findLegacyDirectProviderInvocation(argv: readonly string[]): {
     return undefined;
   }
 
-  const reserved = new Set<string>(["help", "login", "logout", "upgrade", "search", "status", "doctor", "sessions", "logs", "jobs", ...getPlatformCategories()]);
+  const reserved = new Set<string>(["help", "login", "logout", "upgrade", "search", "status", "doctor", "sessions", "logs", "jobs", "serve", "mimika", "platforms", ...getPlatformCategories()]);
   const isHelpRequest = positionals[0] === "help";
   const candidate = isHelpRequest ? positionals[1] : positionals[0];
   if (!candidate || reserved.has(candidate)) {

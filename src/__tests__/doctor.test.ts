@@ -125,6 +125,45 @@ describe("doctor summary helpers", () => {
     ]);
   });
 
+  test("recommends Mimika setup without suggesting a local browser install", () => {
+    const recommendations = buildDoctorRecommendations(
+      [
+        {
+          id: "mimika-browser-gateway",
+          category: "browser",
+          status: "fail",
+          message: "gateway unavailable",
+          details: {
+            owner: "mimika",
+            localBrowserFallback: false,
+          },
+        },
+      ],
+      {
+        pass: 0,
+        warn: 0,
+        fail: 1,
+        total: 1,
+        records: 1,
+        active: 1,
+        expired: 0,
+        unknown: 0,
+      },
+    );
+
+    expect(recommendations).toEqual([
+      "Open Mimika's browser setup and connect its configured browser. MikaCLI will not install or launch a separate browser in managed mode.",
+    ]);
+    expect(buildDoctorFixPlan([
+      {
+        id: "mimika-browser-gateway",
+        category: "browser",
+        status: "fail",
+        message: "gateway unavailable",
+      },
+    ], "darwin").targets).toEqual([]);
+  });
+
   test("builds a macOS auto-fix plan with deduped brew targets", () => {
     const plan = buildDoctorFixPlan(
       [

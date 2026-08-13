@@ -1,6 +1,6 @@
 {
   "name": "@vk007/mikacli",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Terminal automation toolkit for developers and AI agents across LLMs, social platforms, developer tools, editors, data tools, and public utilities.",
   "type": "module",
   "license": "MIT",
@@ -14,18 +14,22 @@
   },
   "packageManager": "bun@1.3.6",
   "keywords": [
+    "agent-tools",
     "bun",
     "cli",
     "automation",
     "instagram",
+    "mcp",
     "twitter",
     "x"
   ],
+  "preferGlobal": true,
   "bin": {
     "mikacli": "./dist/index.js"
   },
   "files": [
     "dist",
+    "LICENSE",
     "README.md",
     "skills"
   ],
@@ -33,8 +37,53 @@
     "access": "public"
   },
   "engines": {
-    "bun": ">=1.3.0",
     "node": ">=20.11.0"
+  },
+  "mikacli": {
+    "schemaVersion": 1,
+    "developerCli": {
+      "channel": "npm",
+      "package": "@vk007/mikacli",
+      "executable": "mikacli",
+      "entrypoint": "dist/index.js",
+      "runtime": "node"
+    },
+    "managedDistribution": {
+      "channel": "npm-platform-packages",
+      "format": "standalone-executable",
+      "requiresNode": false,
+      "checksumAlgorithm": "sha256",
+      "integrityAlgorithm": "sha256",
+      "stateDirectoryEnvironmentVariable": "MIKACLI_HOME",
+      "manifestUrl": "https://github.com/vkop007/mikacli/releases/download/v1.1.0/mikacli-native-manifest.json",
+      "targets": [
+        "darwin-arm64",
+        "darwin-x64",
+        "linux-arm64",
+        "linux-x64",
+        "windows-x64"
+      ]
+    },
+    "catalog": {
+      "schemaVersion": 1,
+      "revisionSource": "package-version",
+      "discovery": "dynamic-registry",
+      "stateSchemaVersion": 1
+    },
+    "mcp": {
+      "transport": "streamable-http",
+      "endpoint": "/mcp",
+      "healthEndpoint": "/health",
+      "protocolVersion": "2025-06-18",
+      "managementProtocolVersion": "1.0",
+      "tools": [
+        "mika_list_platforms",
+        "mika_describe",
+        "mika_auth_status",
+        "mika_run",
+        "mika_manage_platform"
+      ]
+    }
   },
   "scripts": {
     "generate:platform-registry": "bun run scripts/generate-platform-registry.ts",
@@ -58,7 +107,10 @@
     "typecheck": "tsc --noEmit",
     "pretest": "bun run generate:platform-registry",
     "build": "bun build --target=node --format=esm --external tlsclientwrapper --external playwright-core --outdir dist ./src/index.ts",
-    "build:bin": "bun build --compile --target=bun --external playwright-core --outfile bin/mikacli ./src/index.ts",
+    "build:bin": "bun build --compile --target=bun --define __MIKACLI_STANDALONE__=true --external electron --external 'chromium-bidi/*' --outfile bin/mikacli ./src/index.ts",
+    "build:native": "bun run scripts/build-native-distribution.ts",
+    "build:native:current": "bun run scripts/build-native-distribution.ts --target current",
+    "verify:native": "bun run scripts/verify-native-distribution.ts",
     "test": "bun test"
   },
   "dependencies": {

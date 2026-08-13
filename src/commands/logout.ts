@@ -8,6 +8,7 @@ import { ConnectionStore } from "../core/auth/connection-store.js";
 import { MikaCliError } from "../errors.js";
 import { isPlatform } from "../platforms/config.js";
 import { resolveCommandContext } from "../utils/cli.js";
+import { isMimikaManagedMode } from "../utils/mimika-browser-client.js";
 import { printJson } from "../utils/output.js";
 import { removeSessionArtifacts } from "./sessions.js";
 
@@ -83,6 +84,14 @@ export async function logoutSavedState(input: {
   browserProfilePath?: string;
   removeBrowserProfileFn?: (path: string) => Promise<boolean>;
 }): Promise<LogoutResult> {
+  if (input.browser && isMimikaManagedMode()) {
+    throw new MikaCliError(
+      "MIMIKA_BROWSER_OWNED",
+      "Mimika owns the browser profile in managed mode. Clear or switch that browser profile from Mimika; MikaCLI will not modify it.",
+      { details: { browserOwner: "mimika", profileModified: false } },
+    );
+  }
+
   const connectionStore = input.connectionStore ?? new ConnectionStore();
   const removeSessionArtifactsFn = input.removeSessionArtifactsFn ?? removeSessionArtifacts;
   const removeBrowserProfileFn = input.removeBrowserProfileFn ?? removeBrowserProfile;

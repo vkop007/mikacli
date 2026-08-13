@@ -1,6 +1,7 @@
 node_modules
 dist
 bin
+native-dist
 .DS_Store
 *.log
 cookiestest

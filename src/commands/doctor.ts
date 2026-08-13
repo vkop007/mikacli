@@ -19,6 +19,10 @@ import {
 import { ConnectionStore } from "../core/auth/connection-store.js";
 import { resolveCommandContext } from "../utils/cli.js";
 import { probeBrowserExecutable } from "../utils/browser-cookie-login.js";
+import {
+  MimikaBrowserGatewayClient,
+  isMimikaManagedMode,
+} from "../utils/mimika-browser-client.js";
 import { printDoctorTable, printJson } from "../utils/output.js";
 
 import type { ConnectionRecord } from "../core/auth/auth-types.js";
@@ -331,8 +335,11 @@ Examples:
 }
 
 export async function collectDoctorReport(connectionStore = new ConnectionStore()): Promise<DoctorReport> {
+  const directoryDefinitions = isMimikaManagedMode()
+    ? DIRECTORY_CHECKS.filter((entry) => entry.id !== "browser-dir")
+    : DIRECTORY_CHECKS;
   const [directoryChecks, binaryChecks, browserChecks, connectionCheck] = await Promise.all([
-    Promise.all(DIRECTORY_CHECKS.map(runDirectoryCheck)),
+    Promise.all(directoryDefinitions.map(runDirectoryCheck)),
     Promise.all(BINARY_CHECKS.map(runBinaryCheck)),
     collectBrowserChecks(),
     runConnectionCheck(connectionStore),
@@ -359,6 +366,7 @@ export function buildDoctorRecommendations(
   const browserExecutableCheck = checks.find((check) => check.id === "browser-executable");
   const browserProfileCheck = checks.find((check) => check.id === "shared-browser-profile");
   const browserRuntimeCheck = checks.find((check) => check.id === "shared-browser-runtime");
+  const mimikaBrowserCheck = checks.find((check) => check.id === "mimika-browser-gateway");
   const fixPlan = buildDoctorFixPlan(checks);
 
   if (failedDirectories.length > 0) {
@@ -375,6 +383,12 @@ export function buildDoctorRecommendations(
       hint
         ? `Install a Chrome/Chromium browser for browser-backed actions. ${hint}`
         : "Install Chrome/Chromium or set `MIKACLI_BROWSER_PATH` so browser-backed actions can run.",
+    );
+  }
+
+  if (mimikaBrowserCheck && mimikaBrowserCheck.status !== "pass") {
+    recommendations.push(
+      "Open Mimika's browser setup and connect its configured browser. MikaCLI will not install or launch a separate browser in managed mode.",
     );
   }
 
@@ -504,6 +518,10 @@ async function runBinaryCheck(input: (typeof BINARY_CHECKS)[number]): Promise<Do
 }
 
 async function collectBrowserChecks(): Promise<DoctorCheck[]> {
+  if (isMimikaManagedMode()) {
+    return [await runMimikaBrowserGatewayCheck()];
+  }
+
   const [executableCheck, profileCheck, runtimeCheck] = await Promise.all([
     runBrowserExecutableCheck(),
     runBrowserProfileCheck(),
@@ -511,6 +529,44 @@ async function collectBrowserChecks(): Promise<DoctorCheck[]> {
   ]);
 
   return [executableCheck, profileCheck, runtimeCheck];
+}
+
+async function runMimikaBrowserGatewayCheck(): Promise<DoctorCheck> {
+  try {
+    const capabilities = await MimikaBrowserGatewayClient.fromEnvironment().getCapabilities();
+    const ready = capabilities.browser.configured && capabilities.browser.connected;
+    return {
+      id: "mimika-browser-gateway",
+      category: "browser",
+      status: ready ? "pass" : "warn",
+      message: ready
+        ? `Mimika's managed browser is connected through ${capabilities.browser.backend}.`
+        : "Mimika's browser broker is compatible, but its browser is not connected.",
+      details: {
+        owner: "mimika",
+        configured: capabilities.browser.configured,
+        connected: capabilities.browser.connected,
+        backend: capabilities.browser.backend,
+        protocol: capabilities.protocol,
+        protocolVersion: capabilities.protocol_version,
+        originScopedPageActions: capabilities.capabilities.origin_scoped_page_actions,
+        originScopedSessionExport: capabilities.capabilities.origin_scoped_session_export,
+        localBrowserFallback: capabilities.capabilities.local_browser_fallback,
+      },
+    };
+  } catch (error) {
+    return {
+      id: "mimika-browser-gateway",
+      category: "browser",
+      status: "fail",
+      message: "MikaCLI could not validate Mimika's managed browser gateway.",
+      details: {
+        owner: "mimika",
+        localBrowserFallback: false,
+        error: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
 }
 
 async function runBrowserExecutableCheck(): Promise<DoctorCheck> {

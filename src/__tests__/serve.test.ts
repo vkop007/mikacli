@@ -11,16 +11,17 @@ import {
 import { getPlatformDefinition, getPlatformDefinitions } from "../platforms/index.js";
 
 describe("MCP tool surface", () => {
-  test("stays at four tools no matter how large the catalog grows", () => {
+  test("stays at five stable tools no matter how large the catalog grows", () => {
     // The whole design rests on this: a client carrying one tool per capability
     // would hold ~960 of them, an order of magnitude past what MCP clients
     // budget for. If this number ever climbs, discovery has leaked into
     // declaration.
-    expect(TOOLS.length).toBe(4);
+    expect(TOOLS.length).toBe(5);
     expect(TOOLS.map((tool) => tool.name).sort()).toEqual([
       "mika_auth_status",
       "mika_describe",
       "mika_list_platforms",
+      "mika_manage_platform",
       "mika_run",
     ]);
   });
@@ -30,6 +31,22 @@ describe("MCP tool surface", () => {
     // platform name.
     const entry = TOOLS.find((tool) => tool.name === "mika_list_platforms");
     expect(entry?.inputSchema.required).toEqual([]);
+  });
+
+  test("keeps direct-provider capability optional and marks management destructive", () => {
+    const run = TOOLS.find((tool) => tool.name === "mika_run");
+    expect(run?.inputSchema.required).toEqual(["platform"]);
+    expect(run?.inputSchema.additionalProperties).toBe(false);
+
+    const manage = TOOLS.find((tool) => tool.name === "mika_manage_platform");
+    expect(manage?.annotations.destructiveHint).toBe(true);
+    expect(manage?._meta?.["io.mikacli/confirmation"]).toBe("required");
+    expect(manage?.outputSchema.required).toContain("state");
+    expect(TOOLS.find((tool) => tool.name === "mika_list_platforms")?.outputSchema).toBeDefined();
+
+    const authStatus = TOOLS.find((tool) => tool.name === "mika_auth_status");
+    expect(authStatus?.inputSchema.properties).toHaveProperty("refresh");
+    expect(authStatus?.inputSchema.additionalProperties).toBe(false);
   });
 });
 
@@ -92,6 +109,81 @@ describe("describePlatform", () => {
     for (const capability of described.capabilities) {
       expect(capability.arguments.properties).not.toHaveProperty("help");
     }
+  });
+
+  test("publishes an exact HTTPS ConnectSpec only for managed browser login", () => {
+    const github = getPlatformDefinition("github" as never);
+    const described = describePlatform(github!) as { connectSpec?: Record<string, unknown> };
+    expect(described.connectSpec).toEqual({
+      schemaVersion: 1,
+      platform: "github",
+      capability: "login",
+      loginUrl: "https://github.com/",
+      allowedOrigins: ["https://github.com"],
+    });
+
+    const dns = getPlatformDefinition("dns" as never);
+    expect(describePlatform(dns!)).not.toHaveProperty("connectSpec");
+    const vercel = getPlatformDefinition("vercel" as never);
+    expect(describePlatform(vercel!)).not.toHaveProperty("connectSpec");
+    const gmail = getPlatformDefinition("gmail" as never);
+    expect((describePlatform(gmail!) as { connectSpec?: unknown }).connectSpec).toEqual({
+      schemaVersion: 1,
+      platform: "gmail",
+      capability: "login",
+      loginUrl: "https://accounts.google.com/",
+      allowedOrigins: ["https://accounts.google.com"],
+    });
+
+    for (const definition of getPlatformDefinitions()) {
+      const spec = (describePlatform(definition) as { connectSpec?: {
+        loginUrl: string;
+        allowedOrigins: string[];
+      } }).connectSpec;
+      if (!spec) continue;
+      const loginUrl = new URL(spec.loginUrl);
+      expect(loginUrl.protocol).toBe("https:");
+      expect(spec.allowedOrigins).toEqual([loginUrl.origin]);
+    }
+  });
+
+  test("publishes one exact browser origin only for the requested browser-backed capability", () => {
+    const youtube = getPlatformDefinition("youtube" as never)!;
+    expect((describePlatform(youtube, undefined, "upload") as { browserSpec?: unknown }).browserSpec).toEqual({
+      schemaVersion: 1,
+      platform: "youtube",
+      capability: "upload",
+      targetUrl: "https://studio.youtube.com/",
+      allowedOrigin: "https://studio.youtube.com",
+    });
+    expect((describePlatform(youtube, undefined, "comment") as { browserSpec?: unknown }).browserSpec).toEqual({
+      schemaVersion: 1,
+      platform: "youtube",
+      capability: "comment",
+      targetUrl: "https://www.youtube.com/",
+      allowedOrigin: "https://www.youtube.com",
+    });
+
+    const github = getPlatformDefinition("github" as never)!;
+    expect(describePlatform(github, undefined, "issues")).not.toHaveProperty("browserSpec");
+    expect(describePlatform(youtube, undefined, "unknown-capability")).not.toHaveProperty("browserSpec");
+
+    const http = getPlatformDefinition("http" as never)!;
+    expect((describePlatform(http, undefined, undefined, {
+      _: ["github.com", "capture"],
+    }) as { browserSpec?: unknown }).browserSpec).toEqual({
+      schemaVersion: 1,
+      platform: "http",
+      capability: "direct",
+      targetUrl: "https://github.com/",
+      allowedOrigin: "https://github.com",
+    });
+    expect(JSON.stringify(describePlatform(http, undefined, undefined, {
+      _: ["https://github.com/private?token=must-not-leak#fragment", "capture"],
+    }))).not.toContain("must-not-leak");
+    expect(describePlatform(http, undefined, undefined, {
+      _: ["github.com", "request", "GET", "/"],
+    })).not.toHaveProperty("browserSpec");
   });
 });
 
