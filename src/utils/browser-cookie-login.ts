@@ -8,6 +8,7 @@ import { execFile } from "node:child_process";
 
 import { MikaCliError } from "../errors.js";
 import { emitInteractiveProgress } from "./interactive-progress.js";
+import { findMimikaCdpEndpoint } from "./mimika-bridge.js";
 import {
   DEFAULT_BROWSER_PROFILE,
   ensureBrowserDirectory,
@@ -750,6 +751,31 @@ async function ensureManagedBrowser(input: {
   const profile = input.profile ?? DEFAULT_BROWSER_PROFILE;
   await ensureBrowserDirectory(profile);
   const browserProfilePath = getBrowserProfileDir(profile);
+
+  // Prefer a Mimika browser that is already up.
+  //
+  // Cookie capture exists to obtain a session the user already has, and Mimika's
+  // browser is the one they have been signing into. Launching our own here gives
+  // them a second, empty Chrome and asks them to sign in to Linear twice for no
+  // benefit. When Mimika is not running, or is in extension mode where no CDP
+  // endpoint exists, this returns null and the normal path runs unchanged.
+  const mimika = await findMimikaCdpEndpoint();
+  if (mimika) {
+    announceBrowserLogin(input.announceLabel);
+    return {
+      state: {
+        // Not our process. `pid: 0` and `launchedFresh: false` together are what
+        // stop the teardown paths from closing a browser the user is using.
+        pid: 0,
+        port: mimika.port,
+        cdpUrl: mimika.browserUrl,
+        browserProfilePath,
+        executablePath: "",
+        startedAt: new Date().toISOString(),
+      },
+      launchedFresh: false,
+    };
+  }
 
   const existing = await readManagedBrowserState(profile);
   const reusableExisting = await prepareReusableManagedBrowserState(profile, existing, {

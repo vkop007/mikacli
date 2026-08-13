@@ -12,6 +12,7 @@ import { createStatusCommand } from "./commands/status.js";
 import { createLogsCommand } from "./commands/logs.js";
 import { createJobsCommand } from "./commands/jobs.js";
 import { createServeCommand } from "./commands/serve.js";
+import { createMimikaCommand } from "./commands/mimika.js";
 import { MikaCliError } from "./errors.js";
 import { buildCategoryCommand } from "./core/runtime/build-category-command.js";
 import { getPlatformCategories, getPlatformDefinitions, getPlatformDefinitionsByCategory } from "./platforms/index.js";
@@ -91,7 +92,8 @@ Format Transformations (with or without --json):
     .addCommand(createSessionsCommand())
     .addCommand(createLogsCommand())
     .addCommand(createJobsCommand())
-    .addCommand(createServeCommand());
+    .addCommand(createServeCommand())
+    .addCommand(createMimikaCommand());
 
   for (const category of getPlatformCategories()) {
     const definitions = getPlatformDefinitionsByCategory(category);
