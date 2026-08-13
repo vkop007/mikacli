@@ -25,6 +25,8 @@ Decode and inspect JSON Web Tokens offline
 ## Fast Start
 
 - `mikacli tools jwt decode <token>`
+- `mikacli tools jwt verify <token> --secret <key>`
+- `mikacli tools jwt sign --payload <json> --secret <key>`
 - `mikacli tools jwt capabilities --json`
 
 ## Default Command
@@ -44,6 +46,48 @@ No root-only options.
 Usage:
 ```bash
 mikacli tools jwt decode [options] <token>
+```
+
+No description.
+
+No command-specific options.
+
+### `verify`
+
+Usage:
+```bash
+mikacli tools jwt verify [options] <token>
+```
+
+No description.
+
+Options:
+
+- `--secret <key>`: HMAC secret or RSA public key string
+- `--key-file <path>`: Path to public key file
+
+### `sign`
+
+Usage:
+```bash
+mikacli tools jwt sign [options]
+```
+
+No description.
+
+Options:
+
+- `--payload <json>`: JSON payload string
+- `--secret <key>`: HMAC secret or RSA private key string
+- `--key-file <path>`: Path to private key file
+- `--alg <algorithm>`: Signing algorithm (default: HS256)
+- `--exp <duration>`: Expiration time duration (e.g. 1h, 1d)
+
+### `audit`
+
+Usage:
+```bash
+mikacli tools jwt audit [options] <token>
 ```
 
 No description.

@@ -16,7 +16,7 @@ import { NATIVE_TARGETS, getNativeDistributionDescriptor, nativeManifestUrl } fr
 describe("npm distribution metadata", () => {
   test("declares a Node-compatible user-facing executable", () => {
     expect(packageJson.name).toBe("@vk007/mikacli");
-    expect(packageJson.bin).toEqual({ mikacli: "./dist/index.js" });
+    expect(packageJson.bin).toEqual({ mikacli: "dist/index.js" });
     expect(packageJson.engines.node).toBe(">=20.11.0");
     expect(packageJson.files).toContain("dist");
     expect(packageJson.files).toContain("LICENSE");

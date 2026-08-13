@@ -1,6 +1,6 @@
 {
   "name": "@vk007/mikacli",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Terminal automation toolkit for developers and AI agents across LLMs, social platforms, developer tools, editors, data tools, and public utilities.",
   "type": "module",
   "license": "MIT",
@@ -25,7 +25,7 @@
   ],
   "preferGlobal": true,
   "bin": {
-    "mikacli": "./dist/index.js"
+    "mikacli": "dist/index.js"
   },
   "files": [
     "dist",
@@ -55,7 +55,7 @@
       "checksumAlgorithm": "sha256",
       "integrityAlgorithm": "sha256",
       "stateDirectoryEnvironmentVariable": "MIKACLI_HOME",
-      "manifestUrl": "https://github.com/vkop007/mikacli/releases/download/v1.1.0/mikacli-native-manifest.json",
+      "manifestUrl": "https://github.com/vkop007/mikacli/releases/download/v1.2.0/mikacli-native-manifest.json",
       "targets": [
         "darwin-arm64",
         "darwin-x64",
