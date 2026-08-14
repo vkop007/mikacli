@@ -139,11 +139,15 @@ Usage:
 mikacli editor image compress [options] <inputPath>
 ```
 
-Compress an image to a smaller JPEG output
+Compress an image (JPEG, WebP, PNG) with options
 
 Options:
 
-- `--quality <value>`: JPEG quality from 1 to 100
+- `--quality <value>`: Compression quality from 1 to 100
+- `--format <value>`: Target format (jpg, webp, png)
+- `--lossless`: Use lossless compression (for webp/png)
+- `--scale <factor>`: Image scale factor (e.g. 0.5 for half size)
+- `--keep-metadata`: Keep original metadata
 - `--output <path>`: Exact output file path
 
 ### `grayscale`

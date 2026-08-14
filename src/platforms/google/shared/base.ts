@@ -2,12 +2,17 @@ import { sanitizeAccountName } from "../../../config.js";
 import { ConnectionStore } from "../../../core/auth/connection-store.js";
 import { MikaCliError } from "../../../errors.js";
 import { emitInteractiveProgress } from "../../../utils/interactive-progress.js";
+import {
+  MimikaBrowserGatewayClient,
+  isMimikaManagedMode,
+} from "../../../utils/mimika-browser-client.js";
 import { getPlatformDisplayName } from "../../config.js";
 import { buildGoogleAuthUrl, GOOGLE_OPENID_SCOPES, GoogleOAuthClient, type GoogleUserProfile } from "./oauth.js";
 import { startGoogleLoopbackAuthorization } from "./loopback.js";
 
 import type { ConnectionRecord, OAuth2ConnectionAuth } from "../../../core/auth/auth-types.js";
 import type { AdapterActionResult, AdapterStatusResult, Platform, SessionStatus, SessionUser } from "../../../types.js";
+import type { MimikaBrowserGateway } from "../../../utils/mimika-browser-client.js";
 
 export interface GoogleLoginInput {
   account?: string;
@@ -132,9 +137,12 @@ export abstract class BaseGooglePlatformAdapter {
       redirectUri = loopback.redirectUri;
       authUrl = loopback.authUrl;
       announceGoogleLoopbackLogin(this.displayName, authUrl, redirectUri, input.timeoutSeconds);
+      let closeManagedConsent = async (): Promise<void> => {};
       try {
+        closeManagedConsent = await openManagedGoogleOAuthConsent(authUrl);
         code = await loopback.waitForCode();
       } finally {
+        await closeManagedConsent();
         await loopback.close().catch(() => {});
       }
     }
@@ -543,4 +551,29 @@ function announceGoogleLoopbackLogin(
   console.error(`Open this Google consent URL for ${displayName}:`);
   console.error(authUrl);
   console.error(`MikaCLI will wait up to ${timeout} seconds for the browser callback.`);
+}
+
+export async function openManagedGoogleOAuthConsent(
+  authUrl: string,
+  gateway?: MimikaBrowserGateway,
+): Promise<() => Promise<void>> {
+  if (!isMimikaManagedMode()) return async () => {};
+  let target: URL;
+  try {
+    target = new URL(authUrl);
+  } catch (error) {
+    throw new MikaCliError("GOOGLE_OAUTH_URL_INVALID", "Google returned an invalid OAuth consent URL.", { cause: error });
+  }
+  if (target.origin !== "https://accounts.google.com" || target.username || target.password) {
+    throw new MikaCliError(
+      "MIMIKA_BROWSER_SCOPE_VIOLATION",
+      "Managed Google OAuth consent must stay on https://accounts.google.com.",
+    );
+  }
+  const client = gateway ?? MimikaBrowserGatewayClient.fromEnvironment();
+  await client.getCapabilities();
+  const handle = await client.openTab(target.href, 30_000);
+  return async () => {
+    await client.closeTab(handle).catch(() => {});
+  };
 }

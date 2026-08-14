@@ -1,6 +1,7 @@
 import { Command } from "commander";
 
 import { buildExamplesHelpText, buildQuickStartHelpText } from "./example-help.js";
+import { assertPlatformRunnable } from "../platform-state.js";
 import {
   buildCapabilityMetadataHelpText,
   buildStabilityGuideHelpText,
@@ -22,6 +23,12 @@ export function buildPlatformCommand(
   }
 
   registerCapabilityMetadataCommand(command, definition);
+  command.hook("preAction", async (_thisCommand, actionCommand) => {
+    if (actionCommand.name() === "capabilities" || actionCommand.name() === "caps") {
+      return;
+    }
+    await assertPlatformRunnable(definition.id);
+  });
   command.addHelpText("afterAll", buildQuickStartHelpText(definition, options));
   command.addHelpText("afterAll", buildCapabilityMetadataHelpText(definition));
   command.addHelpText("afterAll", buildStabilityGuideHelpText());

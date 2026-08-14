@@ -1,10 +1,12 @@
 import { mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 import type { Platform } from "./types.js";
 
-export const MIKACLI_DIR = join(homedir(), ".mikacli");
+export const MIKACLI_DIR = process.env.MIKACLI_HOME?.trim()
+  ? resolve(process.env.MIKACLI_HOME.trim())
+  : join(homedir(), ".mikacli");
 export const SESSIONS_DIR = join(MIKACLI_DIR, "sessions");
 export const CONNECTIONS_DIR = join(MIKACLI_DIR, "connections");
 export const JOBS_DIR = join(MIKACLI_DIR, "jobs");
@@ -12,6 +14,7 @@ export const CACHE_DIR = join(MIKACLI_DIR, "cache");
 export const BROWSER_DIR = join(MIKACLI_DIR, "browser");
 export const LOGS_DIR = join(MIKACLI_DIR, "logs");
 export const ACTION_LOG_PATH = join(LOGS_DIR, "actions.jsonl");
+export const PLATFORM_STATE_PATH = join(MIKACLI_DIR, "platforms.json");
 export const SESSION_FILE_VERSION = 1 as const;
 export const DEFAULT_ACCOUNT_NAME = "default";
 export const DEFAULT_BROWSER_PROFILE = "default";
