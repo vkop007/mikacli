@@ -101,30 +101,31 @@ import { runtimeConfig as platformRuntimeConfig92 } from "./tools/cheat/runtime.
 import { runtimeConfig as platformRuntimeConfig93 } from "./tools/dns/runtime.js";
 import { runtimeConfig as platformRuntimeConfig94 } from "./tools/download/runtime.js";
 import { runtimeConfig as platformRuntimeConfig95 } from "./tools/favicon/runtime.js";
-import { runtimeConfig as platformRuntimeConfig96 } from "./tools/headers/runtime.js";
-import { runtimeConfig as platformRuntimeConfig97 } from "./tools/http/runtime.js";
-import { runtimeConfig as platformRuntimeConfig98 } from "./tools/ip/runtime.js";
-import { runtimeConfig as platformRuntimeConfig99 } from "./tools/jwt/runtime.js";
-import { runtimeConfig as platformRuntimeConfig100 } from "./tools/markdown-fetch/runtime.js";
-import { runtimeConfig as platformRuntimeConfig101 } from "./tools/metadata/runtime.js";
-import { runtimeConfig as platformRuntimeConfig102 } from "./tools/oembed/runtime.js";
-import { runtimeConfig as platformRuntimeConfig103 } from "./tools/page-links/runtime.js";
-import { runtimeConfig as platformRuntimeConfig104 } from "./tools/qr/runtime.js";
-import { runtimeConfig as platformRuntimeConfig105 } from "./tools/redirect/runtime.js";
-import { runtimeConfig as platformRuntimeConfig106 } from "./tools/robots/runtime.js";
-import { runtimeConfig as platformRuntimeConfig107 } from "./tools/rss/runtime.js";
-import { runtimeConfig as platformRuntimeConfig108 } from "./tools/screenshot/runtime.js";
-import { runtimeConfig as platformRuntimeConfig109 } from "./tools/sitemap/runtime.js";
-import { runtimeConfig as platformRuntimeConfig110 } from "./tools/ssl/runtime.js";
-import { runtimeConfig as platformRuntimeConfig111 } from "./tools/tempmail/runtime.js";
-import { runtimeConfig as platformRuntimeConfig112 } from "./tools/time/runtime.js";
-import { runtimeConfig as platformRuntimeConfig113 } from "./tools/timezone/runtime.js";
-import { runtimeConfig as platformRuntimeConfig114 } from "./tools/transcript/runtime.js";
-import { runtimeConfig as platformRuntimeConfig115 } from "./tools/translate/runtime.js";
-import { runtimeConfig as platformRuntimeConfig116 } from "./tools/uptime/runtime.js";
-import { runtimeConfig as platformRuntimeConfig117 } from "./tools/weather/runtime.js";
-import { runtimeConfig as platformRuntimeConfig118 } from "./tools/websearch/runtime.js";
-import { runtimeConfig as platformRuntimeConfig119 } from "./tools/whois/runtime.js";
+import { runtimeConfig as platformRuntimeConfig96 } from "./tools/hash/runtime.js";
+import { runtimeConfig as platformRuntimeConfig97 } from "./tools/headers/runtime.js";
+import { runtimeConfig as platformRuntimeConfig98 } from "./tools/http/runtime.js";
+import { runtimeConfig as platformRuntimeConfig99 } from "./tools/ip/runtime.js";
+import { runtimeConfig as platformRuntimeConfig100 } from "./tools/jwt/runtime.js";
+import { runtimeConfig as platformRuntimeConfig101 } from "./tools/markdown-fetch/runtime.js";
+import { runtimeConfig as platformRuntimeConfig102 } from "./tools/metadata/runtime.js";
+import { runtimeConfig as platformRuntimeConfig103 } from "./tools/oembed/runtime.js";
+import { runtimeConfig as platformRuntimeConfig104 } from "./tools/page-links/runtime.js";
+import { runtimeConfig as platformRuntimeConfig105 } from "./tools/qr/runtime.js";
+import { runtimeConfig as platformRuntimeConfig106 } from "./tools/redirect/runtime.js";
+import { runtimeConfig as platformRuntimeConfig107 } from "./tools/robots/runtime.js";
+import { runtimeConfig as platformRuntimeConfig108 } from "./tools/rss/runtime.js";
+import { runtimeConfig as platformRuntimeConfig109 } from "./tools/screenshot/runtime.js";
+import { runtimeConfig as platformRuntimeConfig110 } from "./tools/sitemap/runtime.js";
+import { runtimeConfig as platformRuntimeConfig111 } from "./tools/ssl/runtime.js";
+import { runtimeConfig as platformRuntimeConfig112 } from "./tools/tempmail/runtime.js";
+import { runtimeConfig as platformRuntimeConfig113 } from "./tools/time/runtime.js";
+import { runtimeConfig as platformRuntimeConfig114 } from "./tools/timezone/runtime.js";
+import { runtimeConfig as platformRuntimeConfig115 } from "./tools/transcript/runtime.js";
+import { runtimeConfig as platformRuntimeConfig116 } from "./tools/translate/runtime.js";
+import { runtimeConfig as platformRuntimeConfig117 } from "./tools/uptime/runtime.js";
+import { runtimeConfig as platformRuntimeConfig118 } from "./tools/weather/runtime.js";
+import { runtimeConfig as platformRuntimeConfig119 } from "./tools/websearch/runtime.js";
+import { runtimeConfig as platformRuntimeConfig120 } from "./tools/whois/runtime.js";
 
 export function getGeneratedPlatformConfig(): Record<GeneratedPlatformName, PlatformConfig> {
   return {
@@ -224,29 +225,30 @@ export function getGeneratedPlatformConfig(): Record<GeneratedPlatformName, Plat
   "dns": platformRuntimeConfig93,
   "download": platformRuntimeConfig94,
   "favicon": platformRuntimeConfig95,
-  "headers": platformRuntimeConfig96,
-  "http": platformRuntimeConfig97,
-  "ip": platformRuntimeConfig98,
-  "jwt": platformRuntimeConfig99,
-  "markdown-fetch": platformRuntimeConfig100,
-  "metadata": platformRuntimeConfig101,
-  "oembed": platformRuntimeConfig102,
-  "page-links": platformRuntimeConfig103,
-  "qr": platformRuntimeConfig104,
-  "redirect": platformRuntimeConfig105,
-  "robots": platformRuntimeConfig106,
-  "rss": platformRuntimeConfig107,
-  "screenshot": platformRuntimeConfig108,
-  "sitemap": platformRuntimeConfig109,
-  "ssl": platformRuntimeConfig110,
-  "tempmail": platformRuntimeConfig111,
-  "time": platformRuntimeConfig112,
-  "timezone": platformRuntimeConfig113,
-  "transcript": platformRuntimeConfig114,
-  "translate": platformRuntimeConfig115,
-  "uptime": platformRuntimeConfig116,
-  "weather": platformRuntimeConfig117,
-  "websearch": platformRuntimeConfig118,
-  "whois": platformRuntimeConfig119,
+  "hash": platformRuntimeConfig96,
+  "headers": platformRuntimeConfig97,
+  "http": platformRuntimeConfig98,
+  "ip": platformRuntimeConfig99,
+  "jwt": platformRuntimeConfig100,
+  "markdown-fetch": platformRuntimeConfig101,
+  "metadata": platformRuntimeConfig102,
+  "oembed": platformRuntimeConfig103,
+  "page-links": platformRuntimeConfig104,
+  "qr": platformRuntimeConfig105,
+  "redirect": platformRuntimeConfig106,
+  "robots": platformRuntimeConfig107,
+  "rss": platformRuntimeConfig108,
+  "screenshot": platformRuntimeConfig109,
+  "sitemap": platformRuntimeConfig110,
+  "ssl": platformRuntimeConfig111,
+  "tempmail": platformRuntimeConfig112,
+  "time": platformRuntimeConfig113,
+  "timezone": platformRuntimeConfig114,
+  "transcript": platformRuntimeConfig115,
+  "translate": platformRuntimeConfig116,
+  "uptime": platformRuntimeConfig117,
+  "weather": platformRuntimeConfig118,
+  "websearch": platformRuntimeConfig119,
+  "whois": platformRuntimeConfig120,
   };
 }

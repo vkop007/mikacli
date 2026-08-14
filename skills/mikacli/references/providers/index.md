@@ -150,6 +150,7 @@ Use these files when the main `$mikacli` skill already knows the provider and ne
 - [DNS](./dns.md)
 - [Download](./download.md)
 - [Favicon](./favicon.md)
+- [Hash & Encoding](./hash.md)
 - [Headers](./headers.md)
 - [HTTP Toolkit](./http.md)
 - [IP](./ip.md)
