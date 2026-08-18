@@ -8,6 +8,12 @@ import {
   resolveSharedBrowserBootstrapDetector,
   resolveManagedBrowserConnectEndpoint,
 } from "../browser-cookie-login.js";
+import {
+  getPlatformBrowserAuthCookieNames,
+  getPlatformBrowserAuthStorageKeys,
+  getPlatformBrowserReadyCookieNames,
+  getPlatformCookieDomain,
+} from "../../platforms/config.js";
 
 describe("browser cookie login detection", () => {
   it("does not treat GitHub bootstrap cookies as a successful login", () => {
@@ -93,6 +99,69 @@ describe("browser cookie login detection", () => {
 
     expect(missingCsrf).toBe(false);
     expect(complete).toBe(true);
+  });
+
+  it("detects a logged-in ChatGPT session under either session-cookie naming", () => {
+    const authCookieNames = getPlatformBrowserAuthCookieNames("chatgpt");
+    const readyCookieNames = getPlatformBrowserReadyCookieNames("chatgpt");
+    const storageKeys = getPlatformBrowserAuthStorageKeys("chatgpt");
+    const domain = getPlatformCookieDomain("chatgpt");
+    const noStorage = { localStorage: {}, sessionStorage: {} };
+
+    // ChatGPT ships either the legacy next-auth cookie or the newer authjs
+    // cookie, never both, so neither naming may be required alongside the other.
+    const authjs = hasDetectedAuthenticatedState(
+      [
+        { name: "__Secure-authjs.session-token", value: "header.payload.signature", domain: ".chatgpt.com" },
+        { name: "_puid", value: "user-abc123:1700000000-xyz", domain: ".chatgpt.com" },
+      ],
+      authCookieNames,
+      storageKeys,
+      domain,
+      noStorage,
+      readyCookieNames,
+    );
+
+    const legacy = hasDetectedAuthenticatedState(
+      [{ name: "__Secure-next-auth.session-token", value: "header.payload.signature", domain: ".chatgpt.com" }],
+      authCookieNames,
+      storageKeys,
+      domain,
+      noStorage,
+      readyCookieNames,
+    );
+
+    expect(authjs).toBe(true);
+    expect(legacy).toBe(true);
+  });
+
+  it("does not let a foreign domain's cookies satisfy provider login detection", () => {
+    const detected = hasDetectedAuthenticatedState(
+      [
+        { name: "__Secure-next-auth.session-token", value: "token", domain: ".example.com" },
+        { name: "__Secure-authjs.session-token", value: "token", domain: ".example.com" },
+        { name: "_puid", value: "token", domain: ".example.com" },
+      ],
+      getPlatformBrowserAuthCookieNames("chatgpt"),
+      getPlatformBrowserAuthStorageKeys("chatgpt"),
+      getPlatformCookieDomain("chatgpt"),
+      { localStorage: {}, sessionStorage: {} },
+      getPlatformBrowserReadyCookieNames("chatgpt"),
+    );
+
+    expect(detected).toBe(false);
+  });
+
+  it("treats alternative auth cookie names as alternatives across every platform", () => {
+    // Regression guard for the AND/OR mix-up: an absent browserReadyCookieNames
+    // must never promote the OR list into an all-required set.
+    for (const platform of ["chatgpt", "github", "instagram", "x", "reddit", "spotify"] as const) {
+      const authCookieNames = getPlatformBrowserAuthCookieNames(platform);
+      const readyCookieNames = getPlatformBrowserReadyCookieNames(platform);
+      expect(readyCookieNames.some((name) => !authCookieNames.includes(name)) || readyCookieNames.length === 0).toBe(
+        true,
+      );
+    }
   });
 
   it("normalizes serialized session cookies into Playwright cookie objects", () => {

@@ -54,7 +54,14 @@ export function getPlatformBrowserAuthCookieNames(platform: PlatformName): reado
 
 export function getPlatformBrowserReadyCookieNames(platform: PlatformName): readonly string[] {
   const config = getPlatformConfig(platform);
-  return config.browserReadyCookieNames ?? getPlatformBrowserAuthCookieNames(platform);
+  // `authCookieNames` is an OR list: any one of those cookies proves a login.
+  // `browserReadyCookieNames` is an AND list: every entry must be present before
+  // the session is considered safe to capture. Defaulting the AND list to the OR
+  // list turned "any of these" into "all of these", so providers that ship
+  // alternative cookie names (chatgpt's next-auth vs authjs token, github's
+  // user_session vs logged_in, ...) could never satisfy it and browser login
+  // spun until its timeout. Absent an explicit list, apply no extra gate.
+  return config.browserReadyCookieNames ?? [];
 }
 
 export function getPlatformBrowserAuthStorageKeys(platform: PlatformName): readonly string[] {
