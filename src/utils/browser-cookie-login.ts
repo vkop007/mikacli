@@ -454,6 +454,7 @@ export async function captureBrowserLogin(
   let connected: ConnectedBrowser | null = null;
   try {
     const deadline = Date.now() + timeoutMs;
+    const pollIntervalMs = Math.max(10, input.pollIntervalMs ?? 1_000);
     let page: BrowserPageLike | null = null;
     let announcedFallback = false;
 
@@ -493,7 +494,7 @@ export async function captureBrowserLogin(
         });
       }
 
-      await sleep(1000);
+      await sleepUntilNextPoll(deadline, pollIntervalMs);
     }
 
     throw buildBrowserLoginTimeoutError({
@@ -581,6 +582,7 @@ export async function openSharedBrowserProfile(
 
   try {
     const deadline = Date.now() + timeoutMs;
+    const pollIntervalMs = Math.max(10, input.pollIntervalMs ?? 1_000);
     let page: BrowserPageLike | null = null;
 
     while (Date.now() < deadline) {
@@ -626,7 +628,7 @@ export async function openSharedBrowserProfile(
         };
       }
 
-      await sleep(1000);
+      await sleepUntilNextPoll(deadline, pollIntervalMs);
     }
 
     return {
@@ -1003,12 +1005,15 @@ export function hasDetectedAuthenticatedState(
     return domain.replace(/^\./u, "").endsWith(expectedDomain);
   });
 
-  if (authCookieNames.some((pattern) => browserCookies.some((cookie) => isStrongBrowserAuthCookie(cookie, pattern)))) {
+  // Only cookies belonging to the provider's own domain may prove a login.
+  // Scanning every cookie in the profile let an unrelated site's cookie that
+  // happened to share a name (`token`, `_puid`, `sso`, ...) satisfy detection.
+  if (authCookieNames.some((pattern) => matchingDomainCookies.some((cookie) => isStrongBrowserAuthCookie(cookie, pattern)))) {
     if (readyCookieNames.length === 0) {
       return true;
     }
 
-    return readyCookieNames.every((pattern) => browserCookies.some((cookie) => hasPresentBrowserCookie(cookie, pattern)));
+    return readyCookieNames.every((pattern) => matchingDomainCookies.some((cookie) => hasPresentBrowserCookie(cookie, pattern)));
   }
 
   if (authStorageKeys.some((key) => hasTruthyStorageValue(storage.localStorage[key]) || hasTruthyStorageValue(storage.sessionStorage[key]))) {
