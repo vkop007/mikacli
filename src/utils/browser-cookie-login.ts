@@ -457,6 +457,7 @@ export async function captureBrowserLogin(
     const pollIntervalMs = Math.max(10, input.pollIntervalMs ?? 1_000);
     let page: BrowserPageLike | null = null;
     let announcedFallback = false;
+    let lastDiagnostic: BrowserLoginDetectionDiagnostic | undefined;
 
     announceBrowserLogin(`Browser opened for ${displayName}. Complete the sign-in flow there and MikaCLI will save the session automatically once login is detected.`);
 
@@ -476,7 +477,17 @@ export async function captureBrowserLogin(
       if (connected && page) {
         const cookies = await connected.context.cookies();
         const storage = await readStorage(page);
-        if (hasDetectedAuthenticatedState(cookies, authCookieNames, authStorageKeys, expectedDomain, storage, browserReadyCookieNames)) {
+        lastDiagnostic = summarizeDetectionState({
+          cookies,
+          authCookieNames,
+          authStorageKeys,
+          expectedDomain,
+          storage,
+          readyCookieNames: browserReadyCookieNames,
+          finalUrl: page.url(),
+        });
+        emitBrowserLoginDiagnostic(`${platform} login poll`, lastDiagnostic);
+        if (lastDiagnostic.detected) {
           return {
             cookies,
             finalUrl: page.url(),
@@ -503,6 +514,7 @@ export async function captureBrowserLogin(
       startUrl,
       timeoutMs,
       browserProfilePath: managed.state.browserProfilePath,
+      diagnostic: lastDiagnostic,
     });
   } catch (error) {
     if (error instanceof MikaCliError) {
@@ -987,6 +999,88 @@ export async function runBrowserActionPlan<T>(input: BrowserActionPlanInput<T>):
     : new MikaCliError("BROWSER_ACTION_FAILED", "Browser action plan failed before completing the requested operation.");
 }
 
+export interface BrowserLoginDetectionDiagnostic {
+  finalUrl?: string;
+  expectedDomain: string;
+  domainCookieNames: string[];
+  foreignCookieCount: number;
+  matchedAuthCookieNames: string[];
+  missingReadyCookieNames: string[];
+  storageKeysPresent: string[];
+  detected: boolean;
+}
+
+/**
+ * Redacted snapshot of why login detection did or did not fire. Cookie and
+ * storage *values* are never included -- only names -- so this is safe to print
+ * and to attach to error details.
+ */
+export function summarizeDetectionState(input: {
+  cookies: unknown[];
+  authCookieNames: readonly string[];
+  authStorageKeys: readonly string[];
+  expectedDomain: string;
+  storage: { localStorage: Record<string, string>; sessionStorage: Record<string, string> };
+  readyCookieNames?: readonly string[];
+  finalUrl?: string;
+}): BrowserLoginDetectionDiagnostic {
+  const readyCookieNames = input.readyCookieNames ?? [];
+  const cookies = Array.isArray(input.cookies) ? input.cookies : [];
+  const onDomain = cookies.filter((cookie) => {
+    if (!cookie || typeof cookie !== "object") return false;
+    const domain = "domain" in cookie && typeof cookie.domain === "string" ? cookie.domain : "";
+    return domain.replace(/^\./u, "").endsWith(input.expectedDomain);
+  });
+
+  const nameOf = (cookie: unknown): string =>
+    cookie && typeof cookie === "object" && "name" in cookie && typeof cookie.name === "string" ? cookie.name : "";
+
+  return {
+    finalUrl: input.finalUrl,
+    expectedDomain: input.expectedDomain,
+    domainCookieNames: onDomain.map(nameOf).filter(Boolean).sort(),
+    foreignCookieCount: cookies.length - onDomain.length,
+    matchedAuthCookieNames: input.authCookieNames.filter((pattern) =>
+      onDomain.some((cookie) => isStrongBrowserAuthCookie(cookie, pattern)),
+    ),
+    missingReadyCookieNames: readyCookieNames.filter(
+      (pattern) => !onDomain.some((cookie) => hasPresentBrowserCookie(cookie, pattern)),
+    ),
+    storageKeysPresent: input.authStorageKeys.filter(
+      (key) => hasTruthyStorageValue(input.storage.localStorage[key]) || hasTruthyStorageValue(input.storage.sessionStorage[key]),
+    ),
+    detected: hasDetectedAuthenticatedState(
+      input.cookies,
+      input.authCookieNames,
+      input.authStorageKeys,
+      input.expectedDomain,
+      input.storage,
+      readyCookieNames,
+    ),
+  };
+}
+
+export function isBrowserLoginDiagnosticsEnabled(): boolean {
+  return process.env.MIKACLI_DEBUG_BROWSER_LOGIN === "1";
+}
+
+function emitBrowserLoginDiagnostic(label: string, diagnostic: BrowserLoginDetectionDiagnostic): void {
+  if (!isBrowserLoginDiagnosticsEnabled()) {
+    return;
+  }
+
+  console.error(
+    `debug ${label}: detected=${diagnostic.detected}` +
+      ` url=${diagnostic.finalUrl ?? "(none)"}` +
+      ` domain=${diagnostic.expectedDomain}` +
+      ` on-domain-cookies=[${diagnostic.domainCookieNames.join(", ")}]` +
+      ` foreign-cookies=${diagnostic.foreignCookieCount}` +
+      ` matched-auth=[${diagnostic.matchedAuthCookieNames.join(", ")}]` +
+      ` missing-ready=[${diagnostic.missingReadyCookieNames.join(", ")}]` +
+      ` storage-keys=[${diagnostic.storageKeysPresent.join(", ")}]`,
+  );
+}
+
 export function hasDetectedAuthenticatedState(
   cookies: unknown[],
   authCookieNames: readonly string[],
@@ -1282,16 +1376,26 @@ function buildBrowserLoginTimeoutError(input: {
   startUrl: string;
   timeoutMs: number;
   browserProfilePath: string;
+  diagnostic?: BrowserLoginDetectionDiagnostic;
 }): MikaCliError {
+  // Surface the redacted detection snapshot so a timeout explains itself
+  // instead of leaving the user to guess which cookie was missing.
+  const hint = input.diagnostic
+    ? ` Last check saw cookies [${input.diagnostic.domainCookieNames.join(", ") || "none"}] on ${input.diagnostic.expectedDomain}` +
+      `${input.diagnostic.missingReadyCookieNames.length > 0 ? `, still missing [${input.diagnostic.missingReadyCookieNames.join(", ")}]` : ""}` +
+      `. Re-run with MIKACLI_DEBUG_BROWSER_LOGIN=1 for per-poll detail.`
+    : "";
+
   return new MikaCliError(
     "BROWSER_LOGIN_TIMEOUT",
-    `Timed out waiting for ${input.displayName} browser login. Complete the sign-in flow within ${Math.round(input.timeoutMs / 1000)} seconds and try again.`,
+    `Timed out waiting for ${input.displayName} browser login. Complete the sign-in flow within ${Math.round(input.timeoutMs / 1000)} seconds and try again.${hint}`,
     {
       details: {
         platform: input.platform,
         startUrl: input.startUrl,
         timeoutSeconds: Math.round(input.timeoutMs / 1000),
         browserProfilePath: input.browserProfilePath,
+        detection: input.diagnostic,
       },
     },
   );
